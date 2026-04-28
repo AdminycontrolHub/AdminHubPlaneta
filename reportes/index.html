@@ -52,7 +52,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .mc.inesdi .mc-name { color:#a878f0; }
 .mc.esdesign .mc-name { color:#f0a830; }
 .mc.ucma .mc-name   { color:#3aabf0; }
-.mc-subtitle { font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(0,180,210,0.32); margin-bottom:9px; }
+.mc-subtitle { font-size:9px; letter-spacing:0.06em; text-transform:uppercase; color:rgba(0,180,210,0.32); margin-bottom:9px; transition:color 0.2s; }
 .mc-divider { height:1px; background:rgba(0,212,240,0.07); margin-bottom:9px; }
 .mc-stats { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .mc-stat { background:rgba(0,25,50,0.6); border-radius:7px; padding:7px 9px; border:1px solid rgba(0,212,240,0.07); }
@@ -71,6 +71,20 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .mc.esdesign .mc-netas-val { color:#f0a830; }
 .mc.ucma .mc-netas-val   { color:#3aabf0; }
 .mc-updated { font-size:9px; color:rgba(0,180,210,0.2); margin-top:9px; text-align:right; font-family:'Courier New',monospace; }
+
+/* ── Selector convocatoria ── */
+.conv-selector-wrap { position:relative; z-index:10; padding:18px 32px 0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.conv-selector-label { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(0,194,203,0.3); }
+.conv-selector { display:flex; gap:10px; }
+.conv-btn { display:flex; flex-direction:column; align-items:center; gap:3px; background:transparent; border:1.5px solid rgba(0,194,203,0.2); border-radius:10px; padding:10px 36px; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+.conv-btn:hover { border-color:rgba(0,194,203,0.6); background:rgba(0,194,203,0.06); }
+.conv-btn.active { background:rgba(0,194,203,0.12); border-color:#00C2CB; box-shadow:0 0 16px rgba(0,194,203,0.18); }
+.conv-btn-title { font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:rgba(0,194,203,0.4); transition:color 0.2s; }
+.conv-btn.active .conv-btn-title { color:#00C2CB; }
+.conv-btn:hover .conv-btn-title { color:rgba(0,194,203,0.8); }
+.conv-btn-pill { font-size:9px; letter-spacing:0.06em; color:rgba(0,194,203,0.25); transition:color 0.2s; }
+.conv-btn.active .conv-btn-pill { color:rgba(0,194,203,0.5); }
+
 /* ── Botón Actualizar rutas ── */
 .rutas-btn-wrap { position:relative; z-index:10; padding:18px 32px 0; display:flex; justify-content:flex-end; }
 .rutas-btn { display:flex; flex-direction:column; align-items:center; gap:3px; background:rgba(168,120,240,0.15); border:1.5px solid rgba(168,120,240,0.6); border-radius:10px; padding:10px 22px; cursor:pointer; font-family:inherit; transition:all 0.2s; }
@@ -162,12 +176,13 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .empty-state svg { margin:0 auto 14px; display:block; opacity:.35; }
 .empty-state p { font-size:14px; }
 @media(max-width:700px){
-  .topbar,.page-head,.toolbar,.section-lbl,.marca-grid,.bubbles-wrap,.rutas-btn-wrap { padding-left:16px; padding-right:16px; }
+  .topbar,.page-head,.toolbar,.section-lbl,.marca-grid,.bubbles-wrap,.rutas-btn-wrap,.conv-selector-wrap { padding-left:16px; padding-right:16px; }
   .marca-grid { grid-template-columns:repeat(2,1fr); }
   .page-title { font-size:20px; }
   .add-btn { position:static; margin:12px 16px 0; }
   .bmodal-nodes { gap:18px; }
   .cbubble { width:86px; height:86px; }
+  .conv-btn { padding:10px 24px; }
 }
 @media(max-width:420px){ .marca-grid { grid-template-columns:1fr; } }
 </style>
@@ -228,7 +243,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 <div class="section-lbl">DATOS CLAVE</div>
 <div class="marca-grid">
   <div class="mc obs" style="animation-delay:0s">
-    <div class="mc-name">OBS</div><div class="mc-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
+    <div class="mc-name">OBS</div><div class="mc-subtitle" id="obs-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
     <div class="mc-stats">
       <div class="mc-stat"><div class="mc-stat-lbl">Total brutas</div><div class="mc-stat-val" id="obs-brutas">—</div></div>
       <div class="mc-stat"><div class="mc-stat-lbl">Bajas</div><div class="mc-stat-val muted" id="obs-bajas">—</div></div>
@@ -239,7 +254,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="mc-updated" id="obs-updated">Pendiente de datos</div>
   </div>
   <div class="mc inesdi" style="animation-delay:0.05s">
-    <div class="mc-name">INESDI</div><div class="mc-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
+    <div class="mc-name">INESDI</div><div class="mc-subtitle" id="inesdi-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
     <div class="mc-stats">
       <div class="mc-stat"><div class="mc-stat-lbl">Total brutas</div><div class="mc-stat-val" id="inesdi-brutas">—</div></div>
       <div class="mc-stat"><div class="mc-stat-lbl">Bajas</div><div class="mc-stat-val muted" id="inesdi-bajas">—</div></div>
@@ -250,7 +265,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="mc-updated" id="inesdi-updated">Pendiente de datos</div>
   </div>
   <div class="mc esdesign" style="animation-delay:0.10s">
-    <div class="mc-name">ESDesign</div><div class="mc-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
+    <div class="mc-name">ESDesign</div><div class="mc-subtitle" id="esdesign-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
     <div class="mc-stats">
       <div class="mc-stat"><div class="mc-stat-lbl">Total brutas</div><div class="mc-stat-val" id="esdesign-brutas">—</div></div>
       <div class="mc-stat"><div class="mc-stat-lbl">Bajas</div><div class="mc-stat-val muted" id="esdesign-bajas">—</div></div>
@@ -261,7 +276,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="mc-updated" id="esdesign-updated">Pendiente de datos</div>
   </div>
   <div class="mc ucma" style="animation-delay:0.15s">
-    <div class="mc-name">UCMA</div><div class="mc-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
+    <div class="mc-name">UCMA</div><div class="mc-subtitle" id="ucma-subtitle">Convocatoria actual</div><div class="mc-divider"></div>
     <div class="mc-stats">
       <div class="mc-stat"><div class="mc-stat-lbl">Total brutas</div><div class="mc-stat-val" id="ucma-brutas">—</div></div>
       <div class="mc-stat"><div class="mc-stat-lbl">Bajas</div><div class="mc-stat-val muted" id="ucma-bajas">—</div></div>
@@ -270,6 +285,21 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     </div>
     <div class="mc-netas"><span class="mc-netas-lbl">TOTAL NETAS</span><span class="mc-netas-val" id="ucma-netas">—</span></div>
     <div class="mc-updated" id="ucma-updated">Pendiente de datos</div>
+  </div>
+</div>
+
+<!-- Selector convocatoria Abril / Octubre -->
+<div class="conv-selector-wrap">
+  <span class="conv-selector-label">— Seleccionar convocatoria —</span>
+  <div class="conv-selector">
+    <button class="conv-btn active" id="btnAbril" onclick="selectConv('abril')">
+      <span class="conv-btn-title">Abril</span>
+      <span class="conv-btn-pill">XX04</span>
+    </button>
+    <button class="conv-btn" id="btnOctubre" onclick="selectConv('octubre')">
+      <span class="conv-btn-title">Octubre</span>
+      <span class="conv-btn-pill">XX10</span>
+    </button>
   </div>
 </div>
 
@@ -467,6 +497,20 @@ const BECAS_DEFAULTS = [{ nombre:"L'H", url:'', color:'#3aabf0' },{ nombre:'Cola
 let items = [], editIdx = null;
 const bdata = { cierres: [], becas: [] };
 let activeCollection = null, editEntryIdx = null, selectedSwatchColor = SWATCH_COLORS[0];
+let convActiva = 'abril';
+let marcaDataCompleta = null;
+
+function selectConv(conv) {
+  convActiva = conv;
+  document.getElementById('btnAbril').classList.toggle('active', conv === 'abril');
+  document.getElementById('btnOctubre').classList.toggle('active', conv === 'octubre');
+  const label = conv === 'abril' ? 'Conv. Abril' : 'Conv. Octubre';
+  ['obs','inesdi','esdesign','ucma'].forEach(m => {
+    const el = document.getElementById(`${m}-subtitle`);
+    if (el) el.textContent = label;
+  });
+  if (marcaDataCompleta) loadMarcaData(marcaDataCompleta);
+}
 
 async function load() {
   try {
@@ -481,7 +525,7 @@ async function load() {
     items = d1.value ? JSON.parse(d1.value) : JSON.parse(JSON.stringify(DEFAULTS));
     bdata.cierres = d2.value ? JSON.parse(d2.value) : JSON.parse(JSON.stringify(CIERRES_DEFAULTS));
     bdata.becas = d3.value ? JSON.parse(d3.value) : JSON.parse(JSON.stringify(BECAS_DEFAULTS));
-    if (d4.value) loadMarcaData(JSON.parse(d4.value));
+    if (d4.value) { marcaDataCompleta = JSON.parse(d4.value); loadMarcaData(marcaDataCompleta); }
     if (d5.value) {
       const r = JSON.parse(d5.value);
       document.getElementById('ruta-obs').value = r.obs || '';
@@ -500,7 +544,9 @@ async function load() {
 function loadMarcaData(data) {
   const now = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
   ['obs','inesdi','esdesign','ucma'].forEach(m => {
-    const d = data[m] || {};
+    const marcaData = data[m] || {};
+    // Soporte formato con subclaves abril/octubre y formato plano (compatibilidad)
+    const d = (marcaData.abril || marcaData.octubre) ? (marcaData[convActiva] || {}) : marcaData;
     const set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val??'—'; };
     set(`${m}-brutas`,d.brutas); set(`${m}-bajas`,d.bajas); set(`${m}-ccce`,d.ccce); set(`${m}-pendings`,d.pendings); set(`${m}-netas`,d.netas);
     const upd = document.getElementById(`${m}-updated`); if(upd) upd.textContent=`Actualizado · ${now}`;
