@@ -467,7 +467,10 @@ const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 const STORE_KEY='adminhub_reportes_v1';
 const CIERRES_KEY='adminhub_cierres_v1';
 const BECAS_KEY='adminhub_becas_v1';
-const MARCAS_KEY='adminhub_marcas_data';
+const OBS_KEY='adminhub_obs_data';
+const INESDI_KEY='adminhub_inesdi_data';
+const ESDESIGN_KEY='adminhub_esdesign_data';
+const UCMA_KEY='adminhub_ucma_data';
 const RUTAS_KEY='adminhub_rutas_excel';
 const SWATCH_COLORS=['#1dcc84','#a878f0','#f0a830','#3aabf0','#00E6FF','#f07878','#FFD700','#ff7eb3'];
 const DEFAULTS=[{title:'Becas',desc:'Informe de alumnos con beca activa',url:'__BECAS__',color:'#1dcc84',date:''},{title:'Cierres Pasados',desc:'Histórico de cierres contables',url:'__CIERRES__',color:'#f0a830',date:''},{title:'BI Curva',desc:'Dashboard Power BI · curva de cobros',url:'',color:'#3aabf0',date:''},{title:'SXDataHub',desc:'Plataforma de datos SalesXcelerate',url:'',color:'#a878f0',date:''}];
@@ -490,12 +493,17 @@ function selectConv(conv){
 
 async function load(){
   try{
-    const[r1,r2,r3,r4,r5]=await Promise.all([fetch(`${WORKER_URL}/kv?key=${STORE_KEY}`),fetch(`${WORKER_URL}/kv?key=${CIERRES_KEY}`),fetch(`${WORKER_URL}/kv?key=${BECAS_KEY}`),fetch(`${WORKER_URL}/kv?key=${MARCAS_KEY}`),fetch(`${WORKER_URL}/kv?key=${RUTAS_KEY}`)]);
-    const[d1,d2,d3,d4,d5]=await Promise.all([r1.json(),r2.json(),r3.json(),r4.json(),r5.json()]);
+    const[r1,r2,r3,r4,r5,r6,r7]=await Promise.all([fetch(`${WORKER_URL}/kv?key=${STORE_KEY}`),fetch(`${WORKER_URL}/kv?key=${CIERRES_KEY}`),fetch(`${WORKER_URL}/kv?key=${BECAS_KEY}`),fetch(`${WORKER_URL}/kv?key=${OBS_KEY}`),fetch(`${WORKER_URL}/kv?key=${INESDI_KEY}`),fetch(`${WORKER_URL}/kv?key=${ESDESIGN_KEY}`),fetch(`${WORKER_URL}/kv?key=${UCMA_KEY}`)]);
+    const[d1,d2,d3,d4,d5,d6,d7]=await Promise.all([r1.json(),r2.json(),r3.json(),r4.json(),r5.json(),r6.json(),r7.json()]);
     items=d1.value?JSON.parse(d1.value):JSON.parse(JSON.stringify(DEFAULTS));
     bdata.cierres=d2.value?JSON.parse(d2.value):JSON.parse(JSON.stringify(CIERRES_DEFAULTS));
     bdata.becas=d3.value?JSON.parse(d3.value):JSON.parse(JSON.stringify(BECAS_DEFAULTS));
-    if(d4.value){marcaDataCompleta=JSON.parse(d4.value);loadMarcaData(marcaDataCompleta);}
+    const marcas={};
+    if(d4.value){const v=JSON.parse(d4.value);marcas.obs={abril:v.abril||{},octubre:v.octubre||{}};}
+    if(d5.value){const v=JSON.parse(d5.value);marcas.inesdi={abril:v.abril||{},octubre:v.octubre||{}};}
+    if(d6.value){const v=JSON.parse(d6.value);marcas.esdesign={abril:v.abril||{},octubre:v.octubre||{}};}
+    if(d7.value){const v=JSON.parse(d7.value);marcas.ucma={abril:v.abril||{},octubre:v.octubre||{}};}
+    if(Object.keys(marcas).length){marcaDataCompleta=marcas;loadMarcaData(marcas);}
   }catch(e){items=JSON.parse(JSON.stringify(DEFAULTS));bdata.cierres=JSON.parse(JSON.stringify(CIERRES_DEFAULTS));bdata.becas=JSON.parse(JSON.stringify(BECAS_DEFAULTS));}
   renderGrid();
 }
