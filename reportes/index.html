@@ -166,20 +166,20 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .overlay.open { display:flex; }
 .modal { width:min(500px,96vw); max-height:90vh; overflow-y:auto; background:#F5F0E8; border:1px solid rgba(0,100,160,0.2); border-radius:18px; padding:24px; box-shadow:0 0 60px rgba(0,180,255,0.12); animation:fadeUp 0.28s ease; }
 .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid rgba(0,230,255,0.1); }
-.modal-head h2 { font-size:15px; font-weight:600; ccolor:#1a3a50; display:flex; align-items:center; gap:8px; }
+.modal-head h2 { font-size:15px; font-weight:600; color:#1a3a50; display:flex; align-items:center; gap:8px; }
 .modal-close { width:30px; height:30px; border-radius:8px; background:transparent; border:1px solid rgba(0,230,255,0.2); color:rgba(0,230,255,0.5); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-family:inherit; }
 .modal-close:hover { background:rgba(0,230,255,0.1); color:#00E6FF; border-color:rgba(0,230,255,0.5); }
 .field { margin-bottom:14px; }
 .field label { display:block; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(0,80,120,0.5); margin-bottom:6px; }
-.field input, .field textarea, .field select { width:100%; background:rgba(0,20,40,0.8); border:1px solid rgba(0,230,255,0.18); border-radius:9px; padding:10px 13px; color:#E0F7FF; font-size:13px; font-family:inherit; outline:none; transition:border-color 0.2s; appearance:none; }
+.field input, .field textarea, .field select { width:100%; background:rgba(255,252,245,0.9); border:1px solid rgba(0,100,140,0.22); border-radius:9px; padding:10px 13px; color:#1a3a50; font-size:13px; font-family:inherit; outline:none; transition:border-color 0.2s; appearance:none; }
 .field input:focus, .field textarea:focus, .field select:focus { border-color:rgba(0,230,255,0.5); box-shadow:0 0 0 3px rgba(0,230,255,0.07); }
-.field input::placeholder, .field textarea::placeholder { color:rgba(0,200,230,0.22); }
+.field input::placeholder, .field textarea::placeholder { color:rgba(30,60,80,0.35); }
 .field textarea { resize:vertical; min-height:72px; }
 .field select option { background:#030E1E; color:#E0F7FF; }
-.modal-foot { display:flex; justify-content:flex-end; gap:8px; padding-top:14px; border-top:1px solid rgba(0,230,255,0.08); margin-top:4px; }
-.btn-cancel { background:transparent; border:1px solid rgba(0,230,255,0.2); border-radius:9px; padding:9px 16px; color:rgba(0,200,230,0.5); font-size:13px; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.modal-foot { display:flex; justify-content:flex-end; gap:8px; padding-top:14px; border-top:1px solid rgba(0,100,140,0.1); margin-top:4px; }
+.btn-cancel { background:transparent; border:1px solid rgba(0,100,140,0.25); border-radius:9px; padding:9px 16px; color:rgba(0,80,120,0.6); font-size:13px; cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .btn-cancel:hover { background:rgba(0,230,255,0.06); color:#00E6FF; }
-.btn-save { background:rgba(0,80,130,0.4); border:1.5px solid rgba(0,230,255,0.45); border-radius:9px; padding:9px 20px; color:#00E6FF; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.btn-save { background:rgba(0,80,130,0.12); border:1.5px solid rgba(0,100,160,0.45); border-radius:9px; padding:9px 20px; color:#005080; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .btn-save:hover { background:rgba(0,230,255,0.12); border-color:#00E6FF; }
 .btn-delete { display:none; align-items:center; gap:6px; background:rgba(163,45,45,0.15); border:1px solid rgba(240,149,149,0.3); border-radius:9px; padding:9px 16px; color:#F09595; font-size:13px; cursor:pointer; font-family:inherit; margin-right:auto; transition:all 0.15s; }
 .btn-delete:hover { background:rgba(163,45,45,0.3); }
