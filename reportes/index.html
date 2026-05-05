@@ -574,7 +574,7 @@ async function deleteReport(){const r=items[editIdx];if(!r||!confirm(`¿Eliminar
 async function persist(){try{await fetch(`${WORKER_URL}/kv`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:STORE_KEY,value:items})});}catch(e){console.error('KV error:',e);}}
 function closeOverlay(){document.getElementById('formOverlay').classList.remove('open');}
 document.getElementById('formOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('formOverlay'))closeOverlay();});
-
+function renderFormSwatches(selected){const el=document.getElementById('formSwatches');if(!el)return;el.innerHTML=SWATCH_COLORS.map(c=>`<div class="swatch ${c===selected?'selected':''}" style="background:${c};border-color:${c===selected?'#1a3a50':'transparent'}" onclick="document.getElementById('fColor').value='${c}';renderFormSwatches('${c}')"></div>`).join('');}
 load();
 </script>
 </body>
