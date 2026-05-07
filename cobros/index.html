@@ -336,10 +336,13 @@ function formatPct(val){
 
 function renderCards(){
   MARCAS.forEach(m=>{
-    const d=cobrosData[m]?.[convActiva]||{};
+    // Solo mostrar datos si el año coincide con el del KV
+    const d=(yearActivo===cobrosData[m]?.[convActiva]?.año)
+      ? cobrosData[m][convActiva]
+      : {};
     setVal(`${m}-mora`, formatPct(d.pct));
     setVal(`${m}-fact`, formatImporte(d.importe));
-    setVal(`${m}-impagos`, '—'); // pendiente de implementar lógica impagos próxima conv
+    setVal(`${m}-impagos`, '—');
   });
 }
 
@@ -361,7 +364,7 @@ async function load(){
         try{
           // El value llega doblemente serializado: string JSON dentro de string JSON
           const parsed=typeof data.value==='string'?JSON.parse(data.value):data.value;
-          cobrosData[marca][conv]=parsed;
+          cobrosData[marca][conv]={...parsed, año:'2026'};
         }catch(e){
           cobrosData[marca][conv]={};
         }
