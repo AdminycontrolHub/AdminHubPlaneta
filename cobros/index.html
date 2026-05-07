@@ -295,13 +295,11 @@ function setActive(el){
 }
 
 const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
-const INESDI_COBROS='adminhub_inesdi_cobros';
-const OBS_COBROS='adminhub_obs_cobros';
-const ESDESIGN_COBROS='adminhub_esdesign_cobros';
-const UCMA_COBROS='adminhub_ucma_cobros';
+const MARCAS=['inesdi','obs','esdesign','ucma'];
 
 let convActiva='abril';
 let yearActivo='2026';
+// cobrosData[marca][conv] = { importe, pct }
 let cobrosData={};
 
 function selectConv(conv,el){
@@ -313,6 +311,7 @@ function selectConv(conv,el){
 
 function selectYear(y){
   yearActivo=y;
+  // El Excel solo tiene 2026 de momento; si no hay datos para el año, mostrará —
   renderCards();
 }
 
@@ -321,22 +320,52 @@ function setVal(id,val){
   if(el)el.textContent=val??'—';
 }
 
+function formatImporte(val){
+  if(!val||val===''||val==='null')return'—';
+  const n=parseFloat(val);
+  if(isNaN(n))return'—';
+  return new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+}
+
+function formatPct(val){
+  if(!val||val===''||val==='null')return'—';
+  const n=parseFloat(val);
+  if(isNaN(n))return'—';
+  return (n*100).toFixed(1)+'%';
+}
+
 function renderCards(){
-  ['inesdi','obs','esdesign','ucma'].forEach(m=>{
-    const d=cobrosData[m]?.[yearActivo]?.[convActiva]||{};
-    setVal(`${m}-mora`, d.mora??'—');
-    setVal(`${m}-fact`, d.fact??'—');
-    setVal(`${m}-impagos`, d.impagos??'—');
+  MARCAS.forEach(m=>{
+    const d=cobrosData[m]?.[convActiva]||{};
+    setVal(`${m}-mora`, formatPct(d.pct));
+    setVal(`${m}-fact`, formatImporte(d.importe));
+    setVal(`${m}-impagos`, '—'); // pendiente de implementar lógica impagos próxima conv
   });
 }
 
 async function load(){
   try{
-    const keys=[INESDI_COBROS,OBS_COBROS,ESDESIGN_COBROS,UCMA_COBROS];
-    const marcas=['inesdi','obs','esdesign','ucma'];
-    const res=await Promise.all(keys.map(k=>fetch(`${WORKER_URL}/kv?key=${k}`).then(r=>r.json())));
-    res.forEach((d,i)=>{
-      if(d.value)cobrosData[marcas[i]]=JSON.parse(d.value);
+    const convs=['abril','octubre'];
+    const fetches=[];
+    MARCAS.forEach(m=>{
+      convs.forEach(c=>{
+        fetches.push({marca:m, conv:c, key:`adminhub_${m}_${c}`});
+      });
+    });
+    const results=await Promise.all(
+      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}`).then(r=>r.json()).then(d=>({...f,data:d})))
+    );
+    results.forEach(({marca,conv,data})=>{
+      if(!cobrosData[marca])cobrosData[marca]={};
+      if(data.value){
+        try{
+          // El value llega doblemente serializado: string JSON dentro de string JSON
+          const parsed=typeof data.value==='string'?JSON.parse(data.value):data.value;
+          cobrosData[marca][conv]=parsed;
+        }catch(e){
+          cobrosData[marca][conv]={};
+        }
+      }
     });
     renderCards();
   }catch(e){console.error('KV error:',e);}
