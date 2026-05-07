@@ -56,6 +56,11 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .year-select { background:rgba(0,20,40,0.8); border:1px solid rgba(168,120,240,0.35); border-radius:8px; padding:8px 14px; color:rgba(168,120,240,0.8); font-size:12px; font-family:inherit; outline:none; cursor:pointer; font-weight:600; }
 .year-select option { background:#030E1E; color:#E0F7FF; }
 
+/* ── Etiqueta cierre de mes ── */
+.cierre-label { font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(240,168,48,0.6); margin-left:8px; white-space:nowrap; }
+.cierre-editable { color:#f0a830; border-bottom:1px dashed rgba(240,168,48,0.5); padding:0 3px; outline:none; min-width:80px; display:inline-block; cursor:text; transition:border-color 0.2s; }
+.cierre-editable:focus { border-bottom-color:#f0a830; color:#ffc84a; }
+
 /* ── Stats grid ── */
 .stats-grid { position:relative; z-index:10; padding:16px 32px 60px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
 .stat-card { background:rgba(0,16,32,0.85); border-radius:13px; padding:14px 12px; display:flex; flex-direction:column; gap:0; transition:border-color 0.2s, transform 0.2s; animation:fadeUp 0.4s ease both; }
@@ -212,6 +217,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <option value="2029">2029</option>
     <option value="2030">2030</option>
   </select>
+  <span class="cierre-label">DATOS A CIERRE DE MES DE <span id="cierre-mes" class="cierre-editable" contenteditable="true" spellcheck="false" title="Haz clic para editar">ABRIL 2026</span></span>
 </div>
 
 <div class="stats-grid">
