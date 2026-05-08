@@ -86,30 +86,31 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .loading-dots span:nth-child(2){animation-delay:.2s;} .loading-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes ldot { 0%,60%,100%{transform:translateY(0);opacity:.4;} 30%{transform:translateY(-6px);opacity:1;} }
 
-/* Modal base (fechas) */
-.overlay { position:fixed; inset:0; z-index:200; background:rgba(0,5,15,0.85); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:1rem; }
+/* ── Modal fechas — estilo crema ── */
+.overlay { position:fixed; inset:0; z-index:200; background:rgba(0,5,15,0.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:1rem; }
 .overlay.open { display:flex; }
-.modal { width:min(560px,96vw); max-height:90vh; overflow-y:auto; background:#030E1E; border:1px solid rgba(0,212,240,0.3); border-radius:18px; padding:24px; box-shadow:0 0 60px rgba(0,180,255,0.12); animation:fadeUp 0.28s ease; }
-.modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid rgba(0,212,240,0.1); }
-.modal-head h2 { font-size:15px; font-weight:600; color:#E0F7FF; display:flex; align-items:center; gap:8px; }
-.modal-close { width:30px; height:30px; border-radius:8px; background:transparent; border:1px solid rgba(0,212,240,0.2); color:rgba(0,212,240,0.5); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-family:inherit; }
-.modal-close:hover { background:rgba(0,212,240,0.1); color:#00D4F0; border-color:rgba(0,212,240,0.5); }
+.modal { width:min(560px,96vw); max-height:90vh; overflow-y:auto; background:#EEE8DF; border-radius:18px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.35); animation:fadeUp 0.28s ease; border:none; }
+.modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid #d0c9be; }
+.modal-head h2 { font-size:15px; font-weight:600; color:#1a3a5c; display:flex; align-items:center; gap:8px; }
+.modal-close { width:30px; height:30px; border-radius:8px; background:transparent; border:1px solid #c5bfb5; color:#5a7a9a; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-family:inherit; }
+.modal-close:hover { background:#ddd7cd; color:#1a3a5c; border-color:#b0a99f; }
 .modal-brand-section { margin-bottom:20px; }
-.modal-brand-title { font-size:13px; font-weight:600; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(0,212,240,0.08); }
+.modal-brand-title { font-size:13px; font-weight:600; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #d0c9be; }
 .brand-card.obs .modal-brand-title     { color:#1dcc84; }
 .brand-card.inesdi .modal-brand-title  { color:#a878f0; }
 .brand-card.esdesign .modal-brand-title { color:#f0a830; }
 .brand-card.ucma .modal-brand-title    { color:#3aabf0; }
 .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
 .field { display:flex; flex-direction:column; gap:5px; }
-.field label { font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(0,200,230,0.4); }
-.field input { background:rgba(0,20,40,0.8); border:1px solid rgba(0,212,240,0.18); border-radius:8px; padding:8px 11px; color:#E0F7FF; font-size:12px; font-family:‘Courier New’,monospace; outline:none; transition:border-color 0.2s; }
-.field input:focus { border-color:rgba(0,212,240,0.5); box-shadow:0 0 0 3px rgba(0,212,240,0.07); }
-.modal-foot { display:flex; justify-content:flex-end; gap:8px; padding-top:16px; border-top:1px solid rgba(0,212,240,0.08); margin-top:8px; }
-.btn-cancel { background:transparent; border:1px solid rgba(0,212,240,0.2); border-radius:9px; padding:9px 16px; color:rgba(0,200,230,0.5); font-size:13px; cursor:pointer; font-family:inherit; transition:all 0.15s; }
-.btn-cancel:hover { background:rgba(0,212,240,0.06); color:#00D4F0; }
-.btn-save { background:rgba(0,80,130,0.4); border:1.5px solid rgba(0,212,240,0.45); border-radius:9px; padding:9px 20px; color:#00D4F0; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
-.btn-save:hover { background:rgba(0,212,240,0.12); border-color:#00D4F0; }
+.field label { font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:#4a6a8a; font-weight:600; }
+.field input { background:#fff; border:1px solid #d0c9be; border-radius:8px; padding:8px 11px; color:#1a3a5c; font-size:12px; font-family:'Courier New',monospace; outline:none; transition:border-color 0.2s; }
+.field input:focus { border-color:#8aaac5; box-shadow:0 0 0 3px rgba(100,150,190,0.1); }
+.field input::placeholder { color:#b0bec8; }
+.modal-foot { display:flex; justify-content:flex-end; gap:8px; padding-top:16px; border-top:1px solid #d0c9be; margin-top:8px; }
+.btn-cancel { background:transparent; border:1px solid #c5bfb5; border-radius:9px; padding:9px 16px; color:#5a7a9a; font-size:13px; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.btn-cancel:hover { background:#ddd7cd; color:#1a3a5c; }
+.btn-save { background:#d4cfc6; border:1px solid #c0b9af; border-radius:9px; padding:9px 20px; color:#1a3a5c; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.btn-save:hover { background:#c8c2b8; }
 
 /* ── Pop-up AITOR alerta ── */
 .aitor-alert-overlay { position:fixed; inset:0; z-index:400; background:rgba(0,5,15,0.82); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; }
@@ -120,7 +121,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .aitor-av-gradient { position:absolute; bottom:0; left:0; right:0; height:80px; background:linear-gradient(to top,#010d1a,transparent); z-index:2; pointer-events:none; }
 .aitor-av-rim { position:absolute; left:0; top:8%; bottom:8%; width:2px; background:linear-gradient(to bottom,transparent,rgba(0,230,255,0.6),transparent); z-index:3; }
 .aitor-av-scanlines { position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px); z-index:3; pointer-events:none; }
-.aitor-av-hud { position:absolute; top:10px; right:8px; background:rgba(0,5,20,0.85); border:1px solid #00D4F0; border-radius:5px; padding:2px 7px; font-family:‘Courier New’,monospace; font-size:8px; letter-spacing:2px; color:#00D4F0; z-index:4; }
+.aitor-av-hud { position:absolute; top:10px; right:8px; background:rgba(0,5,20,0.85); border:1px solid #00D4F0; border-radius:5px; padding:2px 7px; font-family:'Courier New',monospace; font-size:8px; letter-spacing:2px; color:#00D4F0; z-index:4; }
 .aitor-av-platform { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:80px; height:4px; background:linear-gradient(90deg,transparent,rgba(0,230,255,0.7),transparent); filter:blur(4px); z-index:4; }
 .aitor-chat-box { width:320px; background:#030E1E; border:1px solid rgba(0,230,255,0.3); border-radius:0 16px 16px 0; display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:2; }
 .aitor-chat-header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(0,230,255,0.1); background:rgba(0,20,40,0.5); flex-shrink:0; }
@@ -148,72 +149,75 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .aitor-dismiss-btn { width:100%; background:rgba(0,80,130,0.3); border:1.5px solid rgba(0,230,255,0.35); border-radius:9px; padding:9px; color:#00E6FF; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .aitor-dismiss-btn:hover { background:rgba(0,230,255,0.1); border-color:#00E6FF; }
 
-/* ===================== MODAL CRUCE DE DATOS ===================== */
-#cruceOverlay { position:fixed; inset:0; z-index:300; background:rgba(0,5,15,0.88); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
+/* ── Modal cruce de datos — estilo crema ── */
+#cruceOverlay { position:fixed; inset:0; z-index:300; background:rgba(0,5,15,0.75); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
 #cruceOverlay.open { display:flex; }
-.cruce-modal { width:min(680px,96vw); max-height:92vh; overflow-y:auto; background:#041C2E; border:1px solid rgba(0,212,240,0.3); border-radius:18px; box-shadow:0 0 60px rgba(0,180,255,0.15); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,‘Segoe UI’,sans-serif; }
-.cruce-header { background:#041C2E; border-bottom:1px solid rgba(0,212,240,0.15); padding:16px 22px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; border-radius:18px 18px 0 0; }
+.cruce-modal { width:min(680px,96vw); max-height:92vh; overflow-y:auto; background:#EEE8DF; border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.cruce-header { background:#E2DBD1; border-bottom:1px solid #d0c9be; padding:16px 22px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; border-radius:18px 18px 0 0; }
 .cruce-header-left { display:flex; align-items:center; gap:11px; }
 .cruce-header-icon { width:30px; height:30px; border-radius:50%; border:1.5px solid #9B59FF; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.cruce-title-main { color:#00D4F0; font-size:13px; letter-spacing:1px; text-transform:uppercase; margin:0; }
-.cruce-title-sub { color:rgba(255,255,255,0.4); font-size:10px; margin:2px 0 0; }
+.cruce-title-main { color:#1a3a5c; font-size:13px; letter-spacing:1px; text-transform:uppercase; margin:0; font-weight:600; }
+.cruce-title-sub { color:#7a9ab5; font-size:10px; margin:2px 0 0; }
 .cruce-header-right { display:flex; align-items:center; gap:12px; }
-.cruce-help-btn { background:rgba(0,212,240,0.1); border:1px solid rgba(0,212,240,0.3); border-radius:20px; padding:4px 12px; color:#00D4F0; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; }
-.cruce-help-btn:hover { background:rgba(0,212,240,0.18); }
+.cruce-help-btn { background:rgba(26,58,92,0.1); border:1px solid rgba(26,58,92,0.25); border-radius:20px; padding:4px 12px; color:#1a3a5c; font-size:11px; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; transition:background 0.15s; }
+.cruce-help-btn:hover { background:rgba(26,58,92,0.18); }
 .cruce-steps { display:flex; align-items:center; gap:5px; }
 .cruce-dot { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; transition:all 0.25s; }
-.cruce-dot.active  { background:#00D4F0; color:#020B18; }
-.cruce-dot.done    { background:rgba(0,212,240,0.2); border:1px solid rgba(0,212,240,0.5); color:#00D4F0; }
-.cruce-dot.pending { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.25); }
-.cruce-dot-line { width:16px; height:1px; background:rgba(0,212,240,0.2); }
-.cruce-close { width:22px; height:22px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:transparent; color:rgba(255,255,255,0.4); font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; }
-.cruce-close:hover { border-color:rgba(0,212,240,0.5); color:#00D4F0; }
-.cruce-help-panel { display:none; background:#020B18; border-bottom:1px solid rgba(0,212,240,0.12); padding:16px 22px; }
+.cruce-dot.active  { background:#1a3a5c; color:#fff; }
+.cruce-dot.done    { background:rgba(26,58,92,0.2); border:1px solid rgba(26,58,92,0.5); color:#1a3a5c; }
+.cruce-dot.pending { background:rgba(0,0,0,0.07); border:1px solid rgba(0,0,0,0.15); color:rgba(26,58,92,0.35); }
+.cruce-dot-line { width:16px; height:1px; background:rgba(26,58,92,0.2); }
+.cruce-close { width:22px; height:22px; border-radius:50%; border:1px solid #c5bfb5; background:transparent; color:#5a7a9a; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:all 0.15s; }
+.cruce-close:hover { border-color:#8aaac5; color:#1a3a5c; }
+.cruce-help-panel { display:none; background:#E2DBD1; border-bottom:1px solid #d0c9be; padding:16px 22px; }
 .cruce-help-panel.open { display:block; }
-.cruce-help-title { color:#00D4F0; font-size:10px; letter-spacing:1px; text-transform:uppercase; margin:0 0 12px; }
+.cruce-help-title { color:#1a3a5c; font-size:10px; letter-spacing:1px; text-transform:uppercase; margin:0 0 12px; font-weight:600; }
 .cruce-help-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.cruce-help-card { border-radius:7px; padding:9px 12px; border-left-width:2px; border-left-style:solid; }
-.cruce-help-card .chc-title { font-size:10px; font-weight:500; margin:0 0 3px; }
-.cruce-help-card .chc-body  { font-size:10px; color:rgba(255,255,255,0.4); margin:0; line-height:1.5; }
+.cruce-help-card { border-radius:7px; padding:9px 12px; border-left-width:2px; border-left-style:solid; background:rgba(255,255,255,0.5); }
+.cruce-help-card .chc-title { font-size:10px; font-weight:600; margin:0 0 3px; }
+.cruce-help-card .chc-body  { font-size:10px; color:#5a7a9a; margin:0; line-height:1.5; }
 .cruce-body { padding:22px; }
-.cruce-step-label { color:rgba(255,255,255,0.35); font-size:10px; letter-spacing:0.5px; text-transform:uppercase; margin:0 0 4px; }
-.cruce-step-title { color:#E0F7FF; font-size:15px; font-weight:500; margin:0 0 18px; }
+.cruce-step-label { color:#7a9ab5; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; margin:0 0 4px; }
+.cruce-step-title { color:#1a3a5c; font-size:15px; font-weight:600; margin:0 0 18px; }
 .cruce-modes-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
-.cruce-mode-card { background:#020B18; border-radius:12px; padding:15px; cursor:pointer; transition:opacity 0.15s, border-width 0.1s; }
+.cruce-mode-card { background:rgba(255,255,255,0.6); border-radius:12px; padding:15px; cursor:pointer; transition:opacity 0.15s, border-width 0.1s; }
 .cruce-mode-card:hover { opacity:1 !important; }
 .cruce-mode-card.selected { border-width:2px !important; opacity:1 !important; }
 .cruce-mode-card .cmc-head { display:flex; align-items:center; gap:9px; margin-bottom:9px; }
 .cruce-mode-card .cmc-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.cruce-mode-card .cmc-name { font-size:12px; font-weight:500; }
-.cruce-mode-card .cmc-desc { font-size:11px; color:rgba(255,255,255,0.45); margin:0 0 9px; line-height:1.5; }
+.cruce-mode-card .cmc-name { font-size:12px; font-weight:600; }
+.cruce-mode-card .cmc-desc { font-size:11px; color:#5a7a9a; margin:0 0 9px; line-height:1.5; }
 .cruce-mode-card .cmc-tags { display:flex; gap:5px; flex-wrap:wrap; }
 .cruce-mode-card .cmc-tag  { font-size:10px; padding:2px 7px; border-radius:20px; }
-.cruce-hint { background:#020B18; border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px 13px; display:flex; align-items:center; gap:9px; margin-top:14px; }
-.cruce-hint p { color:rgba(255,255,255,0.3); font-size:10px; margin:0; line-height:1.5; }
-.cruce-hint span { color:rgba(0,212,240,0.55); }
-.cruce-footer { display:flex; justify-content:space-between; align-items:center; padding-top:16px; margin-top:4px; border-top:1px solid rgba(255,255,255,0.06); }
-.cruce-footer-note { color:rgba(255,255,255,0.18); font-size:10px; }
-.cruce-btn-back { background:transparent; color:rgba(255,255,255,0.35); border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:8px 16px; font-size:12px; cursor:pointer; font-family:inherit; }
-.cruce-btn-back:hover { color:rgba(255,255,255,0.6); border-color:rgba(255,255,255,0.3); }
+.cruce-hint { background:rgba(255,255,255,0.5); border:1px solid #d0c9be; border-radius:8px; padding:10px 13px; display:flex; align-items:center; gap:9px; margin-top:14px; }
+.cruce-hint p { color:#7a9ab5; font-size:10px; margin:0; line-height:1.5; }
+.cruce-hint span { color:#1a3a5c; font-weight:500; }
+.cruce-footer { display:flex; justify-content:space-between; align-items:center; padding-top:16px; margin-top:4px; border-top:1px solid #d0c9be; }
+.cruce-footer-note { color:#a0b0c0; font-size:10px; }
+.cruce-btn-back { background:transparent; color:#7a9ab5; border:1px solid #c5bfb5; border-radius:8px; padding:8px 16px; font-size:12px; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.cruce-btn-back:hover { color:#1a3a5c; border-color:#8aaac5; }
 .cruce-btn-next { border:none; border-radius:8px; padding:9px 22px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s; }
-.cruce-btn-next.disabled { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.2); cursor:not-allowed; }
-.cruce-btn-next.enabled  { background:#00D4F0; color:#020B18; }
-.cruce-btn-exec { background:#00C853; color:#020B18; border:none; border-radius:8px; padding:9px 22px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:8px; }
+.cruce-btn-next.disabled { background:rgba(0,0,0,0.08); color:rgba(26,58,92,0.3); cursor:not-allowed; }
+.cruce-btn-next.enabled  { background:#1a3a5c; color:#fff; }
+.cruce-btn-next.enabled:hover { background:#0f2440; }
+.cruce-btn-exec { background:#00C853; color:#020B18; border:none; border-radius:8px; padding:9px 22px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:8px; transition:background 0.15s; }
 .cruce-btn-exec:hover { background:#00e85e; }
 .cruce-files-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-.cruce-file-zone { border-radius:12px; padding:26px 16px; text-align:center; cursor:pointer; background:#020B18; border-style:dashed; border-width:1.5px; transition:border-color 0.2s; }
+.cruce-file-zone { border-radius:12px; padding:26px 16px; text-align:center; cursor:pointer; background:rgba(255,255,255,0.6); border-style:dashed; border-width:1.5px; transition:border-color 0.2s; }
 .cruce-file-zone.loaded { border-style:solid; }
-.cruce-file-label-top { font-size:10px; letter-spacing:0.5px; text-transform:uppercase; margin:0 0 8px; }
+.cruce-file-label-top { font-size:10px; letter-spacing:0.5px; text-transform:uppercase; margin:0 0 8px; font-weight:600; }
 .cruce-file-name { font-size:11px; margin:0; }
-.cruce-config-label { font-size:11px; margin:0 0 8px; }
-.cruce-select { width:100%; background:#020B18; border:1px solid rgba(0,212,240,0.3); border-radius:8px; padding:9px 12px; color:#E0F7FF; font-size:12px; outline:none; margin-bottom:16px; font-family:inherit; }
+.cruce-config-label { font-size:11px; margin:0 0 8px; font-weight:500; color:#1a3a5c; }
+.cruce-select { width:100%; background:#fff; border:1px solid #d0c9be; border-radius:8px; padding:9px 12px; color:#1a3a5c; font-size:12px; outline:none; margin-bottom:16px; font-family:inherit; transition:border-color 0.2s; }
+.cruce-select:focus { border-color:#8aaac5; }
 .cruce-cols-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:16px; }
-.cruce-col-check { display:flex; align-items:center; gap:7px; background:#020B18; border:1px solid rgba(155,89,255,0.2); border-radius:8px; padding:8px 10px; cursor:pointer; }
-.cruce-col-check span { color:rgba(255,255,255,0.75); font-size:11px; }
+.cruce-col-check { display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.7); border:1px solid rgba(155,89,255,0.25); border-radius:8px; padding:8px 10px; cursor:pointer; transition:background 0.15s; }
+.cruce-col-check:hover { background:#fff; }
+.cruce-col-check span { color:#1a3a5c; font-size:11px; }
 .cruce-col-check input { accent-color:#9B59FF; cursor:pointer; }
-.cruce-ready-box { background:rgba(0,200,83,0.07); border:1px solid rgba(0,200,83,0.2); border-radius:10px; padding:11px 14px; display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-.cruce-ready-box p { color:rgba(0,200,83,0.6); font-size:10px; margin:0; }
-.cruce-ready-box strong { color:#00C853; font-weight:500; }
+.cruce-ready-box { background:rgba(0,200,83,0.08); border:1px solid rgba(0,200,83,0.25); border-radius:10px; padding:11px 14px; display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.cruce-ready-box p { color:#2a7a4a; font-size:10px; margin:0; }
+.cruce-ready-box strong { color:#00903a; font-weight:600; }
 
 @media(max-width:700px){
 .topbar,.page-head,.section-header,.brands-grid { padding-left:16px; padding-right:16px; }
@@ -332,8 +336,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- Pop-up alerta AITOR -->
-
+<!-- Pop-up alerta AITOR — sin cambios, mantiene estilo dark propio -->
 <div class="aitor-alert-overlay" id="aitorAlertOverlay">
   <div class="aitor-alert-popup">
     <div class="aitor-av-panel">
@@ -375,12 +378,11 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 </div>
 
 <!-- Modal fechas -->
-
 <div class="overlay" id="editOverlay">
   <div class="modal">
     <div class="modal-head">
       <h2>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
         Editar fechas clave
       </h2>
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -394,7 +396,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 </div>
 
 <!-- Modal cruce de datos -->
-
 <div id="cruceOverlay" onclick="cruceOverlayClick(event)">
   <div class="cruce-modal">
     <div class="cruce-header">
@@ -409,7 +410,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
       <div class="cruce-header-right">
         <button class="cruce-help-btn" onclick="toggleCruceHelp()">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#00D4F0" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           ¿Cómo funciona?
         </button>
         <div class="cruce-steps">
@@ -423,136 +424,135 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
     </div>
 
-  
-<div class="cruce-help-panel" id="cruceHelpPanel">
-  <p class="cruce-help-title">Guía rápida · Cómo usar esta herramienta</p>
-  <div class="cruce-help-grid" style="margin-bottom:18px;">
-    <div class="cruce-help-card" style="background:rgba(0,212,240,0.05);border-left-color:rgba(0,212,240,0.4);"><p class="chc-title" style="color:#00D4F0;">① Tipo de análisis</p><p class="chc-body">Elige qué quieres analizar. Con "Análisis completo" lo haces todo a la vez.</p></div>
-    <div class="cruce-help-card" style="background:rgba(155,89,255,0.05);border-left-color:rgba(155,89,255,0.4);"><p class="chc-title" style="color:#9B59FF;">② Cargar ficheros</p><p class="chc-body">Sube tu listado (A) y el listado general (B). Solo .xlsx. Nada sale de tu equipo.</p></div>
-    <div class="cruce-help-card" style="background:rgba(255,215,0,0.05);border-left-color:rgba(255,215,0,0.4);"><p class="chc-title" style="color:#FFD700;">③ Configurar cruce</p><p class="chc-body">Elige la columna clave (NIF, email…) y qué campos comparar.</p></div>
-    <div class="cruce-help-card" style="background:rgba(0,200,83,0.05);border-left-color:rgba(0,200,83,0.4);"><p class="chc-title" style="color:#00C853;">④ Ejecutar y descargar</p><p class="chc-body">Se genera automáticamente <strong style="color:#00C853;font-weight:500;">CHECK_Resultado_fecha.xlsx</strong> con todas las pestañas de resultado.</p></div>
-  </div>
-  <p class="cruce-help-title" style="margin-bottom:10px;">Así se ve el fichero descargado</p>
-  <div style="background:#1E1E1E;border-radius:9px;overflow:hidden;border:1px solid #333;font-family:'Courier New',monospace;">
-    <div style="background:#2D2D2D;padding:7px 11px;display:flex;align-items:center;gap:7px;border-bottom:1px solid #444;">
-      <div style="width:10px;height:10px;border-radius:50%;background:#FF5F57;"></div>
-      <div style="width:10px;height:10px;border-radius:50%;background:#FFBD2E;"></div>
-      <div style="width:10px;height:10px;border-radius:50%;background:#28C840;"></div>
-      <span style="color:#aaa;font-size:10px;margin-left:6px;">CHECK_Resultado_20250415.xlsx</span>
+    <div class="cruce-help-panel" id="cruceHelpPanel">
+      <p class="cruce-help-title">Guía rápida · Cómo usar esta herramienta</p>
+      <div class="cruce-help-grid" style="margin-bottom:18px;">
+        <div class="cruce-help-card" style="border-left-color:rgba(0,212,240,0.6);"><p class="chc-title" style="color:#1a6a7a;">① Tipo de análisis</p><p class="chc-body">Elige qué quieres analizar. Con "Análisis completo" lo haces todo a la vez.</p></div>
+        <div class="cruce-help-card" style="border-left-color:rgba(155,89,255,0.6);"><p class="chc-title" style="color:#5a3a9a;">② Cargar ficheros</p><p class="chc-body">Sube tu listado (A) y el listado general (B). Solo .xlsx. Nada sale de tu equipo.</p></div>
+        <div class="cruce-help-card" style="border-left-color:rgba(180,140,0,0.6);"><p class="chc-title" style="color:#7a5a00;">③ Configurar cruce</p><p class="chc-body">Elige la columna clave (NIF, email…) y qué campos comparar.</p></div>
+        <div class="cruce-help-card" style="border-left-color:rgba(0,150,60,0.6);"><p class="chc-title" style="color:#006030;">④ Ejecutar y descargar</p><p class="chc-body">Se genera automáticamente <strong style="color:#006030;font-weight:500;">CHECK_Resultado_fecha.xlsx</strong> con todas las pestañas de resultado.</p></div>
+      </div>
+      <p class="cruce-help-title" style="margin-bottom:10px;">Así se ve el fichero descargado</p>
+      <div style="background:#1E1E1E;border-radius:9px;overflow:hidden;border:1px solid #333;font-family:'Courier New',monospace;">
+        <div style="background:#2D2D2D;padding:7px 11px;display:flex;align-items:center;gap:7px;border-bottom:1px solid #444;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#FF5F57;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#FFBD2E;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#28C840;"></div>
+          <span style="color:#aaa;font-size:10px;margin-left:6px;">CHECK_Resultado_20250415.xlsx</span>
+        </div>
+        <div style="display:flex;gap:0;border-bottom:1px solid #444;padding:0 7px;background:#252526;overflow-x:auto;">
+          <div style="background:#1a3a1a;border-top:2px solid #00C853;padding:5px 11px;font-size:10px;color:#00C853;white-space:nowrap;">RESUMEN</div>
+          <div style="background:#1a1a2a;border-top:2px solid #2979FF;padding:5px 11px;font-size:10px;color:#2979FF;white-space:nowrap;">Solo en A</div>
+          <div style="background:#2a1a1a;border-top:2px solid #FF5252;padding:5px 11px;font-size:10px;color:#FF5252;white-space:nowrap;">Solo en B</div>
+          <div style="background:#2a2218;border-top:2px solid #FFD600;padding:5px 11px;font-size:10px;color:#FFD600;white-space:nowrap;">Discrepancias</div>
+          <div style="background:#2a2a2a;border-top:2px solid #888;padding:5px 11px;font-size:10px;color:#888;white-space:nowrap;">Coincidencias ✓</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:10px;">
+            <thead><tr style="background:#2a2a2a;"><th style="padding:6px 10px;text-align:left;color:#666;font-weight:400;border-bottom:1px solid #444;width:28px;">#</th><th style="padding:6px 10px;text-align:left;color:#999;font-weight:400;border-bottom:1px solid #444;">Concepto</th><th style="padding:6px 10px;text-align:right;color:#999;font-weight:400;border-bottom:1px solid #444;">Registros</th><th style="padding:6px 10px;text-align:right;color:#999;font-weight:400;border-bottom:1px solid #444;">% sobre A</th></tr></thead>
+            <tbody>
+              <tr style="background:#252526;"><td style="padding:5px 10px;color:#555;border-bottom:1px solid #2a2a2a;">1</td><td style="padding:5px 10px;color:#ddd;border-bottom:1px solid #2a2a2a;">Total fichero A</td><td style="padding:5px 10px;text-align:right;color:#ddd;border-bottom:1px solid #2a2a2a;">247</td><td style="padding:5px 10px;text-align:right;color:#666;border-bottom:1px solid #2a2a2a;">—</td></tr>
+              <tr style="background:#1a2a1a;"><td style="padding:5px 10px;color:#555;border-bottom:1px solid #2a2a2a;">3</td><td style="padding:5px 10px;border-bottom:1px solid #2a2a2a;"><span style="color:#00C853;">●</span> <span style="color:#ddd;">Coincidencias exactas</span></td><td style="padding:5px 10px;text-align:right;color:#00C853;font-weight:600;border-bottom:1px solid #2a2a2a;">198</td><td style="padding:5px 10px;text-align:right;color:#00C853;border-bottom:1px solid #2a2a2a;">80,2%</td></tr>
+              <tr style="background:#2a2218;"><td style="padding:5px 10px;color:#555;border-bottom:1px solid #2a2a2a;">6</td><td style="padding:5px 10px;border-bottom:1px solid #2a2a2a;"><span style="color:#FFD600;">●</span> <span style="color:#ddd;">Con discrepancias</span></td><td style="padding:5px 10px;text-align:right;color:#FFD600;font-weight:600;border-bottom:1px solid #2a2a2a;">26</td><td style="padding:5px 10px;text-align:right;color:#FFD600;border-bottom:1px solid #2a2a2a;">10,5%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div style="display:flex;gap:0;border-bottom:1px solid #444;padding:0 7px;background:#252526;overflow-x:auto;">
-      <div style="background:#1a3a1a;border-top:2px solid #00C853;padding:5px 11px;font-size:10px;color:#00C853;white-space:nowrap;">RESUMEN</div>
-      <div style="background:#1a1a2a;border-top:2px solid #2979FF;padding:5px 11px;font-size:10px;color:#2979FF;white-space:nowrap;">Solo en A</div>
-      <div style="background:#2a1a1a;border-top:2px solid #FF5252;padding:5px 11px;font-size:10px;color:#FF5252;white-space:nowrap;">Solo en B</div>
-      <div style="background:#2a2218;border-top:2px solid #FFD600;padding:5px 11px;font-size:10px;color:#FFD600;white-space:nowrap;">Discrepancias</div>
-      <div style="background:#2a2a2a;border-top:2px solid #888;padding:5px 11px;font-size:10px;color:#888;white-space:nowrap;">Coincidencias ✓</div>
-    </div>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:10px;">
-        <thead><tr style="background:#2a2a2a;"><th style="padding:6px 10px;text-align:left;color:#666;font-weight:400;border-bottom:1px solid #444;width:28px;">#</th><th style="padding:6px 10px;text-align:left;color:#999;font-weight:400;border-bottom:1px solid #444;">Concepto</th><th style="padding:6px 10px;text-align:right;color:#999;font-weight:400;border-bottom:1px solid #444;">Registros</th><th style="padding:6px 10px;text-align:right;color:#999;font-weight:400;border-bottom:1px solid #444;">% sobre A</th></tr></thead>
-        <tbody>
-          <tr style="background:#252526;"><td style="padding:5px 10px;color:#555;border-bottom:1px solid #2a2a2a;">1</td><td style="padding:5px 10px;color:#ddd;border-bottom:1px solid #2a2a2a;">Total fichero A</td><td style="padding:5px 10px;text-align:right;color:#ddd;border-bottom:1px solid #2a2a2a;">247</td><td style="padding:5px 10px;text-align:right;color:#666;border-bottom:1px solid #2a2a2a;">—</td></tr>
-          <tr style="background:#1a2a1a;"><td style="padding:5px 10px;color:#555;border-bottom:1px solid #2a2a2a;">3</td><td style="padding:5px 10px;border-bottom:1px solid #2a2a2a;"><span style="color:#00C853;">●</span> <span style="color:#ddd;">Coincidencias exactas</span></td><td style="padding:5px 10px;text-align:right;color:#00C853;font-weight:600;border-bottom:1px solid #2a2a2a;">198</td><td style="padding:5px 10px;text-align:right;color:#00C853;border-bottom:1px solid #2a2a2a;">80,2%</td></tr>
-          <tr style="background:#2a2218;"><td style="padding:5px 10px;color:#555;border-bottom:1px solid #2a2a2a;">6</td><td style="padding:5px 10px;border-bottom:1px solid #2a2a2a;"><span style="color:#FFD600;">●</span> <span style="color:#ddd;">Con discrepancias</span></td><td style="padding:5px 10px;text-align:right;color:#FFD600;font-weight:600;border-bottom:1px solid #2a2a2a;">26</td><td style="padding:5px 10px;text-align:right;color:#FFD600;border-bottom:1px solid #2a2a2a;">10,5%</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
 
-<div id="cruceStep1" class="cruce-body">
-  <p class="cruce-step-label">Paso 1 de 3</p>
-  <p class="cruce-step-title">Selecciona el tipo de análisis</p>
-  <div class="cruce-modes-grid">
-    <div class="cruce-mode-card" id="mode-registros" data-mode="registros" style="border:1.5px solid rgba(0,212,240,0.3);" onclick="selectCruceMode('registros')">
-      <div class="cmc-head"><div class="cmc-icon" style="background:rgba(0,212,240,0.1);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00D4F0" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><span class="cmc-name" style="color:#00D4F0;">Comparar registros (Ctrl+H)</span></div>
-      <p class="cmc-desc">¿Está mi alumno en el listado general? Identifica quién falta en cada fichero.</p>
-      <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(0,212,240,0.1);color:#00D4F0;">Solo en A</span><span class="cmc-tag" style="background:rgba(0,212,240,0.1);color:#00D4F0;">Solo en B</span><span class="cmc-tag" style="background:rgba(0,212,240,0.1);color:#00D4F0;">En ambos</span></div>
+    <div id="cruceStep1" class="cruce-body">
+      <p class="cruce-step-label">Paso 1 de 3</p>
+      <p class="cruce-step-title">Selecciona el tipo de análisis</p>
+      <div class="cruce-modes-grid">
+        <div class="cruce-mode-card" id="mode-registros" data-mode="registros" style="border:1.5px solid rgba(0,212,240,0.4);" onclick="selectCruceMode('registros')">
+          <div class="cmc-head"><div class="cmc-icon" style="background:rgba(0,212,240,0.12);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#007a8a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><span class="cmc-name" style="color:#007a8a;">Comparar registros (Ctrl+H)</span></div>
+          <p class="cmc-desc">¿Está mi alumno en el listado general? Identifica quién falta en cada fichero.</p>
+          <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(0,212,240,0.12);color:#007a8a;">Solo en A</span><span class="cmc-tag" style="background:rgba(0,212,240,0.12);color:#007a8a;">Solo en B</span><span class="cmc-tag" style="background:rgba(0,212,240,0.12);color:#007a8a;">En ambos</span></div>
+        </div>
+        <div class="cruce-mode-card" id="mode-datos" data-mode="datos" style="border:1.5px solid rgba(155,89,255,0.4);" onclick="selectCruceMode('datos')">
+          <div class="cmc-head"><div class="cmc-icon" style="background:rgba(155,89,255,0.12);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6a3aaa" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 2 2L11 14l-3 1 1-3 9.5-9.5z"/></svg></div><span class="cmc-name" style="color:#6a3aaa;">Comparar datos (Ctrl+V)</span></div>
+          <p class="cmc-desc">El alumno está en ambos ficheros pero ¿coinciden los datos? Detecta discrepancias campo a campo.</p>
+          <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(155,89,255,0.12);color:#6a3aaa;">Coincide</span><span class="cmc-tag" style="background:rgba(200,100,50,0.15);color:#a05030;">Discrepancia</span></div>
+        </div>
+        <div class="cruce-mode-card" id="mode-duplic" data-mode="duplic" style="border:1.5px solid rgba(180,140,0,0.4);" onclick="selectCruceMode('duplic')">
+          <div class="cmc-head"><div class="cmc-icon" style="background:rgba(180,140,0,0.1);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7a6000" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="cmc-name" style="color:#7a6000;">Duplicados</span></div>
+          <p class="cmc-desc">¿Hay alumnos repetidos dentro de un mismo listado o entre los dos ficheros?</p>
+          <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(180,140,0,0.12);color:#7a6000;">Internos</span><span class="cmc-tag" style="background:rgba(180,140,0,0.12);color:#7a6000;">Entre ficheros</span></div>
+        </div>
+        <div class="cruce-mode-card" id="mode-completo" data-mode="completo" style="border:1.5px solid rgba(0,150,60,0.4);" onclick="selectCruceMode('completo')">
+          <div class="cmc-head"><div class="cmc-icon" style="background:rgba(0,150,60,0.1);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#006030" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><span class="cmc-name" style="color:#006030;">Análisis completo</span></div>
+          <p class="cmc-desc">Todo a la vez: presencia, discrepancias y duplicados. Informe con todas las pestañas.</p>
+          <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(0,150,60,0.12);color:#006030;">Informe completo</span><span class="cmc-tag" style="background:rgba(0,150,60,0.12);color:#006030;">Exportar Excel</span></div>
+        </div>
+      </div>
+      <div class="cruce-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a9ab5" stroke-width="1.5" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>Tras elegir el tipo, subirás los dos .xlsx · elegirás la <span>columna clave</span> · y seleccionarás qué columnas comparar</p>
+      </div>
+      <div class="cruce-footer">
+        <span class="cruce-footer-note">Todo se procesa en el navegador · sin subir datos a ningún servidor</span>
+        <button class="cruce-btn-next disabled" id="btnNext1" onclick="if(cruceState.mode) goCruceStep(2)">CONTINUAR →</button>
+      </div>
     </div>
-    <div class="cruce-mode-card" id="mode-datos" data-mode="datos" style="border:1.5px solid rgba(155,89,255,0.3);" onclick="selectCruceMode('datos')">
-      <div class="cmc-head"><div class="cmc-icon" style="background:rgba(155,89,255,0.1);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9B59FF" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 2 2L11 14l-3 1 1-3 9.5-9.5z"/></svg></div><span class="cmc-name" style="color:#9B59FF;">Comparar datos (Ctrl+V)</span></div>
-      <p class="cmc-desc">El alumno está en ambos ficheros pero ¿coinciden los datos? Detecta discrepancias campo a campo.</p>
-      <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(155,89,255,0.1);color:#9B59FF;">Coincide</span><span class="cmc-tag" style="background:rgba(255,107,53,0.15);color:#FF9B75;">Discrepancia</span></div>
-    </div>
-    <div class="cruce-mode-card" id="mode-duplic" data-mode="duplic" style="border:1.5px solid rgba(255,215,0,0.3);" onclick="selectCruceMode('duplic')">
-      <div class="cmc-head"><div class="cmc-icon" style="background:rgba(255,215,0,0.1);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><span class="cmc-name" style="color:#FFD700;">Duplicados</span></div>
-      <p class="cmc-desc">¿Hay alumnos repetidos dentro de un mismo listado o entre los dos ficheros?</p>
-      <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(255,215,0,0.1);color:#FFD700;">Internos</span><span class="cmc-tag" style="background:rgba(255,215,0,0.1);color:#FFD700;">Entre ficheros</span></div>
-    </div>
-    <div class="cruce-mode-card" id="mode-completo" data-mode="completo" style="border:1.5px solid rgba(0,200,83,0.3);" onclick="selectCruceMode('completo')">
-      <div class="cmc-head"><div class="cmc-icon" style="background:rgba(0,200,83,0.1);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00C853" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><span class="cmc-name" style="color:#00C853;">Análisis completo</span></div>
-      <p class="cmc-desc">Todo a la vez: presencia, discrepancias y duplicados. Informe con todas las pestañas.</p>
-      <div class="cmc-tags"><span class="cmc-tag" style="background:rgba(0,200,83,0.1);color:#00C853;">Informe completo</span><span class="cmc-tag" style="background:rgba(0,200,83,0.1);color:#00C853;">Exportar Excel</span></div>
-    </div>
-  </div>
-  <div class="cruce-hint">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(0,212,240,0.35)" stroke-width="1.5" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    <p>Tras elegir el tipo, subirás los dos .xlsx · elegirás la <span>columna clave</span> · y seleccionarás qué columnas comparar</p>
-  </div>
-  <div class="cruce-footer">
-    <span class="cruce-footer-note">Todo se procesa en el navegador · sin subir datos a ningún servidor</span>
-    <button class="cruce-btn-next disabled" id="btnNext1" onclick="if(cruceState.mode) goCruceStep(2)">CONTINUAR →</button>
-  </div>
-</div>
 
-<div id="cruceStep2" class="cruce-body" style="display:none;">
-  <p class="cruce-step-label">Paso 2 de 3</p>
-  <p class="cruce-step-title">Sube los dos ficheros Excel</p>
-  <div class="cruce-files-grid">
-    <div>
-      <p class="cruce-file-label-top" style="color:#4F8EF7;">FICHERO A · Tu listado</p>
-      <div class="cruce-file-zone" id="zoneA" style="border-color:rgba(79,142,247,0.4);" onclick="document.getElementById('cruceFileA').click()" onmouseover="this.style.borderColor='rgba(79,142,247,0.8)'" onmouseout="this.style.borderColor=cruceState.fileA?'#4F8EF7':'rgba(79,142,247,0.4)'">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(79,142,247,0.5)" stroke-width="1.5" style="display:block;margin:0 auto 10px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <p class="cruce-file-name" id="labelA" style="color:rgba(79,142,247,0.6);">Clic para subir .xlsx</p>
-        <input type="file" id="cruceFileA" accept=".xlsx" style="display:none" onchange="loadCruceFile('A',this)">
+    <div id="cruceStep2" class="cruce-body" style="display:none;">
+      <p class="cruce-step-label">Paso 2 de 3</p>
+      <p class="cruce-step-title">Sube los dos ficheros Excel</p>
+      <div class="cruce-files-grid">
+        <div>
+          <p class="cruce-file-label-top" style="color:#2a5aaa;">FICHERO A · Tu listado</p>
+          <div class="cruce-file-zone" id="zoneA" style="border-color:rgba(42,90,170,0.4);" onclick="document.getElementById('cruceFileA').click()" onmouseover="this.style.borderColor='rgba(42,90,170,0.8)'" onmouseout="this.style.borderColor=cruceState.fileA?'#2a5aaa':'rgba(42,90,170,0.4)'">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(42,90,170,0.5)" stroke-width="1.5" style="display:block;margin:0 auto 10px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <p class="cruce-file-name" id="labelA" style="color:rgba(42,90,170,0.7);">Clic para subir .xlsx</p>
+            <input type="file" id="cruceFileA" accept=".xlsx" style="display:none" onchange="loadCruceFile('A',this)">
+          </div>
+          <div id="sheetSelectorA" style="display:none;margin-top:8px;">
+            <p style="color:rgba(42,90,170,0.8);font-size:10px;margin:0 0 5px;letter-spacing:0.4px;font-weight:600;">PESTAÑA A USAR</p>
+            <select class="cruce-select" style="margin-bottom:0;" onchange="onSheetChange('A',this)"></select>
+          </div>
+        </div>
+        <div>
+          <p class="cruce-file-label-top" style="color:#aa2a2a;">FICHERO B · Listado general</p>
+          <div class="cruce-file-zone" id="zoneB" style="border-color:rgba(170,42,42,0.4);" onclick="document.getElementById('cruceFileB').click()" onmouseover="this.style.borderColor='rgba(170,42,42,0.8)'" onmouseout="this.style.borderColor=cruceState.fileB?'#aa2a2a':'rgba(170,42,42,0.4)'">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(170,42,42,0.5)" stroke-width="1.5" style="display:block;margin:0 auto 10px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <p class="cruce-file-name" id="labelB" style="color:rgba(170,42,42,0.7);">Clic para subir .xlsx</p>
+            <input type="file" id="cruceFileB" accept=".xlsx" style="display:none" onchange="loadCruceFile('B',this)">
+          </div>
+          <div id="sheetSelectorB" style="display:none;margin-top:8px;">
+            <p style="color:rgba(170,42,42,0.8);font-size:10px;margin:0 0 5px;letter-spacing:0.4px;font-weight:600;">PESTAÑA A USAR</p>
+            <select class="cruce-select" style="margin-bottom:0;" onchange="onSheetChange('B',this)"></select>
+          </div>
+        </div>
       </div>
-      <div id="sheetSelectorA" style="display:none;margin-top:8px;">
-        <p style="color:rgba(79,142,247,0.7);font-size:10px;margin:0 0 5px;letter-spacing:0.4px;">PESTAÑA A USAR</p>
-        <select class="cruce-select" style="margin-bottom:0;" onchange="onSheetChange('A',this)"></select>
+      <div class="cruce-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a9ab5" stroke-width="1.5" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+        <p>Los ficheros se leen directamente en tu navegador. No se envían a ningún servidor.</p>
+      </div>
+      <div class="cruce-footer">
+        <button class="cruce-btn-back" onclick="goCruceStep(1)">← Volver</button>
+        <button class="cruce-btn-next disabled" id="btnNext2" onclick="if(cruceState.fileA&&cruceState.fileB) goCruceStep(3)">CONTINUAR →</button>
       </div>
     </div>
-    <div>
-      <p class="cruce-file-label-top" style="color:#FF5252;">FICHERO B · Listado general</p>
-      <div class="cruce-file-zone" id="zoneB" style="border-color:rgba(255,82,82,0.4);" onclick="document.getElementById('cruceFileB').click()" onmouseover="this.style.borderColor='rgba(255,82,82,0.8)'" onmouseout="this.style.borderColor=cruceState.fileB?'#FF5252':'rgba(255,82,82,0.4)'">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,82,82,0.5)" stroke-width="1.5" style="display:block;margin:0 auto 10px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <p class="cruce-file-name" id="labelB" style="color:rgba(255,82,82,0.6);">Clic para subir .xlsx</p>
-        <input type="file" id="cruceFileB" accept=".xlsx" style="display:none" onchange="loadCruceFile('B',this)">
-      </div>
-      <div id="sheetSelectorB" style="display:none;margin-top:8px;">
-        <p style="color:rgba(255,82,82,0.7);font-size:10px;margin:0 0 5px;letter-spacing:0.4px;">PESTAÑA A USAR</p>
-        <select class="cruce-select" style="margin-bottom:0;" onchange="onSheetChange('B',this)"></select>
-      </div>
-    </div>
-  </div>
-  <div class="cruce-hint">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(0,212,240,0.35)" stroke-width="1.5" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-    <p>Los ficheros se leen directamente en tu navegador. No se envían a ningún servidor.</p>
-  </div>
-  <div class="cruce-footer">
-    <button class="cruce-btn-back" onclick="goCruceStep(1)">← Volver</button>
-    <button class="cruce-btn-next disabled" id="btnNext2" onclick="if(cruceState.fileA&&cruceState.fileB) goCruceStep(3)">CONTINUAR →</button>
-  </div>
-</div>
 
-<div id="cruceStep3" class="cruce-body" style="display:none;">
-  <p class="cruce-step-label">Paso 3 de 3</p>
-  <p class="cruce-step-title">Configura el cruce</p>
-  <p class="cruce-config-label" style="color:#00D4F0;">COLUMNA CLAVE <span style="color:rgba(255,255,255,0.3);font-weight:400;">· identifica cada registro en ambos ficheros</span></p>
-  <select class="cruce-select" id="cruceKeyCol"><option value="">— Selecciona columna clave —</option></select>
-  <p class="cruce-config-label" style="color:#9B59FF;">COLUMNAS A COMPARAR <span style="color:rgba(255,255,255,0.3);font-weight:400;">· marca las que quieres cruzar</span></p>
-  <div class="cruce-cols-grid" id="cruceCols"></div>
-  <div class="cruce-ready-box">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C853" stroke-width="2" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
-    <p>Se generará <strong id="cruceFileName">CHECK_Resultado_hoy.xlsx</strong> con pestañas: Resumen · Solo en A · Solo en B · Discrepancias · Coincidencias</p>
-  </div>
-  <div class="cruce-footer">
-    <button class="cruce-btn-back" onclick="goCruceStep(2)">← Volver</button>
-    <button class="cruce-btn-exec" onclick="ejecutarCruce()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#020B18" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      EJECUTAR Y DESCARGAR
-    </button>
-  </div>
-</div>
+    <div id="cruceStep3" class="cruce-body" style="display:none;">
+      <p class="cruce-step-label">Paso 3 de 3</p>
+      <p class="cruce-step-title">Configura el cruce</p>
+      <p class="cruce-config-label">COLUMNA CLAVE <span style="color:#7a9ab5;font-weight:400;">· identifica cada registro en ambos ficheros</span></p>
+      <select class="cruce-select" id="cruceKeyCol"><option value="">— Selecciona columna clave —</option></select>
+      <p class="cruce-config-label" style="color:#6a3aaa;">COLUMNAS A COMPARAR <span style="color:#7a9ab5;font-weight:400;">· marca las que quieres cruzar</span></p>
+      <div class="cruce-cols-grid" id="cruceCols"></div>
+      <div class="cruce-ready-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C853" stroke-width="2" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
+        <p>Se generará <strong id="cruceFileName">CHECK_Resultado_hoy.xlsx</strong> con pestañas: Resumen · Solo en A · Solo en B · Discrepancias · Coincidencias</p>
+      </div>
+      <div class="cruce-footer">
+        <button class="cruce-btn-back" onclick="goCruceStep(2)">← Volver</button>
+        <button class="cruce-btn-exec" onclick="ejecutarCruce()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#020B18" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          EJECUTAR Y DESCARGAR
+        </button>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -574,7 +574,6 @@ function setActive(el) {
   el.classList.add('active');
 }
 
-// ===== MODAL CRUCE =====
 const cruceState = { mode:null, fileA:null, fileB:null, dataA:null, dataB:null, colsA:[], colsB:[], wbA:null, wbB:null };
 const stepLabels = ['Paso 1 de 3 · Tipo de análisis','Paso 2 de 3 · Cargar ficheros','Paso 3 de 3 · Configurar cruce'];
 
@@ -602,12 +601,12 @@ function goCruceStep(n) {
 
 function selectCruceMode(mode) {
   cruceState.mode = mode;
-  const colors = { registros:'rgba(0,212,240,0.3)', datos:'rgba(155,89,255,0.3)', duplic:'rgba(255,215,0,0.3)', completo:'rgba(0,200,83,0.3)' };
-  const colorsSelected = { registros:'#00D4F0', datos:'#9B59FF', duplic:'#FFD700', completo:'#00C853' };
+  const colors = { registros:'rgba(0,212,240,0.3)', datos:'rgba(155,89,255,0.3)', duplic:'rgba(180,140,0,0.3)', completo:'rgba(0,150,60,0.3)' };
+  const colorsSelected = { registros:'#007a8a', datos:'#6a3aaa', duplic:'#7a6000', completo:'#006030' };
   ['registros','datos','duplic','completo'].forEach(m => {
     const card = document.getElementById('mode-'+m);
     if(m===mode) { card.style.borderColor=colorsSelected[m]; card.style.borderWidth='2px'; card.style.opacity='1'; }
-    else { card.style.borderColor=colors[m]; card.style.borderWidth='1.5px'; card.style.opacity='0.45'; }
+    else { card.style.borderColor=colors[m]; card.style.borderWidth='1.5px'; card.style.opacity='0.5'; }
   });
   document.getElementById('btnNext1').className='cruce-btn-next enabled';
 }
@@ -639,7 +638,7 @@ function aplicarHoja(which, wb, sheetName, file) {
   const fileRef = file||(which==='A'?cruceState.fileA:cruceState.fileB);
   if(which==='A') { cruceState.fileA=fileRef; cruceState.dataA=data; cruceState.colsA=cols; }
   else            { cruceState.fileB=fileRef; cruceState.dataB=data; cruceState.colsB=cols; }
-  const color = which==='A'?'#4F8EF7':'#FF5252';
+  const color = which==='A'?'#2a5aaa':'#aa2a2a';
   document.getElementById('label'+which).textContent='✓ '+fileRef.name+' · '+sheetName+' ('+data.length+' filas)';
   document.getElementById('label'+which).style.color=color;
   const zone=document.getElementById('zone'+which);
@@ -732,7 +731,6 @@ function ejecutarCruce() {
   closeCruceModal();
 }
 
-// ===== FECHAS + ALERTA AITOR =====
 const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 const STORE_KEY='adminhub_convo27_fechas';
 const BRANDS=[{id:'obs',name:'OBS',color:'#1dcc84'},{id:'inesdi',name:'INESDI',color:'#a878f0'},{id:'esdesign',name:'ESDesign',color:'#f0a830'},{id:'ucma',name:'UCMA',color:'#3aabf0'}];
