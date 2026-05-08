@@ -116,38 +116,38 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .aitor-alert-overlay { position:fixed; inset:0; z-index:400; background:rgba(0,5,15,0.82); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; }
 .aitor-alert-overlay.open { display:flex; }
 .aitor-alert-popup { display:flex; align-items:flex-end; position:relative; animation:fadeUp 0.35s cubic-bezier(0.34,1.2,0.64,1); }
-.aitor-av-panel { width:250px; height:480px; position:relative; z-index:1; flex-shrink:0; border:1px solid rgba(0,230,255,0.3); border-right:none; border-radius:16px 0 0 16px; overflow:hidden; background:#010d1a; }
-.aitor-av-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top center; mix-blend-mode:normal; filter:drop-shadow(0 0 10px rgba(0,200,255,0.3)) brightness(1.0) contrast(1.0); }
-.aitor-av-gradient { position:absolute; bottom:0; left:0; right:0; height:80px; background:linear-gradient(to top,#010d1a,transparent); z-index:2; pointer-events:none; }
-.aitor-av-rim { position:absolute; left:0; top:8%; bottom:8%; width:2px; background:linear-gradient(to bottom,transparent,rgba(0,230,255,0.6),transparent); z-index:3; }
-.aitor-av-scanlines { position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px); z-index:3; pointer-events:none; }
-.aitor-av-hud { position:absolute; top:10px; right:8px; background:rgba(0,5,20,0.85); border:1px solid #00D4F0; border-radius:5px; padding:2px 7px; font-family:'Courier New',monospace; font-size:8px; letter-spacing:2px; color:#00D4F0; z-index:4; }
+.aitor-av-panel { width:250px; height:480px; position:relative; z-index:1; flex-shrink:0; border:1px solid #d0c9be; border-right:none; border-radius:16px 0 0 16px; overflow:hidden; background:#E2DBD1; }
+.aitor-av-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top center; mix-blend-mode:multiply; filter:brightness(0.95) contrast(1.02); }
+.aitor-av-gradient { position:absolute; bottom:0; left:0; right:0; height:80px; background:linear-gradient(to top,#E2DBD1,transparent); z-index:2; pointer-events:none; }
+.aitor-av-rim { position:absolute; left:0; top:8%; bottom:8%; width:2px; background:linear-gradient(to bottom,transparent,rgba(176,169,159,0.8),transparent); z-index:3; }
+.aitor-av-scanlines { position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.02) 2px,rgba(0,0,0,0.02) 4px); z-index:3; pointer-events:none; }
+.aitor-av-hud { position:absolute; top:10px; right:8px; background:#ddd7cd; border:1px solid #c5bfb5; border-radius:5px; padding:2px 7px; font-family:'Courier New',monospace; font-size:8px; letter-spacing:2px; color:#5a7a9a; z-index:4; }
 .aitor-av-platform { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:80px; height:4px; background:linear-gradient(90deg,transparent,rgba(0,230,255,0.7),transparent); filter:blur(4px); z-index:4; }
-.aitor-chat-box { width:320px; background:#030E1E; border:1px solid rgba(0,230,255,0.3); border-radius:0 16px 16px 0; display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:2; }
-.aitor-chat-header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(0,230,255,0.1); background:rgba(0,20,40,0.5); flex-shrink:0; }
-.aitor-chat-orb { width:32px; height:32px; border-radius:50%; background:#001828; border:1.5px solid rgba(0,230,255,0.5); display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
-.aitor-chat-orb-ring { position:absolute; width:38px; height:38px; border-radius:50%; border:1px solid rgba(0,230,255,0.2); animation:ai-pulse 2.5s ease-in-out infinite; }
+.aitor-chat-box { width:320px; background:#EEE8DF; border:none; border-radius:0 16px 16px 0; display:flex; flex-direction:column; overflow:hidden; position:relative; z-index:2; box-shadow:0 20px 60px rgba(0,0,0,0.35); }
+.aitor-chat-header { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid #d0c9be; background:#E2DBD1; flex-shrink:0; }
+.aitor-chat-orb { width:32px; height:32px; border-radius:50%; background:#ddd7cd; border:1.5px solid #b0a99f; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
+.aitor-chat-orb-ring { position:absolute; width:38px; height:38px; border-radius:50%; border:1px solid rgba(176,169,159,0.4); animation:ai-pulse 2.5s ease-in-out infinite; }
 @keyframes ai-pulse { 0%,100%{opacity:.2;transform:scale(1);} 50%{opacity:.7;transform:scale(1.06);} }
-.aitor-chat-title { font-size:13px; font-weight:600; color:#E0F7FF; }
-.aitor-chat-subtitle { font-size:10px; color:rgba(0,200,230,0.4); margin-top:1px; }
-.aitor-close-btn { margin-left:auto; width:26px; height:26px; border-radius:7px; background:transparent; border:1px solid rgba(0,230,255,0.2); color:rgba(0,230,255,0.5); font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all 0.15s; font-family:inherit; }
-.aitor-close-btn:hover { background:rgba(0,230,255,0.1); color:#00E6FF; }
-.aitor-chat-body { padding:16px; display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; }
-.aitor-alert-badge { display:flex; align-items:center; gap:7px; background:rgba(200,40,40,0.12); border:1px solid rgba(240,80,80,0.35); border-radius:8px; padding:7px 10px; }
-.aitor-alert-dot { width:7px; height:7px; border-radius:50%; background:#ff5a5a; flex-shrink:0; animation:blink 1.4s ease-in-out infinite; }
+.aitor-chat-title { font-size:13px; font-weight:600; color:#1a3a5c; }
+.aitor-chat-subtitle { font-size:10px; color:#7a9ab5; margin-top:1px; }
+.aitor-close-btn { margin-left:auto; width:26px; height:26px; border-radius:7px; background:transparent; border:1px solid #c5bfb5; color:#5a7a9a; font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:all 0.15s; font-family:inherit; }
+.aitor-close-btn:hover { background:#ddd7cd; color:#1a3a5c; }
+.aitor-chat-body { padding:16px; display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; background:#EEE8DF; }
+.aitor-alert-badge { display:flex; align-items:center; gap:7px; background:rgba(163,45,45,0.08); border:1px solid rgba(163,45,45,0.25); border-radius:8px; padding:7px 10px; }
+.aitor-alert-dot { width:7px; height:7px; border-radius:50%; background:#a32d2d; flex-shrink:0; animation:blink 1.4s ease-in-out infinite; }
 @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
-.aitor-alert-badge-text { font-size:10px; font-weight:600; color:#ff8080; letter-spacing:0.06em; text-transform:uppercase; }
-.aitor-msg-bubble { background:rgba(0,25,50,0.9); border:1px solid rgba(0,230,255,0.12); border-radius:12px; border-top-left-radius:3px; padding:12px 14px; }
-.aitor-msg-text { font-size:12.5px; color:rgba(220,245,255,0.88); line-height:1.6; }
-.aitor-msg-text strong { color:#ff8888; }
+.aitor-alert-badge-text { font-size:10px; font-weight:600; color:#a32d2d; letter-spacing:0.06em; text-transform:uppercase; }
+.aitor-msg-bubble { background:#fff; border:1px solid #d0c9be; border-radius:12px; border-top-left-radius:3px; padding:12px 14px; }
+.aitor-msg-text { font-size:12.5px; color:#1a3a5c; line-height:1.6; }
+.aitor-msg-text strong { color:#a32d2d; }
 .aitor-exp-list { margin-top:9px; display:flex; flex-direction:column; gap:5px; }
-.aitor-exp-item { display:flex; align-items:center; gap:7px; padding:5px 8px; background:rgba(200,30,30,0.1); border:1px solid rgba(240,80,80,0.25); border-radius:6px; }
-.aitor-exp-dot { width:5px; height:5px; border-radius:50%; background:#ff6060; flex-shrink:0; }
-.aitor-exp-text { font-size:11px; color:rgba(255,140,140,0.85); }
-.aitor-msg-hint { margin-top:10px; font-size:11.5px; color:rgba(0,200,230,0.5); line-height:1.5; }
-.aitor-chat-footer { padding:12px 14px; border-top:1px solid rgba(0,230,255,0.08); flex-shrink:0; }
-.aitor-dismiss-btn { width:100%; background:rgba(0,80,130,0.3); border:1.5px solid rgba(0,230,255,0.35); border-radius:9px; padding:9px; color:#00E6FF; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
-.aitor-dismiss-btn:hover { background:rgba(0,230,255,0.1); border-color:#00E6FF; }
+.aitor-exp-item { display:flex; align-items:center; gap:7px; padding:5px 8px; background:rgba(163,45,45,0.07); border:1px solid rgba(163,45,45,0.2); border-radius:6px; }
+.aitor-exp-dot { width:5px; height:5px; border-radius:50%; background:#a32d2d; flex-shrink:0; }
+.aitor-exp-text { font-size:11px; color:#a32d2d; }
+.aitor-msg-hint { margin-top:10px; font-size:11.5px; color:#7a9ab5; line-height:1.5; }
+.aitor-chat-footer { padding:12px 14px; border-top:1px solid #d0c9be; flex-shrink:0; background:#E2DBD1; }
+.aitor-dismiss-btn { width:100%; background:#d4cfc6; border:1.5px solid #c0b9af; border-radius:9px; padding:9px; color:#1a3a5c; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.aitor-dismiss-btn:hover { background:#c8c2b8; border-color:#b0a99f; }
 
 /* ── Modal cruce de datos — estilo crema ── */
 #cruceOverlay { position:fixed; inset:0; z-index:300; background:rgba(0,5,15,0.75); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
@@ -351,7 +351,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <div class="aitor-chat-header">
         <div class="aitor-chat-orb">
           <div class="aitor-chat-orb-ring"></div>
-          <svg width="16" height="16" viewBox="0 0 100 120" fill="none"><g transform="scale(0.85 0.85) translate(8 10)"><path d="M10 20C10 20 25 5 45 15C55 20 60 35 60 50C60 65 55 80 45 85C35 90 20 85 15 75C10 65 10 50 10 50" fill="none" stroke="#22D3EE" stroke-width="2"/><circle cx="40" cy="50" r="5" fill="#22D3EE"/></g></svg>
+          <svg width="16" height="16" viewBox="0 0 100 120" fill="none"><g transform="scale(0.85 0.85) translate(8 10)"><path d="M10 20C10 20 25 5 45 15C55 20 60 35 60 50C60 65 55 80 45 85C35 90 20 85 15 75C10 65 10 50 10 50" fill="none" stroke="#1a3a5c" stroke-width="2"/><circle cx="40" cy="50" r="5" fill="#1a3a5c"/></g></svg>
         </div>
         <div>
           <div class="aitor-chat-title">AITOR — Alerta urgente</div>
@@ -367,7 +367,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
         <div class="aitor-msg-bubble">
           <div class="aitor-msg-text">Las siguientes fechas de <strong>Convo '27</strong> han vencido y necesitan actualizarse:</div>
           <div class="aitor-exp-list" id="aitorExpList"></div>
-          <div class="aitor-msg-hint">Usa el botón <strong style="color:rgba(0,210,240,0.8)">Editar fechas</strong> en la parte superior para actualizarlas.</div>
+          <div class="aitor-msg-hint">Usa el botón <strong style="color:#1a3a5c;font-weight:600;">Editar fechas</strong> en la parte superior para actualizarlas.</div>
         </div>
       </div>
       <div class="aitor-chat-footer">
