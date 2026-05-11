@@ -88,24 +88,14 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .mora-row-top { display:flex; justify-content:space-between; align-items:center; padding:7px 10px; }
 
 /* mora actual */
-.mora-row.actual { border:1px solid rgba(255,100,180,0.15); }
+.mora-row.actual { border:1px solid rgba(255,100,180,0.4); }
 .mora-row.actual .mora-row-top { background:rgba(255,100,180,0.06); }
 .mora-row.actual .mora-row-top .lbl { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,100,180,0.8); }
-.mora-row.actual .mora-row-pct { font-size:20px; font-weight:700; color:#ff64b4; flex-shrink:0; margin-left:6px; line-height:1; }
+.mora-row.actual .mora-row-top .lbl-sub { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(29,204,132,0.7); margin-top:4px; display:block; }
+.mora-row.actual .mora-row-pct { font-size:28px; font-weight:700; color:#ff64b4; flex-shrink:0; margin-left:6px; line-height:1; }
 .mora-row-fact { border-top:1px solid rgba(255,100,180,0.12); padding:5px 10px; display:flex; justify-content:space-between; align-items:center; background:rgba(255,100,180,0.04); }
 .mora-row-fact-lbl { font-size:11px; color:rgba(255,100,180,0.5); }
 .mora-row-fact-val { font-size:13px; font-weight:600; color:rgba(220,245,255,0.55); }
-
-/* separador próxima conv */
-.card-separator { display:flex; align-items:center; gap:8px; margin:8px 0 6px; }
-.card-separator-line { flex:1; height:1px; background:rgba(0,212,240,0.08); }
-.card-separator-txt { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(235,229,216,0.38); white-space:nowrap; }
-
-/* impagos */
-.mora-row.impagos { border:1px solid rgba(29,204,132,0.15); }
-.mora-row.impagos .mora-row-top { background:rgba(29,204,132,0.06); }
-.mora-row.impagos .mora-row-top .lbl { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(29,204,132,0.8); }
-.mora-row.impagos .mora-row-pct { font-size:14px; font-weight:600; color:#1dcc84; flex-shrink:0; margin-left:6px; }
 
 @media(max-width:700px){
   .topbar,.page-head,.stats-grid,.conv-selector-wrap { padding-left:16px; padding-right:16px; }
@@ -226,12 +216,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="stat-mora-sub">Mora a mes vencido</div>
     <div class="mora-rows">
       <div class="mora-row actual">
-        <div class="mora-row-top"><span class="lbl">Mora actual</span><span class="mora-row-pct" id="inesdi-mora">—</span></div>
+        <div class="mora-row-top"><div><span class="lbl">Mora actual /</span><span class="lbl-sub">Impagos previos a conv.</span></div><span class="mora-row-pct" id="inesdi-mora">—</span></div>
         <div class="mora-row-fact"><span class="mora-row-fact-lbl">Fact.</span><span class="mora-row-fact-val" id="inesdi-fact">—</span></div>
-      </div>
-      <div class="card-separator"><div class="card-separator-line"></div><span class="card-separator-txt">Próxima convocatoria</span><div class="card-separator-line"></div></div>
-      <div class="mora-row impagos">
-        <div class="mora-row-top"><span class="lbl">Impagos previos a inicio</span><span class="mora-row-pct" id="inesdi-impagos">—</span></div>
       </div>
     </div>
   </div>
@@ -241,12 +227,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="stat-mora-sub">Mora a mes vencido</div>
     <div class="mora-rows">
       <div class="mora-row actual">
-        <div class="mora-row-top"><span class="lbl">Mora actual</span><span class="mora-row-pct" id="obs-mora">—</span></div>
+        <div class="mora-row-top"><div><span class="lbl">Mora actual /</span><span class="lbl-sub">Impagos previos a conv.</span></div><span class="mora-row-pct" id="obs-mora">—</span></div>
         <div class="mora-row-fact"><span class="mora-row-fact-lbl">Fact.</span><span class="mora-row-fact-val" id="obs-fact">—</span></div>
-      </div>
-      <div class="card-separator"><div class="card-separator-line"></div><span class="card-separator-txt">Próxima convocatoria</span><div class="card-separator-line"></div></div>
-      <div class="mora-row impagos">
-        <div class="mora-row-top"><span class="lbl">Impagos previos a inicio</span><span class="mora-row-pct" id="obs-impagos">—</span></div>
       </div>
     </div>
   </div>
@@ -256,12 +238,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="stat-mora-sub">Mora a mes vencido</div>
     <div class="mora-rows">
       <div class="mora-row actual">
-        <div class="mora-row-top"><span class="lbl">Mora actual</span><span class="mora-row-pct" id="esdesign-mora">—</span></div>
+        <div class="mora-row-top"><div><span class="lbl">Mora actual /</span><span class="lbl-sub">Impagos previos a conv.</span></div><span class="mora-row-pct" id="esdesign-mora">—</span></div>
         <div class="mora-row-fact"><span class="mora-row-fact-lbl">Fact.</span><span class="mora-row-fact-val" id="esdesign-fact">—</span></div>
-      </div>
-      <div class="card-separator"><div class="card-separator-line"></div><span class="card-separator-txt">Próxima convocatoria</span><div class="card-separator-line"></div></div>
-      <div class="mora-row impagos">
-        <div class="mora-row-top"><span class="lbl">Impagos previos a inicio</span><span class="mora-row-pct" id="esdesign-impagos">—</span></div>
       </div>
     </div>
   </div>
@@ -271,12 +249,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="stat-mora-sub">Mora a mes vencido</div>
     <div class="mora-rows">
       <div class="mora-row actual">
-        <div class="mora-row-top"><span class="lbl">Mora actual</span><span class="mora-row-pct" id="ucma-mora">—</span></div>
+        <div class="mora-row-top"><div><span class="lbl">Mora actual /</span><span class="lbl-sub">Impagos previos a conv.</span></div><span class="mora-row-pct" id="ucma-mora">—</span></div>
         <div class="mora-row-fact"><span class="mora-row-fact-lbl">Fact.</span><span class="mora-row-fact-val" id="ucma-fact">—</span></div>
-      </div>
-      <div class="card-separator"><div class="card-separator-line"></div><span class="card-separator-txt">Próxima convocatoria</span><div class="card-separator-line"></div></div>
-      <div class="mora-row impagos">
-        <div class="mora-row-top"><span class="lbl">Impagos previos a inicio</span><span class="mora-row-pct" id="ucma-impagos">—</span></div>
       </div>
     </div>
   </div>
@@ -305,7 +279,6 @@ const MARCAS=['inesdi','obs','esdesign','ucma'];
 
 let convActiva='abril';
 let yearActivo='2026';
-// cobrosData[marca][conv] = { importe, pct }
 let cobrosData={};
 
 function selectConv(conv,el){
@@ -317,7 +290,6 @@ function selectConv(conv,el){
 
 function selectYear(y){
   yearActivo=y;
-  // El Excel solo tiene 2026 de momento; si no hay datos para el año, mostrará —
   renderCards();
 }
 
@@ -342,13 +314,11 @@ function formatPct(val){
 
 function renderCards(){
   MARCAS.forEach(m=>{
-    // Solo mostrar datos si el año coincide con el del KV
     const d=(yearActivo===cobrosData[m]?.[convActiva]?.año)
       ? cobrosData[m][convActiva]
       : {};
     setVal(`${m}-mora`, formatPct(d.pct));
     setVal(`${m}-fact`, formatImporte(d.importe));
-    setVal(`${m}-impagos`, '—');
   });
 }
 
@@ -368,7 +338,6 @@ async function load(){
       if(!cobrosData[marca])cobrosData[marca]={};
       if(data.value){
         try{
-          // El value llega doblemente serializado: string JSON dentro de string JSON
           const parsed=typeof data.value==='string'?JSON.parse(data.value):data.value;
           cobrosData[marca][conv]={...parsed, año:'2026'};
         }catch(e){
