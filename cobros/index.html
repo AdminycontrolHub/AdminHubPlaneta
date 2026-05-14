@@ -47,21 +47,15 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .node-label { font-size:12px; font-weight:500; color:rgba(0,190,220,0.45); text-align:center; line-height:1.3; max-width:96px; transition:color 0.2s; }
 .node:hover .node-label, .node.active .node-label { color:#00D4F0; }
 .divider { position:relative; z-index:10; margin:28px 32px 0; height:1px; background:rgba(0,212,240,0.07); }
-
-/* ── Selector convocatoria y año ── */
 .conv-selector-wrap { position:relative; z-index:10; padding:20px 32px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .conv-btn { padding:8px 24px; border-radius:8px; border:2px solid #7a50c0; background:rgba(168,120,240,0.15); color:#a878f0; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; font-family:inherit; transition:all 0.2s; }
 .conv-btn.active { background:#a878f0; border-color:#a878f0; color:#1a0a30; }
 .conv-btn:not(.active):hover { background:rgba(168,120,240,0.3); border-color:#a878f0; color:#c8a0ff; }
 .year-select { background:rgba(0,20,40,0.8); border:1px solid rgba(168,120,240,0.35); border-radius:8px; padding:8px 14px; color:rgba(168,120,240,0.8); font-size:12px; font-family:inherit; outline:none; cursor:pointer; font-weight:600; }
 .year-select option { background:#030E1E; color:#E0F7FF; }
-
-/* ── Etiqueta cierre de mes ── */
 .cierre-label { font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(240,168,48,0.6); margin-left:8px; white-space:nowrap; }
 .cierre-editable { color:#f0a830; border-bottom:1px dashed rgba(240,168,48,0.5); padding:0 3px; outline:none; min-width:80px; display:inline-block; cursor:text; transition:border-color 0.2s; }
 .cierre-editable:focus { border-bottom-color:#f0a830; color:#ffc84a; }
-
-/* ── Stats grid ── */
 .stats-grid { position:relative; z-index:10; padding:16px 32px 60px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
 .stat-card { background:rgba(0,16,32,0.85); border-radius:13px; padding:14px 12px; display:flex; flex-direction:column; gap:0; transition:border-color 0.2s, transform 0.2s; animation:fadeUp 0.4s ease both; }
 .stat-card:hover { transform:translateY(-2px); }
@@ -81,13 +75,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .stat-name.warn { color:#f0a830; }
 .stat-name.info { color:#3aabf0; }
 .stat-mora-sub { font-size:9px; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; margin-top:1px; color:rgba(235,229,216,0.45); }
-
-/* filas principales */
 .mora-rows { display:flex; flex-direction:column; gap:6px; }
 .mora-row { border-radius:7px; overflow:hidden; }
 .mora-row-top { display:flex; justify-content:space-between; align-items:center; padding:7px 10px; }
-
-/* mora actual */
 .mora-row.actual { border:1px solid rgba(255,100,180,0.4); }
 .mora-row.actual .mora-row-top { background:rgba(255,100,180,0.06); }
 .mora-row.actual .mora-row-top .lbl { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,100,180,0.8); }
@@ -96,7 +86,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .mora-row-fact { border-top:1px solid rgba(255,100,180,0.12); padding:5px 10px; display:flex; justify-content:space-between; align-items:center; background:rgba(255,100,180,0.04); }
 .mora-row-fact-lbl { font-size:11px; color:rgba(255,100,180,0.5); }
 .mora-row-fact-val { font-size:13px; font-weight:600; color:rgba(220,245,255,0.55); }
-
 @media(max-width:700px){
   .topbar,.page-head,.stats-grid,.conv-selector-wrap { padding-left:16px; padding-right:16px; }
   .nodes-row { gap:24px; }
@@ -221,7 +210,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
     </div>
   </div>
-
   <div class="stat-card ok" style="animation-delay:0.06s">
     <div class="stat-name ok">OBS</div>
     <div class="stat-mora-sub">Mora a mes vencido</div>
@@ -232,7 +220,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
     </div>
   </div>
-
   <div class="stat-card warn" style="animation-delay:0.12s">
     <div class="stat-name warn">ESDesign</div>
     <div class="stat-mora-sub">Mora a mes vencido</div>
@@ -243,7 +230,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
     </div>
   </div>
-
   <div class="stat-card info" style="animation-delay:0.18s">
     <div class="stat-name info">UCMA</div>
     <div class="stat-mora-sub">Mora a mes vencido</div>
@@ -276,6 +262,8 @@ function setActive(el){
 
 const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 const MARCAS=['inesdi','obs','esdesign','ucma'];
+// Años con datos en el KV — añadir aquí cuando se incorporen nuevos años
+const AÑOS_CON_DATOS=['2025','2026'];
 
 let convActiva='abril';
 let yearActivo='2026';
@@ -314,9 +302,7 @@ function formatPct(val){
 
 function renderCards(){
   MARCAS.forEach(m=>{
-    const d=(yearActivo===cobrosData[m]?.[convActiva]?.año)
-      ? cobrosData[m][convActiva]
-      : {};
+    const d=cobrosData[yearActivo]?.[m]?.[convActiva]||{};
     setVal(`${m}-mora`, formatPct(d.pct));
     setVal(`${m}-fact`, formatImporte(d.importe));
   });
@@ -326,22 +312,29 @@ async function load(){
   try{
     const convs=['abril','octubre'];
     const fetches=[];
-    MARCAS.forEach(m=>{
-      convs.forEach(c=>{
-        fetches.push({marca:m, conv:c, key:`adminhub_${m}_${c}`});
+    AÑOS_CON_DATOS.forEach(anyo=>{
+      MARCAS.forEach(m=>{
+        convs.forEach(c=>{
+          // 2026 usa keys sin sufijo de año (legacy), el resto con sufijo
+          const key=anyo==='2026'
+            ? `adminhub_${m}_${c}`
+            : `adminhub_${m}_${c}_${anyo}`;
+          fetches.push({anyo, marca:m, conv:c, key});
+        });
       });
     });
     const results=await Promise.all(
       fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}`).then(r=>r.json()).then(d=>({...f,data:d})))
     );
-    results.forEach(({marca,conv,data})=>{
-      if(!cobrosData[marca])cobrosData[marca]={};
+    results.forEach(({anyo,marca,conv,data})=>{
+      if(!cobrosData[anyo])cobrosData[anyo]={};
+      if(!cobrosData[anyo][marca])cobrosData[anyo][marca]={};
       if(data.value){
         try{
           const parsed=typeof data.value==='string'?JSON.parse(data.value):data.value;
-          cobrosData[marca][conv]={...parsed, año:'2026'};
+          cobrosData[anyo][marca][conv]=parsed;
         }catch(e){
-          cobrosData[marca][conv]={};
+          cobrosData[anyo][marca][conv]={};
         }
       }
     });
