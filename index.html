@@ -52,6 +52,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .msg-bubble { padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.6; }
 .msg.assistant .msg-bubble { background: #fff; border: 1px solid #d0c9be; color: #1a3a5c; border-top-left-radius: 4px; }
 .msg.user .msg-bubble { background: #ddd7cd; border: 1px solid #c5bfb5; color: #1a3a5c; border-top-right-radius: 4px; }
+.msg-bubble a { color: #005080; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.msg-bubble a:hover { color: #003a60; }
 .typing { display: flex; align-items: center; gap: 5px; padding: 12px 14px; }
 .typing span { width: 6px; height: 6px; border-radius: 50%; background: #b0a99f; animation: tdot 1.2s ease-in-out infinite; }
 .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
@@ -63,10 +65,13 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .send-btn { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; background: #d4cfc6; border: 1.5px solid #c0b9af; color: #1a3a5c; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
 .send-btn:hover { background: #c8c2b8; border-color: #b0a99f; }
 .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-.quick-btns { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 8px; width: 100%; }
-.quick-btn { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 10px; background: rgba(255,255,255,0.7); border: 1px solid #d0c9be; color: #1a3a5c; font-size: 12.5px; cursor: pointer; transition: all 0.2s; text-align: left; width: 100%; }
-.quick-btn:hover { background: #fff; border-color: #8aaac5; color: #0f2440; padding-left: 18px; }
-.quick-btn .qicon { font-size: 15px; flex-shrink: 0; }
+.quick-btns { display: flex; flex-direction: column; gap: 5px; padding: 4px 0 8px; width: 100%; }
+.quick-btn { display: flex; align-items: center; gap: 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0,0,0,0.07); cursor: pointer; background: #fff; transition: all 0.18s; width: 100%; padding: 0; font-family: inherit; }
+.quick-btn:hover { filter: brightness(0.96); transform: translateX(3px); }
+.qb-accent { width: 4px; flex-shrink: 0; align-self: stretch; }
+.qb-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; margin: 0 2px 0 8px; border-radius: 8px; }
+.qb-text { flex: 1; font-size: 12px; color: #1a3a5c; padding: 9px 6px; line-height: 1.3; text-align: left; }
+.qb-tag { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; margin-right: 8px; white-space: nowrap; flex-shrink: 0; font-weight: 600; }
 .scene { flex: 1; position: relative; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 20px 20px 0; min-height: 560px; overflow: hidden; }
 .orbit-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 .hub { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 114px; height: 114px; border-radius: 50%; background: rgba(1,10,22,0.92); border: 2px solid rgba(0,230,255,0.6); display: flex; align-items: center; justify-content: center; z-index: 30; }
@@ -77,58 +82,32 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .bubble { border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s; }
 .node-label { font-size: 12px; font-weight: 500; text-align: center; line-height: 1.2; max-width: 80px; transition: color 0.2s; opacity: 0.55; }
 .node:hover .node-label { opacity: 1; }
-
-/* ── Colores por nodo ── */
 .node[data-k="reportes"] .bubble   { border: 1.5px solid rgba(0,230,255,0.7);   box-shadow: 0 0 10px rgba(0,230,255,0.18); }
 .node[data-k="cobros"] .bubble     { border: 1.5px solid rgba(29,204,132,0.7);  box-shadow: 0 0 10px rgba(29,204,132,0.18); }
 .node[data-k="tareas"] .bubble     { border: 1.5px solid rgba(168,120,240,0.7); box-shadow: 0 0 10px rgba(168,120,240,0.18); }
 .node[data-k="convo"] .bubble      { border: 1.5px solid rgba(58,171,240,0.7);  box-shadow: 0 0 10px rgba(58,171,240,0.18); }
 .node[data-k="manuales"] .bubble   { border: 1.5px solid rgba(240,168,48,0.7);  box-shadow: 0 0 10px rgba(240,168,48,0.18); }
 .node[data-k="comisiones"] .bubble { border: 1.5px solid rgba(255,100,180,0.7); box-shadow: 0 0 10px rgba(255,100,180,0.18); }
-
 .node[data-k="reportes"] .node-label   { color: #00E6FF; }
 .node[data-k="cobros"] .node-label     { color: #1dcc84; }
 .node[data-k="tareas"] .node-label     { color: #a878f0; }
 .node[data-k="convo"] .node-label      { color: #3aabf0; }
 .node[data-k="manuales"] .node-label   { color: #f0a830; }
 .node[data-k="comisiones"] .node-label { color: #ff64b4; }
-
 .node[data-k="reportes"]:hover .bubble   { border-color: #00E6FF;  box-shadow: 0 0 22px rgba(0,230,255,0.6),  inset 0 0 18px rgba(0,200,255,0.08); }
 .node[data-k="cobros"]:hover .bubble     { border-color: #1dcc84;  box-shadow: 0 0 22px rgba(29,204,132,0.6), inset 0 0 18px rgba(29,204,132,0.08); }
 .node[data-k="tareas"]:hover .bubble     { border-color: #a878f0;  box-shadow: 0 0 22px rgba(168,120,240,0.6),inset 0 0 18px rgba(168,120,240,0.08); }
 .node[data-k="convo"]:hover .bubble      { border-color: #3aabf0;  box-shadow: 0 0 22px rgba(58,171,240,0.6), inset 0 0 18px rgba(58,171,240,0.08); }
 .node[data-k="manuales"]:hover .bubble   { border-color: #f0a830;  box-shadow: 0 0 22px rgba(240,168,48,0.6), inset 0 0 18px rgba(240,168,48,0.08); }
 .node[data-k="comisiones"]:hover .bubble { border-color: #ff64b4;  box-shadow: 0 0 22px rgba(255,100,180,0.6),inset 0 0 18px rgba(255,100,180,0.08); }
-
-/* ── Nodo Control de Gestión ── */
 .node[data-k="ctrl"] { z-index: 20; }
-.node[data-k="ctrl"] .ctrl-outer {
-  width: 140px; height: 140px; border-radius: 50%;
-  border: 1.5px solid rgba(0,255,180,0.35);
-  display: flex; align-items: center; justify-content: center;
-  animation: ctrl-outer-pulse 3.5s ease-in-out infinite;
-  transition: border-color 0.2s;
-}
-.node[data-k="ctrl"] .ctrl-inner {
-  width: 118px; height: 118px; border-radius: 50%;
-  background: rgba(120,220,160,0.25);
-  border: 2.5px solid rgba(0,255,180,0.85);
-  box-shadow: 0 0 14px rgba(0,255,180,0.3), inset 0 0 12px rgba(0,255,180,0.06);
-  display: flex; align-items: center; justify-content: center;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-@keyframes ctrl-outer-pulse {
-  0%,100%{ border-color: rgba(0,255,180,0.2); transform: scale(1); }
-  50%{ border-color: rgba(0,255,180,0.6); transform: scale(1.06); }
-}
+.node[data-k="ctrl"] .ctrl-outer { width: 140px; height: 140px; border-radius: 50%; border: 1.5px solid rgba(0,255,180,0.35); display: flex; align-items: center; justify-content: center; animation: ctrl-outer-pulse 3.5s ease-in-out infinite; transition: border-color 0.2s; }
+.node[data-k="ctrl"] .ctrl-inner { width: 118px; height: 118px; border-radius: 50%; background: rgba(120,220,160,0.25); border: 2.5px solid rgba(0,255,180,0.85); box-shadow: 0 0 14px rgba(0,255,180,0.3), inset 0 0 12px rgba(0,255,180,0.06); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s; }
+@keyframes ctrl-outer-pulse { 0%,100%{ border-color: rgba(0,255,180,0.2); transform: scale(1); } 50%{ border-color: rgba(0,255,180,0.6); transform: scale(1.06); } }
 .node[data-k="ctrl"] .node-label { color: #00ffb4; opacity: 0.65; }
 .node[data-k="ctrl"]:hover .ctrl-outer { border-color: rgba(0,255,180,0.7); }
-.node[data-k="ctrl"]:hover .ctrl-inner {
-  border-color: #00ffb4;
-  box-shadow: 0 0 26px rgba(0,255,180,0.55), inset 0 0 18px rgba(0,255,180,0.1);
-}
+.node[data-k="ctrl"]:hover .ctrl-inner { border-color: #00ffb4; box-shadow: 0 0 26px rgba(0,255,180,0.55), inset 0 0 18px rgba(0,255,180,0.1); }
 .node[data-k="ctrl"]:hover .node-label { opacity: 1; }
-
 .hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: rgba(0,230,255,0.13); font-size: 11px; letter-spacing: .1em; pointer-events: none; z-index: 6; white-space: nowrap; }
 @keyframes spin-cw  { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 @keyframes spin-ccw { from{transform:rotate(0)} to{transform:rotate(-360deg)} }
@@ -174,8 +153,6 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .acc-icon-inner { width: 32px; height: 32px; border-radius: 50%; background: rgba(240,168,48,0.1); border: 1px solid rgba(240,168,48,0.5); display: flex; align-items: center; justify-content: center; z-index: 2; animation: acc-glow 2.5s ease-in-out infinite; }
 @keyframes acc-glow { 0%,100%{border-color:rgba(240,168,48,0.4);} 50%{border-color:rgba(240,168,48,1);} }
 .acc-label { font-size: 10px; font-weight: 600; color: #f0a830; writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); letter-spacing: 0.06em; line-height: 1.2; white-space: nowrap; }
-
-/* ── Modal Acceso — estilo crema (igual que otros modales del Hub) ── */
 .acc-modal-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,5,15,0.75); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 1rem; }
 .acc-modal-overlay.open { display: flex; }
 .acc-modal { width: min(420px,96vw); background: #EEE8DF; border-radius: 18px; padding: 24px; animation: fadeUp 0.28s ease; border: none; }
@@ -196,6 +173,14 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .acc-btn-save:hover { background: #c8c2b8; }
 .acc-btn-delete { display: none; align-items: center; gap: 6px; background: rgba(163,45,45,0.1); border: 1px solid rgba(163,45,45,0.3); border-radius: 9px; padding: 9px 16px; color: #a32d2d; font-size: 13px; cursor: pointer; font-family: inherit; margin-right: auto; transition: background 0.15s; }
 .acc-btn-delete:hover { background: rgba(163,45,45,0.2); }
+
+@media (max-width: 600px) {
+  .aitor-wrapper { flex-direction: column; align-items: stretch; width: 100%; }
+  .modal { width: 100vw; height: 100dvh; border-radius: 0; order: 1; }
+  .avatar-3d-panel { display: none; }
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .chat-input { font-size: 16px; }
+}
 </style>
 </head>
 <body>
@@ -442,11 +427,44 @@ document.addEventListener('DOMContentLoaded', function() {
   const GEMINI_MODEL = 'gemini-2.5-flash';
   const ACC_KEY      = 'adminhub_accesos_v1';
 
-  const SYSTEM = `Eres AITOR, el asistente de inteligencia artificial del Admin Hub de Gestión de Cobros. Ayudas al equipo con consultas sobre cobros, reportes, tareas de clientes, comisiones, manuales operativos y convocatorias.
-IDIOMA: Responde siempre en español de España. Usa vocabulario y expresiones propias de España (vosotros, ordenador, móvil, etc.). Nunca uses latinismos ni expresiones de América Latina.
-TONO: Directo, conciso y profesional. Sin muletillas ni frases de relleno. Prohibido usar expresiones como "con gusto", "claro que sí", "por supuesto", "desde luego", "encantado", "no hay problema", "es un placer" o similares. Ve directo al grano.
-Cuando no tengas información específica sobre datos internos, orienta al usuario hacia los módulos del hub.`;
+  // ── SYSTEM PROMPT ──
+  const SYSTEM = `Eres AITOR, el asistente de inteligencia artificial del Admin Hub de Gestión de Cobros de Grupo Planeta. Eres el guía principal del hub y ayudas al equipo a navegar, consultar datos y resolver dudas operativas.
 
+IDIOMA: Responde siempre en español de España. Usa vocabulario y expresiones propias de España (vosotros, ordenador, móvil, etc.). Nunca uses latinismos ni expresiones de América Latina.
+
+TONO: Directo, conciso y profesional. Sin muletillas ni frases de relleno. Prohibido usar expresiones como "con gusto", "claro que sí", "por supuesto", "desde luego", "encantado", "no hay problema", "es un placer" o similares. Ve directo al grano.
+
+NAVEGACIÓN — MÓDULOS DEL HUB:
+Cuando el usuario pida ir a un módulo, ver datos o consultar algo, responde con un enlace clicable en formato markdown: [Texto del enlace](url)
+Las URLs son relativas al hub. Usa siempre este formato para los enlaces de navegación: 👉 [Ir a Nombre del módulo](url)
+
+MÓDULOS DISPONIBLES:
+- Reportes → reportes/index.html
+  Contiene: métricas de matrículas por marca y convocatoria (OBS, INESDI, ESDesign, UCMA), número de brutas/bajas/netas, becas, cierres pasados, SXDataHub, BI Curva. Selecciona convocatoria Abril u Octubre.
+
+- Cobros y Morosidad → cobros/index.html
+  Contiene: datos de morosidad por convocatoria anterior y actual, Power BI Activa, carteras, impagos previos a inicio, mora por marca.
+
+- Tareas / Seguimientos → seguimientos/index.html
+  Contiene: tareas pendientes del equipo ADMC, seguimiento de alumnos, gestión de incidencias.
+
+- Convo '27 → convo/index.html
+  Contiene: fechas clave por marca (con alertas si hay fechas vencidas), herramienta de cruce de datos entre Excels, convocatoria 2027.
+
+- Manuales → manuales/index.html
+  Contiene: manuales operativos y guías del equipo de cobros.
+
+- Comisiones → comisiones/index.html
+  Contiene: calculadora de comisiones, histórico por marca (OBS, INESDI, ESDesign, UCMA), anexos.
+
+- Control de Gestión → control/index.html
+  Contiene: panel de control de gestión general.
+
+ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo ⚡) contiene accesos directos configurables como Sudoku OBS, Bloqueo Campus, Hermes, PayComet, etc. Indícale al usuario que lo abra desde el panel lateral si busca uno de esos accesos.
+
+Cuando respondas con navegación, da primero el enlace y luego una línea breve de qué encontrará allí. No hagas listas largas si no se piden.`;
+
+  // ── MÓDULOS ──
   const D = {
     reportes:   { label:'Reportes',          url:'reportes/index.html' },
     cobros:     { label:'Cobros',             url:'cobros/index.html' },
@@ -613,7 +631,7 @@ Cuando no tengas información específica sobre datos internos, orienta al usuar
     const v = document.getElementById('avatarVideo');
     if (v) { v.muted=false; v.currentTime=0; v.play().catch(()=>{ v.muted=true; v.play(); }); }
     spawnParticles();
-    if (messages.length === 0) { appendMsg('model', 'Hola! Soy **AITOR**, tu asistente de Gestión de Cobros. ¿En qué puedo ayudarte?'); appendQuickButtons(); }
+    if (messages.length === 0) { appendMsg('model', 'Hola, soy **AITOR**. Dime qué necesitas o elige una opción para ir directamente.'); appendQuickButtons(); }
     if (prompt) setTimeout(() => { chatInput.value = prompt; sendMessage(); }, 350);
     else setTimeout(() => chatInput.focus(), 150);
   }
@@ -693,27 +711,42 @@ Cuando no tengas información específica sobre datos internos, orienta al usuar
   function appendMsg(role, text) {
     const div = document.createElement('div');
     const cr = (role==='model') ? 'assistant' : 'user'; div.className = `msg ${cr}`;
-    const html = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    const html = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="window.location.href=\'$2\';return false;">$1 →</a>')
+      .replace(/\n/g, '<br>');
     const av = (cr==='user') ? US_AV : AI_AV;
     div.innerHTML = `<div class="msg-avatar">${av}</div><div class="msg-bubble">${html}</div>`;
     chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
   }
 
+  // ── BOTONES RÁPIDOS ──
   const QUICK_BTNS = [
-    {icon:'📊', label:'Ver reportes del mes'},{icon:'💰', label:'Cobros pendientes'},
-    {icon:'🎓', label:'Buscar Alumno'},{icon:'📈', label:'Histórico de Comisiones'},
-    {icon:'🏅', label:'Becas'},{icon:'📋', label:'Búsqueda rápida en manuales'},
-    {icon:'✅', label:'Tareas pendientes de ADMC'},
+    { icon:'📊', label:'Nº matrículas por marca y convocatoria', color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
+    { icon:'📉', label:'Datos de morosidad',                     color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros' },
+    { icon:'🔵', label:'Power BI Activa',                        color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros' },
+    { icon:'🔗', label:'SXDataHUB',                              color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
+    { icon:'⚡', label:'Sudoku OBS',                             color:'#f0a830', bg:'rgba(240,168,48,0.1)', tagBg:'rgba(240,168,48,0.12)', tagColor:'#8a5a00', tag:'Accesos rápidos' },
+    { icon:'📅', label:'Fechas clave por marca',                 color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27" },
+    { icon:'🔀', label:'Herramienta cruce de datos',             color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27" },
+    { icon:'✅', label:'Resumen de tareas pendientes',           color:'#a878f0', bg:'rgba(168,120,240,0.1)', tagBg:'rgba(168,120,240,0.12)', tagColor:'#5a2aaa', tag:'Tareas' },
+    { icon:'🗂️', label:'Histórico cierres pasados',             color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
+    { icon:'🏅', label:'Becas',                                  color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
   ];
+
   function appendQuickButtons() {
-    const wrap2 = document.createElement('div'); wrap2.className='quick-btns'; wrap2.id='quickBtns';
+    const wrap = document.createElement('div'); wrap.className='quick-btns'; wrap.id='quickBtns';
     QUICK_BTNS.forEach(b => {
       const btn = document.createElement('button'); btn.className='quick-btn';
-      btn.innerHTML = `<span class="qicon">${b.icon}</span>${b.label}`;
-      btn.addEventListener('click', () => { wrap2.remove(); chatInput.value=b.label; sendMessage(); });
-      wrap2.appendChild(btn);
+      btn.innerHTML = `
+        <div class="qb-accent" style="background:${b.color};"></div>
+        <div class="qb-icon" style="background:${b.bg};">${b.icon}</div>
+        <span class="qb-text">${b.label}</span>
+        <span class="qb-tag" style="background:${b.tagBg};color:${b.tagColor};">${b.tag}</span>`;
+      btn.addEventListener('click', () => { wrap.remove(); chatInput.value=b.label; sendMessage(); });
+      wrap.appendChild(btn);
     });
-    chatArea.appendChild(wrap2); chatArea.scrollTop = chatArea.scrollHeight;
+    chatArea.appendChild(wrap); chatArea.scrollTop = chatArea.scrollHeight;
   }
 
   function appendTyping() {
