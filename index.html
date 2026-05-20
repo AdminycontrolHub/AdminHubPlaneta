@@ -16,6 +16,14 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .brand-sq { width: 40px; height: 40px; border-radius: 11px; background: #003A5C; border: 1px solid rgba(0,230,255,0.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .brand-name { color: #fff; font-size: 17px; font-weight: 500; letter-spacing: -0.02em; }
 .brand-dept { color: rgba(0,230,255,0.38); font-size: 11px; margin-top: 2px; letter-spacing: 0.03em; }
+.topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.guide-btn { display: flex; align-items: center; gap: 0; cursor: pointer; background: none; border: none; padding: 0; }
+.guide-circle { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(238,232,223,0.45); background: transparent; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+.guide-btn:hover .guide-circle { background: rgba(238,232,223,0.12); border-color: #EEE8DF; }
+.guide-q { color: rgba(238,232,223,0.6); font-size: 13px; font-weight: 600; line-height: 1; transition: color .2s; }
+.guide-btn:hover .guide-q { color: #EEE8DF; }
+.guide-label { max-width: 0; overflow: hidden; white-space: nowrap; font-size: 11px; color: #EEE8DF; opacity: 0; transition: max-width .3s ease, opacity .25s ease, margin .3s ease; margin-left: 0; font-family: inherit; }
+.guide-btn:hover .guide-label { max-width: 160px; opacity: 1; margin-left: 7px; }
 .ai-badge { display: flex; align-items: center; gap: 7px; background: rgba(0,90,130,0.15); border: 1px solid rgba(0,230,255,0.25); border-radius: 10px; padding: 5px 10px 5px 6px; cursor: pointer; position: absolute; bottom: 12px; right: 14px; z-index: 100; transition: all 0.3s ease; }
 .ai-badge:hover { background: rgba(0,230,255,0.1); border-color: rgba(0,230,255,0.6); transform: translateY(-2px); }
 .ai-orb { width: 30px; height: 30px; border-radius: 50%; background: #001828; border: 1px solid rgba(0,230,255,0.45); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
@@ -40,6 +48,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .modal-title p { color: #7a9ab5; font-size: 11px; margin-top: 2px; }
 .modal-close { width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid #c5bfb5; color: #5a7a9a; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .modal-close:hover { background: #ddd7cd; color: #1a3a5c; border-color: #b0a99f; }
+.modal-menu-btn { display:flex; align-items:center; gap:5px; background:transparent; border:1px solid #c5bfb5; border-radius:8px; padding:5px 10px; color:#5a7a9a; font-size:11px; cursor:pointer; font-family:inherit; transition:all 0.2s; margin-right:6px; }
+.modal-menu-btn:hover { background:#ddd7cd; color:#1a3a5c; }
 .chat-area { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: thin; scrollbar-color: #c5bfb5 transparent; background: #EEE8DF; }
 .chat-area::-webkit-scrollbar { width: 4px; }
 .chat-area::-webkit-scrollbar-thumb { background: #c5bfb5; border-radius: 2px; }
@@ -173,8 +183,31 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .acc-btn-save:hover { background: #c8c2b8; }
 .acc-btn-delete { display: none; align-items: center; gap: 6px; background: rgba(163,45,45,0.1); border: 1px solid rgba(163,45,45,0.3); border-radius: 9px; padding: 9px 16px; color: #a32d2d; font-size: 13px; cursor: pointer; font-family: inherit; margin-right: auto; transition: background 0.15s; }
 .acc-btn-delete:hover { background: rgba(163,45,45,0.2); }
-.modal-menu-btn { display:flex; align-items:center; gap:5px; background:transparent; border:1px solid #c5bfb5; border-radius:8px; padding:5px 10px; color:#5a7a9a; font-size:11px; cursor:pointer; font-family:inherit; transition:all 0.2s; margin-right:6px; }
-.modal-menu-btn:hover { background:#ddd7cd; color:#1a3a5c; }
+
+/* ── Tour guiado ── */
+.tour-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+.tour-overlay.active { pointer-events: all; opacity: 1; }
+.tour-spotlight { position: fixed; border-radius: 50%; z-index: 502; pointer-events: none; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+.tour-spotlight.rect { border-radius: 12px; }
+.tour-tooltip { position: fixed; z-index: 503; background: #EEE8DF; border-radius: 13px; padding: 13px 15px; width: 200px; border: 1px solid #d0c9be; transition: opacity 0.3s; pointer-events: none; }
+.tour-tt-tag { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; display: inline-block; margin-bottom: 5px; font-weight: 600; }
+.tour-tt-title { font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 4px; }
+.tour-tt-desc { font-size: 11px; color: #4a6a8a; line-height: 1.5; }
+.tour-tt-examples { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+.tour-tt-ex { background: rgba(0,80,120,0.08); border-radius: 5px; padding: 3px 8px; font-size: 10px; color: #005080; font-style: italic; }
+.tour-nav-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 503; background: #E2DBD1; border-top: 2px solid #c5bfb5; padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tour-nav-btn { border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; border: none; }
+.tour-nav-btn.prev { background: #d4cfc6; color: #1a3a5c; }
+.tour-nav-btn.prev:hover { background: #c8c2b8; }
+.tour-nav-btn.prev:disabled { opacity: 0.35; cursor: default; }
+.tour-nav-btn.next { background: #1a3a5c; color: #fff; }
+.tour-nav-btn.next:hover { background: #0f2440; }
+.tour-nav-btn.skip { background: transparent; color: #8aaac5; font-size: 11px; font-weight: 500; padding: 8px 10px; border: 1px solid #c5bfb5; }
+.tour-nav-btn.skip:hover { background: #ddd7cd; color: #1a3a5c; }
+.tour-nav-dots { display: flex; gap: 5px; align-items: center; flex: 1; justify-content: center; }
+.tour-nav-dot { width: 6px; height: 6px; border-radius: 50%; background: #8aaac5; transition: all .2s; }
+.tour-nav-dot.on { background: #1a3a5c; width: 18px; border-radius: 3px; }
+
 @media (max-width: 600px) {
   .aitor-wrapper { flex-direction: column; align-items: stretch; width: 100%; }
   .modal { width: 100vw; height: 100dvh; border-radius: 0; order: 1; }
@@ -205,7 +238,13 @@ body { background: #0a2540; margin: 0; padding: 0; }
         <div class="brand-dept">Gestión Cobros</div>
       </div>
     </div>
-    <img src="logo_letra_sin_fondo.png" alt="Grupo Planeta Intranet" style="height:64px;object-fit:contain;filter:brightness(2.5) contrast(0.8) grayscale(0.3);opacity:0.95;">
+    <div class="topbar-right">
+      <img src="logo_letra_sin_fondo.png" alt="Grupo Planeta Intranet" style="height:64px;object-fit:contain;filter:brightness(2.5) contrast(0.8) grayscale(0.3);opacity:0.95;">
+      <button class="guide-btn" id="guideTourBtn">
+        <div class="guide-circle"><span class="guide-q">?</span></div>
+        <span class="guide-label">¿Por dónde empiezo?</span>
+      </button>
+    </div>
   </div>
 
   <div class="scene" id="scene">
@@ -287,17 +326,15 @@ body { background: #0a2540; margin: 0; padding: 0; }
     </div>
 
     <div class="node" style="left:7%;top:52%;" data-k="ctrl">
-      <div class="ctrl-outer">
-        <div class="ctrl-inner">
-          <svg width="52" height="52" viewBox="0 0 30 30" fill="none">
-            <rect x="6" y="3" width="18" height="24" rx="2" stroke="#00ffb4" stroke-width="1.8"/>
-            <rect x="9" y="6" width="12" height="18" rx="1.5" fill="rgba(0,255,180,0.08)" stroke="#00ffb4" stroke-width="1.1"/>
-            <circle cx="20.5" cy="15" r="1.6" fill="#00ffb4"/>
-            <path d="M6 27h18" stroke="#00ffb4" stroke-width="1.3" stroke-linecap="round"/>
-          </svg>
-        </div>
-      </div>
-     <span class="node-label" style="font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;">Control de<br>Gestión</span>
+      <div class="ctrl-outer"><div class="ctrl-inner">
+        <svg width="52" height="52" viewBox="0 0 30 30" fill="none">
+          <rect x="6" y="3" width="18" height="24" rx="2" stroke="#00ffb4" stroke-width="1.8"/>
+          <rect x="9" y="6" width="12" height="18" rx="1.5" fill="rgba(0,255,180,0.08)" stroke="#00ffb4" stroke-width="1.1"/>
+          <circle cx="20.5" cy="15" r="1.6" fill="#00ffb4"/>
+          <path d="M6 27h18" stroke="#00ffb4" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </div></div>
+      <span class="node-label" style="font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;">Control de<br>Gestión</span>
     </div>
 
     <div class="node" style="left:50%;top:16.5%;" data-k="reportes">
@@ -354,8 +391,7 @@ body { background: #0a2540; margin: 0; padding: 0; }
       </div>
       <div class="accesos-card" id="accesosCard">
         <div class="acc-icon-wrap">
-          <div class="acc-ring2"></div>
-          <div class="acc-ring1"></div>
+          <div class="acc-ring2"></div><div class="acc-ring1"></div>
           <div class="acc-icon-inner">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f0a830" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           </div>
@@ -379,10 +415,10 @@ body { background: #0a2540; margin: 0; padding: 0; }
         </div>
         <div class="modal-title"><h2>AITOR — Agente IA</h2><p>Asistente de Gestión de Cobros · Gemini</p></div>
         <button class="modal-menu-btn" id="modalMenuBtn" title="Menú de accesos">
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  Menú
-</button>
-<button class="modal-close" id="modalClose">&#x2715;</button>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          Menú
+        </button>
+        <button class="modal-close" id="modalClose">&#x2715;</button>
       </div>
       <div id="chatSection" style="display:flex;flex:1;flex-direction:column;overflow:hidden;">
         <div class="chat-area" id="chatArea"></div>
@@ -426,13 +462,24 @@ body { background: #0a2540; margin: 0; padding: 0; }
   </div>
 </div>
 
+<!-- Tour guiado -->
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-spotlight" id="tourSpotlight"></div>
+  <div class="tour-tooltip" id="tourTooltip"></div>
+  <div class="tour-nav-bar">
+    <button class="tour-nav-btn prev" id="tourBtnPrev" disabled>← Anterior</button>
+    <div class="tour-nav-dots" id="tourDots"></div>
+    <button class="tour-nav-btn skip" id="tourBtnSkip">Saltar</button>
+    <button class="tour-nav-btn next" id="tourBtnNext">Siguiente →</button>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const WORKER_URL   = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
   const GEMINI_MODEL = 'gemini-2.5-flash';
   const ACC_KEY      = 'adminhub_accesos_v1';
 
-  // ── SYSTEM PROMPT ──
   const SYSTEM = `Eres AITOR, el asistente de inteligencia artificial del Admin Hub de Gestión de Cobros de Grupo Planeta. Eres el guía principal del hub y ayudas al equipo a navegar, consultar datos y resolver dudas operativas.
 
 IDIOMA: Responde siempre en español de España. Usa vocabulario y expresiones propias de España (ordenador, móvil, etc.). Dirígete siempre al usuario en singular (tú), nunca en plural. Nunca uses latinismos ni expresiones de América Latina.
@@ -445,7 +492,7 @@ Las URLs son relativas al hub. Usa siempre este formato para los enlaces de nave
 
 MÓDULOS DISPONIBLES:
 - Reportes → reportes/index.html
-  Contiene: métricas de matrículas por marca y convocatoria (OBS, INESDI, ESDesign, UCMA), número de brutas/bajas/netas, becas, cierres pasados, SXDataHub, BI Curva. Selecciona convocatoria Abril u Octubre.
+  Contiene: métricas de matrículas por marca y convocatoria (OBS, INESDI, ESDesign, UCMA), número de brutas/bajas/netas, becas, cierres pasados, SXDataHub, BI Curva.
 
 - Cobros y Morosidad → cobros/index.html
   Contiene: datos de morosidad por convocatoria anterior y actual, Power BI Activa, carteras, impagos previos a inicio, mora por marca.
@@ -465,11 +512,10 @@ MÓDULOS DISPONIBLES:
 - Control de Gestión → control/index.html
   Contiene: panel de control de gestión general.
 
-ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo ⚡) contiene accesos directos configurables como Sudoku OBS, Bloqueo Campus, Hermes, PayComet, etc. Indícale al usuario que lo abra desde el panel lateral si busca uno de esos accesos.
+ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo) contiene accesos directos configurables como Sudoku OBS, Bloqueo Campus, Hermes, PayComet, etc.
 
-Cuando respondas con navegación, da primero el enlace y luego una línea breve de qué encontrará allí. No hagas listas largas si no se piden.`;
+Cuando respondas con navegación, da primero el enlace y luego una línea breve de qué encontrará allí.`;
 
-  // ── MÓDULOS ──
   const D = {
     reportes:   { label:'Reportes',          url:'reportes/index.html' },
     cobros:     { label:'Cobros',             url:'cobros/index.html' },
@@ -503,6 +549,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   }
   drawBg(); window.addEventListener('resize', drawBg);
 
+  // ── ACCESOS RÁPIDOS ──
   let accesos = [], accEditIdx = null, dragAccIdx = null;
   const DEFAULTS_ACCESOS = [
     { nombre:'Bloqueo Campus', url:'' }, { nombre:'Sudokus', url:'' },
@@ -542,67 +589,41 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
       </div>`).join('');
 
     list.querySelectorAll('.acc-item').forEach(el => {
-      el.addEventListener('dragstart', e => {
-        dragAccIdx = parseInt(el.dataset.i);
-        setTimeout(() => el.classList.add('dragging'), 0);
-        e.dataTransfer.effectAllowed = 'move';
-      });
-      el.addEventListener('dragend', () => {
-        el.classList.remove('dragging');
-        list.querySelectorAll('.acc-item').forEach(x => x.classList.remove('drag-over'));
-        dragAccIdx = null;
-      });
-      el.addEventListener('dragover', e => {
-        e.preventDefault();
-        if (dragAccIdx === null) return;
-        list.querySelectorAll('.acc-item').forEach(x => x.classList.remove('drag-over'));
-        el.classList.add('drag-over');
-      });
+      el.addEventListener('dragstart', e => { dragAccIdx = parseInt(el.dataset.i); setTimeout(() => el.classList.add('dragging'), 0); e.dataTransfer.effectAllowed = 'move'; });
+      el.addEventListener('dragend', () => { el.classList.remove('dragging'); list.querySelectorAll('.acc-item').forEach(x => x.classList.remove('drag-over')); dragAccIdx = null; });
+      el.addEventListener('dragover', e => { e.preventDefault(); if (dragAccIdx === null) return; list.querySelectorAll('.acc-item').forEach(x => x.classList.remove('drag-over')); el.classList.add('drag-over'); });
       el.addEventListener('drop', async e => {
         e.preventDefault();
         const targetIdx = parseInt(el.dataset.i);
         if (dragAccIdx === null || dragAccIdx === targetIdx) return;
         const moved = accesos.splice(dragAccIdx, 1)[0];
         accesos.splice(targetIdx, 0, moved);
-        await persistAccesos();
-        renderAccesos();
+        await persistAccesos(); renderAccesos();
       });
     });
   }
 
   const accWrap = document.getElementById('accesosWrap');
-  document.getElementById('accesosCard').addEventListener('click', function(e) {
-    e.stopPropagation(); accWrap.classList.toggle('open');
-  });
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('#accesosWrap') && !e.target.closest('#accModalOverlay')) accWrap.classList.remove('open');
-  });
-
+  document.getElementById('accesosCard').addEventListener('click', function(e) { e.stopPropagation(); accWrap.classList.toggle('open'); });
+  document.addEventListener('click', function(e) { if (!e.target.closest('#accesosWrap') && !e.target.closest('#accModalOverlay')) accWrap.classList.remove('open'); });
   document.getElementById('accesosAddBtn').addEventListener('click', function(e) {
-    e.stopPropagation();
-    accEditIdx = null;
+    e.stopPropagation(); accEditIdx = null;
     document.getElementById('accModalTitle').textContent = 'Nuevo acceso';
-    document.getElementById('accNombre').value = '';
-    document.getElementById('accUrl').value = '';
+    document.getElementById('accNombre').value = ''; document.getElementById('accUrl').value = '';
     document.getElementById('accBtnDelete').style.display = 'none';
     document.getElementById('accModalOverlay').classList.add('open');
   });
-
   window.accOpenEdit = function(idx) {
-    accEditIdx = idx;
-    const a = accesos[idx];
+    accEditIdx = idx; const a = accesos[idx];
     document.getElementById('accModalTitle').textContent = 'Editar acceso';
-    document.getElementById('accNombre').value = a.nombre;
-    document.getElementById('accUrl').value = a.url || '';
+    document.getElementById('accNombre').value = a.nombre; document.getElementById('accUrl').value = a.url || '';
     document.getElementById('accBtnDelete').style.display = 'flex';
     document.getElementById('accModalOverlay').classList.add('open');
   };
-
   function closeAccModal() { document.getElementById('accModalOverlay').classList.remove('open'); }
   document.getElementById('accModalClose').addEventListener('click', closeAccModal);
   document.getElementById('accBtnCancel').addEventListener('click', closeAccModal);
   document.getElementById('accModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeAccModal(); });
-
   document.getElementById('accBtnSave').addEventListener('click', async function() {
     const nombre = document.getElementById('accNombre').value.trim();
     const url = document.getElementById('accUrl').value.trim();
@@ -611,16 +632,15 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     if (accEditIdx !== null) accesos[accEditIdx] = obj; else accesos.unshift(obj);
     await persistAccesos(); closeAccModal(); renderAccesos();
   });
-
   document.getElementById('accBtnDelete').addEventListener('click', async function() {
     if (accEditIdx === null) return;
     if (!confirm(`¿Eliminar "${accesos[accEditIdx].nombre}"?`)) return;
     accesos.splice(accEditIdx, 1);
     await persistAccesos(); closeAccModal(); renderAccesos();
   });
-
   loadAccesos();
 
+  // ── AITOR ──
   let messages = [];
   const modal = document.getElementById('aitorModal');
   const chatArea = document.getElementById('chatArea');
@@ -630,11 +650,11 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   document.getElementById('aitorBadge').addEventListener('click', () => openModal());
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('modalMenuBtn').addEventListener('click', () => {
-  const existing = document.getElementById('quickBtns');
-  if (existing) existing.remove();
-  appendQuickButtons();
-  chatArea.scrollTop = chatArea.scrollHeight;
-});
+    const existing = document.getElementById('quickBtns');
+    if (existing) existing.remove();
+    appendQuickButtons();
+    chatArea.scrollTop = chatArea.scrollHeight;
+  });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
   function openModal(prompt) {
@@ -731,7 +751,6 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
   }
 
-  // ── BOTONES RÁPIDOS ──
   const QUICK_BTNS = [
     { icon:'📊', label:'Nº matrículas por marca y convocatoria', color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
     { icon:'📉', label:'Datos de morosidad',                     color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros' },
@@ -749,11 +768,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     const wrap = document.createElement('div'); wrap.className='quick-btns'; wrap.id='quickBtns';
     QUICK_BTNS.forEach(b => {
       const btn = document.createElement('button'); btn.className='quick-btn';
-      btn.innerHTML = `
-        <div class="qb-accent" style="background:${b.color};"></div>
-        <div class="qb-icon" style="background:${b.bg};">${b.icon}</div>
-        <span class="qb-text">${b.label}</span>
-        <span class="qb-tag" style="background:${b.tagBg};color:${b.tagColor};">${b.tag}</span>`;
+      btn.innerHTML = `<div class="qb-accent" style="background:${b.color};"></div><div class="qb-icon" style="background:${b.bg};">${b.icon}</div><span class="qb-text">${b.label}</span><span class="qb-tag" style="background:${b.tagBg};color:${b.tagColor};">${b.tag}</span>`;
       btn.addEventListener('click', () => { wrap.remove(); chatInput.value=b.label; sendMessage(); });
       wrap.appendChild(btn);
     });
@@ -765,6 +780,130 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     div.innerHTML = `<div class="msg-avatar">${AI_AV}</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
     chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
   }
+
+  // ── TOUR GUIADO ──
+  const TOUR_STEPS = [
+    { selector:'#aitorBadge', rect:true, color:'#00E6FF',
+      tag:{t:'Empieza aquí', bg:'rgba(0,180,255,0.15)', c:'#005080'},
+      title:'🤖 AITOR — tu guía',
+      desc:'Pulsa este botón para hablar con AITOR. Puedes pedirle que te lleve a cualquier módulo con lenguaje natural.',
+      extras:['«Llévame a Reportes»','«Ver datos de morosidad»','«Abrir cruce de datos»'] },
+    { selector:'.node[data-k="reportes"]', color:'#00E6FF',
+      tag:{t:'Módulo 1', bg:'rgba(0,230,255,0.12)', c:'#007a99'},
+      title:'📊 Reportes',
+      desc:'Métricas de matrículas por marca y convocatoria. Brutas, bajas, netas, becas y cierres pasados.' },
+    { selector:'.node[data-k="cobros"]', color:'#1dcc84',
+      tag:{t:'Módulo 2', bg:'rgba(29,204,132,0.12)', c:'#0a6644'},
+      title:'💰 Cobros',
+      desc:'Datos de morosidad, Power BI Activa y carteras por marca.' },
+    { selector:'.node[data-k="tareas"]', color:'#a878f0',
+      tag:{t:'Módulo 3', bg:'rgba(168,120,240,0.12)', c:'#5a2aaa'},
+      title:'✅ Tareas',
+      desc:'Seguimiento de tareas pendientes del equipo ADMC.' },
+    { selector:'.node[data-k="convo"]', color:'#3aabf0',
+      tag:{t:'Módulo 4', bg:'rgba(58,171,240,0.12)', c:'#0a5a8a'},
+      title:"🎓 Convo '27",
+      desc:'Fechas clave por marca y herramienta de cruce de datos entre Excels.' },
+    { selector:'.node[data-k="manuales"]', color:'#f0a830',
+      tag:{t:'Módulo 5', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
+      title:'📋 Manuales',
+      desc:'Manuales operativos y guías del equipo de cobros.' },
+    { selector:'.node[data-k="comisiones"]', color:'#ff64b4',
+      tag:{t:'Módulo 6', bg:'rgba(255,100,180,0.12)', c:'#8a1a5a'},
+      title:'💸 Comisiones',
+      desc:'Calculadora de comisiones, histórico por marca y anexos.' },
+    { selector:'.node[data-k="ctrl"]', color:'#00ffb4',
+      tag:{t:'Módulo 7', bg:'rgba(0,255,180,0.1)', c:'#005a38'},
+      title:'📋 Control de Gestión',
+      desc:'Panel de control de gestión general del equipo.' },
+    { selector:'#accesosCard', rect:true, color:'#f0a830',
+      tag:{t:'Accesos extra', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
+      title:'⚡ Accesos Rápidos',
+      desc:'Panel lateral con enlaces directos a herramientas externas. Personalizable y reordenable.',
+      extras:['Sudokus · Hermes · PayComet','Bloqueo Campus · Planner…'] },
+  ];
+
+  let tourCur = 0;
+  const tourOverlay  = document.getElementById('tourOverlay');
+  const tourSpot     = document.getElementById('tourSpotlight');
+  const tourTip      = document.getElementById('tourTooltip');
+  const tourDotsEl   = document.getElementById('tourDots');
+  const tourBtnPrev  = document.getElementById('tourBtnPrev');
+  const tourBtnNext  = document.getElementById('tourBtnNext');
+  const tourBtnSkip  = document.getElementById('tourBtnSkip');
+
+  TOUR_STEPS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'tour-nav-dot'; d.id = 'tdot' + i;
+    tourDotsEl.appendChild(d);
+  });
+
+  function tourShow(i) {
+    const s = TOUR_STEPS[i];
+    const el = document.querySelector(s.selector);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const navH = 56;
+
+    TOUR_STEPS.forEach((_, j) => {
+      document.getElementById('tdot' + j).className = 'tour-nav-dot' + (j === i ? ' on' : '');
+    });
+
+    const pad = s.rect ? 12 : 0;
+    if (s.rect) {
+      tourSpot.className = 'tour-spotlight rect';
+      tourSpot.style.left   = (r.left - pad) + 'px';
+      tourSpot.style.top    = (r.top - pad) + 'px';
+      tourSpot.style.width  = (r.width + pad * 2) + 'px';
+      tourSpot.style.height = (r.height + pad * 2) + 'px';
+      tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}99`;
+    } else {
+      const rad = 56;
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      tourSpot.className = 'tour-spotlight';
+      tourSpot.style.left   = (cx - rad) + 'px';
+      tourSpot.style.top    = (cy - rad) + 'px';
+      tourSpot.style.width  = (rad * 2) + 'px';
+      tourSpot.style.height = (rad * 2) + 'px';
+      tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}88`;
+    }
+
+    const ttW = 210;
+    const spotL = parseFloat(tourSpot.style.left);
+    const spotR = spotL + parseFloat(tourSpot.style.width);
+    const spotT = parseFloat(tourSpot.style.top);
+    let ttLeft, ttTop;
+
+    if (spotL > ttW + 20) {
+      ttLeft = spotL - ttW - 14;
+    } else if (window.innerWidth - spotR > ttW + 20) {
+      ttLeft = spotR + 14;
+    } else {
+      ttLeft = Math.max(10, Math.min(window.innerWidth - ttW - 10, spotL));
+    }
+    ttTop = Math.max(10, Math.min(window.innerHeight - navH - 180, spotT));
+
+    tourTip.style.left  = ttLeft + 'px';
+    tourTip.style.top   = ttTop + 'px';
+    tourTip.style.width = ttW + 'px';
+
+    let ex = s.extras ? `<div class="tour-tt-examples">${s.extras.map(e => `<div class="tour-tt-ex">${e}</div>`).join('')}</div>` : '';
+    tourTip.innerHTML = `<span class="tour-tt-tag" style="background:${s.tag.bg};color:${s.tag.c};">${s.tag.t}</span><div class="tour-tt-title">${s.title}</div><div class="tour-tt-desc">${s.desc}</div>${ex}`;
+
+    tourBtnPrev.disabled = (i === 0);
+    tourBtnNext.textContent = i === TOUR_STEPS.length - 1 ? '¡Listo! ✓' : 'Siguiente →';
+    tourCur = i;
+  }
+
+  function tourOpen()  { tourOverlay.classList.add('active'); tourShow(0); }
+  function tourClose() { tourOverlay.classList.remove('active'); }
+
+  document.getElementById('guideTourBtn').addEventListener('click', tourOpen);
+  tourBtnNext.addEventListener('click', () => { if (tourCur < TOUR_STEPS.length - 1) tourShow(tourCur + 1); else tourClose(); });
+  tourBtnPrev.addEventListener('click', () => { if (tourCur > 0) tourShow(tourCur - 1); });
+  tourBtnSkip.addEventListener('click', tourClose);
+
 });
 </script>
 </body>
