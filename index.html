@@ -173,7 +173,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .acc-btn-save:hover { background: #c8c2b8; }
 .acc-btn-delete { display: none; align-items: center; gap: 6px; background: rgba(163,45,45,0.1); border: 1px solid rgba(163,45,45,0.3); border-radius: 9px; padding: 9px 16px; color: #a32d2d; font-size: 13px; cursor: pointer; font-family: inherit; margin-right: auto; transition: background 0.15s; }
 .acc-btn-delete:hover { background: rgba(163,45,45,0.2); }
-
+.modal-menu-btn { display:flex; align-items:center; gap:5px; background:transparent; border:1px solid #c5bfb5; border-radius:8px; padding:5px 10px; color:#5a7a9a; font-size:11px; cursor:pointer; font-family:inherit; transition:all 0.2s; margin-right:6px; }
+.modal-menu-btn:hover { background:#ddd7cd; color:#1a3a5c; }
 @media (max-width: 600px) {
   .aitor-wrapper { flex-direction: column; align-items: stretch; width: 100%; }
   .modal { width: 100vw; height: 100dvh; border-radius: 0; order: 1; }
@@ -377,7 +378,11 @@ body { background: #0a2540; margin: 0; padding: 0; }
           <svg width="20" height="20" viewBox="0 0 100 120" fill="none"><g transform="scale(0.85 0.85) translate(8 10)"><path d="M10 20C10 20 25 5 45 15C55 20 60 35 60 50C60 65 55 80 45 85C35 90 20 85 15 75C10 65 10 50 10 50" fill="none" stroke="#22D3EE" stroke-width="2"/><path d="M50 15L55 10H65M60 25L65 20M55 40L65 35M60 55L65 50" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="50" r="5" fill="#22D3EE"/><circle cx="68" cy="10" r="1.5" fill="#22D3EE"/><circle cx="68" cy="35" r="1.5" fill="#22D3EE"/><circle cx="68" cy="50" r="1.5" fill="#22D3EE"/></g></svg>
         </div>
         <div class="modal-title"><h2>AITOR — Agente IA</h2><p>Asistente de Gestión de Cobros · Gemini</p></div>
-        <button class="modal-close" id="modalClose">&#x2715;</button>
+        <button class="modal-menu-btn" id="modalMenuBtn" title="Menú de accesos">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  Menú
+</button>
+<button class="modal-close" id="modalClose">&#x2715;</button>
       </div>
       <div id="chatSection" style="display:flex;flex:1;flex-direction:column;overflow:hidden;">
         <div class="chat-area" id="chatArea"></div>
@@ -624,6 +629,12 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
 
   document.getElementById('aitorBadge').addEventListener('click', () => openModal());
   document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalMenuBtn').addEventListener('click', () => {
+  const existing = document.getElementById('quickBtns');
+  if (existing) existing.remove();
+  appendQuickButtons();
+  chatArea.scrollTop = chatArea.scrollHeight;
+});
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
   function openModal(prompt) {
