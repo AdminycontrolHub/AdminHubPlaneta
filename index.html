@@ -11,20 +11,24 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .bg-image { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center; opacity: 0.18; }
 .bg-overlay { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(circle at center, rgba(10,37,64,0.4) 0%, rgba(10,37,64,0.7) 60%, rgba(8,30,52,0.9) 100%); }
 .bg-canvas { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+/* ── Topbar ── */
 .topbar { position: relative; z-index: 20; padding: 22px 28px 0; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-sq { width: 40px; height: 40px; border-radius: 11px; background: #003A5C; border: 1px solid rgba(0,230,255,0.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .brand-name { color: #fff; font-size: 17px; font-weight: 500; letter-spacing: -0.02em; }
 .brand-dept { color: rgba(0,230,255,0.38); font-size: 11px; margin-top: 2px; letter-spacing: 0.03em; }
-.topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.topbar-center { display: flex; align-items: center; }
 .guide-btn { display: flex; align-items: center; gap: 0; cursor: pointer; background: none; border: none; padding: 0; }
-.guide-circle { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(238,232,223,0.45); background: transparent; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
-.guide-btn:hover .guide-circle { background: rgba(238,232,223,0.12); border-color: #EEE8DF; }
-.guide-q { color: rgba(238,232,223,0.6); font-size: 13px; font-weight: 600; line-height: 1; transition: color .2s; }
+.guide-circle { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(238,232,223,0.5); background: transparent; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+.guide-btn:hover .guide-circle { background: rgba(238,232,223,0.14); border-color: #EEE8DF; box-shadow: 0 0 12px rgba(238,232,223,0.15); }
+.guide-q { color: rgba(238,232,223,0.7); font-size: 15px; font-weight: 600; line-height: 1; transition: color .2s; }
 .guide-btn:hover .guide-q { color: #EEE8DF; }
 .guide-label { max-width: 0; overflow: hidden; white-space: nowrap; font-size: 11px; color: #EEE8DF; opacity: 0; transition: max-width .3s ease, opacity .25s ease, margin .3s ease; margin-left: 0; font-family: inherit; }
-.guide-btn:hover .guide-label { max-width: 160px; opacity: 1; margin-left: 7px; }
-.ai-badge { display: flex; align-items: center; gap: 7px; background: rgba(0,90,130,0.15); border: 1px solid rgba(0,230,255,0.25); border-radius: 10px; padding: 5px 10px 5px 6px; cursor: pointer; position: absolute; bottom: 12px; right: 14px; z-index: 100; transition: all 0.3s ease; }
+.guide-btn:hover .guide-label { max-width: 160px; opacity: 1; margin-left: 8px; }
+
+/* ── AITOR badge ── */
+.ai-badge { display: flex; align-items: center; gap: 7px; background: rgba(0,90,130,0.15); border: 1px solid rgba(0,230,255,0.25); border-radius: 10px; padding: 5px 10px 5px 6px; cursor: pointer; position: absolute; top: 78%; right: 14px; z-index: 100; transition: all 0.3s ease; }
 .ai-badge:hover { background: rgba(0,230,255,0.1); border-color: rgba(0,230,255,0.6); transform: translateY(-2px); }
 .ai-orb { width: 30px; height: 30px; border-radius: 50%; background: #001828; border: 1px solid rgba(0,230,255,0.45); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
 .ai-orb-ring { position: absolute; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(0,230,255,0.15); animation: ai-pulse 2.5s ease-in-out infinite; }
@@ -35,6 +39,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.25;} }
 .ai-status-text { color: rgba(0,230,255,0.5); font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; }
 .ai-name { color: rgba(0,230,255,0.9); font-size: 11px; font-weight: 500; letter-spacing: -0.01em; }
+
+/* ── Modal AITOR ── */
 .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,5,15,0.82); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .aitor-wrapper { display: flex; align-items: flex-end; gap: 0; transform: scale(0.93) translateY(20px); transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1); }
@@ -82,6 +88,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .qb-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; margin: 0 2px 0 8px; border-radius: 8px; }
 .qb-text { flex: 1; font-size: 12px; color: #1a3a5c; padding: 9px 6px; line-height: 1.3; text-align: left; }
 .qb-tag { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; margin-right: 8px; white-space: nowrap; flex-shrink: 0; font-weight: 600; }
+
+/* ── Scene ── */
 .scene { flex: 1; position: relative; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 20px 20px 0; min-height: 560px; overflow: hidden; }
 .orbit-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 .hub { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 114px; height: 114px; border-radius: 50%; background: rgba(1,10,22,0.92); border: 2px solid rgba(0,230,255,0.6); display: flex; align-items: center; justify-content: center; z-index: 30; }
@@ -125,6 +133,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .rccw { animation: spin-ccw 120s linear infinite; transform-origin: 350px 265px; }
 @keyframes scan { from{transform:rotate(0deg);}to{transform:rotate(360deg);} }
 .scanner { animation: scan 8s linear infinite; transform-origin: 350px 265px; }
+
+/* ── Avatar panel ── */
 .avatar-3d-panel { order: 2; width: 180px; height: min(600px, 88vh); flex-shrink: 0; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; background: #E2DBD1; border: 1px solid #d0c9be; border-left: none; border-radius: 0 20px 20px 0; overflow: hidden; padding-bottom: 18px; }
 .avatar-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; mix-blend-mode: multiply; filter: brightness(0.95) contrast(1.02); animation: float3d 7s ease-in-out infinite; transform-origin: center bottom; }
 @keyframes float3d { 0%,100%{transform:perspective(600px) rotateY(-8deg) rotateX(2deg) translateY(0px);} 30%{transform:perspective(600px) rotateY(-4deg) rotateX(1deg) translateY(-10px);} 65%{transform:perspective(600px) rotateY(-11deg) rotateX(3deg) translateY(-6px);} }
@@ -138,6 +148,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .avatar-hud { position: absolute; top: 14px; right: 10px; background: #ddd7cd; border: 1px solid #c5bfb5; border-radius: 6px; padding: 3px 9px; font-family: 'Courier New',monospace; font-size: 9px; letter-spacing: 2px; color: #5a7a9a; z-index: 7; }
 .avatar-scanlines { position: absolute; inset: 0; background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.02) 2px,rgba(0,0,0,0.02) 4px); pointer-events: none; z-index: 6; }
 .avatar-particles { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+
+/* ── Accesos rápidos ── */
 .accesos-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 40; display: flex; align-items: stretch; transition: transform 0.38s cubic-bezier(0.34,1.2,0.64,1); }
 .accesos-wrap.open { transform: translateY(-50%) translateX(-210px); }
 .accesos-panel { width: 210px; background: rgba(2,12,28,0.97); border: 1px solid rgba(240,168,48,0.35); border-right: none; border-radius: 14px 0 0 14px; padding: 12px 11px; display: flex; flex-direction: column; gap: 5px; opacity: 0; pointer-events: none; transition: opacity 0.22s ease; max-height: 80vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(240,168,48,0.2) transparent; }
@@ -163,6 +175,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .acc-icon-inner { width: 32px; height: 32px; border-radius: 50%; background: rgba(240,168,48,0.1); border: 1px solid rgba(240,168,48,0.5); display: flex; align-items: center; justify-content: center; z-index: 2; animation: acc-glow 2.5s ease-in-out infinite; }
 @keyframes acc-glow { 0%,100%{border-color:rgba(240,168,48,0.4);} 50%{border-color:rgba(240,168,48,1);} }
 .acc-label { font-size: 10px; font-weight: 600; color: #f0a830; writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); letter-spacing: 0.06em; line-height: 1.2; white-space: nowrap; }
+
+/* ── Modal Acceso ── */
 .acc-modal-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,5,15,0.75); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 1rem; }
 .acc-modal-overlay.open { display: flex; }
 .acc-modal { width: min(420px,96vw); background: #EEE8DF; border-radius: 18px; padding: 24px; animation: fadeUp 0.28s ease; border: none; }
@@ -184,17 +198,35 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .acc-btn-delete { display: none; align-items: center; gap: 6px; background: rgba(163,45,45,0.1); border: 1px solid rgba(163,45,45,0.3); border-radius: 9px; padding: 9px 16px; color: #a32d2d; font-size: 13px; cursor: pointer; font-family: inherit; margin-right: auto; transition: background 0.15s; }
 .acc-btn-delete:hover { background: rgba(163,45,45,0.2); }
 
+/* ── Modal Contraseña Control Gestión ── */
+.ctrl-modal-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(0,5,15,0.88); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 1rem; }
+.ctrl-modal-overlay.open { display: flex; }
+.ctrl-modal { width: min(380px,96vw); background: #041C2E; border: 1px solid rgba(0,255,180,0.3); border-radius: 18px; padding: 28px; animation: fadeUp 0.28s ease; box-shadow: 0 0 40px rgba(0,255,180,0.1); }
+.ctrl-modal-icon { width: 52px; height: 52px; border-radius: 50%; background: rgba(0,255,180,0.08); border: 2px solid rgba(0,255,180,0.5); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.ctrl-modal h2 { color: #00ffb4; font-size: 15px; font-weight: 600; text-align: center; margin-bottom: 6px; letter-spacing: -0.01em; }
+.ctrl-modal-sub { color: rgba(0,200,180,0.5); font-size: 11px; text-align: center; margin-bottom: 22px; letter-spacing: 0.03em; }
+.ctrl-pw-field { margin-bottom: 8px; }
+.ctrl-pw-field input { width: 100%; background: rgba(0,20,40,0.8); border: 1px solid rgba(0,255,180,0.2); border-radius: 10px; padding: 11px 14px; color: #E0F7FF; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; letter-spacing: 0.1em; }
+.ctrl-pw-field input:focus { border-color: rgba(0,255,180,0.6); box-shadow: 0 0 0 3px rgba(0,255,180,0.08); }
+.ctrl-pw-field input::placeholder { color: rgba(0,200,180,0.3); letter-spacing: 0; }
+.ctrl-pw-error { color: #ff6b6b; font-size: 11px; margin-bottom: 14px; min-height: 16px; text-align: center; }
+.ctrl-modal-foot { display: flex; gap: 8px; }
+.ctrl-btn-cancel { flex: 1; background: transparent; border: 1px solid rgba(0,255,180,0.2); border-radius: 9px; padding: 10px; color: rgba(0,200,180,0.6); font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.ctrl-btn-cancel:hover { background: rgba(0,255,180,0.06); color: #00ffb4; }
+.ctrl-btn-enter { flex: 2; background: rgba(0,255,180,0.12); border: 1.5px solid rgba(0,255,180,0.5); border-radius: 9px; padding: 10px; color: #00ffb4; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.ctrl-btn-enter:hover { background: rgba(0,255,180,0.2); border-color: #00ffb4; }
+
 /* ── Tour guiado ── */
 .tour-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
 .tour-overlay.active { pointer-events: all; opacity: 1; }
 .tour-spotlight { position: fixed; border-radius: 50%; z-index: 502; pointer-events: none; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
 .tour-spotlight.rect { border-radius: 12px; }
-.tour-tooltip { position: fixed; z-index: 503; background: #EEE8DF; border-radius: 13px; padding: 13px 15px; width: 200px; border: 1px solid #d0c9be; transition: opacity 0.3s; pointer-events: none; }
-.tour-tt-tag { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; display: inline-block; margin-bottom: 5px; font-weight: 600; }
-.tour-tt-title { font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 4px; }
-.tour-tt-desc { font-size: 11px; color: #4a6a8a; line-height: 1.5; }
-.tour-tt-examples { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
-.tour-tt-ex { background: rgba(0,80,120,0.08); border-radius: 5px; padding: 3px 8px; font-size: 10px; color: #005080; font-style: italic; }
+.tour-tooltip { position: fixed; z-index: 503; background: #EEE8DF; border-radius: 13px; padding: 14px 16px; width: 220px; border: 1px solid #d0c9be; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: all 0.35s cubic-bezier(0.4,0,0.2,1); pointer-events: none; }
+.tour-tt-tag { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; display: inline-block; margin-bottom: 6px; font-weight: 600; }
+.tour-tt-title { font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 5px; }
+.tour-tt-desc { font-size: 11px; color: #4a6a8a; line-height: 1.6; }
+.tour-tt-examples { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+.tour-tt-ex { background: rgba(0,80,120,0.08); border-radius: 5px; padding: 4px 8px; font-size: 10px; color: #005080; font-style: italic; }
 .tour-nav-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 503; background: #E2DBD1; border-top: 2px solid #c5bfb5; padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .tour-nav-btn { border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; border: none; }
 .tour-nav-btn.prev { background: #d4cfc6; color: #1a3a5c; }
@@ -214,6 +246,7 @@ body { background: #0a2540; margin: 0; padding: 0; }
   .avatar-3d-panel { display: none; }
   .modal-overlay { align-items: flex-end; padding: 0; }
   .chat-input { font-size: 16px; }
+  .topbar-center { display: none; }
 }
 </style>
 </head>
@@ -238,13 +271,15 @@ body { background: #0a2540; margin: 0; padding: 0; }
         <div class="brand-dept">Gestión Cobros</div>
       </div>
     </div>
-    <div class="topbar-right">
-      <img src="logo_letra_sin_fondo.png" alt="Grupo Planeta Intranet" style="height:64px;object-fit:contain;filter:brightness(2.5) contrast(0.8) grayscale(0.3);opacity:0.95;">
+
+    <div class="topbar-center">
       <button class="guide-btn" id="guideTourBtn">
         <div class="guide-circle"><span class="guide-q">?</span></div>
         <span class="guide-label">¿Por dónde empiezo?</span>
       </button>
     </div>
+
+    <img src="logo_letra_sin_fondo.png" alt="Grupo Planeta Intranet" style="height:64px;object-fit:contain;filter:brightness(2.5) contrast(0.8) grayscale(0.3);opacity:0.95;">
   </div>
 
   <div class="scene" id="scene">
@@ -399,7 +434,6 @@ body { background: #0a2540; margin: 0; padding: 0; }
         <span class="acc-label">Accesos Rápidos</span>
       </div>
     </div>
-
     <div class="hint">toca una herramienta</div>
   </div>
 </div>
@@ -462,6 +496,25 @@ body { background: #0a2540; margin: 0; padding: 0; }
   </div>
 </div>
 
+<!-- Modal Contraseña Control de Gestión -->
+<div class="ctrl-modal-overlay" id="ctrlModalOverlay">
+  <div class="ctrl-modal">
+    <div class="ctrl-modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00ffb4" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2>Control de Gestión</h2>
+    <p class="ctrl-modal-sub">ACCESO RESTRINGIDO · PERSONAL AUTORIZADO</p>
+    <div class="ctrl-pw-field">
+      <input type="password" id="ctrlPwInput" placeholder="Introduce la contraseña" autocomplete="off">
+    </div>
+    <p class="ctrl-pw-error" id="ctrlPwError"></p>
+    <div class="ctrl-modal-foot">
+      <button class="ctrl-btn-cancel" id="ctrlBtnCancel">Cancelar</button>
+      <button class="ctrl-btn-enter" id="ctrlBtnEnter">Entrar →</button>
+    </div>
+  </div>
+</div>
+
 <!-- Tour guiado -->
 <div class="tour-overlay" id="tourOverlay">
   <div class="tour-spotlight" id="tourSpotlight"></div>
@@ -480,6 +533,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const GEMINI_MODEL = 'gemini-2.5-flash';
   const ACC_KEY      = 'adminhub_accesos_v1';
 
+  // ── CONTRASEÑA CONTROL DE GESTIÓN (cambiar aquí) ──
+  const CTRL_PASSWORD = 'control2027';
+  const CTRL_URL      = 'https://sites.google.com/psoplaneta.com/portal-pfuonline/inicio';
+
   const SYSTEM = `Eres AITOR, el asistente de inteligencia artificial del Admin Hub de Gestión de Cobros de Grupo Planeta. Eres el guía principal del hub y ayudas al equipo a navegar, consultar datos y resolver dudas operativas.
 
 IDIOMA: Responde siempre en español de España. Usa vocabulario y expresiones propias de España (ordenador, móvil, etc.). Dirígete siempre al usuario en singular (tú), nunca en plural. Nunca uses latinismos ni expresiones de América Latina.
@@ -492,49 +549,58 @@ Las URLs son relativas al hub. Usa siempre este formato para los enlaces de nave
 
 MÓDULOS DISPONIBLES:
 - Reportes → reportes/index.html
-  Contiene: métricas de matrículas por marca y convocatoria (OBS, INESDI, ESDesign, UCMA), número de brutas/bajas/netas, becas, cierres pasados, SXDataHub, BI Curva.
-
 - Cobros y Morosidad → cobros/index.html
-  Contiene: datos de morosidad por convocatoria anterior y actual, Power BI Activa, carteras, impagos previos a inicio, mora por marca.
-
 - Tareas / Seguimientos → seguimientos/index.html
-  Contiene: tareas pendientes del equipo ADMC, seguimiento de alumnos, gestión de incidencias.
-
 - Convo '27 → convo/index.html
-  Contiene: fechas clave por marca (con alertas si hay fechas vencidas), herramienta de cruce de datos entre Excels, convocatoria 2027.
-
 - Manuales → manuales/index.html
-  Contiene: manuales operativos y guías del equipo de cobros.
-
 - Comisiones → comisiones/index.html
-  Contiene: calculadora de comisiones, histórico por marca (OBS, INESDI, ESDesign, UCMA), anexos.
+- Control de Gestión → acceso restringido con contraseña, solo personal autorizado.
 
-- Control de Gestión → control/index.html
-  Contiene: panel de control de gestión general.
-
-ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo) contiene accesos directos configurables como Sudoku OBS, Bloqueo Campus, Hermes, PayComet, etc.
+ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo) contiene accesos directos configurables.
 
 Cuando respondas con navegación, da primero el enlace y luego una línea breve de qué encontrará allí.`;
 
-  const D = {
-    reportes:   { label:'Reportes',          url:'reportes/index.html' },
-    cobros:     { label:'Cobros',             url:'cobros/index.html' },
-    tareas:     { label:'Tareas',             url:'seguimientos/index.html' },
-    convo:      { label:"Convo '27",          url:'convo/index.html' },
-    manuales:   { label:'Manuales',           url:'manuales/index.html' },
-    comisiones: { label:'Comisiones',         url:'comisiones/index.html' },
-    ctrl:       { label:'Control de Gestión', url:'control/index.html' }
-  };
-
+  // ── Nodos ──
   document.querySelectorAll('.node').forEach(n => {
     n.addEventListener('click', () => {
-      const d = D[n.dataset.k]; if (!d) return;
-      if (d.url) { window.location.href = d.url; }
-      else if (d.excelUrl) { window.open(d.excelUrl, '_blank'); }
-      else { openAitor(d.prompt); }
+      const k = n.dataset.k;
+      if (k === 'ctrl') { openCtrlModal(); return; }
+      const urls = {
+        reportes:'reportes/index.html', cobros:'cobros/index.html',
+        tareas:'seguimientos/index.html', convo:'convo/index.html',
+        manuales:'manuales/index.html', comisiones:'comisiones/index.html'
+      };
+      if (urls[k]) window.location.href = urls[k];
     });
   });
 
+  // ── Modal contraseña Control de Gestión ──
+  function openCtrlModal() {
+    document.getElementById('ctrlPwInput').value = '';
+    document.getElementById('ctrlPwError').textContent = '';
+    document.getElementById('ctrlModalOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('ctrlPwInput').focus(), 150);
+  }
+  function closeCtrlModal() { document.getElementById('ctrlModalOverlay').classList.remove('open'); }
+
+  document.getElementById('ctrlBtnCancel').addEventListener('click', closeCtrlModal);
+  document.getElementById('ctrlModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCtrlModal(); });
+  document.getElementById('ctrlPwInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkCtrlPassword(); });
+  document.getElementById('ctrlBtnEnter').addEventListener('click', checkCtrlPassword);
+
+  function checkCtrlPassword() {
+    const val = document.getElementById('ctrlPwInput').value;
+    if (val === CTRL_PASSWORD) {
+      closeCtrlModal();
+      window.open(CTRL_URL, '_blank');
+    } else {
+      document.getElementById('ctrlPwError').textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+      document.getElementById('ctrlPwInput').value = '';
+      document.getElementById('ctrlPwInput').focus();
+    }
+  }
+
+  // ── Canvas background ──
   const cv = document.getElementById('bgc'), ctx = cv.getContext('2d');
   function drawBg() {
     cv.width = cv.offsetWidth; cv.height = cv.offsetHeight;
@@ -549,7 +615,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   }
   drawBg(); window.addEventListener('resize', drawBg);
 
-  // ── ACCESOS RÁPIDOS ──
+  // ── Accesos rápidos ──
   let accesos = [], accEditIdx = null, dragAccIdx = null;
   const DEFAULTS_ACCESOS = [
     { nombre:'Bloqueo Campus', url:'' }, { nombre:'Sudokus', url:'' },
@@ -558,24 +624,16 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     { nombre:'Planner', url:'' }, { nombre:'Calendario Comisiones', url:'' },
     { nombre:'Puntuación Master', url:'' }
   ];
-
   async function loadAccesos() {
-    try {
-      const res = await fetch(`${WORKER_URL}/kv?key=${ACC_KEY}`);
-      const data = await res.json();
-      accesos = data.value ? JSON.parse(data.value) : JSON.parse(JSON.stringify(DEFAULTS_ACCESOS));
-    } catch(e) { accesos = JSON.parse(JSON.stringify(DEFAULTS_ACCESOS)); }
+    try { const res = await fetch(`${WORKER_URL}/kv?key=${ACC_KEY}`); const data = await res.json(); accesos = data.value ? JSON.parse(data.value) : JSON.parse(JSON.stringify(DEFAULTS_ACCESOS)); }
+    catch(e) { accesos = JSON.parse(JSON.stringify(DEFAULTS_ACCESOS)); }
     renderAccesos();
   }
-
   async function persistAccesos() {
-    try {
-      await fetch(`${WORKER_URL}/kv`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ key: ACC_KEY, value: accesos }) });
-    } catch(e) { console.error('KV error:', e); }
+    try { await fetch(`${WORKER_URL}/kv`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ key: ACC_KEY, value: accesos }) }); }
+    catch(e) { console.error('KV error:', e); }
   }
-
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
   function renderAccesos() {
     const list = document.getElementById('accesosListado');
     if (!accesos.length) { list.innerHTML = '<div class="acc-loading">Sin accesos todavía</div>'; return; }
@@ -587,22 +645,18 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
         </button>
       </div>`).join('');
-
     list.querySelectorAll('.acc-item').forEach(el => {
       el.addEventListener('dragstart', e => { dragAccIdx = parseInt(el.dataset.i); setTimeout(() => el.classList.add('dragging'), 0); e.dataTransfer.effectAllowed = 'move'; });
       el.addEventListener('dragend', () => { el.classList.remove('dragging'); list.querySelectorAll('.acc-item').forEach(x => x.classList.remove('drag-over')); dragAccIdx = null; });
       el.addEventListener('dragover', e => { e.preventDefault(); if (dragAccIdx === null) return; list.querySelectorAll('.acc-item').forEach(x => x.classList.remove('drag-over')); el.classList.add('drag-over'); });
       el.addEventListener('drop', async e => {
-        e.preventDefault();
-        const targetIdx = parseInt(el.dataset.i);
+        e.preventDefault(); const targetIdx = parseInt(el.dataset.i);
         if (dragAccIdx === null || dragAccIdx === targetIdx) return;
-        const moved = accesos.splice(dragAccIdx, 1)[0];
-        accesos.splice(targetIdx, 0, moved);
+        const moved = accesos.splice(dragAccIdx, 1)[0]; accesos.splice(targetIdx, 0, moved);
         await persistAccesos(); renderAccesos();
       });
     });
   }
-
   const accWrap = document.getElementById('accesosWrap');
   document.getElementById('accesosCard').addEventListener('click', function(e) { e.stopPropagation(); accWrap.classList.toggle('open'); });
   document.addEventListener('click', function(e) { if (!e.target.closest('#accesosWrap') && !e.target.closest('#accModalOverlay')) accWrap.classList.remove('open'); });
@@ -625,8 +679,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   document.getElementById('accBtnCancel').addEventListener('click', closeAccModal);
   document.getElementById('accModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeAccModal(); });
   document.getElementById('accBtnSave').addEventListener('click', async function() {
-    const nombre = document.getElementById('accNombre').value.trim();
-    const url = document.getElementById('accUrl').value.trim();
+    const nombre = document.getElementById('accNombre').value.trim(), url = document.getElementById('accUrl').value.trim();
     if (!nombre) { alert('El nombre es obligatorio.'); return; }
     const obj = { nombre, url };
     if (accEditIdx !== null) accesos[accEditIdx] = obj; else accesos.unshift(obj);
@@ -635,8 +688,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   document.getElementById('accBtnDelete').addEventListener('click', async function() {
     if (accEditIdx === null) return;
     if (!confirm(`¿Eliminar "${accesos[accEditIdx].nombre}"?`)) return;
-    accesos.splice(accEditIdx, 1);
-    await persistAccesos(); closeAccModal(); renderAccesos();
+    accesos.splice(accEditIdx, 1); await persistAccesos(); closeAccModal(); renderAccesos();
   });
   loadAccesos();
 
@@ -650,10 +702,8 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   document.getElementById('aitorBadge').addEventListener('click', () => openModal());
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('modalMenuBtn').addEventListener('click', () => {
-    const existing = document.getElementById('quickBtns');
-    if (existing) existing.remove();
-    appendQuickButtons();
-    chatArea.scrollTop = chatArea.scrollHeight;
+    const existing = document.getElementById('quickBtns'); if (existing) existing.remove();
+    appendQuickButtons(); chatArea.scrollTop = chatArea.scrollHeight;
   });
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
@@ -667,7 +717,6 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     else setTimeout(() => chatInput.focus(), 150);
   }
   function closeModal() { modal.classList.remove('open'); }
-  function openAitor(prompt) { openModal(prompt); }
 
   document.addEventListener('mousemove', e => {
     if (!modal.classList.contains('open')) return;
@@ -696,11 +745,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     const MAX_RETRIES = 3; let lastError = null;
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        if (attempt > 1) {
-          const tb = typing.querySelector('.msg-bubble');
-          if (tb) tb.innerHTML = `<em style="color:rgba(0,200,255,0.55);font-size:12px;">⏳ Un momento, reintentando… (${attempt}/${MAX_RETRIES})</em>`;
-          await new Promise(r => setTimeout(r, 1200 * attempt));
-        }
+        if (attempt > 1) { const tb = typing.querySelector('.msg-bubble'); if (tb) tb.innerHTML = `<em style="color:rgba(0,200,255,0.55);font-size:12px;">⏳ Un momento, reintentando… (${attempt}/${MAX_RETRIES})</em>`; await new Promise(r => setTimeout(r, 1200 * attempt)); }
         const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ model: GEMINI_MODEL, contents: [
             { role:'user', parts:[{text:SYSTEM}] },
@@ -709,12 +754,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
           ], generationConfig: { maxOutputTokens:1024, temperature:0.7 } })
         });
         const data = await res.json();
-        if (data.error) {
-          const msg = data.error.message || '';
-          const isOverload = msg.toLowerCase().includes('high demand') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('overloaded');
-          if (isOverload && attempt < MAX_RETRIES) { lastError = msg; continue; }
-          throw new Error(msg);
-        }
+        if (data.error) { const msg = data.error.message || ''; const isOverload = msg.toLowerCase().includes('high demand') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('overloaded'); if (isOverload && attempt < MAX_RETRIES) { lastError = msg; continue; } throw new Error(msg); }
         typing.remove();
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '(sin respuesta)';
         messages.push({ role:'model', parts:[{text:reply}] }); appendMsg('model', reply); lastError = null; break;
@@ -742,10 +782,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   function appendMsg(role, text) {
     const div = document.createElement('div');
     const cr = (role==='model') ? 'assistant' : 'user'; div.className = `msg ${cr}`;
-    const html = text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="window.location.href=\'$2\';return false;">$1 →</a>')
-      .replace(/\n/g, '<br>');
+    const html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="window.location.href=\'$2\';return false;">$1 →</a>').replace(/\n/g, '<br>');
     const av = (cr==='user') ? US_AV : AI_AV;
     div.innerHTML = `<div class="msg-avatar">${av}</div><div class="msg-bubble">${html}</div>`;
     chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
@@ -785,69 +822,65 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   const TOUR_STEPS = [
     { selector:'#aitorBadge', rect:true, color:'#00E6FF',
       tag:{t:'Empieza aquí', bg:'rgba(0,180,255,0.15)', c:'#005080'},
-      title:'🤖 AITOR — tu guía',
-      desc:'Pulsa este botón para hablar con AITOR. Puedes pedirle que te lleve a cualquier módulo con lenguaje natural.',
+      title:'🤖 AITOR — tu guía del hub',
+      desc:'Tu asistente de IA siempre disponible. Puedes pedirle que te lleve a cualquier módulo usando lenguaje natural, sin necesidad de buscarlo tú mismo.',
       extras:['«Llévame a Reportes»','«Ver datos de morosidad»','«Abrir cruce de datos»'] },
     { selector:'.node[data-k="reportes"]', color:'#00E6FF',
       tag:{t:'Módulo 1', bg:'rgba(0,230,255,0.12)', c:'#007a99'},
       title:'📊 Reportes',
-      desc:'Métricas de matrículas por marca y convocatoria. Brutas, bajas, netas, becas y cierres pasados.' },
+      desc:'Métricas de matrículas por marca y convocatoria (OBS, INESDI, ESDesign, UCMA). Brutas, bajas, netas, becas, cierres pasados y acceso a SXDataHub.' },
     { selector:'.node[data-k="cobros"]', color:'#1dcc84',
       tag:{t:'Módulo 2', bg:'rgba(29,204,132,0.12)', c:'#0a6644'},
-      title:'💰 Cobros',
-      desc:'Datos de morosidad, Power BI Activa y carteras por marca.' },
+      title:'💰 Cobros y Morosidad',
+      desc:'Datos de morosidad por convocatoria anterior y actual, carteras por marca, Power BI Activa e impagos previos a inicio.' },
     { selector:'.node[data-k="tareas"]', color:'#a878f0',
       tag:{t:'Módulo 3', bg:'rgba(168,120,240,0.12)', c:'#5a2aaa'},
       title:'✅ Tareas',
-      desc:'Seguimiento de tareas pendientes del equipo ADMC.' },
+      desc:'Seguimiento de tareas pendientes del equipo ADMC, gestión de incidencias y seguimiento de alumnos.' },
     { selector:'.node[data-k="convo"]', color:'#3aabf0',
       tag:{t:'Módulo 4', bg:'rgba(58,171,240,0.12)', c:'#0a5a8a'},
       title:"🎓 Convo '27",
-      desc:'Fechas clave por marca y herramienta de cruce de datos entre Excels.' },
+      desc:'Fechas clave por marca con alertas automáticas si hay fechas vencidas. Incluye la herramienta de cruce de datos entre Excels.' },
     { selector:'.node[data-k="manuales"]', color:'#f0a830',
       tag:{t:'Módulo 5', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
       title:'📋 Manuales',
-      desc:'Manuales operativos y guías del equipo de cobros.' },
+      desc:'Manuales operativos y guías del equipo de cobros. Referencia rápida para procedimientos y protocolos.' },
     { selector:'.node[data-k="comisiones"]', color:'#ff64b4',
       tag:{t:'Módulo 6', bg:'rgba(255,100,180,0.12)', c:'#8a1a5a'},
       title:'💸 Comisiones',
-      desc:'Calculadora de comisiones, histórico por marca y anexos.' },
+      desc:'Calculadora de comisiones, histórico por marca (OBS, INESDI, ESDesign, UCMA) y anexos de comisiones.' },
     { selector:'.node[data-k="ctrl"]', color:'#00ffb4',
       tag:{t:'Módulo 7', bg:'rgba(0,255,180,0.1)', c:'#005a38'},
-      title:'📋 Control de Gestión',
-      desc:'Panel de control de gestión general del equipo.' },
+      title:'🔒 Control de Gestión',
+      desc:'Puerta de entrada al departamento de Control de Gestión. Acceso restringido a personal autorizado mediante contraseña.' },
     { selector:'#accesosCard', rect:true, color:'#f0a830',
-      tag:{t:'Accesos extra', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
+      tag:{t:'Panel lateral', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
       title:'⚡ Accesos Rápidos',
-      desc:'Panel lateral con enlaces directos a herramientas externas. Personalizable y reordenable.',
-      extras:['Sudokus · Hermes · PayComet','Bloqueo Campus · Planner…'] },
+      desc:'Panel lateral con enlaces directos a herramientas externas. Personalizable, reordenable por drag & drop y sincronizado para todo el equipo.',
+      extras:['Sudokus · Hermes · PayComet','Bloqueo Campus · Planner · Referidos'] },
   ];
 
   let tourCur = 0;
-  const tourOverlay  = document.getElementById('tourOverlay');
-  const tourSpot     = document.getElementById('tourSpotlight');
-  const tourTip      = document.getElementById('tourTooltip');
-  const tourDotsEl   = document.getElementById('tourDots');
-  const tourBtnPrev  = document.getElementById('tourBtnPrev');
-  const tourBtnNext  = document.getElementById('tourBtnNext');
-  const tourBtnSkip  = document.getElementById('tourBtnSkip');
+  const tourOverlay = document.getElementById('tourOverlay');
+  const tourSpot    = document.getElementById('tourSpotlight');
+  const tourTip     = document.getElementById('tourTooltip');
+  const tourDotsEl  = document.getElementById('tourDots');
+  const tourBtnPrev = document.getElementById('tourBtnPrev');
+  const tourBtnNext = document.getElementById('tourBtnNext');
+  const tourBtnSkip = document.getElementById('tourBtnSkip');
 
   TOUR_STEPS.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'tour-nav-dot'; d.id = 'tdot' + i;
+    const d = document.createElement('div'); d.className = 'tour-nav-dot'; d.id = 'tdot' + i;
     tourDotsEl.appendChild(d);
   });
 
   function tourShow(i) {
     const s = TOUR_STEPS[i];
-    const el = document.querySelector(s.selector);
-    if (!el) return;
+    const el = document.querySelector(s.selector); if (!el) return;
     const r = el.getBoundingClientRect();
-    const navH = 56;
+    const navH = 58;
 
-    TOUR_STEPS.forEach((_, j) => {
-      document.getElementById('tdot' + j).className = 'tour-nav-dot' + (j === i ? ' on' : '');
-    });
+    TOUR_STEPS.forEach((_, j) => { document.getElementById('tdot' + j).className = 'tour-nav-dot' + (j === i ? ' on' : ''); });
 
     const pad = s.rect ? 12 : 0;
     if (s.rect) {
@@ -859,8 +892,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
       tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}99`;
     } else {
       const rad = 56;
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       tourSpot.className = 'tour-spotlight';
       tourSpot.style.left   = (cx - rad) + 'px';
       tourSpot.style.top    = (cy - rad) + 'px';
@@ -869,20 +901,28 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
       tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}88`;
     }
 
-    const ttW = 210;
+    // Tooltip positioning: place it on the free side of the spotlight
+    const ttW = 230, ttH = 180;
     const spotL = parseFloat(tourSpot.style.left);
-    const spotR = spotL + parseFloat(tourSpot.style.width);
     const spotT = parseFloat(tourSpot.style.top);
-    let ttLeft, ttTop;
+    const spotW = parseFloat(tourSpot.style.width);
+    const spotH = parseFloat(tourSpot.style.height);
+    const spotR = spotL + spotW;
+    const spotB = spotT + spotH;
+    const margin = 16;
 
-    if (spotL > ttW + 20) {
-      ttLeft = spotL - ttW - 14;
-    } else if (window.innerWidth - spotR > ttW + 20) {
-      ttLeft = spotR + 14;
+    let ttLeft, ttTop;
+    // Prefer left of spotlight, else right, else above
+    if (spotL > ttW + margin * 2) {
+      ttLeft = spotL - ttW - margin;
+    } else if (window.innerWidth - spotR > ttW + margin * 2) {
+      ttLeft = spotR + margin;
     } else {
-      ttLeft = Math.max(10, Math.min(window.innerWidth - ttW - 10, spotL));
+      ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, spotL + spotW / 2 - ttW / 2));
     }
-    ttTop = Math.max(10, Math.min(window.innerHeight - navH - 180, spotT));
+    // Vertically: align with spotlight center, clamp to visible area above nav
+    ttTop = Math.max(margin, Math.min(window.innerHeight - navH - ttH - margin, spotT + spotH / 2 - ttH / 2));
+    ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, ttLeft));
 
     tourTip.style.left  = ttLeft + 'px';
     tourTip.style.top   = ttTop + 'px';
@@ -903,7 +943,6 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   tourBtnNext.addEventListener('click', () => { if (tourCur < TOUR_STEPS.length - 1) tourShow(tourCur + 1); else tourClose(); });
   tourBtnPrev.addEventListener('click', () => { if (tourCur > 0) tourShow(tourCur - 1); });
   tourBtnSkip.addEventListener('click', tourClose);
-
 });
 </script>
 </body>
