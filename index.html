@@ -251,8 +251,10 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .disc-dot-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
 .disc-dot { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.12); cursor: default; flex-shrink: 0; }
 .disc-plus-sep { font-size: 13px; color: #8aaac5; }
-.disc-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #d0c9be; border-radius: 10px; padding: 10px 12px; width: 200px; z-index: 999; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
-.disc-dot-wrap:hover .disc-tooltip { opacity: 1; }
+.disc-tooltip { display: none; } /* desactivado — usamos tooltip global */
+/* ── Tooltip flotante global DISC (renderizado en body, z-index máximo) ── */
+#discFloatTip { position: fixed; z-index: 9999; background: #fff; border: 1px solid #d0c9be; border-radius: 10px; padding: 10px 12px; width: 210px; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 6px 24px rgba(0,0,0,0.16); }
+#discFloatTip.visible { opacity: 1; }
 .disc-tooltip-title { font-size: 11px; font-weight: 600; color: #1a3a5c; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
 .disc-tooltip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .disc-tooltip-tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-bottom: 6px; display: inline-block; }
@@ -564,6 +566,9 @@ body { background: #0a2540; margin: 0; padding: 0; }
   </div>
 </div>
 
+<!-- Tooltip flotante global DISC -->
+<div id="discFloatTip"></div>
+
 <!-- Sub-modal edición de persona DISC -->
 <div class="disc-person-editor" id="discPersonEditor">
   <div class="disc-pe-box">
@@ -873,7 +878,47 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
 
   function discColorByKey(key) { return DISC_PALETTE.find(p => p.disc === key) || DISC_PALETTE[0]; }
 
-  // ── KV helpers ──
+  // ── Tooltip flotante global DISC ──
+  const floatTip = document.getElementById('discFloatTip');
+  let floatTipTimeout = null;
+
+  function showDiscTip(anchorEl, c) {
+    clearTimeout(floatTipTimeout);
+    floatTip.innerHTML = `
+      <div class="disc-tooltip-title">
+        <div class="disc-tooltip-dot" style="background:${c.hex}"></div>
+        ${c.label} — DISC ${c.disc}
+      </div>
+      <span class="disc-tooltip-tag" style="background:${c.tagBg};color:${c.tagColor}">${c.tag}</span>
+      ${c.tips.map(t => `<div class="disc-tip-item">${t}</div>`).join('')}
+    `;
+    floatTip.style.opacity = '0';
+    floatTip.style.display = 'block';
+
+    const r = anchorEl.getBoundingClientRect();
+    const tw = 210, th = floatTip.offsetHeight;
+    const margin = 10;
+
+    // Posición preferida: encima del círculo
+    let top = r.top - th - margin;
+    let left = r.left + r.width / 2 - tw / 2;
+
+    // Si se sale por arriba, ponerlo debajo
+    if (top < margin) top = r.bottom + margin;
+    // Clamp horizontal
+    left = Math.max(margin, Math.min(window.innerWidth - tw - margin, left));
+
+    floatTip.style.top = top + 'px';
+    floatTip.style.left = left + 'px';
+    floatTip.classList.add('visible');
+  }
+
+  function hideDiscTip() {
+    floatTipTimeout = setTimeout(() => {
+      floatTip.classList.remove('visible');
+      setTimeout(() => { floatTip.style.display = 'none'; }, 150);
+    }, 80);
+  }
   async function loadDiscData() {
     try {
       const res = await fetch(`${WORKER_URL}/kv?key=${DISC_KEY}`);
@@ -940,9 +985,9 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
         const c = discColorByKey(key);
         const wrap = document.createElement('div'); wrap.className = 'disc-dot-wrap';
         const dot = document.createElement('div'); dot.className = 'disc-dot'; dot.style.background = c.hex;
-        const tip = document.createElement('div'); tip.className = 'disc-tooltip';
-        tip.innerHTML = `<div class="disc-tooltip-title"><div class="disc-tooltip-dot" style="background:${c.hex}"></div>${c.label} — DISC ${c.disc}</div><span class="disc-tooltip-tag" style="background:${c.tagBg};color:${c.tagColor}">${c.tag}</span>${c.tips.map(t=>`<div class="disc-tip-item">${t}</div>`).join('')}`;
-        wrap.appendChild(dot); wrap.appendChild(tip); group.appendChild(wrap);
+        dot.addEventListener('mouseenter', () => showDiscTip(dot, c));
+        dot.addEventListener('mouseleave', hideDiscTip);
+        wrap.appendChild(dot); group.appendChild(wrap);
       });
 
       // Botón editar persona (solo en modo edición)
