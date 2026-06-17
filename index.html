@@ -18,7 +18,12 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .brand-sq { width: 40px; height: 40px; border-radius: 11px; background: #003A5C; border: 1px solid rgba(0,230,255,0.4); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .brand-name { color: #fff; font-size: 17px; font-weight: 500; letter-spacing: -0.02em; }
 .brand-dept { color: rgba(0,230,255,0.38); font-size: 11px; margin-top: 2px; letter-spacing: 0.03em; }
-.topbar-center { display: flex; align-items: center; position: absolute; right: 58px; bottom: -44px; z-index: 20; }
+.topbar-center { display: flex; align-items: center; gap: 8px; position: absolute; right: 58px; bottom: -44px; z-index: 20; }
+
+/* ── Botón espectro colores ── */
+.disc-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(238,232,223,0.5); background: conic-gradient(#e63946 0deg,#f4a261 45deg,#f9c74f 90deg,#90be6d 135deg,#43aa8b 180deg,#4cc9f0 225deg,#4361ee 270deg,#7b2d8b 315deg,#e63946 360deg); cursor: pointer; flex-shrink: 0; transition: transform .2s, border-color .2s; padding: 0; }
+.disc-btn:hover { transform: scale(1.1); border-color: #EEE8DF; }
+
 .guide-btn { display: flex; align-items: center; gap: 0; cursor: pointer; background: none; border: none; padding: 0; }
 .guide-circle { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(238,232,223,0.5); background: transparent; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
 .guide-btn:hover .guide-circle { background: rgba(238,232,223,0.14); border-color: #EEE8DF; box-shadow: 0 0 12px rgba(238,232,223,0.15); }
@@ -216,6 +221,88 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .ctrl-btn-enter { flex: 2; background: rgba(0,255,180,0.12); border: 1.5px solid rgba(0,255,180,0.5); border-radius: 9px; padding: 10px; color: #00ffb4; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
 .ctrl-btn-enter:hover { background: rgba(0,255,180,0.2); border-color: #00ffb4; }
 
+/* ── Modal DISC Colores de Comunicación ── */
+.disc-modal-overlay { position: fixed; inset: 0; z-index: 450; background: rgba(0,5,15,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 1rem; }
+.disc-modal-overlay.open { display: flex; }
+.disc-modal { width: min(520px,96vw); background: #EEE8DF; border-radius: 18px; animation: fadeUp 0.28s ease; overflow: visible; max-height: 90vh; display: flex; flex-direction: column; }
+.disc-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 12px; border-bottom: 1px solid #d0c9be; background: #E2DBD1; border-radius: 18px 18px 0 0; flex-shrink: 0; }
+.disc-modal-title { font-size: 13px; font-weight: 600; color: #1a3a5c; display: flex; align-items: center; gap: 8px; }
+.disc-spectrum-mini { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); background: conic-gradient(#e63946 0deg,#f4a261 45deg,#f9c74f 90deg,#90be6d 135deg,#43aa8b 180deg,#4cc9f0 225deg,#4361ee 270deg,#7b2d8b 315deg,#e63946 360deg); flex-shrink: 0; }
+.disc-modal-header-actions { display: flex; align-items: center; gap: 6px; }
+.disc-edit-toggle { display: flex; align-items: center; gap: 5px; background: transparent; border: 1px solid #c5bfb5; border-radius: 7px; padding: 5px 10px; color: #5a7a9a; font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.disc-edit-toggle:hover { background: #ddd7cd; color: #1a3a5c; }
+.disc-edit-toggle.active { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+.disc-modal-close { width: 28px; height: 28px; border-radius: 7px; background: transparent; border: 1px solid #c5bfb5; color: #5a7a9a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.15s; }
+.disc-modal-close:hover { background: #ddd7cd; color: #1a3a5c; }
+.disc-subheader { display: flex; align-items: center; justify-content: space-between; padding: 6px 18px 2px; flex-shrink: 0; }
+.disc-col-headers { display: flex; align-items: center; gap: 10px; flex: 1; }
+.disc-col-name-spacer { width: 52px; flex-shrink: 0; }
+.disc-col-colors-spacer { flex: 1; }
+.disc-col-counter-label { font-size: 10px; font-weight: 600; color: #5a7a9a; text-align: center; width: 96px; flex-shrink: 0; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.25; word-break: break-word; }
+.disc-col-edit-spacer { width: 24px; flex-shrink: 0; }
+.disc-sync-bar { display: flex; align-items: center; gap: 5px; }
+.disc-sync-dot { width: 5px; height: 5px; border-radius: 50%; background: #1D9E75; animation: blink 2s ease-in-out infinite; }
+.disc-sync-text { font-size: 9px; color: #8aaac5; letter-spacing: 0.06em; white-space: nowrap; }
+.disc-body { overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c5bfb5 transparent; }
+.disc-list { padding: 4px 13px 8px; display: flex; flex-direction: column; gap: 7px; }
+.disc-person { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 10px; border: 1px solid #d0c9be; background: #E2DBD1; position: relative; }
+.disc-name { font-size: 13px; font-weight: 600; color: #1a3a5c; width: 52px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.disc-colors-group { display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap; }
+.disc-dot-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+.disc-dot { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.12); cursor: default; flex-shrink: 0; }
+.disc-plus-sep { font-size: 13px; color: #8aaac5; }
+.disc-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid #d0c9be; border-radius: 10px; padding: 10px 12px; width: 200px; z-index: 999; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.disc-dot-wrap:hover .disc-tooltip { opacity: 1; }
+.disc-tooltip-title { font-size: 11px; font-weight: 600; color: #1a3a5c; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.disc-tooltip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.disc-tooltip-tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-bottom: 6px; display: inline-block; }
+.disc-tip-item { font-size: 11px; color: #4a6a8a; line-height: 1.5; padding: 2px 0; display: flex; align-items: flex-start; gap: 5px; }
+.disc-tip-item::before { content: "·"; flex-shrink: 0; color: #8aaac5; margin-top: 1px; }
+.disc-counter { display: flex; align-items: center; gap: 5px; width: 96px; flex-shrink: 0; justify-content: center; }
+.disc-count-btn { width: 24px; height: 24px; border-radius: 7px; border: 1px solid #c5bfb5; background: transparent; color: #5a7a9a; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; line-height: 1; padding: 0; transition: background 0.1s; }
+.disc-count-btn:hover { background: #ddd7cd; color: #1a3a5c; }
+.disc-count-btn:active { transform: scale(0.93); }
+.disc-count-val { font-size: 15px; font-weight: 600; color: #1a3a5c; min-width: 22px; text-align: center; transition: color 0.2s; }
+.disc-count-val.pos { color: #0F6E56; }
+.disc-count-val.neg { color: #A32D2D; }
+.disc-del-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(163,45,45,0.25); background: transparent; color: #a32d2d; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center; font-family: inherit; line-height: 1; padding: 0; flex-shrink: 0; transition: background 0.12s; }
+.disc-del-btn:hover { background: rgba(163,45,45,0.1); }
+.disc-editing .disc-del-btn { display: flex; }
+.disc-editing .disc-counter { display: none; }
+/* ── Añadir persona ── */
+.disc-add-row { padding: 6px 13px 14px; flex-shrink: 0; }
+.disc-add-btn { display: flex; align-items: center; gap: 7px; width: 100%; padding: 9px 14px; border-radius: 10px; border: 1.5px dashed #c5bfb5; background: transparent; color: #8aaac5; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.disc-add-btn:hover { border-color: #8aaac5; color: #1a3a5c; background: rgba(26,58,92,0.04); }
+/* ── Sub-modal edición persona ── */
+.disc-person-editor { position: fixed; inset: 0; z-index: 460; background: rgba(0,5,15,0.7); display: none; align-items: center; justify-content: center; padding: 1rem; }
+.disc-person-editor.open { display: flex; }
+.disc-pe-box { width: min(400px,96vw); background: #EEE8DF; border-radius: 16px; padding: 22px; animation: fadeUp 0.22s ease; }
+.disc-pe-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.disc-pe-head h3 { font-size: 14px; font-weight: 600; color: #1a3a5c; }
+.disc-pe-close { width: 28px; height: 28px; border-radius: 7px; background: transparent; border: 1px solid #c5bfb5; color: #5a7a9a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+.disc-pe-close:hover { background: #ddd7cd; }
+.disc-pe-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #4a6a8a; margin-bottom: 6px; display: block; }
+.disc-pe-input { width: 100%; background: #fff; border: 1px solid #d0c9be; border-radius: 9px; padding: 9px 13px; color: #1a3a5c; font-size: 13px; font-family: inherit; outline: none; margin-bottom: 16px; transition: border-color 0.2s; }
+.disc-pe-input:focus { border-color: #8aaac5; }
+.disc-color-palette { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.disc-palette-row { display: flex; align-items: center; gap: 8px; }
+.disc-palette-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4a6a8a; width: 18px; flex-shrink: 0; }
+.disc-palette-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; flex-shrink: 0; }
+.disc-palette-dot:hover { transform: scale(1.15); }
+.disc-palette-dot.selected { border-color: #1a3a5c; transform: scale(1.18); }
+.disc-palette-name { font-size: 11px; color: #5a7a9a; margin-left: 4px; }
+.disc-selected-colors { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 32px; padding: 6px 10px; background: #E2DBD1; border-radius: 8px; margin-bottom: 16px; border: 1px solid #d0c9be; }
+.disc-sel-dot { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.12); flex-shrink: 0; cursor: pointer; position: relative; transition: transform 0.12s; }
+.disc-sel-dot:hover { transform: scale(1.1); }
+.disc-sel-dot::after { content: '×'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; background: rgba(0,0,0,0.35); border-radius: 50%; opacity: 0; transition: opacity 0.12s; }
+.disc-sel-dot:hover::after { opacity: 1; }
+.disc-sel-empty { font-size: 11px; color: #b0bec8; }
+.disc-pe-foot { display: flex; gap: 8px; justify-content: flex-end; }
+.disc-pe-cancel { background: transparent; border: 1px solid #c5bfb5; border-radius: 9px; padding: 8px 16px; color: #5a7a9a; font-size: 13px; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+.disc-pe-cancel:hover { background: #ddd7cd; }
+.disc-pe-save { background: #1a3a5c; border: 1px solid #1a3a5c; border-radius: 9px; padding: 8px 20px; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; }
+.disc-pe-save:hover { background: #0f2440; }
+
 /* ── Tour guiado ── */
 .tour-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
 .tour-overlay.active { pointer-events: all; opacity: 1; }
@@ -273,6 +360,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
     </div>
 
     <div class="topbar-center">
+      <!-- Espectro DISC primero, ? después -->
+      <button class="disc-btn" id="discBtn" title="Colores de comunicación DISC" aria-label="Colores de comunicación"></button>
       <button class="guide-btn" id="guideTourBtn">
         <div class="guide-circle"><span class="guide-q">?</span></div>
         <span class="guide-label">¿Por dónde empiezo?</span>
@@ -438,6 +527,63 @@ body { background: #0a2540; margin: 0; padding: 0; }
   </div>
 </div>
 
+<!-- Modal DISC Colores de Comunicación -->
+<div class="disc-modal-overlay" id="discModal">
+  <div class="disc-modal">
+    <div class="disc-modal-header">
+      <div class="disc-modal-title">
+        <div class="disc-spectrum-mini"></div>
+        Colores de comunicación
+      </div>
+      <div class="disc-modal-header-actions">
+        <button class="disc-edit-toggle" id="discEditToggle">✏ Editar</button>
+        <button class="disc-modal-close" id="discModalClose">✕</button>
+      </div>
+    </div>
+    <div class="disc-subheader">
+      <div class="disc-col-headers">
+        <div class="disc-col-name-spacer"></div>
+        <div class="disc-col-colors-spacer"></div>
+        <div class="disc-col-counter-label" id="discCounterLabel">LO UTILICÉ Y ME SIRVIÓ</div>
+        <div class="disc-col-edit-spacer"></div>
+      </div>
+      <div class="disc-sync-bar">
+        <div class="disc-sync-dot"></div>
+        <span class="disc-sync-text">EN TIEMPO REAL</span>
+      </div>
+    </div>
+    <div class="disc-body">
+      <div class="disc-list" id="discList"></div>
+      <div class="disc-add-row" id="discAddRow" style="display:none;">
+        <button class="disc-add-btn" id="discAddBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Añadir persona
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-modal edición de persona DISC -->
+<div class="disc-person-editor" id="discPersonEditor">
+  <div class="disc-pe-box">
+    <div class="disc-pe-head">
+      <h3 id="discPeTitle">Nueva persona</h3>
+      <button class="disc-pe-close" id="discPeClose">✕</button>
+    </div>
+    <label class="disc-pe-label">Nombre</label>
+    <input class="disc-pe-input" id="discPeName" placeholder="Nombre del miembro…" maxlength="20">
+    <label class="disc-pe-label">Colores DISC — toca para añadir</label>
+    <div class="disc-color-palette" id="discPalette"></div>
+    <label class="disc-pe-label">Colores seleccionados — toca para quitar</label>
+    <div class="disc-selected-colors" id="discSelectedColors"><span class="disc-sel-empty">Ninguno</span></div>
+    <div class="disc-pe-foot">
+      <button class="disc-pe-cancel" id="discPeCancel">Cancelar</button>
+      <button class="disc-pe-save" id="discPeSave">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal AITOR -->
 <div class="modal-overlay" id="aitorModal">
   <div class="aitor-wrapper">
@@ -532,8 +678,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const WORKER_URL   = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
   const GEMINI_MODEL = 'gemini-2.5-flash';
   const ACC_KEY      = 'adminhub_accesos_v1';
+  const DISC_KEY     = 'adminhub_disc_counters_v1';
 
-  // ── CONTRASEÑA CONTROL DE GESTIÓN (cambiar aquí) ──
   const CTRL_PASSWORD = 'control2027';
   const CTRL_URL      = 'https://sites.google.com/psoplaneta.com/portal-pfuonline/inicio';
 
@@ -574,7 +720,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     });
   });
 
-  // ── Modal contraseña Control de Gestión ──
+  // ── Modal Control de Gestión ──
   function openCtrlModal() {
     document.getElementById('ctrlPwInput').value = '';
     document.getElementById('ctrlPwError').textContent = '';
@@ -582,22 +728,14 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     setTimeout(() => document.getElementById('ctrlPwInput').focus(), 150);
   }
   function closeCtrlModal() { document.getElementById('ctrlModalOverlay').classList.remove('open'); }
-
   document.getElementById('ctrlBtnCancel').addEventListener('click', closeCtrlModal);
   document.getElementById('ctrlModalOverlay').addEventListener('click', function(e) { if (e.target === this) closeCtrlModal(); });
   document.getElementById('ctrlPwInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkCtrlPassword(); });
   document.getElementById('ctrlBtnEnter').addEventListener('click', checkCtrlPassword);
-
   function checkCtrlPassword() {
     const val = document.getElementById('ctrlPwInput').value;
-    if (val === CTRL_PASSWORD) {
-      closeCtrlModal();
-      window.open(CTRL_URL, '_blank');
-    } else {
-      document.getElementById('ctrlPwError').textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
-      document.getElementById('ctrlPwInput').value = '';
-      document.getElementById('ctrlPwInput').focus();
-    }
+    if (val === CTRL_PASSWORD) { closeCtrlModal(); window.open(CTRL_URL, '_blank'); }
+    else { document.getElementById('ctrlPwError').textContent = 'Contraseña incorrecta. Inténtalo de nuevo.'; document.getElementById('ctrlPwInput').value = ''; document.getElementById('ctrlPwInput').focus(); }
   }
 
   // ── Canvas background ──
@@ -691,6 +829,291 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     accesos.splice(accEditIdx, 1); await persistAccesos(); closeAccModal(); renderAccesos();
   });
   loadAccesos();
+
+  // ────────────────────────────────────────────────────────────
+  // ── DISC — Colores de Comunicación (editable + KV en tiempo real)
+  // ────────────────────────────────────────────────────────────
+
+  // Paleta DISC completa
+  const DISC_PALETTE = [
+    { disc:'D', hex:'#E24B4A', label:'Rojo',     tag:'Perfil D — Dominancia',  tagBg:'#FCEBEB', tagColor:'#791F1F',
+      tips:['Ve directo al grano','Habla de resultados y retos','Evita rodeos innecesarios','Dale autonomía y control','Acepta su carácter directo'] },
+    { disc:'I', hex:'#F9C74F', label:'Amarillo',  tag:'Perfil I — Influencia',  tagBg:'#FAEEDA', tagColor:'#633806',
+      tips:['Muéstrate entusiasta y abierto','Deja espacio para conversar','Reconoce sus logros públicamente','Haz la comunicación amena','Evita un tono demasiado frío'] },
+    { disc:'S', hex:'#1FC77E', label:'Verde',     tag:'Perfil S — Estabilidad', tagBg:'#EAF3DE', tagColor:'#27500A',
+      tips:['Habla con calma y ritmo pausado','Da tiempo para reflexionar','Muestra apoyo y consistencia','Evita cambios bruscos sin aviso','Valora el trabajo en equipo'] },
+    { disc:'C', hex:'#4CC9F0', label:'Azul',      tag:'Perfil C — Cumplimiento',tagBg:'#E6F1FB', tagColor:'#0C447C',
+      tips:['Prepara datos y argumentos','Sé preciso y ordenado','Evita improvisaciones','Dale tiempo para analizar','Respeta los procedimientos'] },
+    { disc:'D2', hex:'#FF7043', label:'Naranja',  tag:'Perfil D — Dominancia alt.', tagBg:'#FBE9E7', tagColor:'#7B2B14',
+      tips:['Ve directo al grano','Habla de resultados y retos','Evita rodeos innecesarios','Dale autonomía y control','Acepta su carácter directo'] },
+    { disc:'I2', hex:'#AB47BC', label:'Violeta',  tag:'Perfil I — Influencia alt.',  tagBg:'#F3E5F5', tagColor:'#4A148C',
+      tips:['Muéstrate entusiasta y abierto','Deja espacio para conversar','Reconoce sus logros públicamente','Haz la comunicación amena','Evita un tono demasiado frío'] },
+    { disc:'S2', hex:'#26A69A', label:'Teal',     tag:'Perfil S — Estabilidad alt.',  tagBg:'#E0F2F1', tagColor:'#00401A',
+      tips:['Habla con calma y ritmo pausado','Da tiempo para reflexionar','Muestra apoyo y consistencia','Evita cambios bruscos sin aviso','Valora el trabajo en equipo'] },
+    { disc:'C2', hex:'#5C6BC0', label:'Índigo',   tag:'Perfil C — Cumplimiento alt.', tagBg:'#E8EAF6', tagColor:'#1A237E',
+      tips:['Prepara datos y argumentos','Sé preciso y ordenado','Evita improvisaciones','Dale tiempo para analizar','Respeta los procedimientos'] },
+  ];
+
+  // Estado en memoria — se sincroniza con KV
+  // discData = [ { name, colors:[disc_key,...], counter } ]
+  const DISC_DEFAULTS = [
+    { name:'Elsa',  colors:['S','C'], counter:0 },
+    { name:'Noe',   colors:['S','D'], counter:0 },
+    { name:'Silvia',colors:['C','S'], counter:0 },
+    { name:'Ana',   colors:['I','C'], counter:0 },
+    { name:'Vero',  colors:['S','C'], counter:0 },
+  ];
+
+  let discData = JSON.parse(JSON.stringify(DISC_DEFAULTS));
+  let discPollInterval = null;
+  let discSaving = false;
+  let discEditing = false;
+  let discEditIdx = null; // null = nueva persona
+  let discPeColors = [];  // colores seleccionados en el sub-modal
+
+  function discColorByKey(key) { return DISC_PALETTE.find(p => p.disc === key) || DISC_PALETTE[0]; }
+
+  // ── KV helpers ──
+  async function loadDiscData() {
+    try {
+      const res = await fetch(`${WORKER_URL}/kv?key=${DISC_KEY}`);
+      const data = await res.json();
+      if (data.value) {
+        const saved = JSON.parse(data.value);
+        if (Array.isArray(saved) && saved.length > 0) discData = saved;
+      }
+    } catch(e) {}
+    renderDiscList();
+  }
+
+  async function persistDiscData() {
+    if (discSaving) return;
+    discSaving = true;
+    try {
+      await fetch(`${WORKER_URL}/kv`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key: DISC_KEY, value: discData })
+      });
+    } catch(e) { console.error('DISC KV:', e); }
+    discSaving = false;
+  }
+
+  async function pollDisc() {
+    try {
+      const res = await fetch(`${WORKER_URL}/kv?key=${DISC_KEY}`);
+      const data = await res.json();
+      if (!data.value) return;
+      const saved = JSON.parse(data.value);
+      if (!Array.isArray(saved)) return;
+      const localStr = JSON.stringify(discData);
+      const remoteStr = JSON.stringify(saved);
+      if (localStr !== remoteStr) { discData = saved; renderDiscList(); }
+    } catch(e) {}
+  }
+
+  // ── Render principal ──
+  function renderDiscList() {
+    const list = document.getElementById('discList');
+    const addRow = document.getElementById('discAddRow');
+    list.innerHTML = '';
+    addRow.style.display = discEditing ? '' : 'none';
+
+    if (discEditing) list.closest('.disc-modal').classList.add('disc-editing');
+    else list.closest('.disc-modal').classList.remove('disc-editing');
+
+    discData.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'disc-person';
+
+      // Nombre
+      const name = document.createElement('span');
+      name.className = 'disc-name';
+      name.textContent = p.name;
+      name.title = p.name;
+      row.appendChild(name);
+
+      // Colores
+      const group = document.createElement('div');
+      group.className = 'disc-colors-group';
+      (p.colors || []).forEach((key, ci) => {
+        if (ci > 0) { const sep = document.createElement('span'); sep.className = 'disc-plus-sep'; sep.textContent = '+'; group.appendChild(sep); }
+        const c = discColorByKey(key);
+        const wrap = document.createElement('div'); wrap.className = 'disc-dot-wrap';
+        const dot = document.createElement('div'); dot.className = 'disc-dot'; dot.style.background = c.hex;
+        const tip = document.createElement('div'); tip.className = 'disc-tooltip';
+        tip.innerHTML = `<div class="disc-tooltip-title"><div class="disc-tooltip-dot" style="background:${c.hex}"></div>${c.label} — DISC ${c.disc}</div><span class="disc-tooltip-tag" style="background:${c.tagBg};color:${c.tagColor}">${c.tag}</span>${c.tips.map(t=>`<div class="disc-tip-item">${t}</div>`).join('')}`;
+        wrap.appendChild(dot); wrap.appendChild(tip); group.appendChild(wrap);
+      });
+
+      // Botón editar persona (solo en modo edición)
+      if (discEditing) {
+        const editDot = document.createElement('button');
+        editDot.style.cssText = 'background:transparent;border:none;cursor:pointer;color:#8aaac5;font-size:11px;padding:2px 4px;flex-shrink:0;';
+        editDot.textContent = '✏';
+        editDot.title = 'Editar colores';
+        editDot.addEventListener('click', () => openPersonEditor(i));
+        group.appendChild(editDot);
+      }
+
+      row.appendChild(group);
+
+      // Contador (oculto en modo edición via CSS)
+      const counter = document.createElement('div');
+      counter.className = 'disc-counter';
+      const bm = document.createElement('button'); bm.className = 'disc-count-btn'; bm.textContent = '−';
+      const val = document.createElement('span'); val.className = 'disc-count-val'; val.id = 'disc-c-' + i;
+      val.textContent = p.counter || 0;
+      if ((p.counter||0) > 0) val.classList.add('pos');
+      else if ((p.counter||0) < 0) val.classList.add('neg');
+      const bp = document.createElement('button'); bp.className = 'disc-count-btn'; bp.textContent = '+';
+      bp.addEventListener('click', async () => { discData[i].counter = (discData[i].counter||0)+1; renderDiscList(); await persistDiscData(); });
+      bm.addEventListener('click', async () => { discData[i].counter = (discData[i].counter||0)-1; renderDiscList(); await persistDiscData(); });
+      counter.appendChild(bm); counter.appendChild(val); counter.appendChild(bp);
+      row.appendChild(counter);
+
+      // Botón eliminar (solo edición)
+      const delBtn = document.createElement('button');
+      delBtn.className = 'disc-del-btn';
+      delBtn.innerHTML = '×';
+      delBtn.title = 'Eliminar';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm(`¿Eliminar a "${p.name}"?`)) return;
+        discData.splice(i, 1);
+        renderDiscList();
+        await persistDiscData();
+      });
+      row.appendChild(delBtn);
+
+      list.appendChild(row);
+    });
+  }
+
+  // ── Toggle modo edición ──
+  const discEditToggle = document.getElementById('discEditToggle');
+  discEditToggle.addEventListener('click', () => {
+    discEditing = !discEditing;
+    discEditToggle.textContent = discEditing ? '✓ Listo' : '✏ Editar';
+    discEditToggle.classList.toggle('active', discEditing);
+    document.getElementById('discAddRow').style.display = discEditing ? '' : 'none';
+    renderDiscList();
+  });
+
+  // ── Añadir persona ──
+  document.getElementById('discAddBtn').addEventListener('click', () => openPersonEditor(null));
+
+  // ── Sub-modal edición persona ──
+  function openPersonEditor(idx) {
+    discEditIdx = idx;
+    const pe = document.getElementById('discPersonEditor');
+    const peTitle = document.getElementById('discPeTitle');
+    const peInput = document.getElementById('discPeName');
+    peTitle.textContent = idx === null ? 'Nueva persona' : 'Editar persona';
+    peInput.value = idx !== null ? discData[idx].name : '';
+    discPeColors = idx !== null ? [...(discData[idx].colors || [])] : [];
+    renderPalette();
+    renderSelectedColors();
+    pe.classList.add('open');
+    setTimeout(() => peInput.focus(), 100);
+  }
+
+  function closePe() { document.getElementById('discPersonEditor').classList.remove('open'); }
+
+  document.getElementById('discPeClose').addEventListener('click', closePe);
+  document.getElementById('discPeCancel').addEventListener('click', closePe);
+  document.getElementById('discPersonEditor').addEventListener('click', function(e) { if (e.target === this) closePe(); });
+
+  function renderPalette() {
+    const pal = document.getElementById('discPalette');
+    pal.innerHTML = '';
+    // agrupar en filas de 4
+    for (let r = 0; r < 2; r++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'disc-palette-row';
+      for (let c = 0; c < 4; c++) {
+        const item = DISC_PALETTE[r*4+c];
+        if (!item) continue;
+        const dot = document.createElement('div');
+        dot.className = 'disc-palette-dot' + (discPeColors.includes(item.disc) ? ' selected' : '');
+        dot.style.background = item.hex;
+        dot.title = `${item.label} (${item.disc})`;
+        dot.addEventListener('click', () => {
+          if (discPeColors.includes(item.disc)) {
+            discPeColors = discPeColors.filter(k => k !== item.disc);
+          } else {
+            if (discPeColors.length >= 4) { alert('Máximo 4 colores por persona.'); return; }
+            discPeColors.push(item.disc);
+          }
+          renderPalette(); renderSelectedColors();
+        });
+        rowEl.appendChild(dot);
+        const lbl = document.createElement('span');
+        lbl.className = 'disc-palette-name';
+        lbl.textContent = `${item.label}`;
+        if (c < 3) rowEl.appendChild(lbl);
+      }
+      pal.appendChild(rowEl);
+    }
+  }
+
+  function renderSelectedColors() {
+    const box = document.getElementById('discSelectedColors');
+    box.innerHTML = '';
+    if (!discPeColors.length) { box.innerHTML = '<span class="disc-sel-empty">Ninguno</span>'; return; }
+    discPeColors.forEach((key, i) => {
+      const c = discColorByKey(key);
+      const dot = document.createElement('div');
+      dot.className = 'disc-sel-dot';
+      dot.style.background = c.hex;
+      dot.title = `Quitar ${c.label}`;
+      dot.addEventListener('click', () => {
+        discPeColors.splice(i, 1);
+        renderPalette(); renderSelectedColors();
+      });
+      box.appendChild(dot);
+    });
+  }
+
+  document.getElementById('discPeSave').addEventListener('click', async () => {
+    const nombre = document.getElementById('discPeName').value.trim();
+    if (!nombre) { alert('El nombre es obligatorio.'); return; }
+    if (!discPeColors.length) { alert('Elige al menos un color.'); return; }
+    if (discEditIdx === null) {
+      discData.push({ name: nombre, colors: [...discPeColors], counter: 0 });
+    } else {
+      discData[discEditIdx].name = nombre;
+      discData[discEditIdx].colors = [...discPeColors];
+    }
+    closePe();
+    renderDiscList();
+    await persistDiscData();
+  });
+
+  // Ajustar texto cabecera
+  function fitDiscLabel() {
+    const el = document.getElementById('discCounterLabel');
+    if (!el) return;
+    el.style.width = '96px';
+    let size = 11;
+    while (size > 7) { el.style.fontSize = size + 'px'; if (el.scrollWidth <= 98) break; size -= 0.5; }
+  }
+
+  // ── Modal DISC abre/cierra ──
+  const discModal = document.getElementById('discModal');
+  document.getElementById('discBtn').addEventListener('click', function() {
+    discModal.classList.add('open');
+    loadDiscData();
+    setTimeout(fitDiscLabel, 80);
+    discPollInterval = setInterval(pollDisc, 15000);
+  });
+  document.getElementById('discModalClose').addEventListener('click', closeDiscModal);
+  discModal.addEventListener('click', function(e) { if (e.target === this) closeDiscModal(); });
+  function closeDiscModal() {
+    discModal.classList.remove('open');
+    discEditing = false;
+    discEditToggle.textContent = '✏ Editar';
+    discEditToggle.classList.remove('active');
+    if (discPollInterval) { clearInterval(discPollInterval); discPollInterval = null; }
+  }
 
   // ── AITOR ──
   let messages = [];
@@ -878,59 +1301,33 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     const s = TOUR_STEPS[i];
     const el = document.querySelector(s.selector); if (!el) return;
     const r = el.getBoundingClientRect();
-    const navH = 58;
-
     TOUR_STEPS.forEach((_, j) => { document.getElementById('tdot' + j).className = 'tour-nav-dot' + (j === i ? ' on' : ''); });
-
     const pad = s.rect ? 12 : 0;
     if (s.rect) {
       tourSpot.className = 'tour-spotlight rect';
-      tourSpot.style.left   = (r.left - pad) + 'px';
-      tourSpot.style.top    = (r.top - pad) + 'px';
-      tourSpot.style.width  = (r.width + pad * 2) + 'px';
-      tourSpot.style.height = (r.height + pad * 2) + 'px';
+      tourSpot.style.left   = (r.left - pad) + 'px'; tourSpot.style.top    = (r.top - pad) + 'px';
+      tourSpot.style.width  = (r.width + pad * 2) + 'px'; tourSpot.style.height = (r.height + pad * 2) + 'px';
       tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}99`;
     } else {
-      const rad = 56;
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const rad = 56; const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       tourSpot.className = 'tour-spotlight';
-      tourSpot.style.left   = (cx - rad) + 'px';
-      tourSpot.style.top    = (cy - rad) + 'px';
-      tourSpot.style.width  = (rad * 2) + 'px';
-      tourSpot.style.height = (rad * 2) + 'px';
+      tourSpot.style.left   = (cx - rad) + 'px'; tourSpot.style.top    = (cy - rad) + 'px';
+      tourSpot.style.width  = (rad * 2) + 'px'; tourSpot.style.height  = (rad * 2) + 'px';
       tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}88`;
     }
-
-    // Tooltip positioning: place it on the free side of the spotlight
     const ttW = 400, ttH = 320;
-    const spotL = parseFloat(tourSpot.style.left);
-    const spotT = parseFloat(tourSpot.style.top);
-    const spotW = parseFloat(tourSpot.style.width);
-    const spotH = parseFloat(tourSpot.style.height);
-    const spotR = spotL + spotW;
-    const spotB = spotT + spotH;
-    const margin = 16;
-
+    const spotL = parseFloat(tourSpot.style.left), spotT = parseFloat(tourSpot.style.top);
+    const spotW = parseFloat(tourSpot.style.width), spotH = parseFloat(tourSpot.style.height);
+    const spotR = spotL + spotW; const margin = 16;
     let ttLeft, ttTop;
-    // Prefer left of spotlight, else right, else above
-    if (spotL > ttW + margin * 2) {
-      ttLeft = spotL - ttW - margin;
-    } else if (window.innerWidth - spotR > ttW + margin * 2) {
-      ttLeft = spotR + margin;
-    } else {
-      ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, spotL + spotW / 2 - ttW / 2));
-    }
-    // Vertically: align with spotlight center, clamp to visible area above nav
-   ttTop = Math.max(margin, Math.min(window.innerHeight * 0.55, spotT + spotH / 2 - ttH / 2));
+    if (spotL > ttW + margin * 2) ttLeft = spotL - ttW - margin;
+    else if (window.innerWidth - spotR > ttW + margin * 2) ttLeft = spotR + margin;
+    else ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, spotL + spotW / 2 - ttW / 2));
+    ttTop = Math.max(margin, Math.min(window.innerHeight * 0.55, spotT + spotH / 2 - ttH / 2));
     ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, ttLeft));
-
-    tourTip.style.left  = ttLeft + 'px';
-    tourTip.style.top   = ttTop + 'px';
-    tourTip.style.width = ttW + 'px';
-
+    tourTip.style.left = ttLeft + 'px'; tourTip.style.top = ttTop + 'px'; tourTip.style.width = ttW + 'px';
     let ex = s.extras ? `<div class="tour-tt-examples">${s.extras.map(e => `<div class="tour-tt-ex">${e}</div>`).join('')}</div>` : '';
     tourTip.innerHTML = `<span class="tour-tt-tag" style="background:${s.tag.bg};color:${s.tag.c};">${s.tag.t}</span><div class="tour-tt-title">${s.title}</div><div class="tour-tt-desc">${s.desc}</div>${ex}`;
-
     tourBtnPrev.disabled = (i === 0);
     tourBtnNext.textContent = i === TOUR_STEPS.length - 1 ? '¡Listo! ✓' : 'Siguiente →';
     tourCur = i;
@@ -938,7 +1335,6 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
 
   function tourOpen()  { tourOverlay.classList.add('active'); tourShow(0); }
   function tourClose() { tourOverlay.classList.remove('active'); }
-
   document.getElementById('guideTourBtn').addEventListener('click', tourOpen);
   tourBtnNext.addEventListener('click', () => { if (tourCur < TOUR_STEPS.length - 1) tourShow(tourCur + 1); else tourClose(); });
   tourBtnPrev.addEventListener('click', () => { if (tourCur > 0) tourShow(tourCur - 1); });
