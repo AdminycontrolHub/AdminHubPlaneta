@@ -224,7 +224,7 @@ body { background: #0a2540; margin: 0; padding: 0; }
 /* ── Modal DISC Colores de Comunicación ── */
 .disc-modal-overlay { position: fixed; inset: 0; z-index: 450; background: rgba(0,5,15,0.82); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 1rem; }
 .disc-modal-overlay.open { display: flex; }
-.disc-modal { width: min(520px,96vw); background: #EEE8DF; border-radius: 18px; animation: fadeUp 0.28s ease; overflow: visible; max-height: 90vh; display: flex; flex-direction: column; }
+.disc-modal { width: min(520px,96vw); background: #EEE8DF; border-radius: 18px; animation: fadeUp 0.28s ease; overflow: visible; display: flex; flex-direction: column; }
 .disc-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 12px; border-bottom: 1px solid #d0c9be; background: #E2DBD1; border-radius: 18px 18px 0 0; flex-shrink: 0; }
 .disc-modal-title { font-size: 13px; font-weight: 600; color: #1a3a5c; display: flex; align-items: center; gap: 8px; }
 .disc-spectrum-mini { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); background: conic-gradient(#e63946 0deg,#f4a261 45deg,#f9c74f 90deg,#90be6d 135deg,#43aa8b 180deg,#4cc9f0 225deg,#4361ee 270deg,#7b2d8b 315deg,#e63946 360deg); flex-shrink: 0; }
@@ -243,7 +243,7 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .disc-sync-bar { display: flex; align-items: center; gap: 5px; }
 .disc-sync-dot { width: 5px; height: 5px; border-radius: 50%; background: #1D9E75; animation: blink 2s ease-in-out infinite; }
 .disc-sync-text { font-size: 9px; color: #8aaac5; letter-spacing: 0.06em; white-space: nowrap; }
-.disc-body { overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c5bfb5 transparent; }
+.disc-body { overflow: visible; flex: 1; }
 .disc-list { padding: 4px 13px 8px; display: flex; flex-direction: column; gap: 7px; }
 .disc-person { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 10px; border: 1px solid #d0c9be; background: #E2DBD1; position: relative; }
 .disc-name { font-size: 13px; font-weight: 600; color: #1a3a5c; width: 52px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -253,8 +253,8 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .disc-plus-sep { font-size: 13px; color: #8aaac5; }
 .disc-tooltip { display: none; } /* desactivado — usamos tooltip global */
 /* ── Tooltip flotante global DISC (renderizado en body, z-index máximo) ── */
-#discFloatTip { position: fixed; z-index: 9999; background: #fff; border: 1px solid #d0c9be; border-radius: 10px; padding: 10px 12px; width: 210px; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 6px 24px rgba(0,0,0,0.16); }
-#discFloatTip.visible { opacity: 1; }
+#discFloatTip { position: fixed; z-index: 9999; background: #fff; border: 1px solid #d0c9be; border-radius: 10px; padding: 10px 12px; width: 210px; pointer-events: none; display: none; opacity: 0; transition: opacity 0.12s; box-shadow: 0 6px 24px rgba(0,0,0,0.16); }
+#discFloatTip.visible { opacity: 1; display: block; }
 .disc-tooltip-title { font-size: 11px; font-weight: 600; color: #1a3a5c; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
 .disc-tooltip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .disc-tooltip-tag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-bottom: 6px; display: inline-block; }
@@ -878,13 +878,13 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
 
   function discColorByKey(key) { return DISC_PALETTE.find(p => p.disc === key) || DISC_PALETTE[0]; }
 
-  // ── Tooltip flotante global DISC ──
+  // ── Tooltip flotante global DISC — sigue el cursor ──
   const floatTip = document.getElementById('discFloatTip');
   let floatTipTimeout = null;
+  let currentTipTarget = null;
 
-  function showDiscTip(anchorEl, c) {
-    clearTimeout(floatTipTimeout);
-    floatTip.innerHTML = `
+  function buildTipHTML(c) {
+    return `
       <div class="disc-tooltip-title">
         <div class="disc-tooltip-dot" style="background:${c.hex}"></div>
         ${c.label} — DISC ${c.disc}
@@ -892,32 +892,43 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
       <span class="disc-tooltip-tag" style="background:${c.tagBg};color:${c.tagColor}">${c.tag}</span>
       ${c.tips.map(t => `<div class="disc-tip-item">${t}</div>`).join('')}
     `;
-    floatTip.style.opacity = '0';
-    floatTip.style.display = 'block';
+  }
 
-    const r = anchorEl.getBoundingClientRect();
-    const tw = 210, th = floatTip.offsetHeight;
-    const margin = 10;
-
-    // Posición preferida: encima del círculo
-    let top = r.top - th - margin;
-    let left = r.left + r.width / 2 - tw / 2;
-
-    // Si se sale por arriba, ponerlo debajo
-    if (top < margin) top = r.bottom + margin;
-    // Clamp horizontal
-    left = Math.max(margin, Math.min(window.innerWidth - tw - margin, left));
-
-    floatTip.style.top = top + 'px';
+  function positionTip(x, y) {
+    const tw = floatTip.offsetWidth || 220;
+    const th = floatTip.offsetHeight || 180;
+    const margin = 14;
+    const offset = 18; // distancia del cursor
+    let left = x + offset;
+    let top  = y - th / 2;
+    // Si se sale por la derecha → aparece a la izquierda
+    if (left + tw + margin > window.innerWidth) left = x - tw - offset;
+    // Clamp vertical
+    top = Math.max(margin, Math.min(window.innerHeight - th - margin, top));
     floatTip.style.left = left + 'px';
+    floatTip.style.top  = top  + 'px';
+  }
+
+  document.addEventListener('mousemove', function(e) {
+    if (currentTipTarget) positionTip(e.clientX, e.clientY);
+  });
+
+  function showDiscTip(dotEl, c, e) {
+    clearTimeout(floatTipTimeout);
+    currentTipTarget = dotEl;
+    floatTip.innerHTML = buildTipHTML(c);
+    floatTip.style.display = 'block';
+    positionTip(e.clientX, e.clientY);
+    // Forzar reflow antes de añadir clase para que transition funcione
+    floatTip.offsetHeight;
     floatTip.classList.add('visible');
   }
 
   function hideDiscTip() {
     floatTipTimeout = setTimeout(() => {
+      currentTipTarget = null;
       floatTip.classList.remove('visible');
-      setTimeout(() => { floatTip.style.display = 'none'; }, 150);
-    }, 80);
+    }, 60);
   }
   async function loadDiscData() {
     try {
@@ -985,7 +996,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
         const c = discColorByKey(key);
         const wrap = document.createElement('div'); wrap.className = 'disc-dot-wrap';
         const dot = document.createElement('div'); dot.className = 'disc-dot'; dot.style.background = c.hex;
-        dot.addEventListener('mouseenter', () => showDiscTip(dot, c));
+        dot.addEventListener('mouseenter', (e) => showDiscTip(dot, c, e));
         dot.addEventListener('mouseleave', hideDiscTip);
         wrap.appendChild(dot); group.appendChild(wrap);
       });
