@@ -1086,35 +1086,36 @@ function updateSelCount(){
 }
 
 /* ===================== EXPORTAR SELECCIÓN ===================== */
+function sanitizeForXLSX(obj){
+  const out={};
+  for(const k in obj){
+    const v=obj[k];
+    if(v===null||v===undefined)out[k]='';
+    else if(typeof v==='boolean')out[k]=v?'Si':'No';
+    else if(typeof v==='number')out[k]=v;
+    else out[k]=String(v);
+  }
+  return out;
+}
 function exportLHSeleccion(){
   const idxs=Array.from(document.querySelectorAll('.lh-row-check:checked')).map(c=>+c.dataset.idx);
   if(!idxs.length){alert('Selecciona al menos un candidato.');return;}
-  const s=v=>String(v==null?'':v);
   const sel=idxs.map(i=>lhCandidatos[i]);
-  const wsData=sel.map(c=>({
-    'Marca':s(c.brand),
-    'Candidato':s(c.nombre),
-    'DNI':s(c.dni),
-    'Email':s(c.email),
-    'Master':s(c.master),
-    'Beca EUR':Number(c.importe)||0,
-    'Beca Pct':s(c.pct)+'%',
-    'DV':s(c.dv),
-    'Asignado a':s(c.asignadoA),
-    'Estado':s(c.estado),
-    'Tejado de':s(c.tejado),
-    'Notificado':c.notificado?'Si':'No',
-    'Sustituido por':s(c.sustituido),
-    'En el programa':s(c.enPrograma),
-    'Observaciones':s(c.observaciones)
+  const wsData=sel.map(c=>sanitizeForXLSX({
+    Marca:c.brand,Candidato:c.nombre,DNI:c.dni,Email:c.email,
+    Master:c.master,BecaEUR:Number(c.importe)||0,
+    BecaPct:String(c.pct||0)+'%',DV:c.dv,
+    AsignadoA:c.asignadoA,Estado:c.estado,TejadoDe:c.tejado,
+    Notificado:c.notificado?'Si':'No',
+    SustituidoPor:c.sustituido,EnElPrograma:c.enPrograma,
+    Observaciones:c.observaciones
   }));
   try{
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.json_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb,'Seleccion',ws);
-    const fecha=new Date().toLocaleDateString('es-ES').replace(/\//g,'-');
-    XLSX.writeFile(wb,'BecasLH_Seleccion_'+fecha+'.xlsx');
-  }catch(err){console.error('Export seleccion error:',err);alert('Error al exportar: '+err.message);}
+    XLSX.writeFile(wb,'BecasLH_Seleccion_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  }catch(err){console.error(err);alert('Error al exportar: '+err.message);}
 }
 
 /* ===================== EXTRACCIÓN FINAL ===================== */
@@ -1125,28 +1126,21 @@ async function exportLHFinal(){
     if(!ok)return;
   }
   /* Generar Excel formato entrega */
-  const s=v=>String(v==null?'':v);
-  const wsData=lhCandidatos.filter(c=>c.estado==='Matriculado').map(c=>({
-    'CAMPUS':s(c.brand),
-    'Fecha inscripcion':new Date().toLocaleDateString('es-ES'),
-    'Curso':s(c.master),
-    'Convocatoria':s(lhMeta.convocatoria),
-    'APELLIDOS NOMBRE':s(c.nombre),
-    'Nacionalidad':'Espana',
-    'Pais de residencia':'Espana',
-    'PROVINCIA':'Barcelona',
-    'PRECIO CURSO':7500,
-    'FACTURACION NETA':Number(c.importe)||0,
-    'TIPOLOGIA MATRICULA':'BECA',
-    'TIPOLOGIA ALUMNO':'NUEVA MATRICULA',
-    'Observaciones':'Beca Hospitalet '+s(lhMeta.year)
+  const wsDataFinal=lhCandidatos.filter(c=>c.estado==='Matriculado').map(c=>sanitizeForXLSX({
+    CAMPUS:c.brand,FechaInscripcion:new Date().toISOString().slice(0,10),
+    Curso:c.master,Convocatoria:lhMeta.convocatoria,
+    APELLIDOS_NOMBRE:c.nombre,Nacionalidad:'Espana',PaisResidencia:'Espana',
+    PROVINCIA:'Barcelona',PRECIO_CURSO:7500,
+    FACTURACION_NETA:Number(c.importe)||0,
+    TIPOLOGIA_MATRICULA:'BECA',TIPOLOGIA_ALUMNO:'NUEVA MATRICULA',
+    Observaciones:'Beca Hospitalet '+String(lhMeta.year||'')
   }));
   try{
     const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.json_to_sheet(wsData);
+    const ws=XLSX.utils.json_to_sheet(wsDataFinal);
     XLSX.utils.book_append_sheet(wb,'Becas',ws);
-    XLSX.writeFile(wb,'BecasLH_Final_'+(lhMeta.year||new Date().getFullYear())+'.xlsx');
-  }catch(err){console.error('Export final error:',err);alert('Error al exportar: '+err.message);return;}
+    XLSX.writeFile(wb,'BecasLH_Final_'+String(lhMeta.year||new Date().getFullYear())+'.xlsx');
+  }catch(err){console.error(err);alert('Error al exportar: '+err.message);return;}
 
   /* Guardar en histórico */
   const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
