@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reportes — Admin Hub</title>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #041C2E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #E0F7FF; min-height: 100vh; }
@@ -1089,28 +1089,32 @@ function updateSelCount(){
 function exportLHSeleccion(){
   const idxs=Array.from(document.querySelectorAll('.lh-row-check:checked')).map(c=>+c.dataset.idx);
   if(!idxs.length){alert('Selecciona al menos un candidato.');return;}
+  const s=v=>String(v==null?'':v);
   const sel=idxs.map(i=>lhCandidatos[i]);
   const wsData=sel.map(c=>({
-    'Marca':c.brand,
-    'Candidato':c.nombre,
-    'DNI':c.dni,
-    'Email':c.email,
-    'Máster':c.master,
-    'Beca (€)':c.importe,
-    'Beca (%)':c.pct+'%',
-    'DV':c.dv,
-    'Asignado a':c.asignadoA,
-    'Estado':c.estado,
-    'Tejado de':c.tejado,
-    'Candidato notificado':c.notificado?'Sí':'',
-    'Sustituido por':c.sustituido||'',
-    'En el programa':c.enPrograma||'',
-    'Observaciones':c.observaciones||''
+    'Marca':s(c.brand),
+    'Candidato':s(c.nombre),
+    'DNI':s(c.dni),
+    'Email':s(c.email),
+    'Master':s(c.master),
+    'Beca EUR':Number(c.importe)||0,
+    'Beca Pct':s(c.pct)+'%',
+    'DV':s(c.dv),
+    'Asignado a':s(c.asignadoA),
+    'Estado':s(c.estado),
+    'Tejado de':s(c.tejado),
+    'Notificado':c.notificado?'Si':'No',
+    'Sustituido por':s(c.sustituido),
+    'En el programa':s(c.enPrograma),
+    'Observaciones':s(c.observaciones)
   }));
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.json_to_sheet(wsData);
-  XLSX.utils.book_append_sheet(wb,'Selección',ws);
-  XLSX.writeFile(wb,`BecasLH_Seleccion_${new Date().toLocaleDateString('es-ES').replace(/\//g,'-')}.xlsx`);
+  try{
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb,'Seleccion',ws);
+    const fecha=new Date().toLocaleDateString('es-ES').replace(/\//g,'-');
+    XLSX.writeFile(wb,'BecasLH_Seleccion_'+fecha+'.xlsx');
+  }catch(err){console.error('Export seleccion error:',err);alert('Error al exportar: '+err.message);}
 }
 
 /* ===================== EXTRACCIÓN FINAL ===================== */
@@ -1121,25 +1125,28 @@ async function exportLHFinal(){
     if(!ok)return;
   }
   /* Generar Excel formato entrega */
+  const s=v=>String(v==null?'':v);
   const wsData=lhCandidatos.filter(c=>c.estado==='Matriculado').map(c=>({
-    'CAMPUS':c.brand,
-    'Fecha inscripción':new Date().toLocaleDateString('es-ES'),
-    'Curso':c.master,
-    'Convocatori a':lhMeta.convocatoria,
-    'APELLIDOS, NOMBRE':c.nombre,
-    'Nacionalidad':'España',
-    'País de residencia':'España',
+    'CAMPUS':s(c.brand),
+    'Fecha inscripcion':new Date().toLocaleDateString('es-ES'),
+    'Curso':s(c.master),
+    'Convocatoria':s(lhMeta.convocatoria),
+    'APELLIDOS NOMBRE':s(c.nombre),
+    'Nacionalidad':'Espana',
+    'Pais de residencia':'Espana',
     'PROVINCIA':'Barcelona',
     'PRECIO CURSO':7500,
-    'FACTURACIÓN NETA':c.importe,
+    'FACTURACION NETA':Number(c.importe)||0,
     'TIPOLOGIA MATRICULA':'BECA',
     'TIPOLOGIA ALUMNO':'NUEVA MATRICULA',
-    'Observaciones':`Beca Hospitalet ${lhMeta.year||''}`
+    'Observaciones':'Beca Hospitalet '+s(lhMeta.year)
   }));
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.json_to_sheet(wsData);
-  XLSX.utils.book_append_sheet(wb,'Becas',ws);
-  XLSX.writeFile(wb,`BecasLH_Final_${lhMeta.year||new Date().getFullYear()}.xlsx`);
+  try{
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb,'Becas',ws);
+    XLSX.writeFile(wb,'BecasLH_Final_'+(lhMeta.year||new Date().getFullYear())+'.xlsx');
+  }catch(err){console.error('Export final error:',err);alert('Error al exportar: '+err.message);return;}
 
   /* Guardar en histórico */
   const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
