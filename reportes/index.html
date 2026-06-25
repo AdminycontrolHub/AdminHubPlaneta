@@ -1042,8 +1042,8 @@ function renderLHBrandCards(){
   }).join('');
 }
 
-function lhEnterBlur(el){if(event.key==='Enter')el.blur();}
-function lhEnterUpdate(el){if(event.key==='Enter'){event.preventDefault();updateCandById(el);}}
+function lhEnterBlur(ev,el){if(ev.key==='Enter')el.blur();}
+function lhEnterUpdate(ev,el){if(ev.key==='Enter'){ev.preventDefault();updateCandById(el);}}
 
 /* ===================== BUILD SUST CELL ===================== */
 function buildSustCell(anyNoApto, isNoApto, idx, c){
@@ -1051,8 +1051,8 @@ function buildSustCell(anyNoApto, isNoApto, idx, c){
   if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
   var v1=esc(c.sustituido||''), v2=esc(c.enPrograma||'');
   var cid=c.id||'';
-  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Nombre sustituto" data-cid="'+cid+'" data-idx="'+idx+'" data-field="sustituido" onkeydown="lhEnterUpdate(this)" onchange="updateCandById(this)"></td>';
-  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Cambio prog." data-cid="'+cid+'" data-idx="'+idx+'" data-field="enPrograma" onkeydown="lhEnterUpdate(this)" onchange="updateCandById(this)"></td>';
+  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Nombre sustituto" data-cid="'+cid+'" data-idx="'+idx+'" data-field="sustituido" onkeydown="lhEnterUpdate(event,this)" onchange="updateCandById(this)"></td>';
+  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Cambio prog." data-cid="'+cid+'" data-idx="'+idx+'" data-field="enPrograma" onkeydown="lhEnterUpdate(event,this)" onchange="updateCandById(this)"></td>';
   return td1+td2;
 }
 
@@ -1123,8 +1123,8 @@ function renderLHTable(){
         <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
-      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
-      <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:130px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
+      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
+      <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:130px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
       <td style="white-space:nowrap"><span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span></td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
         <option value="" ${!c.dv?'selected':''}>—</option>
@@ -1143,7 +1143,7 @@ function renderLHTable(){
       </td>
       <td class="tejado-cell">${esc(c.tejado)}</td>
       ${sustCell}
-      <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
+      <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
       ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="deleteLHRow('${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
     </tr>`;
   }).join('');
