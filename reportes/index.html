@@ -1047,12 +1047,12 @@ function lhEnterUpdate(ev,el){if(ev.key==='Enter'){ev.preventDefault();updateCan
 
 /* ===================== BUILD SUST CELL ===================== */
 function buildSustCell(anyNoApto, isNoApto, idx, c){
-  if(!anyNoApto) return '';
-  if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
   var v1=esc(c.sustituido||''), v2=esc(c.enPrograma||'');
   var cid=c.id||'';
-  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Nombre sustituto" data-cid="'+cid+'" data-idx="'+idx+'" data-field="sustituido" onkeydown="lhEnterUpdate(event,this)" onchange="updateCandById(this)"></td>';
-  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Cambio prog." data-cid="'+cid+'" data-idx="'+idx+'" data-field="enPrograma" onkeydown="lhEnterUpdate(event,this)" onchange="updateCandById(this)"></td>';
+  var dis=isNoApto?'':'disabled';
+  var bg=isNoApto?'':'background:rgba(0,0,0,0.04);cursor:not-allowed;';
+  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px;'+bg+'" value="'+v1+'" placeholder="Nombre sustituto" '+dis+' data-cid="'+cid+'" data-idx="'+idx+'" data-field="sustituido" onkeydown="lhEnterUpdate(event,this)" onchange="updateCandById(this)"></td>';
+  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px;'+bg+'" value="'+v2+'" placeholder="Master sustituto" '+dis+' data-cid="'+cid+'" data-idx="'+idx+'" data-field="enPrograma" onkeydown="lhEnterUpdate(event,this)" onchange="updateCandById(this)"></td>';
   return td1+td2;
 }
 
@@ -1104,8 +1104,7 @@ function renderLHTable(){
   const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
   document.getElementById('lh-fact-total').textContent=factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 
-  const anyNoApto=lhCandidatos.some(c=>c.estado==='No apto');
-  document.querySelectorAll('.lh-th-noApto').forEach(th=>th.style.display=anyNoApto?'':'none');
+  const anyNoApto=true; /* columnas siempre visibles */
 
   tbody.innerHTML=filtered.map(c=>{
     const idx=lhCandidatos.indexOf(c);
@@ -1165,10 +1164,7 @@ function renderLHTable(){
   }
 }
 
-function updateNoAptoHeaders(){
-  const anyNoApto=lhCandidatos.some(c=>c.estado==='No apto');
-  document.querySelectorAll('.lh-th-noApto').forEach(th=>th.style.display=anyNoApto?'':'none');
-}
+function updateNoAptoHeaders(){/* columnas siempre visibles */}
 
 /* ===================== UPDATE CANDIDATO ===================== */
 async function updateCand(idx,field,value){
@@ -1260,10 +1256,21 @@ function updateEstado(idx,sel){
     } else {
       if(notifDiv)notifDiv.remove();
     }
-    /* Mostrar/ocultar celdas no apto */
-    const noAptoCells=row.querySelectorAll('.lh-td-noApto');
-    noAptoCells.forEach(td=>{
-      td.style.display=val==='No apto'?'table-cell':'none';
+    /* Habilitar/deshabilitar inputs de sustituido y cambio programa */
+    const noAptoCells=row.querySelectorAll('.lh-td-noApto input');
+    noAptoCells.forEach(inp=>{
+      if(val==='No apto'){
+        inp.disabled=false;
+        inp.style.background='';
+        inp.style.cursor='';
+      } else {
+        inp.disabled=true;
+        inp.style.background='rgba(0,0,0,0.04)';
+        inp.style.cursor='not-allowed';
+        inp.value='';
+        var cid=inp.dataset.cid, field=inp.dataset.field;
+        if(cid&&field){var i2=lhCandidatos.findIndex(function(c){return c.id===cid;});if(i2>=0)lhCandidatos[i2][field]='';}
+      }
     });
   }
   kvSet(LH_CANDS_KEY,lhCandidatos);
