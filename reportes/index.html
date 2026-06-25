@@ -773,6 +773,8 @@ async function load(){
   if(lhM)lhMeta=lhM;
   updateBecasFactExtra();
   renderGrid();
+  /* Abrir LH si la URL tiene el hash — se llama aquí para tener datos ya cargados */
+  checkHashBecasLH();
 }
 
 function updateBecasFactExtra(){
@@ -1037,8 +1039,8 @@ function renderLHTable(){
     const col=BRAND_COLORS[c.brand]||'#00E6FF';
     const stStyle=ESTADO_STYLES[c.estado]||'';
     const isNoApto=c.estado==='No apto';
-    const sustCell=anyNoApto?`<td style="display:${isNoApto?'table-cell':'none'};padding:${isNoApto?'8px 10px':'0'};width:${isNoApto?'':'0'}" class="lh-td-noApto">${isNoApto?`<input class="inline-input" style="width:110px" value="${esc(c.sustituido||'')}" placeholder="Nombre sustituto…" onchange="updateCand(${idx},'sustituido',this.value)">`:''}</td>
-      <td style="display:${isNoApto?'table-cell':'none'};padding:${isNoApto?'8px 10px':'0'};width:${isNoApto?'':'0'}" class="lh-td-noApto">${isNoApto?`<input class="inline-input" style="width:110px" value="${esc(c.enPrograma||'')}" placeholder="Máster sustituto…" onchange="updateCand(${idx},'enPrograma',this.value)">`:''}</td>`:'';
+    const sustCell=anyNoApto?`<td style="display:${isNoApto?'table-cell':'none'};padding:${isNoApto?'8px 10px':'0'}" class="lh-td-noApto"><input class="inline-input" style="width:110px" value="${esc(c.sustituido||'')}" placeholder="Nombre sustituto…" onchange="updateCand(${idx},'sustituido',this.value)"></td>
+      <td style="display:${isNoApto?'table-cell':'none'};padding:${isNoApto?'8px 10px':'0'}" class="lh-td-noApto"><input class="inline-input" style="width:110px" value="${esc(c.enPrograma||'')}" placeholder="Máster sustituto…" onchange="updateCand(${idx},'enPrograma',this.value)"></td>`:'';
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
       <td><input type="checkbox" class="lh-row-check" data-idx="${idx}" onchange="updateSelCount()"></td>
       <td>${c.added?`<select class="st-select" style="max-width:72px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(7500*(lhCandidatos[${idx}].pct/100)))">
@@ -1136,8 +1138,8 @@ function updateEstado(idx,sel){
     /* Mostrar/ocultar celdas no apto */
     const noAptoCells=row.querySelectorAll('.lh-td-noApto');
     noAptoCells.forEach(td=>{
-      if(val==='No apto'){td.style.display='table-cell';td.style.padding='8px 10px';td.style.width='';}
-      else{td.style.display='none';td.style.padding='0';td.style.width='0';}
+      if(val==='No apto'){td.style.display='table-cell';td.style.padding='8px 10px';}
+      else{td.style.display='none';td.style.padding='0';}
     });
   }
   kvSet(LH_CANDS_KEY,lhCandidatos);
@@ -1408,21 +1410,23 @@ document.addEventListener('click',e=>{
 
 /* ===================== URL DIRECTA #becas-lh ===================== */
 function checkHashBecasLH(){
-  if(window.location.hash==='#becas-lh'){
+  if(window.location.hash==='#becas-lh'||window.location.hash==='#becas-lh/'){
     /* Ocultar todo el Admin Hub y mostrar solo LH */
-    document.querySelectorAll('.topbar,.page-head,.toolbar,.section-lbl,.marca-grid,.conv-selector-wrap,.rutas-btn-wrap,.bubbles-wrap').forEach(el=>el.style.display='none');
-    document.querySelector('.sys-tag').style.display='none';
+    ['topbar','page-head','toolbar','section-lbl','marca-grid','conv-selector-wrap','rutas-btn-wrap','bubbles-wrap'].forEach(cls=>{
+      document.querySelectorAll('.'+cls).forEach(el=>el.style.display='none');
+    });
+    const sysTag=document.querySelector('.sys-tag');
+    if(sysTag)sysTag.style.display='none';
+    /* Esperar a que load() haya cargado los datos antes de abrir */
     openLHOverlay();
-    /* Quitar el botón de cerrar para que no puedan salir al hub */
-    const closeBtn=document.querySelector('.lh-close');
-    if(closeBtn)closeBtn.style.display='none';
+    /* Quitar botón cerrar para que no naveguen al hub */
+    document.querySelectorAll('.lh-close').forEach(btn=>btn.style.display='none');
   }
 }
 window.addEventListener('hashchange',checkHashBecasLH);
 
 
 load();
-checkHashBecasLH();
 </script>
 </body>
 </html>
