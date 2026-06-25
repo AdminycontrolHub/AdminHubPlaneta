@@ -1039,7 +1039,15 @@ function renderLHTable(){
     const col=BRAND_COLORS[c.brand]||'#00E6FF';
     const stStyle=ESTADO_STYLES[c.estado]||'';
     const isNoApto=c.estado==='No apto';
-    const sustCell=anyNoApto?`<td class="lh-td-noApto" style="display:${isNoApto?'table-cell':'none'}">${isNoApto?`<input class="inline-input" style="width:110px" value="${esc(c.sustituido||'')}" placeholder="Nombre sustituto…" onchange="updateCand(${idx},'sustituido',this.value)">`:''}</td><td class="lh-td-noApto" style="display:${isNoApto?'table-cell':'none'}">${isNoApto?`<input class="inline-input" style="width:110px" value="${esc(c.enPrograma||'')}" placeholder="Máster sustituto…" onchange="updateCand(${idx},'enPrograma',this.value)">`:''}</td>`:'';
+        const _sustHtml = (function(){
+      if(!anyNoApto) return '';
+      if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
+      const v1 = esc(c.sustituido||'');
+      const v2 = esc(c.enPrograma||'');
+      return '<td class="lh-td-noApto"><input class="inline-input" style="width:110px" value="'+v1+'" placeholder="Nombre sustituto" onchange="updateCand('+idx+','sustituido',this.value)"></td>'
+           + '<td class="lh-td-noApto"><input class="inline-input" style="width:110px" value="'+v2+'" placeholder="Master sustituto" onchange="updateCand('+idx+','enPrograma',this.value)"></td>';
+    })();
+    const sustCell = _sustHtml;
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
       <td><input type="checkbox" class="lh-row-check" data-idx="${idx}" onchange="updateSelCount()"></td>
       <td>${c.added?`<select class="st-select" style="max-width:72px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(7500*(lhCandidatos[${idx}].pct/100)))">
@@ -1137,8 +1145,7 @@ function updateEstado(idx,sel){
     /* Mostrar/ocultar celdas no apto */
     const noAptoCells=row.querySelectorAll('.lh-td-noApto');
     noAptoCells.forEach(td=>{
-      if(val==='No apto'){td.style.display='table-cell';td.style.padding='8px 10px';}
-      else{td.style.display='none';td.style.padding='0';}
+      td.style.display=val==='No apto'?'table-cell':'none';
     });
   }
   kvSet(LH_CANDS_KEY,lhCandidatos);
