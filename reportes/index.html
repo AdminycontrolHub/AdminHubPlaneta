@@ -1111,9 +1111,12 @@ function exportLHSeleccion(){
     Observaciones:c.observaciones
   }));
   try{
+    const keys=wsData.length?Object.keys(wsData[0]):[];
+    const aoa=[keys,...wsData.map(r=>keys.map(k=>r[k]))];
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
     const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.json_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb,'Seleccion',ws);
+    wb.SheetNames.push('Seleccion');
+    wb.Sheets['Seleccion']=ws;
     XLSX.writeFile(wb,'BecasLH_Seleccion_'+new Date().toISOString().slice(0,10)+'.xlsx');
   }catch(err){console.error(err);alert('Error al exportar: '+err.message);}
 }
@@ -1136,10 +1139,13 @@ async function exportLHFinal(){
     Observaciones:'Beca Hospitalet '+String(lhMeta.year||'')
   }));
   try{
-    const wb=XLSX.utils.book_new();
-    const ws=XLSX.utils.json_to_sheet(wsDataFinal);
-    XLSX.utils.book_append_sheet(wb,'Becas',ws);
-    XLSX.writeFile(wb,'BecasLH_Final_'+String(lhMeta.year||new Date().getFullYear())+'.xlsx');
+    const keys2=wsDataFinal.length?Object.keys(wsDataFinal[0]):[];
+    const aoa2=[keys2,...wsDataFinal.map(r=>keys2.map(k=>r[k]))];
+    const ws2=XLSX.utils.aoa_to_sheet(aoa2);
+    const wb2=XLSX.utils.book_new();
+    wb2.SheetNames.push('Becas');
+    wb2.Sheets['Becas']=ws2;
+    XLSX.writeFile(wb2,'BecasLH_Final_'+String(lhMeta.year||new Date().getFullYear())+'.xlsx');
   }catch(err){console.error(err);alert('Error al exportar: '+err.message);return;}
 
   /* Guardar en histórico */
