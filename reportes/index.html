@@ -188,7 +188,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 /* ===================== BECAS LH MODAL ===================== */
 .lh-overlay { position:fixed; inset:0; z-index:400; background:rgba(0,5,15,0.92); backdrop-filter:blur(8px); display:none; align-items:flex-start; justify-content:center; padding:1rem; overflow-y:auto; }
 .lh-overlay.open { display:flex; }
-.lh-modal { background:#F5F0E8; border-radius:18px; width:min(1300px,98vw); margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.4); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#1a3a50; }
+.lh-modal { background:#F5F0E8; border-radius:18px; width:min(1500px,99vw); margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.4); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#1a3a50; }
 .lh-header { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid rgba(0,100,140,0.12); background:#F5F0E8; border-radius:18px 18px 0 0; position:sticky; top:0; z-index:10; flex-wrap:wrap; gap:10px; }
 .lh-header-left { display:flex; align-items:center; gap:12px; }
 .lh-header-left h2 { font-size:16px; font-weight:700; color:#1a3a50; margin:0; }
@@ -669,7 +669,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">6. Cambio de programa</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al escribir en <strong>Cambio Programa</strong>, se crea automáticamente una fila editable con el nuevo máster para el mismo candidato.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">7. Añadir candidatos manualmente</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Usa <strong>+ Añadir candidato</strong> para añadir nuevos candidatos de listados extra. Aparecen resaltados en amarillo. Usa la papelera para eliminar filas manuales.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">8. Exportar</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">• <strong>Exportar selección</strong>: descarga las filas marcadas en formato de trabajo.<br>• <strong>Extracción final</strong>: genera el Excel para Financiero y archiva la convocatoria en el Histórico.</p></div>
-      <div style="margin-bottom:12px;padding:10px 12px;background:#e8f4fd;border-radius:8px;border:1px solid rgba(58,171,240,0.3)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:6px">9. Acceso externo (Admisiones y Marketing)</p><p style="font-size:12px;color:#3a5a70;line-height:1.6;margin-bottom:8px">Admisiones y Marketing pueden acceder directamente sin ver el resto del Admin Hub. Los datos se sincronizan en tiempo real para todos.</p><div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,100,140,0.18);border-radius:7px;padding:8px 10px"><code id="lh-link-code" style="font-size:11px;color:#005080;font-family:'Courier New',monospace;flex:1;word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">https://adminycontrolhub.github.io/AdminHubPlaneta/reportes/index.html#becas-lh</code><button onclick="navigator.clipboard.writeText(document.getElementById('lh-link-code').textContent).then(function(){var b=event.target.closest('button');b.textContent='✓ Copiado';setTimeout(function(){b.textContent='Copiar';},2000)})" style="background:rgba(0,100,160,0.1);border:1px solid rgba(0,100,160,0.25);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;color:#005080;font-family:inherit;white-space:nowrap">Copiar</button></div></div>
+      <div style="margin-bottom:12px;padding:10px 12px;background:#e8f4fd;border-radius:8px;border:1px solid rgba(58,171,240,0.3)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:6px">9. Acceso externo (Admisiones y Marketing)</p><p style="font-size:12px;color:#3a5a70;line-height:1.6;margin-bottom:8px">Admisiones y Marketing pueden acceder directamente sin ver el resto del Admin Hub. Los datos se sincronizan en tiempo real para todos.</p><div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,100,140,0.18);border-radius:7px;padding:8px 10px"><code id="lh-link-code" style="font-size:11px;color:#005080;font-family:'Courier New',monospace;flex:1;word-break:break-all">https://adminycontrolhub.github.io/AdminHubPlaneta/reportes/index.html#becas-lh</code><button onclick="navigator.clipboard.writeText(document.getElementById('lh-link-code').textContent).then(function(){var b=event.target.closest('button');b.textContent='✓ Copiado';setTimeout(function(){b.textContent='Copiar';},2000)})" style="background:rgba(0,100,160,0.1);border:1px solid rgba(0,100,160,0.25);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;color:#005080;font-family:inherit;white-space:nowrap">Copiar</button></div></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">10. Histórico</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Cada Extracción final queda guardada en <strong>Histórico</strong> con el resumen y detalle completo de la convocatoria cerrada.</p></div>
     </div>
   </div>
@@ -805,7 +805,13 @@ async function load(){
   }
   /* Cargar datos LH desde KV */
   const[lhC,lhH,lhM]=await Promise.all([kvGet(LH_CANDS_KEY),kvGet(LH_HIST_KEY),kvGet(LH_META_KEY)]);
-  if(lhC)lhCandidatos=lhC;
+  if(lhC){
+    lhCandidatos=lhC.map(function(c,i){
+      if(!c.id)c.id='lh_migrated_'+i+'_'+Date.now();
+      if(!c.leadCreado)c.leadCreado='';
+      return c;
+    });
+  }
   if(lhH)lhHistorico=lhH;
   if(lhM)lhMeta=lhM;
   updateBecasFactExtra();
@@ -1042,15 +1048,17 @@ function buildSustCell(anyNoApto, isNoApto, idx, c){
   if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
   var v1=esc(c.sustituido||''), v2=esc(c.enPrograma||'');
   var cid=c.id||'';
-  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Nombre sustituto" data-cid="'+cid+'" data-field="sustituido" onchange="updateCandById(this)"></td>';
-  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Master sustituto" data-cid="'+cid+'" data-field="enPrograma" onchange="updateCandById(this)"></td>';
+  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Nombre sustituto" data-cid="'+cid+'" data-idx="'+idx+'" data-field="sustituido" onchange="updateCandById(this)"></td>';
+  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Cambio prog." data-cid="'+cid+'" data-idx="'+idx+'" data-field="enPrograma" onchange="updateCandById(this)"></td>';
   return td1+td2;
 }
 
 function updateCandById(input){
   var cid=input.dataset.cid, field=input.dataset.field, value=input.value;
-  var idx=lhCandidatos.findIndex(function(c){return c.id===cid;});
-  if(idx<0)return;
+  var idx=-1;
+  if(cid) idx=lhCandidatos.findIndex(function(c){return c.id===cid;});
+  if(idx<0) idx=parseInt(input.dataset.idx||'-1');
+  if(idx<0||!lhCandidatos[idx])return;
   updateCand(idx,field,value);
 }
 
@@ -1087,7 +1095,8 @@ function renderLHTable(){
     if(filterSearch&&!c.nombre.toLowerCase().includes(filterSearch)&&!c.master.toLowerCase().includes(filterSearch))return false;
     return true;
   });
-  if(!filterBrand) filtered.sort((a,b)=>brandOrder.indexOf(a.brand)-brandOrder.indexOf(b.brand));
+  /* Sort solo para visualización — no modifica lhCandidatos */
+  if(!filterBrand) filtered=[...filtered].sort((a,b)=>brandOrder.indexOf(a.brand)-brandOrder.indexOf(b.brand));
 
   const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
   document.getElementById('lh-fact-total').textContent=factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
