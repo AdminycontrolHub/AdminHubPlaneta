@@ -995,6 +995,16 @@ function renderLHBrandCards(){
   }).join('');
 }
 
+/* ===================== BUILD SUST CELL ===================== */
+function buildSustCell(anyNoApto, isNoApto, idx, c){
+  if(!anyNoApto) return '';
+  if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
+  var v1=esc(c.sustituido||''), v2=esc(c.enPrograma||'');
+  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:110px" value="'+v1+'" placeholder="Nombre sustituto" onchange="updateCand('+idx+',\'sustituido\',this.value)"></td>';
+  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:110px" value="'+v2+'" placeholder="Master sustituto" onchange="updateCand('+idx+',\'enPrograma\',this.value)"></td>';
+  return td1+td2;
+}
+
 /* ===================== RENDER TABLA ===================== */
 function renderLHTable(){
   const tbody=document.getElementById('lh-tbody');
@@ -1039,15 +1049,7 @@ function renderLHTable(){
     const col=BRAND_COLORS[c.brand]||'#00E6FF';
     const stStyle=ESTADO_STYLES[c.estado]||'';
     const isNoApto=c.estado==='No apto';
-        const _sustHtml = (function(){
-      if(!anyNoApto) return '';
-      if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
-      const v1 = esc(c.sustituido||'');
-      const v2 = esc(c.enPrograma||'');
-      return '<td class="lh-td-noApto"><input class="inline-input" style="width:110px" value="'+v1+'" placeholder="Nombre sustituto" onchange="updateCand('+idx+','sustituido',this.value)"></td>'
-           + '<td class="lh-td-noApto"><input class="inline-input" style="width:110px" value="'+v2+'" placeholder="Master sustituto" onchange="updateCand('+idx+','enPrograma',this.value)"></td>';
-    })();
-    const sustCell = _sustHtml;
+        const sustCell = buildSustCell(anyNoApto, isNoApto, idx, c);
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
       <td><input type="checkbox" class="lh-row-check" data-idx="${idx}" onchange="updateSelCount()"></td>
       <td>${c.added?`<select class="st-select" style="max-width:72px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(7500*(lhCandidatos[${idx}].pct/100)))">
@@ -1092,10 +1094,11 @@ async function updateCand(idx,field,value){
   /* Si se completa "sustituido", crear/actualizar fila sustituto */
   if(field==='sustituido'){
     const cand=lhCandidatos[idx];
-    const existingSubIdx=lhCandidatos.findIndex(c=>c.sustitutoDeIdx===idx);
+    const candId=cand.id;
+    const existingSubIdx=lhCandidatos.findIndex(c=>c.sustitutoDeId===candId);
     if(value.trim()){
       const subRow={
-        id:'lh_sub_'+idx+'_'+Date.now(),
+        id:'lh_sub_'+candId+'_'+Date.now(),
         nombre:value.trim(),dni:'',email:'',tel:'',
         master:cand.master,brand:cand.brand,
         pct:cand.pct,importe:cand.importe,
@@ -1103,10 +1106,13 @@ async function updateCand(idx,field,value){
         estado:'Pendiente contacto',dv:'',asignadoA:'',
         tejado:'Admisiones',notificado:false,
         sustituido:'',enPrograma:'',observaciones:'',
-        added:true,sustitutoDeIdx:idx
+        added:true,sustitutoDeId:candId
       };
-      if(existingSubIdx>=0)lhCandidatos[existingSubIdx]=subRow;
-      else lhCandidatos.splice(idx+1,0,subRow);
+      if(existingSubIdx>=0){lhCandidatos[existingSubIdx]=subRow;}
+      else{
+        const currentIdx=lhCandidatos.findIndex(c=>c.id===candId);
+        lhCandidatos.splice(currentIdx+1,0,subRow);
+      }
     } else {
       if(existingSubIdx>=0)lhCandidatos.splice(existingSubIdx,1);
     }
