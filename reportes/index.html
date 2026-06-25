@@ -264,9 +264,12 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 /* Tooltip para máster largo */
 .master-cell { max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Filas añadidas posteriormente */
-.lh-table tr.lh-row-added td { background:rgba(245,200,50,0.08) !important; }
-.lh-table tr.lh-row-added:hover td { background:rgba(245,200,50,0.14) !important; }
-.lh-table tr.lh-row-added td:first-child { border-left:3px solid #d4a017; }
+.lh-table tr.lh-row-added td { background:rgba(245,170,30,0.13) !important; }
+.lh-table tr.lh-row-added:hover td { background:rgba(245,170,30,0.22) !important; }
+.lh-table tr.lh-row-added td:first-child { border-left:3px solid #c8900a; }
+/* Botón papelera */
+.lh-btn-del { background:none;border:none;cursor:pointer;color:rgba(180,60,60,0.5);padding:2px 4px;border-radius:4px;font-size:12px;line-height:1; }
+.lh-btn-del:hover { color:#c0392b;background:rgba(180,60,60,0.08); }
 /* Nombre con hover tooltip */
 .lh-nombre-cell { cursor:pointer; text-decoration:underline dotted rgba(0,100,140,0.4); }
 .lh-nombre-cell:hover { color:#005080; }
@@ -547,6 +550,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
         </div>
       </div>
       <div class="lh-header-btns">
+        <button onclick="document.getElementById('lh-manual-overlay').style.display='flex'" style="width:28px;height:28px;border-radius:50%;background:#e8f4fd;border:2px solid #3aabf0;cursor:pointer;font-weight:700;color:#0077aa;font-size:14px;display:flex;align-items:center;justify-content:center;font-family:inherit;flex-shrink:0" title="Manual de uso">?</button>
         <button class="lh-btn" onclick="openLHHistorico()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Histórico
@@ -607,6 +611,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
             <tr>
               <th style="width:28px"><input type="checkbox" id="lh-check-all" onchange="lhCheckAll(this)"></th>
               <th>Marca</th>
+              <th>Lead</th>
               <th>Candidato</th>
               <th>Máster</th>
               <th>Beca</th>
@@ -615,8 +620,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
               <th>Estado</th>
               <th>Tejado de</th>
               <th class="lh-th-noApto" style="display:none">Sustituido por</th>
-              <th class="lh-th-noApto" style="display:none">En el programa</th>
+              <th class="lh-th-noApto" style="display:none">Cambio Programa</th>
               <th>Observaciones</th>
+              <th style="width:28px"></th>
             </tr>
           </thead>
           <tbody id="lh-tbody"></tbody>
@@ -638,6 +644,32 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
         <p style="font-size:14px;">Carga el listado inicial para empezar</p>
         <p style="font-size:12px;margin-top:6px;">Usa el botón <strong>Cargar listado</strong> con el Excel de candidatos de l'Hospitalet</p>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MANUAL DE USO LH -->
+<div id="lh-manual-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,5,15,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#F5F0E8;border-radius:18px;width:min(700px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.35);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid rgba(0,100,140,0.1);position:sticky;top:0;background:#F5F0E8;border-radius:18px 18px 0 0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:28px;height:28px;border-radius:50%;background:#e8f4fd;border:2px solid #3aabf0;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0077aa;font-size:14px">?</div>
+        <p style="font-size:15px;font-weight:700;color:#1a3a50;margin:0">Manual de uso · Becas l'Hospitalet</p>
+      </div>
+      <button onclick="document.getElementById('lh-manual-overlay').style.display='none'" style="background:none;border:1px solid rgba(0,100,140,0.2);border-radius:8px;width:28px;height:28px;cursor:pointer;color:#6a8a9a;font-size:14px">✕</button>
+    </div>
+    <div style="padding:20px 24px 28px;color:#1a3a50">
+      <div style="background:#e8f4fd;border-left:3px solid #3aabf0;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#005080">
+        Esta herramienta gestiona el proceso de becas l'Hospitalet de forma colaborativa entre <strong>Admisiones</strong> y <strong>Administración Comercial</strong>, sin necesidad de emails.
+      </div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">1. Cargar listado</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Pulsa <strong>Cargar listado</strong> y selecciona el Excel de candidatos. El sistema detecta automáticamente año, convocatoria y marca.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">2. Gestión de estados</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Cada candidato pasa por: <em>Pendiente contacto → Docs solicitados → Apto no enviado → Apto enviado gestión → Matriculado</em>. La columna <strong>Tejado de</strong> se actualiza sola.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">3. Candidato no apto</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Selecciona <strong>No apto</strong>, marca <em>Candidato notificado</em> y escribe el nombre en <strong>Sustituido por</strong>. Se creará automáticamente una fila para el sustituto.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">4. Cambio de programa</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al escribir en <strong>Cambio Programa</strong>, se crea automáticamente una fila editable con el nuevo máster para el mismo candidato.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">5. Añadir candidatos manualmente</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Usa <strong>+ Añadir candidato</strong> para añadir nuevos candidatos de listados extra. Aparecen resaltados en amarillo. Usa la papelera para eliminarlos.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">6. Exportar</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">• <strong>Exportar selección</strong>: descarga las filas marcadas en formato de trabajo.<br>• <strong>Extracción final</strong>: genera el Excel para Financiero y archiva la convocatoria en el Histórico.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">7. Acceso externo (Admisiones)</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Admisiones puede acceder directamente con el link <strong>#becas-lh</strong> sin ver el resto del Admin Hub. Los datos se sincronizan en tiempo real.</p></div>
+      <div style="margin-bottom:14px"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:4px">8. Histórico</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Cada Extracción final queda guardada en <strong>Histórico</strong> con el detalle completo de la convocatoria cerrada.</p></div>
     </div>
   </div>
 </div>
@@ -941,6 +973,7 @@ function loadLHExcel(evt){
           pct,importe,
           convocatoria:convRaw,
           estado:existing?.estado||'Pendiente contacto',
+          leadCreado:existing?.leadCreado||'',
           dv:existing?.dv||'',
           asignadoA:existing?.asignadoA||'',
           tejado:existing?.tejado||'Admisiones',
@@ -951,6 +984,9 @@ function loadLHExcel(evt){
         };
       });
 
+      /* Ordenar por brand */
+      const brandOrder=['OBS','INESDI','ESDESIGN','UCMA'];
+      newCands.sort((a,b)=>brandOrder.indexOf(a.brand)-brandOrder.indexOf(b.brand));
       lhCandidatos=newCands;
       await kvSet(LH_CANDS_KEY,lhCandidatos);
       await kvSet(LH_META_KEY,lhMeta);
@@ -1004,9 +1040,17 @@ function buildSustCell(anyNoApto, isNoApto, idx, c){
   if(!anyNoApto) return '';
   if(!isNoApto) return '<td class="lh-td-noApto" style="display:none"></td><td class="lh-td-noApto" style="display:none"></td>';
   var v1=esc(c.sustituido||''), v2=esc(c.enPrograma||'');
-  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Sustituto" onchange="updateCand('+idx+',\'sustituido\',this.value)"></td>';
-  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Master" onchange="updateCand('+idx+',\'enPrograma\',this.value)"></td>';
+  var cid=c.id||'';
+  var td1='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v1+'" placeholder="Nombre sustituto" data-cid="'+cid+'" data-field="sustituido" onchange="updateCandById(this)"></td>';
+  var td2='<td class="lh-td-noApto"><input class="inline-input" style="width:100px" value="'+v2+'" placeholder="Master sustituto" data-cid="'+cid+'" data-field="enPrograma" onchange="updateCandById(this)"></td>';
   return td1+td2;
+}
+
+function updateCandById(input){
+  var cid=input.dataset.cid, field=input.dataset.field, value=input.value;
+  var idx=lhCandidatos.findIndex(function(c){return c.id===cid;});
+  if(idx<0)return;
+  updateCand(idx,field,value);
 }
 
 /* ===================== RENDER TABLA ===================== */
@@ -1059,6 +1103,11 @@ function renderLHTable(){
       <td>${c.added?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(7500*(lhCandidatos[${idx}].pct/100)))">
         ${['OBS','INESDI','ESDESIGN','UCMA'].map(b=>`<option value="${b}" ${c.brand===b?'selected':''}>${b}</option>`).join('')}
       </select>`:`<span class="lh-badge" style="background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span>`}</td>
+      <td><select class="st-select" style="max-width:52px" onchange="updateCand(${idx},'leadCreado',this.value)">
+        <option value="" ${!c.leadCreado?'selected':''}>—</option>
+        <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
+        <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
+      </select></td>
       <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" onmouseenter="showLHTooltip(event,${idx})" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
       <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:130px" value="${esc(c.master)}" placeholder="Nombre del máster…" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
       <td style="white-space:nowrap"><span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span></td>
@@ -1080,6 +1129,7 @@ function renderLHTable(){
       <td class="tejado-cell">${esc(c.tejado)}</td>
       ${sustCell}
       <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onchange="updateCand(${idx},'observaciones',this.value)"></td>
+      ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="deleteLHRow('${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
     </tr>`;
   }).join('');
 
@@ -1095,6 +1145,35 @@ function updateNoAptoHeaders(){
 async function updateCand(idx,field,value){
   if(!lhCandidatos[idx])return;
   lhCandidatos[idx][field]=value;
+  /* Si se completa "enPrograma" (Cambio Programa), crear fila nueva editable */
+  if(field==='enPrograma'){
+    const cand=lhCandidatos[idx];
+    const candId=cand.id;
+    const existingProgIdx=lhCandidatos.findIndex(c=>c.cambioDeId===candId);
+    if(value.trim()){
+      const progRow={
+        id:'lh_prog_'+candId+'_'+Date.now(),
+        nombre:cand.nombre,dni:'',email:'',tel:'',
+        master:value.trim(),brand:cand.brand,
+        pct:cand.pct,importe:cand.importe,
+        convocatoria:cand.convocatoria,
+        estado:'Pendiente contacto',dv:'',asignadoA:'',
+        tejado:'Admisiones',notificado:false,
+        sustituido:'',enPrograma:'',observaciones:'',
+        added:true,cambioDeId:candId,leadCreado:''
+      };
+      if(existingProgIdx>=0){lhCandidatos[existingProgIdx]=progRow;}
+      else{
+        const currentIdx=lhCandidatos.findIndex(c=>c.id===candId);
+        lhCandidatos.splice(currentIdx+1,0,progRow);
+      }
+    } else {
+      if(existingProgIdx>=0)lhCandidatos.splice(existingProgIdx,1);
+    }
+    await kvSet(LH_CANDS_KEY,lhCandidatos);
+    renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+    return;
+  }
   /* Si se completa "sustituido", crear/actualizar fila sustituto */
   if(field==='sustituido'){
     const cand=lhCandidatos[idx];
@@ -1333,6 +1412,15 @@ function toggleHistDetail(i,btn){
   if(!el)return;
   const open=el.classList.toggle('open');
   btn.textContent=open?'Ocultar detalle ▴':'Ver detalle ▾';
+}
+
+/* ===================== ELIMINAR FILA INDIVIDUAL ===================== */
+async function deleteLHRow(cid){
+  if(!confirm('¿Eliminar esta fila?'))return;
+  // Eliminar también la fila cambio asociada si existe
+  lhCandidatos=lhCandidatos.filter(c=>c.id!==cid&&c.cambioDeId!==cid&&c.sustitutoDeId!==cid);
+  await kvSet(LH_CANDS_KEY,lhCandidatos);
+  renderLHBrandCards();renderLHTable();updateBecasFactExtra();
 }
 
 /* ===================== BORRAR DATOS LH ===================== */
