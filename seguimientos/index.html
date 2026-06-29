@@ -57,6 +57,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .badge-ok   { background:#16a96b; color:#fff; }
 .badge-warn { background:#d9911a; color:#fff; }
 .badge-info { background:#1e7fc0; color:#fff; }
+.badge-obs  { background:#2a7f8a; color:#fff; }
 .node-label { font-size:12px; font-weight:500; color:rgba(0,190,220,0.45); text-align:center; line-height:1.3; max-width:110px; transition:color 0.2s; }
 .node:hover .node-label, .node.active .node-label { color:#00D4F0; }
 
@@ -64,7 +65,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .divider { position:relative; z-index:10; margin:28px 32px 0; height:1px; background:rgba(0,212,240,0.07); }
 
 /* Stats */
-.stats-grid { position:relative; z-index:10; padding:22px 32px 60px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.stats-grid { position:relative; z-index:10; padding:22px 32px 60px; display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
 .stat-card { background:rgba(0,16,32,0.85); border:1px solid rgba(0,212,240,0.1); border-radius:13px; padding:16px 18px; display:flex; flex-direction:column; gap:4px; transition:border-color 0.2s, transform 0.2s; animation:fadeUp 0.4s ease both; cursor:pointer; }
 .stat-card:hover { border-color:rgba(0,212,240,0.3); transform:translateY(-2px); }
 @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
@@ -73,12 +74,14 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .stat-card.warn::before { background:linear-gradient(90deg,#d9911a,transparent); }
 .stat-card.info::before { background:linear-gradient(90deg,#1e7fc0,transparent); }
 .stat-card.teal::before { background:linear-gradient(90deg,#00D4F0,transparent); }
+.stat-card.obs::before  { background:linear-gradient(90deg,#2a7f8a,transparent); }
 .stat-label { font-size:10px; letter-spacing:0.09em; text-transform:uppercase; color:rgba(0,180,210,0.38); }
-.stat-value { font-size:42px; font-weight:600; line-height:1.1; }
+.stat-value { font-size:38px; font-weight:600; line-height:1.1; }
 .stat-value.ok   { color:#1dcc84; }
 .stat-value.warn { color:#f0a830; }
 .stat-value.info { color:#3aabf0; }
 .stat-value.teal { color:#00D4F0; }
+.stat-value.obs  { color:#4fc3cf; }
 .stat-name { font-size:13px; font-weight:500; color:rgba(0,200,230,0.6); margin-top:2px; }
 .stat-sub { font-size:11px; color:rgba(0,200,230,0.28); margin-top:2px; }
 
@@ -99,7 +102,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 <canvas id="bgc"></canvas>
 <div class="corner tl"></div><div class="corner tr"></div>
 <div class="corner bl"></div><div class="corner br"></div>
-<div class="sys-tag">SYS.SEGUIMIENTOS v1.0 · NET.ACTIVE</div>
+<div class="sys-tag">SYS.SEGUIMIENTOS v1.1 · NET.ACTIVE</div>
 
 <!-- Topbar -->
 <div class="topbar">
@@ -139,24 +142,25 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
 <!-- Nodes -->
 <div class="nodes-area">
-  <svg class="connector-svg" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid meet">
-    <line x1="450" y1="130" x2="150" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
-    <line x1="450" y1="130" x2="300" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
-    <line x1="450" y1="130" x2="600" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
-    <line x1="450" y1="130" x2="750" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
-    <circle cx="150" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
-    <circle cx="300" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
-    <circle cx="450" cy="130" r="3.5" fill="rgba(0,212,240,0.4)"/>
-    <circle cx="600" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
-    <circle cx="750" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
-    <circle cx="450" cy="130" r="55"  fill="none" stroke="rgba(0,180,220,0.06)" stroke-width="1"/>
-    <circle cx="450" cy="130" r="110" fill="none" stroke="rgba(0,180,220,0.04)" stroke-width="1"/>
-    <circle cx="450" cy="130" r="165" fill="none" stroke="rgba(0,180,220,0.03)" stroke-width="1"/>
+  <svg class="connector-svg" viewBox="0 0 1100 260" preserveAspectRatio="xMidYMid meet">
+    <line x1="550" y1="130" x2="110" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
+    <line x1="550" y1="130" x2="330" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
+    <line x1="550" y1="130" x2="550" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
+    <line x1="550" y1="130" x2="770" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
+    <line x1="550" y1="130" x2="990" y2="130" stroke="rgba(0,200,240,0.1)" stroke-width="1" stroke-dasharray="5 5"/>
+    <circle cx="110" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
+    <circle cx="330" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
+    <circle cx="550" cy="130" r="3.5" fill="rgba(0,212,240,0.4)"/>
+    <circle cx="770" cy="130" r="2.5" fill="rgba(0,212,240,0.2)"/>
+    <circle cx="990" cy="130" r="2.5" fill="rgba(42,127,138,0.5)"/>
+    <circle cx="550" cy="130" r="55"  fill="none" stroke="rgba(0,180,220,0.06)" stroke-width="1"/>
+    <circle cx="550" cy="130" r="110" fill="none" stroke="rgba(0,180,220,0.04)" stroke-width="1"/>
+    <circle cx="550" cy="130" r="165" fill="none" stroke="rgba(0,180,220,0.03)" stroke-width="1"/>
   </svg>
 
   <div class="nodes-row">
 
-    <!-- Correos → abre Excel -->
+    <!-- Correos -->
     <div class="node active" data-node="correos"
          onclick="window.open('https://gplaneta.sharepoint.com/:x:/r/sites/AdministracinComercialyCobros-AdministracinComercial2.0/_layouts/15/Doc.aspx?sourcedoc=%7BDB9CB695-6DCC-423C-8DBB-0ED9CF40DDB9%7D&file=Seguimiento%20CC%2C%20Bajas%20y%20Devoluciones..xlsx&action=default&mobileredirect=true','_blank')">
       <div class="bubble">
@@ -169,7 +173,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <span class="node-label">Correos</span>
     </div>
 
-    <!-- Bajas y Cambios → abre Excel -->
+    <!-- Bajas y Cambios -->
     <div class="node" data-node="bajas"
          onclick="window.open('https://gplaneta.sharepoint.com/:x:/r/sites/AdministracinComercialyCobros-AdministracinComercial2.0/_layouts/15/Doc.aspx?sourcedoc=%7BDB9CB695-6DCC-423C-8DBB-0ED9CF40DDB9%7D&file=Seguimiento%20CC%2C%20Bajas%20y%20Devoluciones..xlsx&action=default&mobileredirect=true','_blank')">
       <div class="bubble">
@@ -183,7 +187,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <span class="node-label">Bajas y Cambios</span>
     </div>
 
-    <!-- Bootcamps → solo activa estado -->
+    <!-- Bootcamps -->
     <div class="node" data-node="bootcamps" onclick="setActive(this)">
       <div class="bubble">
         <div class="status-badge badge-info">i</div>
@@ -197,7 +201,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <span class="node-label">Bootcamps</span>
     </div>
 
-    <!-- Ampliaciones y Renovaciones UCMA → solo activa estado -->
+    <!-- Ampliaciones UCMA -->
     <div class="node" data-node="ampliaciones" onclick="setActive(this)">
       <div class="bubble">
         <div class="status-badge badge-ok">✓</div>
@@ -208,6 +212,21 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
         </svg>
       </div>
       <span class="node-label">Ampliaciones y Renovaciones UCMA</span>
+    </div>
+
+    <!-- NUEVO: Referidos OBS -->
+    <div class="node" data-node="referidos-obs" onclick="window.location.href='referidos-obs.html'">
+      <div class="bubble" style="border-color:rgba(42,127,138,0.35); box-shadow:inset 0 0 22px rgba(42,127,138,0.12);">
+        <div class="status-badge badge-obs">🎓</div>
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+          <!-- diploma/referral icon -->
+          <circle cx="19" cy="13" r="6" stroke="#4fc3cf" stroke-width="1.6"/>
+          <path d="M8 32c0-6.075 4.925-11 11-11s11 4.925 11 11" stroke="#4fc3cf" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M24 18l3 2-3 2" stroke="#a8d8b0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M27 20h4" stroke="#a8d8b0" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="node-label">Referidos OBS</span>
     </div>
 
   </div>
@@ -248,6 +267,13 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="stat-sub">casos activos</div>
   </div>
 
+  <div class="stat-card obs" style="animation-delay:0.24s" onclick="window.location.href='referidos-obs.html'">
+    <div class="stat-label">Referidos OBS</div>
+    <div class="stat-value obs" id="stat-obs-total">—</div>
+    <div class="stat-name">Referidos OBS</div>
+    <div class="stat-sub">registros activos</div>
+  </div>
+
 </div>
 
 <script>
@@ -274,6 +300,22 @@ function setActive(el) {
   document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
 }
+
+// Intentar leer contador de KV para referidos OBS
+async function loadObsCount() {
+  try {
+    const res = await fetch('https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv/adminhub_referidos_obs_v1');
+    if (res.ok) {
+      const d = await res.json();
+      const data = typeof d.value === 'string' ? JSON.parse(d.value) : d.value;
+      if (data && data.recs) {
+        const activos = data.recs.filter(r => r.estado !== 'pagado').length;
+        document.getElementById('stat-obs-total').textContent = activos;
+      }
+    }
+  } catch(e) { /* silencioso */ }
+}
+loadObsCount();
 </script>
 </body>
 </html>
