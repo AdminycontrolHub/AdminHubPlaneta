@@ -232,10 +232,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       <div class="fgrid">
         <div class="ff"><label>Nombre *</label><input type="text" id="rn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)"/></div>
         <div class="ff"><label>ID alumno *</label><input type="text" id="ri" placeholder="2021-XXXXXXXXX"/></div>
-        <div class="ff"><label>Fecha matrícula</label><input type="date" id="rfm"/></div>
+        <div class="ff"><label>Fecha matrícula *</label><input type="date" id="rfm"/></div>
         <div class="ff"><label>Convocatoria *</label><select id="rc"></select></div>
-        <div class="ff full"><label>Beneficio matrícula</label>
+        <div class="ff"><label>Beneficio matrícula *</label>
           <select id="rb"><option value="">—</option><option>Cheque Amazon</option><option>Descuento 5%</option><option>Sin beneficio</option></select></div>
+        <div class="ff"><label>¿Primer referido? *</label>
+          <select id="primerRef"><option value="">—</option><option>Sí</option><option>No</option></select></div>
       </div>
     </div>
     <div class="fsec">
@@ -244,18 +246,18 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="ff"><label>Nombre *</label><input type="text" id="nn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)"/></div>
         <div class="ff"><label>ID alumno *</label><input type="text" id="ni" placeholder="2021-XXXXXXXXX"/></div>
         <div class="ff"><label>Convocatoria *</label><select id="nc"></select></div>
-        <div class="ff"><label>Beneficio</label>
+        <div class="ff"><label>Beneficio *</label>
           <select id="nb"><option value="">—</option><option>Cheque Amazon</option><option>Descuento 5%</option><option>Sin beneficio</option></select></div>
-        <div class="ff"><label>Email</label><input type="text" id="ne" placeholder="email@ejemplo.com"/></div>
-        <div class="ff"><label>Teléfono</label><input type="text" id="nt" placeholder="+34 600..."/></div>
+        <div class="ff"><label>Email *</label><input type="text" id="ne" placeholder="email@ejemplo.com"/></div>
+        <div class="ff"><label>Teléfono *</label><input type="text" id="nt" placeholder="+34 600..."/></div>
       </div>
     </div>
     <div class="fsec">
       <div class="fsec-t">Gestión</div>
       <div class="fgrid g3">
         <div class="ff"><label>Asesor *</label><input type="text" id="as_" placeholder="Nombre asesor"/></div>
-        <div class="ff"><label>Fecha registro</label><input type="date" id="fr_"/></div>
-        <div class="ff"><label>Comentarios</label><input type="text" id="cm_" placeholder="Opcional"/></div>
+        <div class="ff"><label>Fecha registro *</label><input type="date" id="fr_"/></div>
+        <div class="ff"><label>Comentarios *</label><input type="text" id="cm_" placeholder="Obligatorio"/></div>
       </div>
     </div>
     <div class="modal-err" id="fErr">Completa todos los campos obligatorios (*)</div>
@@ -299,15 +301,15 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
   <div class="imodal">
     <h3>❓ Ayuda — Referidos OBS</h3>
     <div class="help-h4">Flujo</div>
-    <p class="help-p">Añadir → Adm. Comercial → Marketing → Pendiente de Pago → OK Pagado</p>
-    <div class="help-h4">Contraseñas</div>
-    <p class="help-p">Adm. Comercial y Pago: <code>AdminHubOBS</code> · Marketing: <code>MKTok</code></p>
+    <p class="help-p">Añadir por Admisiones → A validar Adm. Comercial → A validar Marketing → Pendiente de Pago → OK Pagado</p>
+    <div class="help-h4" id="helpPwdTitle" style="display:none;">Contraseñas</div>
+    <p class="help-p" id="helpPwdBody" style="display:none;">Adm. Comercial y Pago: <code>AdminHubOBS</code> · Marketing: <code>MKTok</code></p>
     <div class="help-h4">Cargar listado Excel</div>
     <p class="help-p">Usa "Cargar listado" para importar el Excel de referidos. Cada fila se asigna automáticamente a la burbuja correcta según el estado del cheque y las condiciones.</p>
     <div class="help-h4">Buscar alumno</div>
     <p class="help-p">Escribe el nombre en el campo de búsqueda para ver en qué estado está el expediente.</p>
-    <div class="help-h4">Acceso directo</div>
-    <p class="help-p">Esta herramienta está integrada en Seguimientos. Accede desde la burbuja "Referidos OBS".</p>
+    <div class="help-h4">Acceso externo</div>
+    <p class="help-p">Enlace directo para acceder sin pasar por el Admin Hub:<br><code id="helpExtLink">—</code></p>
     <div class="imodal-btns"><button class="mbtn mbtn-cancel" onclick="document.getElementById('mHelp').classList.remove('show')">Cerrar</button></div>
   </div>
 </div>
@@ -320,12 +322,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <div class="obs-close-bar">
       <div class="obs-close-bar-l">
         <div class="obs-icon">🎓</div>
-        <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Administración Comercial · Marketing · Control de Gestión</div></div>
+        <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Admisiones · Administración Comercial · Marketing · Control de Gestión</div></div>
       </div>
       <div class="obs-close-bar-r">
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
         <button class="hbtn export" onclick="exportCSV()">📤 Exportar</button>
-        <button class="hbtn help" onclick="document.getElementById('mHelp').classList.add('show')">?</button>
+        <button class="hbtn help" onclick="openHelp()">?</button>
         <button class="hbtn cerrar" onclick="closeObs()">✕ Cerrar</button>
         <input type="file" id="fileInputObs" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
       </div>
@@ -439,8 +441,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <div id="obsEmpty" class="carga-inicial">
       <div class="ci-icon">📂</div>
       <h4>Sin datos cargados</h4>
-      <p>Usa "Cargar listado" con el Excel de referidos OBS para empezar.<br>Cada fila se asignará automáticamente a la burbuja correspondiente.</p>
-      <button class="btn-cargar" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado Excel</button>
+      <p>Usa "Cargar listado" arriba con el Excel de referidos OBS para empezar.<br>Cada fila se asignará automáticamente a la burbuja correspondiente.</p>
     </div>
 
     <!-- tabla -->
@@ -789,8 +790,9 @@ function getFiltered(estado){
 // ── NUEVO REFERIDO ──
 function openNuevo(){
   ['rn','ri','nn','ni','ne','nt','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  ['rb','nb'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
+  ['rb','nb','primerRef'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
   document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
+  document.getElementById('rfm').value='';
   document.getElementById('dupAlert').style.display='none';
   document.getElementById('fErr').style.display='none';
   document.getElementById('fOk').style.display='none';
@@ -807,16 +809,43 @@ function chkDup(val){
 function saveNuevo(){
   const rn=document.getElementById('rn').value.trim();
   const ri=document.getElementById('ri').value.trim();
+  const rfm=document.getElementById('rfm').value;
+  const rc=document.getElementById('rc').value;
+  const rb=document.getElementById('rb').value;
+  const primerRef=document.getElementById('primerRef').value;
   const nn=document.getElementById('nn').value.trim();
   const ni=document.getElementById('ni').value.trim();
-  const as_=document.getElementById('as_').value.trim();
-  const rc=document.getElementById('rc').value;
   const nc=document.getElementById('nc').value;
-  if(!rn||!ri||!nn||!ni||!as_||!rc||!nc){document.getElementById('fErr').style.display='';return;}
+  const nb=document.getElementById('nb').value;
+  const ne=document.getElementById('ne').value.trim();
+  const nt=document.getElementById('nt').value.trim();
+  const as_=document.getElementById('as_').value.trim();
+  const fr_=document.getElementById('fr_').value;
+  const cm_=document.getElementById('cm_').value.trim();
+
+  if(!rn||!ri||!rfm||!rc||!rb||!primerRef||!nn||!ni||!nc||!nb||!ne||!nt||!as_||!fr_||!cm_){
+    document.getElementById('fErr').style.display='';return;
+  }
   document.getElementById('fErr').style.display='none';
   const v1=norm(rn),v2=norm(nn);
   if(recs.find(r=>norm(r.rn)===v1||norm(r.nn)===v2)){document.getElementById('dupMsg').textContent='Registro ya existente.';document.getElementById('dupAlert').style.display='';return;}
-  recs.push({id:nextId++,rn,ri,nn,ni,rc,nc,rb:document.getElementById('rb').value,nb:document.getElementById('nb').value,ne:document.getElementById('ne').value,nt:document.getElementById('nt').value,as_,fr_:document.getElementById('fr_').value,cm_:document.getElementById('cm_').value,rfm:'',idnacs_ref:'',cartera_ref:'',idnacs_new:'',cartera_new:'',estado:'adm',cumple_adm:'',motivo_adm:'',cumple_mkt:''});
+
+  // Lógica primer referido + descuento
+  let estadoInicial='adm';
+  const tieneDescuento = rb==='Descuento 5%';
+  if(primerRef==='Sí' && tieneDescuento){
+    estadoInicial='r_adm'; // no cumple Adm. Comercial
+  } else if(primerRef==='No'){
+    estadoInicial='mkt'; // pasa directo a validar marketing
+  }
+
+  recs.push({id:nextId++,rn,ri,nn,ni,rc,nc,rb,nb,ne,nt,as_,fr_,cm_,rfm,
+    primerRef,
+    idnacs_ref:'',cartera_ref:'',idnacs_new:'',cartera_new:'',
+    estado:estadoInicial,
+    cumple_adm: estadoInicial==='r_adm' ? 'No' : '',
+    motivo_adm: estadoInicial==='r_adm' ? 'Referidor no cumple (primer referido con descuento)' : '',
+    cumple_mkt:''});
   updateCounts();saveKV();
   document.getElementById('fOk').style.display='';
   setTimeout(closeNuevo,1200);
@@ -953,6 +982,23 @@ function exportCSV(){
 // ── ABRIR/CERRAR OVERLAY ──
 function openObs(){document.getElementById('obsOverlay').classList.add('show');document.body.style.overflow='hidden';}
 function closeObs(){document.getElementById('obsOverlay').classList.remove('show');document.body.style.overflow='';closeTable();}
+
+// ── AYUDA: detecta si se accede vía Hub (referrer) o link externo ──
+function openHelp(){
+  const fromHub = document.referrer.includes(window.location.host) || sessionStorage.getItem('viaHub')==='1';
+  document.getElementById('helpPwdTitle').style.display = fromHub ? '' : 'none';
+  document.getElementById('helpPwdBody').style.display = fromHub ? '' : 'none';
+  document.getElementById('helpExtLink').textContent = window.location.href.split('#')[0].split('?')[0] + '#referidos-obs';
+  document.getElementById('mHelp').classList.add('show');
+}
+// marcar si venimos del index del hub
+if(document.referrer && document.referrer.includes(window.location.pathname.split('/seguimientos')[0])){
+  sessionStorage.setItem('viaHub','1');
+}
+// abrir automáticamente si la URL trae #referidos-obs (acceso externo directo)
+if(window.location.hash === '#referidos-obs'){
+  window.addEventListener('DOMContentLoaded', openObs);
+}
 </script>
 </body>
 </html>
