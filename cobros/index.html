@@ -53,9 +53,11 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .conv-btn:not(.active):hover { background:rgba(168,120,240,0.3); border-color:#a878f0; color:#c8a0ff; }
 .year-select { background:rgba(0,20,40,0.8); border:1px solid rgba(168,120,240,0.35); border-radius:8px; padding:8px 14px; color:rgba(168,120,240,0.8); font-size:12px; font-family:inherit; outline:none; cursor:pointer; font-weight:600; }
 .year-select option { background:#030E1E; color:#E0F7FF; }
-.cierre-label { font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(240,168,48,0.6); margin-left:8px; white-space:nowrap; }
+.cierre-label { font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(240,168,48,0.6); margin-left:8px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
 .cierre-editable { color:#f0a830; border-bottom:1px dashed rgba(240,168,48,0.5); padding:0 3px; outline:none; min-width:80px; display:inline-block; cursor:text; transition:border-color 0.2s; }
 .cierre-editable:focus { border-bottom-color:#f0a830; color:#ffc84a; }
+.cierre-saved { font-size:9px; color:rgba(29,204,132,0.7); opacity:0; transition:opacity 0.3s; white-space:nowrap; }
+.cierre-saved.show { opacity:1; }
 .stats-grid { position:relative; z-index:10; padding:16px 32px 60px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
 .stat-card { background:rgba(0,16,32,0.85); border-radius:13px; padding:14px 12px; display:flex; flex-direction:column; gap:0; transition:border-color 0.2s, transform 0.2s; animation:fadeUp 0.4s ease both; }
 .stat-card:hover { transform:translateY(-2px); }
@@ -100,7 +102,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 <canvas id="bgc"></canvas>
 <div class="corner tl"></div><div class="corner tr"></div>
 <div class="corner bl"></div><div class="corner br"></div>
-<div class="sys-tag">SYS.CARTERAS v1.0 · NET.ACTIVE</div>
+<div class="sys-tag">SYS.CARTERAS v1.1 · NET.ACTIVE</div>
 
 <div class="topbar">
   <div class="brand">
@@ -196,7 +198,11 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <option value="2029">2029</option>
     <option value="2030">2030</option>
   </select>
-  <span class="cierre-label">DATOS A CIERRE DE MES DE <span id="cierre-mes" class="cierre-editable" contenteditable="true" spellcheck="false" title="Haz clic para editar">ABRIL 2026</span></span>
+  <span class="cierre-label">
+    DATOS A CIERRE DE MES DE
+    <span id="cierre-mes" class="cierre-editable" contenteditable="true" spellcheck="false" title="Haz clic para editar. Se guarda automáticamente.">ABRIL 2026</span>
+    <span id="cierre-saved" class="cierre-saved">✓ Guardado</span>
+  </span>
 </div>
 
 <div class="stats-grid">
@@ -264,6 +270,7 @@ const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 const MARCAS=['inesdi','obs','esdesign','ucma'];
 // Años con datos en el KV — añadir aquí cuando se incorporen nuevos años
 const AÑOS_CON_DATOS=['2025','2026'];
+const CIERRE_KV_KEY='adminhub_cierre_mes_label';
 
 let convActiva='abril';
 let yearActivo='2026';
@@ -342,6 +349,45 @@ async function load(){
   }catch(e){console.error('KV error:',e);}
 }
 
+// ── CAMPO "DATOS A CIERRE DE MES DE..." — persistencia en KV ──
+async function loadCierreLabel(){
+  try{
+    const res=await fetch(`${WORKER_URL}/kv?key=${CIERRE_KV_KEY}`);
+    const data=await res.json();
+    if(data.value){
+      const val=typeof data.value==='string'?JSON.parse(data.value):data.value;
+      if(val && typeof val==='string'){
+        document.getElementById('cierre-mes').textContent=val;
+      }
+    }
+  }catch(e){console.error('Cierre label load error:',e);}
+}
+
+let cierreSaveTimeout=null;
+async function saveCierreLabel(){
+  const text=document.getElementById('cierre-mes').textContent.trim();
+  if(!text)return;
+  try{
+    const res=await fetch(`${WORKER_URL}/kv`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key:CIERRE_KV_KEY,value:text})
+    });
+    if(res.ok){
+      const savedTag=document.getElementById('cierre-saved');
+      savedTag.classList.add('show');
+      setTimeout(()=>savedTag.classList.remove('show'),1800);
+    }
+  }catch(e){console.error('Cierre label save error:',e);}
+}
+
+const cierreEl=document.getElementById('cierre-mes');
+cierreEl.addEventListener('blur', saveCierreLabel);
+cierreEl.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); cierreEl.blur(); }
+});
+
+loadCierreLabel();
 load();
 </script>
 </body>
