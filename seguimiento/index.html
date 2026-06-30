@@ -254,8 +254,9 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     </div>
     <div class="fsec">
       <div class="fsec-t">Gestión</div>
-      <div class="fgrid g3">
+      <div class="fgrid g3" style="grid-template-columns:1fr 1fr 1fr 1fr;">
         <div class="ff"><label>Asesor *</label><input type="text" id="as_" placeholder="Nombre asesor"/></div>
+        <div class="ff"><label>JE</label><input type="text" id="je_" placeholder="Jefe de equipo"/></div>
         <div class="ff"><label>Fecha registro *</label><input type="date" id="fr_"/></div>
         <div class="ff"><label>Comentarios</label><input type="text" id="cm_" placeholder="Opcional"/></div>
       </div>
@@ -887,7 +888,7 @@ function getFiltered(estado){
 // ── NUEVO REFERIDO ──
 function openNuevo(){
   if(!requireWrite())return;
-  ['rn','ri','rmail','nn','ni','ne','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['rn','ri','rmail','nn','ni','ne','as_','je_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['rb','primerRef'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
   document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
   document.getElementById('dupAlert').style.display='none';
@@ -914,15 +915,24 @@ function saveNuevo(){
   const nc=document.getElementById('nc').value;
   const ne=document.getElementById('ne').value.trim();
   const as_=document.getElementById('as_').value.trim();
+  const je=document.getElementById('je_').value.trim();
   const fr_=document.getElementById('fr_').value;
   const cm_=document.getElementById('cm_').value.trim();
 
   if(!rn||!ri||!rmail||!rb||!primerRef||!nn||!ni||!nc||!ne||!as_||!fr_){
-    document.getElementById('fErr').style.display='';return;
+    document.getElementById('fErr').style.display='';
+    document.getElementById('fErr').scrollIntoView({behavior:'smooth',block:'center'});
+    return;
   }
   document.getElementById('fErr').style.display='none';
   const v1=norm(rn),v2=norm(nn);
-  if(recs.find(r=>norm(r.rn)===v1||norm(r.nn)===v2)){document.getElementById('dupMsg').textContent='Registro ya existente.';document.getElementById('dupAlert').style.display='';return;}
+  const dup = recs.find(r=>norm(r.rn)===v1 && norm(r.nn)===v2);
+  if(dup){
+    document.getElementById('dupMsg').textContent=`Este referidor ya tiene registrado a este referido exacto ("${dup.rn}" → "${dup.nn}").`;
+    document.getElementById('dupAlert').style.display='';
+    return;
+  }
+  document.getElementById('dupAlert').style.display='none';
 
   // Lógica primer referido + descuento
   let estadoInicial='adm';
@@ -933,7 +943,7 @@ function saveNuevo(){
     estadoInicial='mkt';
   }
 
-  recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,fr_,cm_,
+  recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,je,fr_,cm_,
     primerRef,
     idnacs_ref:'',cartera_ref:'',idnacs_new:'',cartera_new:'',
     estado:estadoInicial,
@@ -1076,7 +1086,7 @@ function deleteRecord(recId){
 function buildTable(n,rows){
   if(!rows.length)return'<p class="empty-msg">Sin registros en este estado</p>';
   if(n===2){
-    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>ID Ref.</th><th>Conv.</th><th>Beneficio Ref.</th><th>Referido</th><th>ID New</th><th>Conv.</th><th>Beneficio New</th><th>Email</th><th>Asesor</th><th>Comentarios</th><th>ID NACS Ref.</th><th>Cartera Ref.</th><th>ID NACS New</th><th>Cartera New</th><th>Cumple Requisitos</th><th>Motivo No Cumple</th><th></th></tr></thead><tbody>`;
+    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>ID Ref.</th><th>Conv.</th><th>Beneficio Ref.</th><th>Referido</th><th>ID New</th><th>Conv.</th><th>Beneficio New</th><th>Email</th><th>Asesor</th><th>JE</th><th>Comentarios</th><th>ID NACS Ref.</th><th>Cartera Ref.</th><th>ID NACS New</th><th>Cartera New</th><th>Cumple Requisitos</th><th>Motivo No Cumple</th><th></th></tr></thead><tbody>`;
     rows.forEach(r=>{
       h+=`<tr><td><input type="checkbox"/></td>
         <td><input class="edt" ${roAttr()} value="${esc(r.rn)}" onchange="fldChange('rn',${r.id},this.value)" style="width:110px;"/></td>
@@ -1089,6 +1099,7 @@ function buildTable(n,rows){
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('nb',${r.id},this.value)">${['Cheque Amazon','Descuento 5%','Sin beneficio'].map(o=>`<option ${r.nb===o?'selected':''}>${o}</option>`).join('')}</select></td>
         <td><input class="edt" ${roAttr()} value="${esc(r.ne)}" onchange="fldChange('ne',${r.id},this.value)" style="width:120px;"/></td>
         <td><input class="edt" ${roAttr()} value="${esc(r.as_)}" onchange="fldChange('as_',${r.id},this.value)" style="width:90px;"/></td>
+        <td><input class="edt" ${roAttr()} value="${esc(r.je)}" onchange="fldChange('je',${r.id},this.value)" style="width:90px;"/></td>
         <td><input class="edt" ${roAttr()} value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:110px;"/></td>
         <td><input class="edt" ${roAttr()} value="${esc(r.idnacs_ref)}" onchange="fldChange('idnacs_ref',${r.id},this.value)" style="width:75px;"/></td>
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cartera_ref',${r.id},this.value)">${['','Al corriente','Máster pagado','Cuotas impagadas','Impagado','Baja','Moroso'].map(o=>`<option ${r.cartera_ref===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
