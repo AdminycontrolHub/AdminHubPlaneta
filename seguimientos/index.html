@@ -622,7 +622,24 @@ function setActive(el){document.querySelectorAll('.node').forEach(n=>n.classList
 
 // ── REFERIDOS OBS ──
 const P_ADM='AdminHubOBS', P_MKT='MKTok';
-const KV_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv/adminhub_referidos_obs_v1';
+const KV_BASE='https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv';
+const KV_KEY_MAIN='adminhub_referidos_obs_v1';
+const KV_KEY_WA='adminhub_referidos_obs_writeaccess';
+
+async function kvGet(key){
+  const res = await fetch(`${KV_BASE}?key=${encodeURIComponent(key)}`);
+  if(!res.ok) throw new Error('kv get failed');
+  const d = await res.json();
+  return d.value ? JSON.parse(d.value) : null;
+}
+async function kvSet(key, value){
+  const res = await fetch(KV_BASE, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ key, value })
+  });
+  return res.ok;
+}
 let convs=['2604','2510','2504'],tempConvs=[];
 let pwdCb=null,pwdPass=null,curBub=null;
 let unlocked={2:false,3:false,4:false};
@@ -660,12 +677,12 @@ function updateCounts(){
 
 // ── KV ──
 async function saveKV(){
-  try{await fetch(KV_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:JSON.stringify({recs,convs,nextId})})});}catch(e){}
+  try{ await kvSet(KV_KEY_MAIN, {recs,convs,nextId}); }catch(e){}
 }
 async function loadKV(){
   try{
-    const res=await fetch(KV_URL);
-    if(res.ok){const d=await res.json();const data=typeof d.value==='string'?JSON.parse(d.value):d.value;if(data&&data.recs){recs=data.recs;convs=data.convs||convs;nextId=data.nextId||nextId;}}
+    const data = await kvGet(KV_KEY_MAIN);
+    if(data && data.recs){recs=data.recs;convs=data.convs||convs;nextId=data.nextId||nextId;}
   }catch(e){}
   renderConvSel();updateCounts();
 }
@@ -1048,12 +1065,12 @@ function updateReadOnlyUI(){
 // gestión de códigos (solo Hub)
 async function loadWaCodes(){
   try{
-    const res=await fetch(KV_URL.replace('adminhub_referidos_obs_v1','adminhub_referidos_obs_writeaccess'));
-    if(res.ok){const d=await res.json();const data=typeof d.value==='string'?JSON.parse(d.value):d.value;if(data&&data.codes)waCodes=data.codes;}
+    const data = await kvGet(KV_KEY_WA);
+    if(data && data.codes) waCodes = data.codes;
   }catch(e){}
 }
 async function saveWaCodes(){
-  try{await fetch(KV_URL.replace('adminhub_referidos_obs_v1','adminhub_referidos_obs_writeaccess'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:JSON.stringify({codes:waCodes})})});}catch(e){}
+  try{ await kvSet(KV_KEY_WA, {codes:waCodes}); }catch(e){}
 }
 
 function openWriteAccess(){
