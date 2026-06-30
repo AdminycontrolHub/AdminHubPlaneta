@@ -324,39 +324,6 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
   </div>
 </div>
 
-<!-- Gestión de acceso de escritura (solo desde Hub) -->
-<div class="imodal-bg" id="mWriteAccess">
-  <div class="imodal sm">
-    <div id="waS1">
-      <h3>🔒 Gestionar acceso de escritura</h3><p>Solo Administración Comercial.</p>
-      <input type="password" id="waPwd" placeholder="Contraseña admin..." onkeydown="if(event.key==='Enter')chkWaPwd()"/>
-      <div class="modal-err" id="waErr">Contraseña incorrecta</div>
-      <div class="imodal-btns"><button class="mbtn mbtn-cancel" onclick="closeWriteAccess()">Cancelar</button><button class="mbtn mbtn-ok" onclick="chkWaPwd()">Entrar</button></div>
-    </div>
-    <div id="waS2" style="display:none">
-      <h3>🔑 Códigos de acceso de escritura</h3>
-      <p>Las personas con uno de estos códigos podrán editar desde el enlace externo. Sin código, solo pueden consultar (lectura).</p>
-      <div class="conv-tags" id="waTags"></div>
-      <div class="add-conv-row"><input type="text" id="waNewName" placeholder="Nombre (ej: Noe)" style="max-width:120px;"/><input type="text" id="waNewCode" placeholder="Código..." onkeydown="if(event.key==='Enter')addWaCode()"/><button onclick="addWaCode()">+ Añadir</button></div>
-      <div class="imodal-btns"><button class="mbtn mbtn-cancel" onclick="closeWriteAccess()">Cancelar</button><button class="mbtn mbtn-ok" onclick="saveWa()">Guardar</button></div>
-    </div>
-  </div>
-</div>
-
-<!-- Desbloquear escritura (acceso externo) -->
-<div class="imodal-bg" id="mUnlockWrite">
-  <div class="imodal sm">
-    <h3>🔑 Código de acceso de escritura</h3>
-    <p>Introduce el código que te facilitó Administración Comercial para poder editar.</p>
-    <input type="text" id="unlockCodeInput" placeholder="Código de acceso..." onkeydown="if(event.key==='Enter')doUnlockWrite()"/>
-    <div class="modal-err" id="unlockErr">Código no válido</div>
-    <div class="imodal-btns">
-      <button class="mbtn mbtn-cancel" onclick="document.getElementById('mUnlockWrite').classList.remove('show')">Cancelar</button>
-      <button class="mbtn mbtn-ok" onclick="doUnlockWrite()">Desbloquear</button>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ MODAL PRINCIPAL REFERIDOS OBS ═══ -->
 <div class="obs-overlay" id="obsOverlay">
   <div class="obs-modal">
@@ -368,18 +335,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Admisiones · Administración Comercial · Marketing · Control de Gestión</div></div>
       </div>
       <div class="obs-close-bar-r">
-        <button class="hbtn" id="btnWriteAccess" style="display:none;color:#0d44a1;border-color:#90caf9;" onclick="openWriteAccess()">🔑 Acceso escritura</button>
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
         <button class="hbtn export" onclick="exportCSV()">📤 Exportar</button>
         <button class="hbtn help" onclick="openHelp()">?</button>
         <button class="hbtn cerrar" onclick="closeObs()">✕ Cerrar</button>
         <input type="file" id="fileInputObs" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
       </div>
-    </div>
-
-    <!-- aviso modo solo lectura -->
-    <div id="readOnlyBanner" style="display:none;background:#fff3e0;border-bottom:1px solid #ffcc80;padding:8px 20px;font-size:11px;color:#c45200;font-weight:700;text-align:center;">
-      🔒 Modo solo lectura — acceso vía enlace externo. Necesitas un código de acceso de escritura para editar o añadir registros. <button onclick="openUnlockWrite()" style="margin-left:6px;background:#c45200;color:#fff;border:none;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;">Introducir código</button>
     </div>
 
     <!-- buscar alumno -->
@@ -670,12 +631,9 @@ async function loadKV(){
   renderConvSel();updateCounts();
 }
 loadKV();
-loadWaCodes();
-detectAccessMode();
 
 // ── IMPORTAR EXCEL ──
 function importExcel(input){
-  if(!requireWrite()){input.value='';return;}
   const file=input.files[0];if(!file)return;
   if(typeof XLSX==='undefined'){
     const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
@@ -834,7 +792,6 @@ function getFiltered(estado){
 
 // ── NUEVO REFERIDO ──
 function openNuevo(){
-  if(!requireWrite())return;
   ['rn','ri','rmail','nn','ni','ne','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['rb','primerRef'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
   document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
@@ -924,7 +881,6 @@ function closeTable(){curBub=null;document.getElementById('tSec').classList.remo
 
 // ── FIELD CHANGE ──
 function fldChange(field,recId,val){
-  if(!requireWrite())return;
   const r=recs.find(x=>x.id===recId);if(!r)return;
   r[field]=val;
   if(field==='cumple_adm'){
@@ -946,23 +902,23 @@ function buildTable(n,rows){
     let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>ID Ref.</th><th>Conv.</th><th>Beneficio Ref.</th><th>Referido</th><th>ID New</th><th>Conv.</th><th>Beneficio New</th><th>Email</th><th>Asesor</th><th>Comentarios</th><th>ID NACS Ref.</th><th>Cartera Ref.</th><th>ID NACS New</th><th>Cartera New</th><th>Cumple Requisitos</th><th>Motivo No Cumple</th></tr></thead><tbody>`;
     rows.forEach(r=>{
       h+=`<tr><td><input type="checkbox"/></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.rn)}" onchange="fldChange('rn',${r.id},this.value)" style="width:110px;"/></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.ri)}" onchange="fldChange('ri',${r.id},this.value)" style="width:100px;"/></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('rc',${r.id},this.value)">${convs.map(c=>`<option ${r.rc===c?'selected':''}>${c}</option>`).join('')}</select></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('rb',${r.id},this.value)">${['Cheque Amazon','Descuento 5%','Sin beneficio'].map(o=>`<option ${r.rb===o?'selected':''}>${o}</option>`).join('')}</select></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.nn)}" onchange="fldChange('nn',${r.id},this.value)" style="width:110px;"/></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.ni)}" onchange="fldChange('ni',${r.id},this.value)" style="width:100px;"/></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('nc',${r.id},this.value)">${convs.map(c=>`<option ${r.nc===c?'selected':''}>${c}</option>`).join('')}</select></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('nb',${r.id},this.value)">${['Cheque Amazon','Descuento 5%','Sin beneficio'].map(o=>`<option ${r.nb===o?'selected':''}>${o}</option>`).join('')}</select></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.ne)}" onchange="fldChange('ne',${r.id},this.value)" style="width:120px;"/></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.as_)}" onchange="fldChange('as_',${r.id},this.value)" style="width:90px;"/></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:110px;"/></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.idnacs_ref)}" onchange="fldChange('idnacs_ref',${r.id},this.value)" style="width:75px;"/></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cartera_ref',${r.id},this.value)">${['','Al corriente','Máster pagado','Cuotas impagadas','Impagado','Baja','Moroso'].map(o=>`<option ${r.cartera_ref===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.idnacs_new)}" onchange="fldChange('idnacs_new',${r.id},this.value)" style="width:75px;"/></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cartera_new',${r.id},this.value)">${['','Al corriente','Máster pagado','Cuotas impagadas','Impagado','Baja','Moroso'].map(o=>`<option ${r.cartera_new===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cumple_adm',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_adm===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('motivo_adm',${r.id},this.value)">${['','Referidor no cumple','Referido no cumple','Ambos no cumplen'].map(o=>`<option value="${o}" ${r.motivo_adm===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+        <td><input class="edt" value="${esc(r.rn)}" onchange="fldChange('rn',${r.id},this.value)" style="width:110px;"/></td>
+        <td><input class="edt" value="${esc(r.ri)}" onchange="fldChange('ri',${r.id},this.value)" style="width:100px;"/></td>
+        <td><select class="edt-sel" onchange="fldChange('rc',${r.id},this.value)">${convs.map(c=>`<option ${r.rc===c?'selected':''}>${c}</option>`).join('')}</select></td>
+        <td><select class="edt-sel" onchange="fldChange('rb',${r.id},this.value)">${['Cheque Amazon','Descuento 5%','Sin beneficio'].map(o=>`<option ${r.rb===o?'selected':''}>${o}</option>`).join('')}</select></td>
+        <td><input class="edt" value="${esc(r.nn)}" onchange="fldChange('nn',${r.id},this.value)" style="width:110px;"/></td>
+        <td><input class="edt" value="${esc(r.ni)}" onchange="fldChange('ni',${r.id},this.value)" style="width:100px;"/></td>
+        <td><select class="edt-sel" onchange="fldChange('nc',${r.id},this.value)">${convs.map(c=>`<option ${r.nc===c?'selected':''}>${c}</option>`).join('')}</select></td>
+        <td><select class="edt-sel" onchange="fldChange('nb',${r.id},this.value)">${['Cheque Amazon','Descuento 5%','Sin beneficio'].map(o=>`<option ${r.nb===o?'selected':''}>${o}</option>`).join('')}</select></td>
+        <td><input class="edt" value="${esc(r.ne)}" onchange="fldChange('ne',${r.id},this.value)" style="width:120px;"/></td>
+        <td><input class="edt" value="${esc(r.as_)}" onchange="fldChange('as_',${r.id},this.value)" style="width:90px;"/></td>
+        <td><input class="edt" value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:110px;"/></td>
+        <td><input class="edt" value="${esc(r.idnacs_ref)}" onchange="fldChange('idnacs_ref',${r.id},this.value)" style="width:75px;"/></td>
+        <td><select class="edt-sel" onchange="fldChange('cartera_ref',${r.id},this.value)">${['','Al corriente','Máster pagado','Cuotas impagadas','Impagado','Baja','Moroso'].map(o=>`<option ${r.cartera_ref===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+        <td><input class="edt" value="${esc(r.idnacs_new)}" onchange="fldChange('idnacs_new',${r.id},this.value)" style="width:75px;"/></td>
+        <td><select class="edt-sel" onchange="fldChange('cartera_new',${r.id},this.value)">${['','Al corriente','Máster pagado','Cuotas impagadas','Impagado','Baja','Moroso'].map(o=>`<option ${r.cartera_new===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+        <td><select class="edt-sel" onchange="fldChange('cumple_adm',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_adm===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
+        <td><select class="edt-sel" onchange="fldChange('motivo_adm',${r.id},this.value)">${['','Referidor no cumple','Referido no cumple','Ambos no cumplen'].map(o=>`<option value="${o}" ${r.motivo_adm===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
       </tr>`;
     });
     return h+'</tbody></table>';
@@ -974,8 +930,8 @@ function buildTable(n,rows){
         <td><span class="nm">${esc(r.rn)}</span><span class="xid">${esc(r.ri)}</span></td>
         <td><span class="nm">${esc(r.nn)}</span><span class="xid">${esc(r.ni)}</span></td>
         <td>${esc(r.nc)}</td><td>${esc(r.nb)}</td><td>${esc(r.ne)||'—'}</td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:120px;"/></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cumple_mkt',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_mkt===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
+        <td><input class="edt" value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:120px;"/></td>
+        <td><select class="edt-sel" onchange="fldChange('cumple_mkt',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_mkt===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
       </tr>`;
     });
     return h+'</tbody></table>';
@@ -987,7 +943,7 @@ function buildTable(n,rows){
         <td><span class="nm">${esc(r.rn)}</span><span class="xid">${esc(r.ri)}</span></td>
         <td><span class="nm">${esc(r.nn)}</span><span class="xid">${esc(r.ni)}</span></td>
         <td>${esc(r.nc)}</td><td>${esc(r.nb)}</td><td>${esc(r.as_)||'—'}</td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('fecha_pago',${r.id},this.value)">${['','Julio 2026','Enero 2027','Julio 2027','Enero 2028'].map(o=>`<option value="${o}" ${r.fecha_pago===o?'selected':''}>${o||'— Seleccionar fecha —'}</option>`).join('')}</select></td>
+        <td><select class="edt-sel" onchange="fldChange('fecha_pago',${r.id},this.value)">${['','Julio 2026','Enero 2027','Julio 2027','Enero 2028'].map(o=>`<option value="${o}" ${r.fecha_pago===o?'selected':''}>${o||'— Seleccionar fecha —'}</option>`).join('')}</select></td>
       </tr>`;
     });
     return h+'</tbody></table>';
@@ -1013,7 +969,6 @@ function buildTable(n,rows){
 }
 
 function esc(s){return(s||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function roAttr(){ return (isFromHub || isWriteUnlocked) ? '' : 'disabled style="background:#f0eae2;cursor:not-allowed;"'; }
 
 // ── EXPORTAR ──
 function exportCSV(){
@@ -1023,97 +978,7 @@ function exportCSV(){
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='Referidos_OBS_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
 }
 
-// ── CONTROL DE ACCESO DE ESCRITURA (modo lectura para link externo) ──
-let waCodes = []; // [{name, code}]
-let isWriteUnlocked = false;
-let isFromHub = false;
-
-const WA_ADMIN_PASS = 'AdminHubOBS';
-
-function detectAccessMode(){
-  isFromHub = document.referrer.includes(window.location.host) || sessionStorage.getItem('viaHub')==='1';
-  document.getElementById('btnWriteAccess').style.display = isFromHub ? '' : 'none';
-  if(isFromHub){
-    isWriteUnlocked = true; // dentro del hub siempre se puede escribir (sujeto a contraseñas por burbuja ya existentes)
-  } else {
-    isWriteUnlocked = sessionStorage.getItem('obsWriteUnlocked')==='1';
-  }
-  updateReadOnlyUI();
-}
-
-function updateReadOnlyUI(){
-  const readOnly = !isFromHub && !isWriteUnlocked;
-  document.getElementById('readOnlyBanner').style.display = readOnly ? '' : 'none';
-}
-
-// gestión de códigos (solo Hub)
-async function loadWaCodes(){
-  try{
-    const res=await fetch(KV_URL.replace('adminhub_referidos_obs_v1','adminhub_referidos_obs_writeaccess'));
-    if(res.ok){const d=await res.json();const data=typeof d.value==='string'?JSON.parse(d.value):d.value;if(data&&data.codes)waCodes=data.codes;}
-  }catch(e){}
-}
-async function saveWaCodes(){
-  try{await fetch(KV_URL.replace('adminhub_referidos_obs_v1','adminhub_referidos_obs_writeaccess'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value:JSON.stringify({codes:waCodes})})});}catch(e){}
-}
-
-function openWriteAccess(){
-  document.getElementById('waS1').style.display='';
-  document.getElementById('waS2').style.display='none';
-  document.getElementById('waPwd').value='';
-  document.getElementById('waErr').style.display='none';
-  document.getElementById('mWriteAccess').classList.add('show');
-}
-function closeWriteAccess(){document.getElementById('mWriteAccess').classList.remove('show');}
-function chkWaPwd(){
-  if(document.getElementById('waPwd').value===WA_ADMIN_PASS){
-    document.getElementById('waS1').style.display='none';
-    document.getElementById('waS2').style.display='';
-    renderWaTags();
-  } else { document.getElementById('waErr').style.display=''; }
-}
-function renderWaTags(){
-  document.getElementById('waTags').innerHTML = waCodes.length
-    ? waCodes.map((c,i)=>`<div class="conv-tag">${esc(c.name)}: ${esc(c.code)}<button onclick="remWaCode(${i})">×</button></div>`).join('')
-    : '<p style="font-size:11px;color:#9a8e82;">Sin códigos creados todavía.</p>';
-}
-function remWaCode(i){waCodes.splice(i,1);renderWaTags();}
-function addWaCode(){
-  const name=document.getElementById('waNewName').value.trim();
-  const code=document.getElementById('waNewCode').value.trim();
-  if(name&&code){waCodes.push({name,code});renderWaTags();}
-  document.getElementById('waNewName').value='';
-  document.getElementById('waNewCode').value='';
-}
-function saveWa(){saveWaCodes();closeWriteAccess();}
-
-// desbloqueo desde link externo
-function openUnlockWrite(){
-  document.getElementById('unlockCodeInput').value='';
-  document.getElementById('unlockErr').style.display='none';
-  document.getElementById('mUnlockWrite').classList.add('show');
-}
-function doUnlockWrite(){
-  const v=document.getElementById('unlockCodeInput').value.trim();
-  const match=waCodes.find(c=>c.code===v);
-  if(match){
-    isWriteUnlocked=true;
-    sessionStorage.setItem('obsWriteUnlocked','1');
-    sessionStorage.setItem('obsWriteUser',match.name);
-    document.getElementById('mUnlockWrite').classList.remove('show');
-    updateReadOnlyUI();
-    if(curBub)showBub(curBub);
-  } else {
-    document.getElementById('unlockErr').style.display='';
-  }
-}
-
-// guard global: bloquea acciones de escritura si procede
-function requireWrite(){
-  if(isFromHub || isWriteUnlocked) return true;
-  openUnlockWrite();
-  return false;
-}
+// ── ABRIR/CERRAR OVERLAY ──
 function openObs(){document.getElementById('obsOverlay').classList.add('show');document.body.style.overflow='hidden';}
 function closeObs(){document.getElementById('obsOverlay').classList.remove('show');document.body.style.overflow='';closeTable();}
 
