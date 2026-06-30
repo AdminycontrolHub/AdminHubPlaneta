@@ -254,9 +254,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     </div>
     <div class="fsec">
       <div class="fsec-t">Gestión</div>
-      <div class="fgrid g3" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+      <div class="fgrid g3" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
         <div class="ff"><label>Asesor *</label><input type="text" id="as_" placeholder="Nombre asesor"/></div>
-        <div class="ff"><label>JE</label><input type="text" id="je_" placeholder="Jefe de equipo"/></div>
+        <div class="ff"><label>JE *</label><select id="je_"></select></div>
+        <div class="ff"><label>DV *</label><select id="dv_"></select></div>
         <div class="ff"><label>Fecha registro *</label><input type="date" id="fr_"/></div>
         <div class="ff"><label>Comentarios</label><input type="text" id="cm_" placeholder="Opcional"/></div>
       </div>
@@ -358,6 +359,24 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
   </div>
 </div>
 
+<!-- Gestionar listas JE / DV (solo Hub, sin contraseña) -->
+<div class="imodal-bg" id="mJeDv">
+  <div class="imodal sm">
+    <h3>👥 Gestionar JE y DV</h3>
+    <p>Añade, edita o elimina los nombres disponibles en los desplegables del formulario.</p>
+    <div class="fsec-t" style="margin-top:6px;">Lista JE</div>
+    <div class="conv-tags" id="jeTags"></div>
+    <div class="add-conv-row"><input type="text" id="jeNew" placeholder="Nombre nuevo JE..." onkeydown="if(event.key==='Enter')addJe()"/><button onclick="addJe()">+ Añadir</button></div>
+    <div class="fsec-t" style="margin-top:14px;">Lista DV</div>
+    <div class="conv-tags" id="dvTags"></div>
+    <div class="add-conv-row"><input type="text" id="dvNew" placeholder="Nombre nuevo DV..." onkeydown="if(event.key==='Enter')addDv()"/><button onclick="addDv()">+ Añadir</button></div>
+    <div class="imodal-btns" style="margin-top:14px;">
+      <button class="mbtn mbtn-cancel" onclick="closeJeDv()">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="saveJeDv()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Motivo obligatorio al marcar No cumple -->
 <div class="imodal-bg" id="mMotivo">
   <div class="imodal sm">
@@ -389,6 +408,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       </div>
       <div class="obs-close-bar-r">
         <button class="hbtn" id="btnWriteAccess" style="display:none;color:#0d44a1;border-color:#90caf9;" onclick="openWriteAccess()">🔑 Acceso escritura</button>
+        <button class="hbtn" id="btnJeDv" style="display:none;color:#5a2aaa;border-color:#a878f0;" onclick="openJeDv()">👥 Gestionar JE/DV</button>
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
         <button class="hbtn export" onclick="exportCSV()">📤 Exportar</button>
         <button class="hbtn help" onclick="openHelp()">?</button>
@@ -708,6 +728,7 @@ async function loadKV(){
 }
 loadKV();
 loadWaCodes();
+loadJeDv();
 
 // ── IMPORTAR EXCEL ──
 function importExcel(input){
@@ -883,13 +904,14 @@ function getFiltered(estado){
 // ── NUEVO REFERIDO ──
 function openNuevo(){
   if(!requireWrite())return;
-  ['rn','ri','rmail','nn','ni','ne','as_','je_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  ['rb','primerRef'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
+  ['rn','ri','rmail','nn','ni','ne','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['rb','primerRef','je_','dv_'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
   document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
   document.getElementById('dupAlert').style.display='none';
   document.getElementById('fErr').style.display='none';
   document.getElementById('fOk').style.display='none';
   renderConvSel();
+  renderJeDvSelects();
   document.getElementById('mNuevo').classList.add('show');
 }
 function closeNuevo(){document.getElementById('mNuevo').classList.remove('show');}
@@ -911,10 +933,11 @@ function saveNuevo(){
   const ne=document.getElementById('ne').value.trim();
   const as_=document.getElementById('as_').value.trim();
   const je=document.getElementById('je_').value.trim();
+  const dv=document.getElementById('dv_').value.trim();
   const fr_=document.getElementById('fr_').value;
   const cm_=document.getElementById('cm_').value.trim();
 
-  if(!rn||!ri||!rmail||!rb||!primerRef||!nn||!ni||!nc||!ne||!as_||!fr_){
+  if(!rn||!ri||!rmail||!rb||!primerRef||!nn||!ni||!nc||!ne||!as_||!je||!dv||!fr_){
     document.getElementById('fErr').style.display='';
     document.getElementById('fErr').scrollIntoView({behavior:'smooth',block:'center'});
     return;
@@ -938,7 +961,7 @@ function saveNuevo(){
     estadoInicial='mkt';
   }
 
-  recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,je,fr_,cm_,
+  recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,je,dv,fr_,cm_,
     primerRef,
     idnacs_ref:'',cartera_ref:'',idnacs_new:'',cartera_new:'',
     estado:estadoInicial,
@@ -1230,6 +1253,64 @@ function exportCSV(){
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='Referidos_OBS_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
 }
 
+// ── LISTAS JE / DV (editables solo desde el Hub, sin contraseña) ──
+const KV_KEY_JEDV='adminhub_referidos_obs_jedv';
+let jeList=['Carlos','Liliana','Alexandra','Daniel','Victor','Omar'];
+let dvList=['Xènia','Mariana'];
+let tempJe=[],tempDv=[];
+
+function renderJeDvSelects(){
+  const jeSel=document.getElementById('je_');
+  const dvSel=document.getElementById('dv_');
+  if(jeSel) jeSel.innerHTML='<option value="">—</option>'+jeList.map(j=>`<option>${esc(j)}</option>`).join('');
+  if(dvSel) dvSel.innerHTML='<option value="">—</option>'+dvList.map(d=>`<option>${esc(d)}</option>`).join('');
+}
+
+async function loadJeDv(){
+  try{
+    const data=await kvGet(KV_KEY_JEDV);
+    if(data){
+      if(Array.isArray(data.je)&&data.je.length) jeList=data.je;
+      if(Array.isArray(data.dv)&&data.dv.length) dvList=data.dv;
+    }
+  }catch(e){}
+  renderJeDvSelects();
+}
+async function saveJeDvKV(){
+  try{ await kvSet(KV_KEY_JEDV,{je:jeList,dv:dvList}); }catch(e){}
+}
+
+function openJeDv(){
+  tempJe=[...jeList]; tempDv=[...dvList];
+  renderJeTags(); renderDvTags();
+  document.getElementById('mJeDv').classList.add('show');
+}
+function closeJeDv(){ document.getElementById('mJeDv').classList.remove('show'); }
+function renderJeTags(){
+  document.getElementById('jeTags').innerHTML=tempJe.map((j,i)=>`<div class="conv-tag">${esc(j)}<button onclick="remJe(${i})">×</button></div>`).join('')
+    || '<p style="font-size:11px;color:#9a8e82;">Sin nombres.</p>';
+}
+function renderDvTags(){
+  document.getElementById('dvTags').innerHTML=tempDv.map((d,i)=>`<div class="conv-tag">${esc(d)}<button onclick="remDv(${i})">×</button></div>`).join('')
+    || '<p style="font-size:11px;color:#9a8e82;">Sin nombres.</p>';
+}
+function remJe(i){ tempJe.splice(i,1); renderJeTags(); }
+function remDv(i){ tempDv.splice(i,1); renderDvTags(); }
+function addJe(){
+  const v=document.getElementById('jeNew').value.trim();
+  if(v&&!tempJe.includes(v)){ tempJe.push(v); renderJeTags(); }
+  document.getElementById('jeNew').value='';
+}
+function addDv(){
+  const v=document.getElementById('dvNew').value.trim();
+  if(v&&!tempDv.includes(v)){ tempDv.push(v); renderDvTags(); }
+  document.getElementById('dvNew').value='';
+}
+function saveJeDv(){
+  jeList=[...tempJe]; dvList=[...tempDv];
+  renderJeDvSelects(); saveJeDvKV(); closeJeDv();
+}
+
 // ── CONTROL DE ACCESO DE ESCRITURA (modo lectura para link externo) ──
 let waCodes = []; // [{name, code}]
 let isWriteUnlocked = false;
@@ -1240,6 +1321,7 @@ const WA_ADMIN_PASS = 'AdminHubOBS';
 function detectAccessMode(){
   isFromHub = sessionStorage.getItem('viaHub')==='1' || !window.location.hash;
   document.getElementById('btnWriteAccess').style.display = isFromHub ? '' : 'none';
+  document.getElementById('btnJeDv').style.display = isFromHub ? '' : 'none';
   if(isFromHub){
     isWriteUnlocked = true; // dentro del hub siempre se puede escribir (sujeto a contraseñas por burbuja ya existentes)
   } else {
@@ -1265,6 +1347,13 @@ async function saveWaCodes(){
 }
 
 function openWriteAccess(){
+  if(isFromHub){
+    document.getElementById('waS1').style.display='none';
+    document.getElementById('waS2').style.display='';
+    renderWaTags();
+    document.getElementById('mWriteAccess').classList.add('show');
+    return;
+  }
   document.getElementById('waS1').style.display='';
   document.getElementById('waS2').style.display='none';
   document.getElementById('waPwd').value='';
