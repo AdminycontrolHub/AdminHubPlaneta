@@ -677,7 +677,12 @@ function updateCounts(){
 
 // ── KV ──
 async function saveKV(){
-  try{ await kvSet(KV_KEY_MAIN, {recs,convs,nextId}); }catch(e){}
+  try{
+    const ok = await kvSet(KV_KEY_MAIN, {recs,convs,nextId});
+    if(!ok) console.error('saveKV: kvSet devolvió false — el POST no fue ok');
+  }catch(e){
+    console.error('saveKV ERROR:', e);
+  }
 }
 async function loadKV(){
   try{
@@ -840,6 +845,9 @@ function applyFilters(){if(curBub)showBub(curBub);}
 function getFiltered(estado){
   const nombre=norm(document.getElementById('filterNombre').value);
   const conv=document.getElementById('convSel').value;
+  const estadoSel=document.getElementById('filterEstado').value;
+  // si hay un filtro de estado explícito y no coincide con la burbuja activa, no mostramos nada de esa burbuja
+  if(estadoSel && estadoSel!==estado) return [];
   return recs.filter(r=>{
     if(r.estado!==estado)return false;
     if(nombre&&!norm(r.rn).includes(nombre)&&!norm(r.nn).includes(nombre))return false;
@@ -931,7 +939,7 @@ function showBub(n){
   document.getElementById('tBadge').className='tsec-badge badge '+BUB_CLS[n];
   document.getElementById('tBadge').textContent=BUB_ICON[n];
   document.getElementById('tTitle').textContent=' '+BUB_LABEL[n];
-  const rows=n===5?recs.filter(r=>r.estado==='pagado'):getFiltered(BUB_ESTADO[n]);
+  const rows=n===5?getFiltered('pagado'):getFiltered(BUB_ESTADO[n]);
   document.getElementById('tCount').textContent=rows.length+' registros';
   document.getElementById('tBody').innerHTML=buildTable(n,rows);
   document.getElementById('tSec').classList.add('show');
@@ -944,11 +952,28 @@ function fldChange(field,recId,val){
   const r=recs.find(x=>x.id===recId);if(!r)return;
   r[field]=val;
   if(field==='cumple_adm'){
-    if(val==='Sí'){r.estado='mkt';r.cumple_mkt='';}else if(val==='No'){r.estado='r_adm';}
-    updateCounts();saveKV();setTimeout(()=>showBub(2),80);
+    if(val==='Sí'){
+      r.estado='mkt';r.cumple_mkt='';
+      updateCounts();saveKV();setTimeout(()=>showBub(2),80);
+    } else if(val==='No'){
+      // no cambiamos de estado todavía: dejamos que se rellene el motivo primero
+      saveKV();
+    } else {
+      saveKV();
+    }
+  } else if(field==='motivo_adm'){
+    if(val && r.cumple_adm==='No'){
+      r.estado='r_adm';
+      updateCounts();saveKV();setTimeout(()=>showBub(2),300);
+    } else { saveKV(); }
   } else if(field==='cumple_mkt'){
-    if(val==='Sí'){r.estado='pago';r.fecha_pago='';}else if(val==='No'){r.estado='r_mkt';r.motivo_mkt='No cumple requisitos lead';}
-    updateCounts();saveKV();setTimeout(()=>showBub(3),80);
+    if(val==='Sí'){
+      r.estado='pago';r.fecha_pago='';
+      updateCounts();saveKV();setTimeout(()=>showBub(3),80);
+    } else if(val==='No'){
+      r.estado='r_mkt';r.motivo_mkt='No cumple requisitos lead';
+      updateCounts();saveKV();setTimeout(()=>showBub(3),300);
+    } else { saveKV(); }
   } else if(field==='fecha_pago'&&val){
     r.estado='pagado';r.importe=r.importe||'200,00 €';
     updateCounts();saveKV();setTimeout(()=>showBub(4),80);
