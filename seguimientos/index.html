@@ -181,6 +181,10 @@ tr:hover td{background:rgba(42,127,138,0.04);}
 .help-h4{font-size:11px;font-weight:800;color:#2a7f8a;text-transform:uppercase;letter-spacing:0.4px;margin:10px 0 4px;}
 .help-p{font-size:12px;color:#1a3a50;line-height:1.6;margin-bottom:6px;}
 code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-family:monospace;color:#1a3a50;}
+.link-row{display:flex;align-items:center;gap:6px;background:#e8f0f4;border-radius:6px;padding:6px 10px;margin-top:4px;}
+.link-row code{background:none;padding:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-copy{flex-shrink:0;padding:4px 10px;border-radius:5px;background:#2a7f8a;color:#fff;border:none;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-copy:hover{background:#1f6370;}
 
 /* carga inicial */
 .carga-inicial{text-align:center;padding:40px 20px;color:#9a8e82;}
@@ -231,12 +235,11 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       <div class="fsec-t">Alumno referidor</div>
       <div class="fgrid">
         <div class="ff"><label>Nombre *</label><input type="text" id="rn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)"/></div>
-        <div class="ff"><label>ID alumno *</label><input type="text" id="ri" placeholder="2021-XXXXXXXXX"/></div>
-        <div class="ff"><label>Fecha matrícula *</label><input type="date" id="rfm"/></div>
-        <div class="ff"><label>Convocatoria *</label><select id="rc"></select></div>
+        <div class="ff"><label>ID oportunidad *</label><input type="text" id="ri" placeholder="2021-XXXXXXXXX"/></div>
+        <div class="ff"><label>Correo electrónico *</label><input type="text" id="rmail" placeholder="email@ejemplo.com"/></div>
         <div class="ff"><label>Beneficio matrícula *</label>
           <select id="rb"><option value="">—</option><option>Cheque Amazon</option><option>Descuento 5%</option><option>Sin beneficio</option></select></div>
-        <div class="ff"><label>¿Primer referido? *</label>
+        <div class="ff full"><label>¿Primer referido? *</label>
           <select id="primerRef"><option value="">—</option><option>Sí</option><option>No</option></select></div>
       </div>
     </div>
@@ -244,12 +247,9 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       <div class="fsec-t">Nuevo alumno referido</div>
       <div class="fgrid">
         <div class="ff"><label>Nombre *</label><input type="text" id="nn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)"/></div>
-        <div class="ff"><label>ID alumno *</label><input type="text" id="ni" placeholder="2021-XXXXXXXXX"/></div>
+        <div class="ff"><label>ID oportunidad *</label><input type="text" id="ni" placeholder="2021-XXXXXXXXX"/></div>
         <div class="ff"><label>Convocatoria *</label><select id="nc"></select></div>
-        <div class="ff"><label>Beneficio *</label>
-          <select id="nb"><option value="">—</option><option>Cheque Amazon</option><option>Descuento 5%</option><option>Sin beneficio</option></select></div>
         <div class="ff"><label>Email *</label><input type="text" id="ne" placeholder="email@ejemplo.com"/></div>
-        <div class="ff"><label>Teléfono *</label><input type="text" id="nt" placeholder="+34 600..."/></div>
       </div>
     </div>
     <div class="fsec">
@@ -302,14 +302,24 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <h3>❓ Ayuda — Referidos OBS</h3>
     <div class="help-h4">Flujo</div>
     <p class="help-p">Añadir por Admisiones → A validar Adm. Comercial → A validar Marketing → Pendiente de Pago → OK Pagado</p>
-    <div class="help-h4" id="helpPwdTitle" style="display:none;">Contraseñas</div>
-    <p class="help-p" id="helpPwdBody" style="display:none;">Adm. Comercial y Pago: <code>AdminHubOBS</code> · Marketing: <code>MKTok</code></p>
-    <div class="help-h4">Cargar listado Excel</div>
-    <p class="help-p">Usa "Cargar listado" para importar el Excel de referidos. Cada fila se asigna automáticamente a la burbuja correcta según el estado del cheque y las condiciones.</p>
+    <div class="help-h4">Fechas de pago</div>
+    <p class="help-p">Los cheques se emiten en julio y enero de cada año.</p>
     <div class="help-h4">Buscar alumno</div>
     <p class="help-p">Escribe el nombre en el campo de búsqueda para ver en qué estado está el expediente.</p>
-    <div class="help-h4">Acceso externo</div>
-    <p class="help-p">Enlace directo para acceder sin pasar por el Admin Hub:<br><code id="helpExtLink">—</code></p>
+    <div class="help-h4">Convocatorias</div>
+    <p class="help-p">No se admiten referidos de convocatorias más allá de las 3 últimas.</p>
+    <div id="helpInternalOnly">
+      <div class="help-h4">Contraseñas</div>
+      <p class="help-p">Adm. Comercial y Pago: <code>AdminHubOBS</code> · Marketing: <code>MKTok</code></p>
+      <div class="help-h4">Cargar listado Excel</div>
+      <p class="help-p">Usa "Cargar listado" para importar el Excel de referidos. Cada fila se asigna automáticamente a la burbuja correcta según el estado del cheque y las condiciones.</p>
+      <div class="help-h4">Acceso externo</div>
+      <p class="help-p">Enlace directo para acceder sin pasar por el Admin Hub:</p>
+      <div class="link-row">
+        <code id="helpExtLink">—</code>
+        <button class="btn-copy" onclick="copyHelpLink()">📋 Copiar</button>
+      </div>
+    </div>
     <div class="imodal-btns"><button class="mbtn mbtn-cancel" onclick="document.getElementById('mHelp').classList.remove('show')">Cerrar</button></div>
   </div>
 </div>
@@ -789,10 +799,9 @@ function getFiltered(estado){
 
 // ── NUEVO REFERIDO ──
 function openNuevo(){
-  ['rn','ri','nn','ni','ne','nt','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  ['rb','nb','primerRef'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
+  ['rn','ri','rmail','nn','ni','ne','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['rb','primerRef'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
   document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
-  document.getElementById('rfm').value='';
   document.getElementById('dupAlert').style.display='none';
   document.getElementById('fErr').style.display='none';
   document.getElementById('fOk').style.display='none';
@@ -809,21 +818,18 @@ function chkDup(val){
 function saveNuevo(){
   const rn=document.getElementById('rn').value.trim();
   const ri=document.getElementById('ri').value.trim();
-  const rfm=document.getElementById('rfm').value;
-  const rc=document.getElementById('rc').value;
+  const rmail=document.getElementById('rmail').value.trim();
   const rb=document.getElementById('rb').value;
   const primerRef=document.getElementById('primerRef').value;
   const nn=document.getElementById('nn').value.trim();
   const ni=document.getElementById('ni').value.trim();
   const nc=document.getElementById('nc').value;
-  const nb=document.getElementById('nb').value;
   const ne=document.getElementById('ne').value.trim();
-  const nt=document.getElementById('nt').value.trim();
   const as_=document.getElementById('as_').value.trim();
   const fr_=document.getElementById('fr_').value;
   const cm_=document.getElementById('cm_').value.trim();
 
-  if(!rn||!ri||!rfm||!rc||!rb||!primerRef||!nn||!ni||!nc||!nb||!ne||!nt||!as_||!fr_||!cm_){
+  if(!rn||!ri||!rmail||!rb||!primerRef||!nn||!ni||!nc||!ne||!as_||!fr_||!cm_){
     document.getElementById('fErr').style.display='';return;
   }
   document.getElementById('fErr').style.display='none';
@@ -834,12 +840,12 @@ function saveNuevo(){
   let estadoInicial='adm';
   const tieneDescuento = rb==='Descuento 5%';
   if(primerRef==='Sí' && tieneDescuento){
-    estadoInicial='r_adm'; // no cumple Adm. Comercial
+    estadoInicial='r_adm';
   } else if(primerRef==='No'){
-    estadoInicial='mkt'; // pasa directo a validar marketing
+    estadoInicial='mkt';
   }
 
-  recs.push({id:nextId++,rn,ri,nn,ni,rc,nc,rb,nb,ne,nt,as_,fr_,cm_,rfm,
+  recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,fr_,cm_,
     primerRef,
     idnacs_ref:'',cartera_ref:'',idnacs_new:'',cartera_new:'',
     estado:estadoInicial,
@@ -986,10 +992,17 @@ function closeObs(){document.getElementById('obsOverlay').classList.remove('show
 // ── AYUDA: detecta si se accede vía Hub (referrer) o link externo ──
 function openHelp(){
   const fromHub = document.referrer.includes(window.location.host) || sessionStorage.getItem('viaHub')==='1';
-  document.getElementById('helpPwdTitle').style.display = fromHub ? '' : 'none';
-  document.getElementById('helpPwdBody').style.display = fromHub ? '' : 'none';
+  document.getElementById('helpInternalOnly').style.display = fromHub ? '' : 'none';
   document.getElementById('helpExtLink').textContent = window.location.href.split('#')[0].split('?')[0] + '#referidos-obs';
   document.getElementById('mHelp').classList.add('show');
+}
+function copyHelpLink(){
+  const txt=document.getElementById('helpExtLink').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('.btn-copy');
+    const orig=btn.textContent;btn.textContent='✔ Copiado';
+    setTimeout(()=>btn.textContent=orig,1500);
+  });
 }
 // marcar si venimos del index del hub
 if(document.referrer && document.referrer.includes(window.location.pathname.split('/seguimientos')[0])){
