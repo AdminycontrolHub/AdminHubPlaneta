@@ -1117,14 +1117,27 @@ function buildTable(n,rows){
   }
   if(n==='r2'||n==='r3'){
     const mf=n==='r2'?'motivo_adm':'motivo_mkt';
-    let h=`<table><thead><tr><th>Referidor</th><th>ID</th><th>Referido</th><th>ID</th><th>Asesor</th><th>Conv.</th><th>Comentarios</th><th>Motivo</th>${n==='r2'?'<th></th>':''}</tr></thead><tbody>`;
+    let h=`<table><thead><tr><th>Referidor</th><th>ID</th><th>Referido</th><th>ID</th><th>Asesor</th><th>Conv.</th><th>Comentarios</th><th>Motivo</th>${n==='r2'?'<th></th><th></th>':''}</tr></thead><tbody>`;
     rows.forEach(r=>{
       const reclamarBtn = n==='r2' ? `<td><button onclick="reclamarCaso(${r.id})" style="background:#fff3e0;border:1px solid #ffcc80;color:#c45200;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;" title="Enviar reclamación por email">✉️</button></td>` : '';
-      h+=`<tr><td><span class="nm">${esc(r.rn)}</span></td><td><span class="xid">${esc(r.ri)}</span></td><td><span class="nm">${esc(r.nn)}</span></td><td><span class="xid">${esc(r.ni)}</span></td><td>${esc(r.as_)||'—'}</td><td>${esc(r.nc)}</td><td>${esc(r.cm_)||'—'}</td><td><span class="badge b-r">✗ ${esc(r[mf])||'—'}</span></td>${reclamarBtn}</tr>`;
+      const devolverBtn = n==='r2' ? `<td><button onclick="devolverCaso(${r.id})" style="background:#e3f2fd;border:1px solid #90caf9;color:#0d44a1;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;" title="Devolver a validación Adm. Comercial">↩ Devolver</button></td>` : '';
+      h+=`<tr><td><span class="nm">${esc(r.rn)}</span></td><td><span class="xid">${esc(r.ri)}</span></td><td><span class="nm">${esc(r.nn)}</span></td><td><span class="xid">${esc(r.ni)}</span></td><td>${esc(r.as_)||'—'}</td><td>${esc(r.nc)}</td><td>${esc(r.cm_)||'—'}</td><td><span class="badge b-r">✗ ${esc(r[mf])||'—'}</span></td>${reclamarBtn}${devolverBtn}</tr>`;
     });
     return h+'</tbody></table>';
   }
   return '';
+}
+
+function devolverCaso(recId){
+  openPwd('🔒 Devolver a validación', 'Solo Administración Comercial puede revertir este caso.', P_ADM, ()=>{
+    const r = recs.find(x=>x.id===recId);
+    if(!r) return;
+    r.estado = 'adm';
+    r.cumple_adm = '';
+    r.motivo_adm = '';
+    updateCounts(); saveKV();
+    if(curBub) showBub(curBub);
+  });
 }
 
 function reclamarCaso(recId){
