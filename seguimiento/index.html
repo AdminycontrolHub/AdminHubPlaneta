@@ -997,10 +997,22 @@ function fldChange(field,recId,val){
       r.estado='r_mkt';r.motivo_mkt='No cumple requisitos lead';
       updateCounts();saveKV();setTimeout(()=>showBub(3),300);
     } else { saveKV(); }
+  } else if(field==='fecha_pago_iso'&&val){
+    r.fecha_pago_iso = val;
+    r.fecha_pago = formatFechaPagoLabel(val);
+    r.estado='pagado';r.importe=r.importe||'200,00 €';
+    updateCounts();saveKV();setTimeout(()=>showBub(4),80);
   } else if(field==='fecha_pago'&&val){
     r.estado='pagado';r.importe=r.importe||'200,00 €';
     updateCounts();saveKV();setTimeout(()=>showBub(4),80);
   } else {saveKV();}
+}
+
+function formatFechaPagoLabel(isoDate){
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const d = new Date(isoDate + 'T00:00:00');
+  const mes = meses[d.getMonth()];
+  return `${mes.charAt(0).toUpperCase()+mes.slice(1)} ${d.getFullYear()}`;
 }
 
 // ── MOTIVO OBLIGATORIO al marcar "No cumple" ──
@@ -1106,11 +1118,12 @@ function buildTable(n,rows){
   if(n===4){
     let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>Referido</th><th>Conv.</th><th>Beneficio</th><th>Asesor</th><th>Fecha de Pago</th>${isFromHub?'<th></th>':''}</tr></thead><tbody>`;
     rows.forEach(r=>{
+      const fechaVal = r.fecha_pago_iso || new Date().toISOString().split('T')[0];
       h+=`<tr><td><input type="checkbox"/></td>
         <td><span class="nm">${esc(r.rn)}</span><span class="xid">${esc(r.ri)}</span></td>
         <td><span class="nm">${esc(r.nn)}</span><span class="xid">${esc(r.ni)}</span></td>
         <td>${esc(r.nc)}</td><td>${esc(r.nb)}</td><td>${esc(r.as_)||'—'}</td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('fecha_pago',${r.id},this.value)">${['','Julio 2026','Enero 2027','Julio 2027','Enero 2028'].map(o=>`<option value="${o}" ${r.fecha_pago===o?'selected':''}>${o||'— Seleccionar fecha —'}</option>`).join('')}</select></td>
+        <td><input type="date" class="edt" ${roAttr()} value="${fechaVal}" onchange="fldChange('fecha_pago_iso',${r.id},this.value)" style="width:135px;"/></td>
         ${isFromHub?`<td><button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button></td>`:''}
       </tr>`;
     });
