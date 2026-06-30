@@ -357,6 +357,25 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
   </div>
 </div>
 
+<!-- Motivo obligatorio al marcar No cumple -->
+<div class="imodal-bg" id="mMotivo">
+  <div class="imodal sm">
+    <h3>⚠ Motivo de no cumplimiento</h3>
+    <p>Indica el motivo antes de continuar. Es obligatorio.</p>
+    <select id="motivoSelectInput">
+      <option value="">— Seleccionar motivo —</option>
+      <option>Referidor no cumple</option>
+      <option>Referido no cumple</option>
+      <option>Ambos no cumplen</option>
+    </select>
+    <div class="modal-err" id="motivoErr">Debes seleccionar un motivo</div>
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="cancelMotivoModal()">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="confirmMotivoModal()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL PRINCIPAL REFERIDOS OBS ═══ -->
 <div class="obs-overlay" id="obsOverlay">
   <div class="obs-modal">
@@ -953,19 +972,13 @@ function fldChange(field,recId,val){
   r[field]=val;
   if(field==='cumple_adm'){
     if(val==='Sí'){
-      r.estado='mkt';r.cumple_mkt='';
+      r.estado='mkt';r.cumple_mkt='';r.motivo_adm='';
       updateCounts();saveKV();setTimeout(()=>showBub(2),80);
     } else if(val==='No'){
-      // no cambiamos de estado todavía: dejamos que se rellene el motivo primero
-      saveKV();
+      openMotivoModal(r.id,'adm');
     } else {
       saveKV();
     }
-  } else if(field==='motivo_adm'){
-    if(val && r.cumple_adm==='No'){
-      r.estado='r_adm';
-      updateCounts();saveKV();setTimeout(()=>showBub(2),300);
-    } else { saveKV(); }
   } else if(field==='cumple_mkt'){
     if(val==='Sí'){
       r.estado='pago';r.fecha_pago='';
@@ -980,11 +993,68 @@ function fldChange(field,recId,val){
   } else {saveKV();}
 }
 
+// ── MOTIVO OBLIGATORIO al marcar "No cumple" ──
+let motivoTargetId = null;
+let motivoTargetTipo = null; // 'adm' | 'mkt'
+
+function openMotivoModal(recId, tipo){
+  motivoTargetId = recId;
+  motivoTargetTipo = tipo;
+  document.getElementById('motivoSelectInput').selectedIndex = 0;
+  document.getElementById('motivoErr').style.display = 'none';
+  document.getElementById('mMotivo').classList.add('show');
+}
+
+function cancelMotivoModal(){
+  // revertimos el cumple_adm/cumple_mkt a vacío para que la persona pueda volver a intentarlo
+  const r = recs.find(x=>x.id===motivoTargetId);
+  if(r){
+    if(motivoTargetTipo==='adm') r.cumple_adm='';
+    if(motivoTargetTipo==='mkt') r.cumple_mkt='';
+    saveKV();
+    if(curBub) showBub(curBub);
+  }
+  document.getElementById('mMotivo').classList.remove('show');
+  motivoTargetId=null;motivoTargetTipo=null;
+}
+
+function confirmMotivoModal(){
+  const v = document.getElementById('motivoSelectInput').value;
+  if(!v){ document.getElementById('motivoErr').style.display=''; return; }
+  const r = recs.find(x=>x.id===motivoTargetId);
+  if(r){
+    if(motivoTargetTipo==='adm'){
+      r.cumple_adm='No';
+      r.motivo_adm=v;
+      r.estado='r_adm';
+    } else if(motivoTargetTipo==='mkt'){
+      r.cumple_mkt='No';
+      r.motivo_mkt=v;
+      r.estado='r_mkt';
+    }
+    updateCounts();saveKV();
+  }
+  document.getElementById('mMotivo').classList.remove('show');
+  const tipoBub = motivoTargetTipo==='adm' ? 2 : 3;
+  motivoTargetId=null;motivoTargetTipo=null;
+  setTimeout(()=>showBub(tipoBub),150);
+}
+
+function deleteRecord(recId){
+  if(!requireWrite())return;
+  const r=recs.find(x=>x.id===recId);
+  if(!r)return;
+  if(!confirm(`¿Eliminar definitivamente el registro de "${r.rn}" → "${r.nn}"?\n\nEsta acción no se puede deshacer.`))return;
+  recs = recs.filter(x=>x.id!==recId);
+  updateCounts();saveKV();
+  if(curBub)showBub(curBub);
+}
+
 // ── TABLAS ──
 function buildTable(n,rows){
   if(!rows.length)return'<p class="empty-msg">Sin registros en este estado</p>';
   if(n===2){
-    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>ID Ref.</th><th>Conv.</th><th>Beneficio Ref.</th><th>Referido</th><th>ID New</th><th>Conv.</th><th>Beneficio New</th><th>Email</th><th>Asesor</th><th>Comentarios</th><th>ID NACS Ref.</th><th>Cartera Ref.</th><th>ID NACS New</th><th>Cartera New</th><th>Cumple Requisitos</th><th>Motivo No Cumple</th></tr></thead><tbody>`;
+    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>ID Ref.</th><th>Conv.</th><th>Beneficio Ref.</th><th>Referido</th><th>ID New</th><th>Conv.</th><th>Beneficio New</th><th>Email</th><th>Asesor</th><th>Comentarios</th><th>ID NACS Ref.</th><th>Cartera Ref.</th><th>ID NACS New</th><th>Cartera New</th><th>Cumple Requisitos</th><th>Motivo No Cumple</th><th></th></tr></thead><tbody>`;
     rows.forEach(r=>{
       h+=`<tr><td><input type="checkbox"/></td>
         <td><input class="edt" ${roAttr()} value="${esc(r.rn)}" onchange="fldChange('rn',${r.id},this.value)" style="width:110px;"/></td>
@@ -1004,6 +1074,7 @@ function buildTable(n,rows){
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cartera_new',${r.id},this.value)">${['','Al corriente','Máster pagado','Cuotas impagadas','Impagado','Baja','Moroso'].map(o=>`<option ${r.cartera_new===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cumple_adm',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_adm===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('motivo_adm',${r.id},this.value)">${['','Referidor no cumple','Referido no cumple','Ambos no cumplen'].map(o=>`<option value="${o}" ${r.motivo_adm===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+        <td>${(isFromHub||isWriteUnlocked)?`<button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button>`:''}</td>
       </tr>`;
     });
     return h+'</tbody></table>';
@@ -1046,11 +1117,35 @@ function buildTable(n,rows){
   }
   if(n==='r2'||n==='r3'){
     const mf=n==='r2'?'motivo_adm':'motivo_mkt';
-    let h=`<table><thead><tr><th>Referidor</th><th>ID</th><th>Referido</th><th>ID</th><th>Asesor</th><th>Conv.</th><th>Comentarios</th><th>Motivo</th></tr></thead><tbody>`;
-    rows.forEach(r=>{h+=`<tr><td><span class="nm">${esc(r.rn)}</span></td><td><span class="xid">${esc(r.ri)}</span></td><td><span class="nm">${esc(r.nn)}</span></td><td><span class="xid">${esc(r.ni)}</span></td><td>${esc(r.as_)||'—'}</td><td>${esc(r.nc)}</td><td>${esc(r.cm_)||'—'}</td><td><span class="badge b-r">✗ ${esc(r[mf])||'—'}</span></td></tr>`;});
+    let h=`<table><thead><tr><th>Referidor</th><th>ID</th><th>Referido</th><th>ID</th><th>Asesor</th><th>Conv.</th><th>Comentarios</th><th>Motivo</th>${n==='r2'?'<th></th>':''}</tr></thead><tbody>`;
+    rows.forEach(r=>{
+      const reclamarBtn = n==='r2' ? `<td><button onclick="reclamarCaso(${r.id})" style="background:#fff3e0;border:1px solid #ffcc80;color:#c45200;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;" title="Enviar reclamación por email">✉️</button></td>` : '';
+      h+=`<tr><td><span class="nm">${esc(r.rn)}</span></td><td><span class="xid">${esc(r.ri)}</span></td><td><span class="nm">${esc(r.nn)}</span></td><td><span class="xid">${esc(r.ni)}</span></td><td>${esc(r.as_)||'—'}</td><td>${esc(r.nc)}</td><td>${esc(r.cm_)||'—'}</td><td><span class="badge b-r">✗ ${esc(r[mf])||'—'}</span></td>${reclamarBtn}</tr>`;
+    });
     return h+'</tbody></table>';
   }
   return '';
+}
+
+function reclamarCaso(recId){
+  const r=recs.find(x=>x.id===recId);if(!r)return;
+  const subject = encodeURIComponent(`Reclamación — Referido no cumple requisitos (${r.rn} → ${r.nn})`);
+  const body = encodeURIComponent(
+`Buenos días,
+
+Quiero solicitar una revisión de la resolución aplicada al siguiente caso, ya que no estamos de acuerdo o no entendemos la resolución indicada:
+
+Referidor: ${r.rn} (ID: ${r.ri})
+Referido: ${r.nn} (ID: ${r.ni})
+Convocatoria: ${r.nc || '—'}
+Asesor: ${r.as_ || '—'}
+Motivo indicado como no cumple: ${r.motivo_adm || '—'}
+
+Solicitamos amablemente la revisión del caso a la mayor brevedad posible.
+
+Gracias de antemano.`
+  );
+  window.location.href = `mailto:administracion@obsbusiness.school?subject=${subject}&body=${body}`;
 }
 
 function esc(s){return(s||'').toString().replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
