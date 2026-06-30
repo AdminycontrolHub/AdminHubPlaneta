@@ -1031,7 +1031,7 @@ let isFromHub = false;
 const WA_ADMIN_PASS = 'AdminHubOBS';
 
 function detectAccessMode(){
-  isFromHub = sessionStorage.getItem('viaHub')==='1' || !window.location.hash;
+  isFromHub = document.referrer.includes(window.location.host) || sessionStorage.getItem('viaHub')==='1';
   document.getElementById('btnWriteAccess').style.display = isFromHub ? '' : 'none';
   if(isFromHub){
     isWriteUnlocked = true; // dentro del hub siempre se puede escribir (sujeto a contraseñas por burbuja ya existentes)
@@ -1119,7 +1119,7 @@ function closeObs(){document.getElementById('obsOverlay').classList.remove('show
 
 // ── AYUDA: detecta si se accede vía Hub (referrer) o link externo ──
 function openHelp(){
-  const fromHub = isFromHub;
+  const fromHub = document.referrer.includes(window.location.host) || sessionStorage.getItem('viaHub')==='1';
   document.getElementById('helpInternalOnly').style.display = fromHub ? '' : 'none';
   document.getElementById('helpExtLink').textContent = window.location.href.split('#')[0].split('?')[0] + '#referidos-obs';
   document.getElementById('mHelp').classList.add('show');
@@ -1132,22 +1132,13 @@ function copyHelpLink(){
     setTimeout(()=>btn.textContent=orig,1500);
   });
 }
-// marcar si venimos navegando desde dentro del propio Hub (clic en una burbuja del index principal)
-const cameFromInternalNav = document.referrer && (
-  document.referrer.includes('/index.html') ||
-  document.referrer.endsWith('/AdminHubPlaneta/') ||
-  document.referrer.includes('/seguimientos/')
-);
-if(cameFromInternalNav){
+// marcar si venimos del index del hub
+if(document.referrer && document.referrer.includes(window.location.pathname.split('/seguimientos')[0])){
   sessionStorage.setItem('viaHub','1');
 }
-// abrir automáticamente SOLO si la URL trae #referidos-obs Y no venimos de navegación interna
-// (es decir: entrada directa por el link externo, sin referrer interno)
-if(window.location.hash === '#referidos-obs' && !cameFromInternalNav){
+// abrir automáticamente si la URL trae #referidos-obs (acceso externo directo)
+if(window.location.hash === '#referidos-obs'){
   window.addEventListener('DOMContentLoaded', openObs);
-} else if(window.location.hash === '#referidos-obs'){
-  // si hay hash pero venimos de navegación interna (ej. recarga), limpiamos el hash para no reabrir el modal sin querer
-  history.replaceState(null, '', window.location.pathname);
 }
 </script>
 </body>
