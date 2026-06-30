@@ -671,7 +671,6 @@ async function loadKV(){
 }
 loadKV();
 loadWaCodes();
-detectAccessMode();
 
 // ── IMPORTAR EXCEL ──
 function importExcel(input){
@@ -1153,6 +1152,9 @@ if(cameFromInternalNav){
     window.addEventListener('load', function(){ openObs(); });
   }
 })();
+
+// ahora que todo está declarado, detectamos el modo de acceso
+detectAccessMode();
 </script>
 </body>
 </html>
