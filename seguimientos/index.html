@@ -257,7 +257,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       <div class="fgrid g3">
         <div class="ff"><label>Asesor *</label><input type="text" id="as_" placeholder="Nombre asesor"/></div>
         <div class="ff"><label>Fecha registro *</label><input type="date" id="fr_"/></div>
-        <div class="ff"><label>Comentarios</label><input type="text" id="cm_" placeholder="Opcional"/></div>
+        <div class="ff"><label>Comentarios *</label><input type="text" id="cm_" placeholder="Obligatorio"/></div>
       </div>
     </div>
     <div class="modal-err" id="fErr">Completa todos los campos obligatorios (*)</div>
@@ -822,7 +822,7 @@ function saveNuevo(){
   const fr_=document.getElementById('fr_').value;
   const cm_=document.getElementById('cm_').value.trim();
 
-  if(!rn||!ri||!rmail||!rb||!primerRef||!nn||!ni||!nc||!ne||!as_||!fr_){
+  if(!rn||!ri||!rmail||!rb||!primerRef||!nn||!ni||!nc||!ne||!as_||!fr_||!cm_){
     document.getElementById('fErr').style.display='';return;
   }
   document.getElementById('fErr').style.display='none';
