@@ -405,21 +405,15 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <!-- buscar alumno -->
     <div class="obs-search">
       <label>🔍 Buscar alumno:</label>
-      <input type="text" id="searchAlumno" placeholder="Escribe nombre para ver en qué estado está..." oninput="buscarAlumno(this.value)"/>
+      <input type="text" id="searchAlumno" placeholder="Escribe nombre de referido..." oninput="buscarAlumno(this.value)"/>
+      <button class="btn-edit-conv" onclick="openConv()" style="margin-left:auto;">✏️ Editar convocatorias</button>
     </div>
 
-    <!-- filtros -->
-    <div class="obs-filters">
-      <span class="fl">Filtrar:</span>
-      <input class="fi fi-search" id="filterNombre" placeholder="Nombre referidor o referido..." oninput="applyFilters()"/>
-      <div class="conv-group">
-        <div class="conv-row">
-          <select class="fi" id="convSel" onchange="applyFilters()"></select>
-          <button class="btn-edit-conv" onclick="openConv()">✏️ Editar convocatorias</button>
-        </div>
-        <span class="conv-warn">⚠ No se admiten convocatorias anteriores</span>
-      </div>
-      <select class="fi" id="filterEstado" onchange="applyFilters()">
+    <!-- campos de filtro internos (ocultos, usados por la lógica de tablas) -->
+    <div style="display:none;">
+      <input type="text" id="filterNombre"/>
+      <select id="convSel"></select>
+      <select id="filterEstado">
         <option value="">Estado: todos</option>
         <option value="adm">A validar Adm. Comercial</option>
         <option value="mkt">A validar Marketing</option>
@@ -429,6 +423,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <option value="r_mkt">No cumple — Marketing</option>
       </select>
     </div>
+
 
     <!-- burbujas -->
     <div class="obs-bubbles">
@@ -1018,6 +1013,20 @@ function fldChange(field,recId,val){
   } else {saveKV();}
 }
 
+function confirmarPago(recId){
+  if(!requireWrite())return;
+  const input = document.getElementById('fp_'+recId);
+  if(!input || !input.value){ alert('Selecciona una fecha de pago antes de confirmar.'); return; }
+  const r = recs.find(x=>x.id===recId);
+  if(!r) return;
+  r.fecha_pago_iso = input.value;
+  r.fecha_pago = formatFechaPagoLabel(input.value);
+  r.estado = 'pagado';
+  r.importe = r.importe || '200,00 €';
+  updateCounts(); saveKV();
+  setTimeout(()=>showBub(4), 80);
+}
+
 function formatFechaPagoLabel(isoDate){
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const d = new Date(isoDate + 'T00:00:00');
@@ -1127,14 +1136,15 @@ function buildTable(n,rows){
     return h+'</tbody></table>';
   }
   if(n===4){
-    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>Referido</th><th>Conv.</th><th>Beneficio</th><th>Asesor</th><th>Fecha de Pago</th>${isFromHub?'<th></th>':''}</tr></thead><tbody>`;
+    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>Referido</th><th>Conv.</th><th>Beneficio</th><th>Asesor</th><th>Fecha de Pago</th><th></th>${isFromHub?'<th></th>':''}</tr></thead><tbody>`;
     rows.forEach(r=>{
       const fechaVal = r.fecha_pago_iso || new Date().toISOString().split('T')[0];
       h+=`<tr><td><input type="checkbox"/></td>
         <td><span class="nm">${esc(r.rn)}</span><span class="xid">${esc(r.ri)}</span></td>
         <td><span class="nm">${esc(r.nn)}</span><span class="xid">${esc(r.ni)}</span></td>
         <td>${esc(r.nc)}</td><td>${esc(r.nb)}</td><td>${esc(r.as_)||'—'}</td>
-        <td><input type="date" class="edt" ${roAttr()} value="${fechaVal}" onchange="fldChange('fecha_pago_iso',${r.id},this.value)" style="width:135px;"/></td>
+        <td><input type="date" class="edt" ${roAttr()} id="fp_${r.id}" value="${fechaVal}" style="width:135px;"/></td>
+        <td><button ${(isFromHub||isWriteUnlocked)?'':'disabled style="opacity:0.4;cursor:not-allowed;"'} onclick="confirmarPago(${r.id})" style="background:#e8f5e9;border:1px solid #81c784;color:#1B5E20;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;" title="Confirmar pago y mover a OK Pagado">✔ OK</button></td>
         ${isFromHub?`<td><button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button></td>`:''}
       </tr>`;
     });
