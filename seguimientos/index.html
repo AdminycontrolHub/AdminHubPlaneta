@@ -1458,6 +1458,8 @@ function checkHashReferidosObs(){
     });
     const cerrarBtn = document.getElementById('btnCerrarObs');
     if(cerrarBtn) cerrarBtn.remove();
+    const importBtn = document.querySelector('.obs-close-bar-r .hbtn.import');
+    if(importBtn) importBtn.remove();
   }
 }
 window.addEventListener('hashchange', checkHashReferidosObs);
