@@ -78,6 +78,7 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .hbtn.export{color:#0d44a1;border-color:#90caf9;}
 .hbtn.help{width:30px;height:30px;padding:0;border-radius:50%;font-size:13px;font-weight:800;color:#8B6914;border-color:#ffe082;justify-content:center;}
 .hbtn.cerrar{color:#c62828;border-color:#f48fb1;background:#fce4ec;}
+.hbtn.volver-hub{color:#0d44a1;border-color:#90caf9;background:#e3f2fd;text-decoration:none;}
 .lock-tag{font-size:9px;background:rgba(46,125,50,0.12);color:#1B5E20;padding:1px 5px;border-radius:3px;border:1px solid #a5d6a7;}
 
 /* search bar */
@@ -406,13 +407,13 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="obs-icon">🎓</div>
         <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Admisiones · Administración Comercial · Marketing · Control de Gestión</div></div>
       </div>
-      <div class="obs-close-bar-r">
+      <div class="obs-close-bar-r" id="obsCloseBarR">
         <button class="hbtn" id="btnWriteAccess" style="display:none;color:#0d44a1;border-color:#90caf9;" onclick="openWriteAccess()">🔑 Acceso escritura</button>
         <button class="hbtn" id="btnJeDv" style="display:none;color:#5a2aaa;border-color:#a878f0;" onclick="openJeDv()">👥 Gestionar JE/DV</button>
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
         <button class="hbtn export" onclick="exportCSV()">📤 Exportar</button>
         <button class="hbtn help" onclick="openHelp()">?</button>
-        <button class="hbtn cerrar" onclick="closeObs()">✕ Cerrar</button>
+        <button class="hbtn cerrar" id="btnCerrarObs" onclick="closeObs()">✕ Cerrar</button>
         <input type="file" id="fileInputObs" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
       </div>
     </div>
@@ -1437,21 +1438,38 @@ const cameFromInternalNav = document.referrer && (
 if(cameFromInternalNav){
   sessionStorage.setItem('viaHub','1');
 }
-// el modal de Referidos OBS NUNCA se abre automáticamente — solo con clic explícito en la burbuja o stat card
-// (auto-apertura por hash deshabilitada para evitar tapar la página de Seguimientos)
-
-// EXCEPCIÓN controlada: si la pestaña se abrió SIN historial previo (entry_type navigate, sin referrer)
-// y trae el hash externo, se interpreta como acceso directo por link compartido.
-(function(){
-  const noReferrer = !document.referrer;
-  const hasHash = window.location.hash === '#referidos-obs';
-  if(noReferrer && hasHash){
-    window.addEventListener('load', function(){ openObs(); });
-  }
-})();
 
 // ahora que todo está declarado, detectamos el modo de acceso
 detectAccessMode();
+
+// ── ACCESO DIRECTO POR URL #referidos-obs ──
+// Si la URL trae el hash, se abre el modal SIEMPRE (sin depender del referrer).
+// Si el acceso es externo (no viene navegando desde dentro del Hub), además se
+// oculta toda la página de Seguimientos que queda detrás y se sustituye el
+// botón "✕ Cerrar" por "← Volver al Hub", porque no hay nada a lo que "cerrar".
+function checkHashReferidosObs(){
+  if(window.location.hash.toLowerCase() !== '#referidos-obs') return;
+
+  openObs();
+
+  if(!isFromHub){
+    document.querySelectorAll('.topbar,.page-head,.nodes-area,.divider,.stats-grid,.sys-tag').forEach(function(el){
+      el.style.display = 'none';
+    });
+    const cerrarBtn = document.getElementById('btnCerrarObs');
+    if(cerrarBtn && !document.getElementById('btnVolverHub')){
+      const link = document.createElement('a');
+      link.id = 'btnVolverHub';
+      link.href = '../index.html';
+      link.className = 'hbtn volver-hub';
+      link.innerHTML = '← Volver al Hub';
+      cerrarBtn.replaceWith(link);
+    }
+  }
+}
+window.addEventListener('hashchange', checkHashReferidosObs);
+window.addEventListener('load', checkHashReferidosObs);
+checkHashReferidosObs();
 </script>
 </body>
 </html>
