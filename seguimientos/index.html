@@ -1457,14 +1457,7 @@ function checkHashReferidosObs(){
       el.style.display = 'none';
     });
     const cerrarBtn = document.getElementById('btnCerrarObs');
-    if(cerrarBtn && !document.getElementById('btnVolverHub')){
-      const link = document.createElement('a');
-      link.id = 'btnVolverHub';
-      link.href = '../index.html';
-      link.className = 'hbtn volver-hub';
-      link.innerHTML = '← Volver al Hub';
-      cerrarBtn.replaceWith(link);
-    }
+    if(cerrarBtn) cerrarBtn.remove();
   }
 }
 window.addEventListener('hashchange', checkHashReferidosObs);
