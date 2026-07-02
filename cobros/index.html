@@ -95,7 +95,100 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
 }
 @media(max-width:400px){ .stats-grid { grid-template-columns:1fr; } }
+
+/* ===================== MODALES "COBROS AL DÍA" (tema crema) ===================== */
+.cm-overlay { position:fixed; inset:0; z-index:200; background:rgba(4,28,46,0.72); display:none; align-items:center; justify-content:center; padding:20px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.cm-overlay.show { display:flex; }
+.cm-modal { background:#F5F0E8; border-radius:16px; width:100%; max-height:94vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+.cm-modal.cm-w-sm { max-width:560px; }
+.cm-modal.cm-w-lg { max-width:1180px; }
+.cm-header { background:#2f8f8a; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.cm-header-left { display:flex; align-items:center; gap:10px; min-width:0; }
+.cm-header-icon { width:34px; height:34px; border-radius:9px; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cm-header-icon svg { display:block; }
+.cm-header-title { font-size:15px; font-weight:500; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cm-header-sub { font-size:11px; color:rgba(255,255,255,0.75); margin-top:1px; }
+.cm-header-right { display:flex; gap:8px; align-items:center; flex-shrink:0; }
+.cm-btn-back { background:rgba(255,255,255,0.18); border:none; border-radius:50%; width:28px; height:28px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.cm-btn-back:hover { background:rgba(255,255,255,0.3); }
+.cm-btn-white { background:#fff; border:none; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:500; color:#3a3128; display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; font-family:inherit; }
+.cm-btn-white:hover { background:#f2f2f2; }
+.cm-btn-danger { background:#fff0e0; color:#a04a10; }
+.cm-btn-danger:hover { background:#ffe4cc; }
+.cm-btn-circle { background:rgba(255,255,255,0.18); border:none; border-radius:50%; width:30px; height:30px; color:#fff; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; font-family:inherit; }
+.cm-btn-circle:hover { background:rgba(255,255,255,0.3); }
+.cm-body { overflow-y:auto; overflow-x:hidden; flex:1; }
+.cm-bubbles-l1 { display:flex; justify-content:center; gap:48px; padding:52px 20px; flex-wrap:wrap; }
+.cm-bnode { display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer; transition:transform .2s; }
+.cm-bnode:hover { transform:scale(1.06); }
+.cm-bcircle { width:104px; height:104px; border-radius:50%; background:#F5F0E8; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.cm-bnode span.cm-blabel { font-size:13px; font-weight:600; text-align:center; }
+.cm-bubbles-l2 { display:flex; justify-content:center; gap:60px; padding:48px 20px; flex-wrap:wrap; }
+.cm-bcircle-l2 { width:112px; height:112px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all .2s; }
+.cm-bcircle-l2 .cm-range { font-size:11px; font-weight:700; margin-top:4px; }
+.cm-help-pop { position:absolute; top:56px; right:20px; width:320px; background:#fff; border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,0.22); padding:18px 20px; z-index:50; display:none; text-align:left; }
+.cm-help-pop.show { display:block; }
+.cm-help-title { font-size:13px; font-weight:600; color:#3a3128; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.cm-help-label { font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:#8a7d6a; margin-bottom:4px; }
+.cm-help-files { background:#F5F0E8; border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#3a3128; line-height:1.7; font-family:'Courier New',monospace; }
+.cm-help-list { margin:0; padding-left:16px; font-size:11.5px; color:#4a4136; line-height:1.6; }
+.cm-search-row { padding:14px 20px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.cm-search-input { flex:1; max-width:280px; background:#fff; border:0.5px solid rgba(58,49,40,0.15); border-radius:8px; padding:6px 10px; font-size:12px; color:#3a3128; font-family:inherit; }
+.cm-rounds-wrap { display:flex; justify-content:center; gap:56px; padding:16px 20px 6px; flex-wrap:wrap; }
+.cm-round-group { display:flex; flex-direction:column; align-items:center; }
+.cm-round-title { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px; }
+.cm-round-bubbles { display:flex; gap:16px; }
+.cm-round-bubble { display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; }
+.cm-round-circle { width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#fff; }
+.cm-round-label { font-size:10px; font-weight:600; }
+.cm-alert-badge { position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:#fff; border:2px solid #e14b3a; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+.cm-round-divider { width:1px; background:rgba(58,49,40,0.12); align-self:stretch; }
+.cm-table-wrap { padding:12px 16px 20px; overflow-x:auto; }
+.cm-table { background:#fff; border:0.5px solid rgba(58,49,40,0.1); border-radius:12px; overflow:hidden; min-width:1100px; }
+.cm-trow { display:grid; grid-template-columns:22px 24px 78px 1.2fr 0.9fr 0.85fr 0.75fr 0.5fr 0.5fr 0.7fr 28px 28px 1.1fr 0.8fr; padding:8px 10px; align-items:center; gap:4px; }
+.cm-thead { background:rgba(58,49,40,0.05); border-bottom:0.5px solid rgba(58,49,40,0.1); }
+.cm-th { font-size:9px; letter-spacing:0.05em; text-transform:uppercase; color:#8a7d6a; font-weight:600; display:flex; align-items:center; gap:3px; }
+.cm-th.filt { cursor:pointer; }
+.cm-th.filt:hover { color:#3a3128; }
+.cm-trow-body { border-bottom:0.5px solid rgba(58,49,40,0.07); }
+.cm-cell-name { font-size:12px; color:#3a3128; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cm-cell-mut { font-size:10px; color:#8a7d6a; }
+.cm-cell-num { font-size:11px; color:#a89c88; }
+.cm-badge-marca { font-size:9.5px; font-weight:700; border-radius:6px; padding:2px 6px; text-align:center; display:inline-block; }
+.cm-pais-pill { font-size:10px; color:#3a3128; border-radius:5px; padding:2px 5px; text-align:center; font-weight:600; cursor:default; white-space:nowrap; }
+.cm-select { border:none; border-radius:6px; padding:2px 3px; font-size:10px; font-weight:600; width:46px; font-family:inherit; cursor:pointer; }
+.cm-mail-btn { width:24px; height:24px; border-radius:6px; background:rgba(47,143,138,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; border:none; }
+.cm-mail-btn:hover { background:rgba(47,143,138,0.22); }
+.cm-mail-btn:disabled { opacity:0.25; cursor:not-allowed; }
+.cm-comment-input { background:#F5F0E8; border:0.5px solid rgba(58,49,40,0.12); border-radius:6px; padding:3px 6px; font-size:10.5px; color:#3a3128; width:100%; font-family:inherit; }
+.cm-checkbox { width:13px; height:13px; cursor:pointer; }
+.cm-empty-state { text-align:center; padding:40px 20px; color:#8a7d6a; font-size:13px; }
+.cm-confirm-overlay { position:fixed; inset:0; z-index:300; background:rgba(58,49,40,0.4); display:none; align-items:center; justify-content:center; }
+.cm-confirm-overlay.show { display:flex; }
+.cm-confirm-box { background:#fff; border-radius:14px; padding:22px 24px; width:340px; box-shadow:0 12px 32px rgba(0,0,0,0.22); }
+.cm-confirm-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.cm-confirm-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cm-confirm-title { font-size:15px; font-weight:600; color:#3a3128; }
+.cm-confirm-text { font-size:12.5px; color:#4a4136; line-height:1.6; margin-bottom:16px; }
+.cm-marca-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
+.cm-marca-opt { border-radius:8px; padding:8px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid transparent; font-family:inherit; }
+.cm-marca-opt.selected { outline:2px solid #3a3128; outline-offset:1px; }
+.cm-confirm-actions { display:flex; gap:10px; justify-content:flex-end; }
+.cm-btn-cancel { background:#f0ece2; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:500; color:#3a3128; cursor:pointer; font-family:inherit; }
+.cm-btn-cancel:hover { background:#e6e0d4; }
+.cm-btn-confirm-danger { background:#e14b3a; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; color:#fff; cursor:pointer; font-family:inherit; }
+.cm-btn-confirm-danger:disabled { opacity:0.4; cursor:not-allowed; }
+.cm-btn-confirm-ok { background:#2f8f8a; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; color:#fff; cursor:pointer; font-family:inherit; }
+.cm-form-field { margin-bottom:12px; }
+.cm-form-label { font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:#8a7d6a; margin-bottom:4px; display:block; }
+.cm-form-input, .cm-form-textarea { width:100%; background:#F5F0E8; border:0.5px solid rgba(58,49,40,0.15); border-radius:8px; padding:8px 10px; font-size:12.5px; color:#3a3128; font-family:inherit; }
+.cm-form-textarea { min-height:100px; resize:vertical; }
+.cm-file-hidden { display:none; }
+@media(max-width:700px){
+  .cm-trow { grid-template-columns:20px 22px 60px 1fr 0.8fr 0.7fr 0.65fr 0.45fr 0.45fr 0.6fr 24px 24px 0.9fr 0.65fr; }
+}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="bg-overlay"></div>
@@ -161,7 +254,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
       <span class="node-label">Activa</span>
     </div>
-    <div class="node" onclick="setActive(this)">
+    <div class="node" onclick="setActive(this); cmOpenL1();">
       <div class="bubble">
         <div class="status-badge badge-ok">✓</div>
         <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="5" y="9" width="28" height="20" rx="3" stroke="#40C8E0" stroke-width="1.6"/><path d="M5 15h28" stroke="#40C8E0" stroke-width="1.4"/><circle cx="14" cy="23" r="3.5" stroke="#40C8E0" stroke-width="1.4"/><path d="M21 22h9M21 25h6" stroke="#40C8E0" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -389,6 +482,708 @@ cierreEl.addEventListener('keydown', e=>{
 
 loadCierreLabel();
 load();
+
+/* ================================================================
+   COBROS AL DÍA — sistema de modales (Mes actual > Links tarjeta NO domiciliada)
+   ================================================================ */
+const CM_KV_DATA_KEY = 'adminhub_cobros_links_nodom_v1';
+const CM_KV_REMITENTE_KEY = 'adminhub_cobros_remitente_v1';
+
+const CM_MARCAS = {
+  obs:      { label:'OBS',      badgeBg:'#f0dfa0', badgeColor:'#5a5142', rowBg:'#fdf6d8', hasMail:true  },
+  inesdi:   { label:'INESDI',   badgeBg:'#b8e8dc', badgeColor:'#0f6e56', rowBg:'#dcf3ee', hasMail:false },
+  esdesign: { label:'ESDESIGN', badgeBg:'#f5c39a', badgeColor:'#a04a10', rowBg:'#fde3d0', hasMail:false },
+  ucma:     { label:'UCMA',     badgeBg:'#1a2a52', badgeColor:'#fff',    rowBg:'#e2e8f5', hasMail:false, badgeBorder:'#e8c94a' }
+};
+
+// Zonas horarias IANA por país (gestiona el horario de verano automáticamente)
+const CM_PAIS_TZ = {
+  'españa':'Europe/Madrid','mexico':'America/Mexico_City','méxico':'America/Mexico_City',
+  'colombia':'America/Bogota','argentina':'America/Argentina/Buenos_Aires','chile':'America/Santiago',
+  'peru':'America/Lima','perú':'America/Lima','ecuador':'America/Guayaquil','venezuela':'America/Caracas',
+  'bolivia':'America/La_Paz','paraguay':'America/Asuncion','uruguay':'America/Montevideo',
+  'republica dominicana':'America/Santo_Domingo','república dominicana':'America/Santo_Domingo',
+  'costa rica':'America/Costa_Rica','panama':'America/Panama','panamá':'America/Panama',
+  'guatemala':'America/Guatemala','honduras':'America/Tegucigalpa','el salvador':'America/El_Salvador',
+  'nicaragua':'America/Managua','cuba':'America/Havana','puerto rico':'America/Puerto_Rico',
+  'estados unidos':'America/New_York','usa':'America/New_York','brasil':'America/Sao_Paulo',
+  'portugal':'Europe/Lisbon','francia':'Europe/Paris','italia':'Europe/Rome','alemania':'Europe/Berlin',
+  'reino unido':'Europe/London','marruecos':'Africa/Casablanca','andorra':'Europe/Andorra'
+};
+
+let cmData = []; // registros de alumnos
+let cmFiltroMarca = null;
+let cmFiltroPais = null;
+let cmMarcaBorrarSeleccionada = null;
+
+function cmNormalize(str){
+  return (str||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
+function cmEscapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str ?? '';
+  return d.innerHTML;
+}
+
+function cmGenId(){
+  return 'cm_' + Date.now() + '_' + Math.random().toString(36).slice(2,9);
+}
+
+function cmGetUserName(){
+  let name = localStorage.getItem('adminhub_username');
+  if(!name){
+    name = prompt('¿Cuál es tu nombre o iniciales? (se usará para registrar cambios)') || 'Sin nombre';
+    localStorage.setItem('adminhub_username', name);
+  }
+  return name;
+}
+
+/* ---------- Apertura/cierre en cascada de modales ---------- */
+function cmOpenL1(){ document.getElementById('cmOverlayL1').classList.add('show'); }
+function cmBackToL1(){ document.getElementById('cmOverlayL2').classList.remove('show'); document.getElementById('cmOverlayL1').classList.add('show'); }
+function cmOpenL2(){
+  document.getElementById('cmOverlayL1').classList.remove('show');
+  document.getElementById('cmOverlayL2').classList.add('show');
+  cmRenderL2Bubbles();
+}
+function cmBackToL2(){ document.getElementById('cmOverlayL3').classList.remove('show'); document.getElementById('cmOverlayL2').classList.add('show'); }
+async function cmOpenL3(){
+  document.getElementById('cmOverlayL2').classList.remove('show');
+  document.getElementById('cmOverlayL3').classList.add('show');
+  await cmLoadData();
+  await cmLoadRemitente();
+  cmRenderTable();
+  cmStartHourlyRefresh();
+}
+function cmCloseAll(){
+  ['cmOverlayL1','cmOverlayL2','cmOverlayL3'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  document.getElementById('cmHelpPop').classList.remove('show');
+  cmStopHourlyRefresh();
+}
+function cmComingSoon(nombre){
+  document.getElementById('cmSoonTitle').textContent = nombre;
+  document.getElementById('cmSoonText').textContent = `La sección "${nombre}" está en construcción. Próximamente disponible.`;
+  document.getElementById('cmOverlaySoon').classList.add('show');
+}
+function cmCloseSoon(){ document.getElementById('cmOverlaySoon').classList.remove('show'); }
+
+function cmToggleHelp(){ document.getElementById('cmHelpPop').classList.toggle('show'); }
+
+/* ---------- Nivel 2: burbujas Mes actual con estado activo por día ---------- */
+function cmRenderL2Bubbles(){
+  const hoy = new Date().getDate();
+  const activoRound1 = hoy >= 1 && hoy <= 15;
+  const activoRound2 = hoy >= 15 && hoy <= 31;
+  const wrap = document.getElementById('cmL2Bubbles');
+  wrap.innerHTML = `
+    <div class="cm-bnode" onclick="cmOpenL3()">
+      <div class="cm-bcircle-l2" style="${activoRound1 ? 'background:#a8548a;box-shadow:0 6px 18px rgba(168,84,138,0.35);' : 'background:#F5F0E8;border:2px solid #d97fa0;'}">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${activoRound1?'#fff':'#a8548a'}" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        <span class="cm-range" style="color:${activoRound1?'#fff':'#a8548a'};">1-15</span>
+      </div>
+      <div style="text-align:center;">
+        <div class="cm-blabel" style="color:#a8548a;">Links tarjeta</div>
+        <div class="cm-blabel" style="color:#a8548a;">NO domiciliada</div>
+      </div>
+    </div>
+    <div class="cm-bnode" onclick="cmOpenAvisoRemesa()">
+      <div class="cm-bcircle-l2" style="${activoRound2 ? 'background:#2f8f8a;box-shadow:0 6px 18px rgba(47,143,138,0.35);' : 'background:#F5F0E8;border:2px solid #6ec4bd;'}">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${activoRound2?'#fff':'#2f8f8a'}" stroke-width="1.8"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span class="cm-range" style="color:${activoRound2?'#fff':'#2f8f8a'};">15-30</span>
+      </div>
+      <span class="cm-blabel" style="color:#2f8f8a;">Remesa devueltos</span>
+    </div>
+  `;
+}
+function cmOpenAvisoRemesa(){ document.getElementById('cmOverlayAvisoRemesa').classList.add('show'); }
+function cmCloseAvisoRemesa(){ document.getElementById('cmOverlayAvisoRemesa').classList.remove('show'); }
+
+/* ---------- Carga / guardado en KV ---------- */
+async function cmLoadData(){
+  try{
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`);
+    const data = await res.json();
+    if(data.value){
+      cmData = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+    } else {
+      cmData = [];
+    }
+  }catch(e){ console.error('Error cargando datos Links NO domiciliada:', e); cmData = []; }
+}
+async function cmSaveData(){
+  try{
+    await fetch(`${WORKER_URL}/kv`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: CM_KV_DATA_KEY, value: JSON.stringify(cmData) })
+    });
+  }catch(e){ console.error('Error guardando datos Links NO domiciliada:', e); }
+}
+async function cmLoadRemitente(){
+  try{
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_REMITENTE_KEY}`);
+    const data = await res.json();
+    if(data.value){
+      const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      document.getElementById('cmMailRemitente').value = val || '';
+    }
+  }catch(e){ console.error('Error cargando remitente:', e); }
+}
+async function cmSaveRemitente(){
+  const val = document.getElementById('cmMailRemitente').value.trim();
+  if(!val) return;
+  try{
+    await fetch(`${WORKER_URL}/kv`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: CM_KV_REMITENTE_KEY, value: JSON.stringify(val) })
+    });
+  }catch(e){ console.error('Error guardando remitente:', e); }
+}
+
+/* ---------- Filtros de encabezado ---------- */
+function cmToggleFiltroMarca(ev){
+  ev.stopPropagation();
+  const marcas = [...new Set(cmData.map(r=>r.marca))];
+  const opciones = ['(Todas)', ...marcas.map(m=>CM_MARCAS[m]?.label || m)];
+  const seleccion = prompt('Filtrar por marca:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  cmFiltroMarca = (isNaN(idx) || idx === 0) ? null : marcas[idx-1];
+  cmRenderTable();
+}
+function cmToggleFiltroPais(ev){
+  ev.stopPropagation();
+  const paises = [...new Set(cmData.map(r=>r.pais).filter(Boolean))];
+  const opciones = ['(Todos)', ...paises];
+  const seleccion = prompt('Filtrar por país:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  cmFiltroPais = (isNaN(idx) || idx === 0) ? null : paises[idx-1];
+  cmRenderTable();
+}
+
+/* ---------- Semáforo horario por país ---------- */
+function cmGetPaisEstado(pais){
+  const tz = CM_PAIS_TZ[cmNormalize(pais)];
+  if(!tz) return { color:null, hora:null };
+  try{
+    const horaStr = new Date().toLocaleString('en-US', { timeZone: tz, hour:'2-digit', hour12:false });
+    const hora = parseInt(horaStr);
+    const enHorario = hora >= 9 && hora < 14;
+    return { color: enHorario ? '#a8e0b8' : '#f0a8a8', textColor: enHorario ? '#0a4a2a' : '#7a1a1a', hora };
+  }catch(e){ return { color:null, hora:null }; }
+}
+
+let cmHourlyInterval = null;
+function cmStartHourlyRefresh(){
+  cmStopHourlyRefresh();
+  cmHourlyInterval = setInterval(()=>{ cmRenderTable(); }, 60*60*1000);
+}
+function cmStopHourlyRefresh(){
+  if(cmHourlyInterval){ clearInterval(cmHourlyInterval); cmHourlyInterval = null; }
+}
+
+/* ---------- Render de la tabla ---------- */
+function cmRenderTable(){
+  const search = cmNormalize(document.getElementById('cmSearchInput')?.value || '');
+  let rows = cmData.filter(r=>{
+    if(cmFiltroMarca && r.marca !== cmFiltroMarca) return false;
+    if(cmFiltroPais && r.pais !== cmFiltroPais) return false;
+    if(search){
+      const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
+      if(!hay) return false;
+    }
+    return true;
+  });
+
+  // Agrupar por marca (orden fijo) y numerar dentro de cada grupo/filtro
+  const ordenMarcas = ['obs','inesdi','esdesign','ucma'];
+  rows.sort((a,b)=> ordenMarcas.indexOf(a.marca) - ordenMarcas.indexOf(b.marca));
+
+  const tbody = document.getElementById('cmTableBody');
+  const hoy = new Date().getDate();
+
+  if(rows.length === 0){
+    tbody.innerHTML = `<div class="cm-empty-state">No hay alumnos que coincidan con la búsqueda/filtro. Usa "Cargar listado" para importar datos.</div>`;
+  } else {
+    let contadorPorMarca = {};
+    tbody.innerHTML = rows.map(r=>{
+      contadorPorMarca[r.marca] = (contadorPorMarca[r.marca]||0) + 1;
+      const num = contadorPorMarca[r.marca];
+      const marcaInfo = CM_MARCAS[r.marca] || { label:r.marca, badgeBg:'#eee', badgeColor:'#333', rowBg:'#fff' };
+      const paisEstado = cmGetPaisEstado(r.pais);
+      const paisStyle = paisEstado.color ? `background:${paisEstado.color};color:${paisEstado.textColor};` : `background:#eee;color:#888;`;
+      const paisTexto = r.pais ? cmEscapeHtml(r.pais) : '—';
+      const mailBtn = marcaInfo.hasMail
+        ? `<button class="cm-mail-btn" onclick="cmOpenMailModal('${r.id}')" title="Enviar plantilla de email"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></button>`
+        : `<div></div>`;
+      const badgeStyle = `background:${marcaInfo.badgeBg};color:${marcaInfo.badgeColor};${marcaInfo.badgeBorder?`border:1.5px solid ${marcaInfo.badgeBorder};`:''}`;
+
+      return `
+      <div class="cm-trow cm-trow-body" style="background:${marcaInfo.rowBg};">
+        <input type="checkbox" class="cm-checkbox" data-id="${r.id}">
+        <div class="cm-cell-num">${num}</div>
+        <span class="cm-badge-marca" style="${badgeStyle}">${marcaInfo.label}</span>
+        <div class="cm-cell-name" title="${cmEscapeHtml(r.nombre)}">${cmEscapeHtml(r.nombre)}</div>
+        <div class="cm-pais-pill" style="${paisStyle}" title="${paisEstado.hora!==null ? 'Hora local: '+paisEstado.hora+':00' : ''}">${paisTexto}</div>
+        <div class="cm-cell-mut">${cmEscapeHtml(r.idNacs||'—')}</div>
+        <select class="cm-select" style="${cmGetSelectStyle('r1',r.link1)}" onchange="cmChangeLink('${r.id}','link1',this.value)">
+          <option value="No" ${r.link1!=='Si'?'selected':''}>No</option>
+          <option value="Si" ${r.link1==='Si'?'selected':''}>Sí</option>
+        </select>
+        <select class="cm-select" style="${cmGetSelectStyle('r2',r.link2)}" onchange="cmChangeLink('${r.id}','link2',this.value)">
+          <option value="No" ${r.link2!=='Si'?'selected':''}>No</option>
+          <option value="Si" ${r.link2==='Si'?'selected':''}>Sí</option>
+        </select>
+        <div class="cm-cell-mut">${r.ultimaFecha || '—'}</div>
+        ${mailBtn}
+        <input type="checkbox" class="cm-checkbox" style="justify-self:center;" ${r.marcaEnviada?'checked':''} onchange="cmToggleMarcaEnviada('${r.id}',this.checked)">
+        <input type="text" class="cm-comment-input" value="${cmEscapeHtml(r.comentarios||'')}" placeholder="Comentario..." onblur="cmChangeComentario('${r.id}',this.value)">
+        <div class="cm-cell-mut">${cmEscapeHtml(r.ultimoUsuario||'—')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Filtro activo (texto informativo)
+  const filtroTxt = [];
+  if(cmFiltroMarca) filtroTxt.push('Marca: ' + (CM_MARCAS[cmFiltroMarca]?.label||cmFiltroMarca));
+  if(cmFiltroPais) filtroTxt.push('País: ' + cmFiltroPais);
+  document.getElementById('cmFiltroActivo').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
+
+  cmUpdateCounters(rows);
+}
+
+function cmGetSelectStyle(round, valor){
+  const esSi = valor === 'Si';
+  if(round === 'r1'){
+    return esSi ? 'background:#fde3b8;color:#8a5300;' : 'background:#f5b95c;color:#5c3400;';
+  } else {
+    return esSi ? 'background:#e4d6f7;color:#6a3fa0;' : 'background:#c3a8e8;color:#3f1f70;';
+  }
+}
+
+function cmUpdateCounters(rows){
+  const r1Pend = rows.filter(r=>r.link1!=='Si').length;
+  const r1Env  = rows.filter(r=>r.link1==='Si').length;
+  const r2Pend = rows.filter(r=>r.link2!=='Si').length;
+  const r2Env  = rows.filter(r=>r.link2==='Si').length;
+  document.getElementById('cmR1Pend').textContent = r1Pend;
+  document.getElementById('cmR1Env').textContent  = r1Env;
+  document.getElementById('cmR2Pend').textContent = r2Pend;
+  document.getElementById('cmR2Env').textContent  = r2Env;
+}
+
+/* ---------- Cambios en celdas ---------- */
+async function cmChangeLink(id, campo, valor){
+  const r = cmData.find(x=>x.id===id);
+  if(!r) return;
+  r[campo] = valor;
+  const hoy = new Date();
+  r.ultimaFecha = hoy.toLocaleDateString('es-ES');
+  r.ultimoUsuario = cmGetUserName();
+  await cmSaveData();
+  cmRenderTable();
+}
+async function cmChangeComentario(id, valor){
+  const r = cmData.find(x=>x.id===id);
+  if(!r) return;
+  if(r.comentarios === valor) return;
+  r.comentarios = valor;
+  r.ultimoUsuario = cmGetUserName();
+  r.ultimaFecha = new Date().toLocaleDateString('es-ES');
+  await cmSaveData();
+}
+async function cmToggleMarcaEnviada(id, checked){
+  const r = cmData.find(x=>x.id===id);
+  if(!r) return;
+  r.marcaEnviada = checked;
+  await cmSaveData();
+}
+
+/* ---------- Plantilla de mail ---------- */
+let cmMailAlumnoActivo = null;
+function cmOpenMailModal(id){
+  const r = cmData.find(x=>x.id===id);
+  if(!r) return;
+  cmMailAlumnoActivo = id;
+  document.getElementById('cmMailDestinatario').value = r.email || '(sin email en el listado)';
+  document.getElementById('cmOverlayMail').classList.add('show');
+}
+function cmCloseMailModal(){ document.getElementById('cmOverlayMail').classList.remove('show'); }
+function cmSendMail(){
+  const destinatario = document.getElementById('cmMailDestinatario').value;
+  const asunto = document.getElementById('cmMailAsunto').value;
+  const cuerpo = document.getElementById('cmMailCuerpo').value;
+  const mailto = `mailto:${encodeURIComponent(destinatario)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+  window.location.href = mailto;
+  cmCloseMailModal();
+}
+
+/* ---------- Borrar datos por marca ---------- */
+function cmOpenBorrarDatos(){
+  cmMarcaBorrarSeleccionada = null;
+  document.querySelectorAll('#cmMarcaGridBorrar .cm-marca-opt').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('cmBtnBorrarConfirm').disabled = true;
+  document.getElementById('cmOverlayBorrar').classList.add('show');
+}
+function cmCloseBorrarDatos(){ document.getElementById('cmOverlayBorrar').classList.remove('show'); }
+function cmSelectMarcaBorrar(marca, el){
+  cmMarcaBorrarSeleccionada = marca;
+  document.querySelectorAll('#cmMarcaGridBorrar .cm-marca-opt').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('cmBtnBorrarConfirm').disabled = false;
+}
+async function cmConfirmBorrarMarca(){
+  if(!cmMarcaBorrarSeleccionada) return;
+  cmData = cmData.filter(r=>r.marca !== cmMarcaBorrarSeleccionada);
+  await cmSaveData();
+  cmCloseBorrarDatos();
+  cmRenderTable();
+}
+
+/* ---------- Importar Excel (SheetJS) ---------- */
+function cmDetectMarcaFromFilename(filename){
+  const n = cmNormalize(filename);
+  if(n.includes('obs')) return 'obs';
+  if(n.includes('inesdi')) return 'inesdi';
+  if(n.includes('esdesign')) return 'esdesign';
+  if(n.includes('ucma')) return 'ucma';
+  return null;
+}
+function cmFindColumn(headers, posibles){
+  const normHeaders = headers.map(h=>cmNormalize(h));
+  for(const p of posibles){
+    const idx = normHeaders.indexOf(cmNormalize(p));
+    if(idx !== -1) return headers[idx];
+  }
+  return null;
+}
+async function cmHandleFileUpload(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+
+  let marca = cmDetectMarcaFromFilename(file.name);
+  if(!marca){
+    const seleccion = prompt('No se ha detectado la marca por el nombre del archivo.\n¿A qué marca pertenece?\n1. OBS\n2. INESDI\n3. ESDESIGN\n4. UCMA\n\nEscribe el número:');
+    const map = {'1':'obs','2':'inesdi','3':'esdesign','4':'ucma'};
+    marca = map[seleccion];
+    if(!marca){ ev.target.value=''; return; }
+  }
+
+  try{
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type:'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { defval:'' });
+    if(json.length === 0){ alert('El archivo no contiene filas de datos.'); ev.target.value=''; return; }
+
+    const headers = Object.keys(json[0]);
+    const colNombre = cmFindColumn(headers, ['nombre','alumno','nombre completo','nombre alumno']);
+    const colEmail  = cmFindColumn(headers, ['email','correo','e-mail','mail']);
+    const colId     = cmFindColumn(headers, ['id nacs','idnacs','id_nacs','nacs']);
+    const colPais   = cmFindColumn(headers, ['pais','país','country']);
+
+    if(!colNombre){
+      alert('No se ha encontrado una columna de Nombre en el Excel. Revisa que el archivo tenga una columna "Nombre".');
+      ev.target.value=''; return;
+    }
+
+    const nuevos = json.map(row=>({
+      id: cmGenId(),
+      marca,
+      nombre: row[colNombre] || '',
+      email: colEmail ? row[colEmail] : '',
+      idNacs: colId ? row[colId] : '',
+      pais: colPais ? row[colPais] : '',
+      link1: 'No', link2: 'No',
+      ultimaFecha: null, ultimoUsuario: null,
+      marcaEnviada: false, comentarios: ''
+    })).filter(r=>r.nombre);
+
+    // Sustituye solo los datos de esa marca
+    cmData = cmData.filter(r=>r.marca !== marca).concat(nuevos);
+    await cmSaveData();
+    cmRenderTable();
+    alert(`Importados ${nuevos.length} alumnos de ${CM_MARCAS[marca].label}.`);
+  }catch(e){
+    console.error('Error importando Excel:', e);
+    alert('Hubo un error leyendo el archivo. Comprueba que sea un .xlsx válido.');
+  }
+  ev.target.value = '';
+}
+
+/* ---------- Exportar a Excel ---------- */
+function cmExportExcel(){
+  if(cmData.length === 0){ alert('No hay datos para exportar.'); return; }
+  const filas = cmData.map(r=>({
+    'Marca': CM_MARCAS[r.marca]?.label || r.marca,
+    'Alumno': r.nombre,
+    'Email': r.email,
+    'ID NACS': r.idNacs,
+    'País': r.pais,
+    'Link 1': r.link1,
+    'Link 2': r.link2,
+    'Fecha último cambio': r.ultimaFecha || '',
+    'Email enviado a marca': r.marcaEnviada ? 'Sí' : 'No',
+    'Comentarios': r.comentarios || '',
+    'Usuario': r.ultimoUsuario || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(filas);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Links NO domiciliada');
+  XLSX.writeFile(wb, `Links_tarjeta_NO_domiciliada_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// Cerrar popover de ayuda al clicar fuera
+document.addEventListener('click', (e)=>{
+  const pop = document.getElementById('cmHelpPop');
+  const btn = e.target.closest('.cm-btn-circle');
+  if(pop && pop.classList.contains('show') && !pop.contains(e.target) && !(btn && btn.textContent.trim()==='?')){
+    pop.classList.remove('show');
+  }
+});
 </script>
+<!-- ============ MODAL NIVEL 1: COBROS AL DÍA ============ -->
+<div class="cm-overlay" id="cmOverlayL1">
+  <div class="cm-modal cm-w-sm">
+    <div class="cm-header">
+      <div class="cm-header-left">
+        <div class="cm-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 3v4M17 3v4"/></svg></div>
+        <div>
+          <div class="cm-header-title">Cobros al día</div>
+          <div class="cm-header-sub">Atención Cobros</div>
+        </div>
+      </div>
+      <div class="cm-header-right">
+        <button class="cm-btn-circle" onclick="cmCloseAll()">×</button>
+      </div>
+    </div>
+    <div class="cm-body">
+      <div class="cm-bubbles-l1">
+        <div class="cm-bnode" onclick="cmOpenL2()">
+          <div class="cm-bcircle" style="border:2px solid #6ec4bd;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 13h2M8 16h2"/></svg>
+          </div>
+          <span class="cm-blabel" style="color:#2f8f8a;">Mes actual</span>
+        </div>
+        <div class="cm-bnode" onclick="cmComingSoon('Deuda pasada')">
+          <div class="cm-bcircle" style="border:2px solid #e0985c;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c06a1e" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <span class="cm-blabel" style="color:#c06a1e;">Deuda pasada</span>
+        </div>
+        <div class="cm-bnode" onclick="cmComingSoon('Campañas')">
+          <div class="cm-bcircle" style="border:2px solid #9a5aa8;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7a3ea8" stroke-width="1.8"><path d="M3 11l18-7-4 18-6-8-8-3z"/></svg>
+          </div>
+          <span class="cm-blabel" style="color:#7a3ea8;">Campañas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL NIVEL 2: MES ACTUAL ============ -->
+<div class="cm-overlay" id="cmOverlayL2">
+  <div class="cm-modal cm-w-sm">
+    <div class="cm-header">
+      <div class="cm-header-left">
+        <button class="cm-btn-back" onclick="cmBackToL1()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="cm-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/></svg></div>
+        <div>
+          <div class="cm-header-title">Mes actual</div>
+          <div class="cm-header-sub">Cobros al día · Atención Cobros</div>
+        </div>
+      </div>
+      <div class="cm-header-right">
+        <button class="cm-btn-circle" onclick="cmCloseAll()">×</button>
+      </div>
+    </div>
+    <div class="cm-body">
+      <div class="cm-bubbles-l2" id="cmL2Bubbles"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AVISO REMESA DEVUELTOS ============ -->
+<div class="cm-confirm-overlay" id="cmOverlayAvisoRemesa">
+  <div class="cm-confirm-box">
+    <div class="cm-confirm-head">
+      <div class="cm-confirm-icon" style="background:#fde3b8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a5300" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+      <div class="cm-confirm-title">Antes de continuar</div>
+    </div>
+    <div class="cm-confirm-text">Asegúrate de que la fecha de hoy es <strong>posterior al día 15</strong> del mes antes de gestionar remesas devueltas, para evitar un doble cobro al alumno.</div>
+    <div class="cm-confirm-actions">
+      <button class="cm-btn-cancel" onclick="cmCloseAvisoRemesa()">Cancelar</button>
+      <button class="cm-btn-confirm-ok" onclick="cmCloseAvisoRemesa(); cmComingSoon('Remesa devueltos');">Entendido, continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL NIVEL 3: LINKS TARJETA NO DOMICILIADA ============ -->
+<div class="cm-overlay" id="cmOverlayL3">
+  <div class="cm-modal cm-w-lg">
+    <div class="cm-header" style="position:relative;">
+      <div class="cm-header-left">
+        <button class="cm-btn-back" onclick="cmBackToL2()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="cm-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div>
+        <div>
+          <div class="cm-header-title">Links tarjeta NO domiciliada</div>
+          <div class="cm-header-sub">Mes actual · Atención Cobros</div>
+        </div>
+      </div>
+      <div class="cm-header-right">
+        <button class="cm-btn-white" onclick="document.getElementById('cmFileInput').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7f77dd" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M4 21h16"/></svg>Cargar listado</button>
+        <input type="file" id="cmFileInput" class="cm-file-hidden" accept=".xlsx,.xls" onchange="cmHandleFileUpload(event)">
+        <button class="cm-btn-white" onclick="cmExportExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f6e56" stroke-width="2"><path d="M12 15V3M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>Exportar</button>
+        <button class="cm-btn-white cm-btn-danger" onclick="cmOpenBorrarDatos()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Borrar datos</button>
+        <button class="cm-btn-circle" onclick="cmToggleHelp()">?</button>
+        <div class="cm-help-pop" id="cmHelpPop">
+          <div class="cm-help-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Cómo usar esta herramienta</div>
+          <div class="cm-help-label">Nombres de archivo requeridos</div>
+          <div class="cm-help-files">OBS_COBROS.xlsx<br>INESDI_COBROS.xlsx<br>ESDESIGN_COBROS.xlsx<br>UCMA_COBROS.xlsx</div>
+          <div class="cm-help-label">Instrucciones</div>
+          <ul class="cm-help-list">
+            <li>Cada carga sustituye únicamente los datos de esa marca; el resto no se modifica.</li>
+            <li>Link 1 y Link 2 se ponen en "No" por defecto para cada alumno nuevo.</li>
+            <li>El sobre para enviar la plantilla de email solo aparece en los alumnos de OBS.</li>
+            <li>"Borrar datos" elimina permanentemente la marca seleccionada; úsalo con cuidado.</li>
+          </ul>
+        </div>
+        <button class="cm-btn-circle" onclick="cmCloseAll()">×</button>
+      </div>
+    </div>
+    <div class="cm-body">
+      <div class="cm-search-row">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a89c88" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" class="cm-search-input" id="cmSearchInput" placeholder="Buscar alumno, email o ID NACS..." oninput="cmRenderTable()">
+        <span id="cmFiltroActivo" style="font-size:11px;color:#8a7d6a;"></span>
+      </div>
+
+      <div class="cm-rounds-wrap">
+        <div class="cm-round-group">
+          <div class="cm-round-title" style="color:#a85f0f;">Round 1 · Link 1</div>
+          <div class="cm-round-bubbles">
+            <div class="cm-round-bubble">
+              <div class="cm-round-circle" id="cmR1Pend" style="background:#f5b95c;color:#5c3400;">0</div>
+              <span class="cm-round-label" style="color:#5c3400;">Pendientes</span>
+            </div>
+            <div class="cm-round-bubble">
+              <div class="cm-round-circle" id="cmR1Env" style="background:#fde3b8;color:#8a5300;">0</div>
+              <span class="cm-round-label" style="color:#8a5300;">Enviados</span>
+            </div>
+          </div>
+        </div>
+        <div class="cm-round-divider"></div>
+        <div class="cm-round-group">
+          <div class="cm-round-title" style="color:#6a3fa0;">Round 2 · Link 2</div>
+          <div class="cm-round-bubbles">
+            <div class="cm-round-bubble">
+              <div class="cm-round-circle" id="cmR2Pend" style="background:#c3a8e8;color:#3f1f70;">0</div>
+              <span class="cm-round-label" style="color:#3f1f70;">Pendientes</span>
+            </div>
+            <div class="cm-round-bubble">
+              <div class="cm-round-circle" id="cmR2Env" style="background:#e4d6f7;color:#6a3fa0;">0</div>
+              <span class="cm-round-label" style="color:#6a3fa0;">Enviados</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cm-table-wrap">
+        <div class="cm-table">
+          <div class="cm-trow cm-thead">
+            <div></div>
+            <div class="cm-th">Nº</div>
+            <div class="cm-th filt" onclick="cmToggleFiltroMarca(event)">Marca <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <div class="cm-th">Alumno</div>
+            <div class="cm-th filt" onclick="cmToggleFiltroPais(event)">País <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <div class="cm-th">ID NACS</div>
+            <div class="cm-th" style="color:#a85f0f;">L1</div>
+            <div class="cm-th" style="color:#6a3fa0;">L2</div>
+            <div class="cm-th">Fecha</div>
+            <div></div>
+            <div class="cm-th" style="justify-content:center;">M.</div>
+            <div class="cm-th">Comentarios</div>
+            <div class="cm-th">Usuario</div>
+          </div>
+          <div id="cmTableBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIRMAR BORRAR DATOS ============ -->
+<div class="cm-confirm-overlay" id="cmOverlayBorrar">
+  <div class="cm-confirm-box">
+    <div class="cm-confirm-head">
+      <div class="cm-confirm-icon" style="background:#fde3d0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+      <div class="cm-confirm-title">¿Estás seguro?</div>
+    </div>
+    <div class="cm-confirm-text">Esta acción borrará permanentemente los datos de la marca seleccionada en esta tabla. No se puede deshacer.</div>
+    <div class="cm-help-label">¿Qué archivo quieres borrar?</div>
+    <div class="cm-marca-grid" id="cmMarcaGridBorrar">
+      <button class="cm-marca-opt" data-marca="obs" style="background:#fdf6d8;color:#5a5142;" onclick="cmSelectMarcaBorrar('obs',this)">OBS</button>
+      <button class="cm-marca-opt" data-marca="inesdi" style="background:#dcf3ee;color:#0f6e56;" onclick="cmSelectMarcaBorrar('inesdi',this)">INESDI</button>
+      <button class="cm-marca-opt" data-marca="esdesign" style="background:#fde3d0;color:#a04a10;" onclick="cmSelectMarcaBorrar('esdesign',this)">ESDESIGN</button>
+      <button class="cm-marca-opt" data-marca="ucma" style="background:#1a2a52;color:#fff;border-color:#e8c94a;" onclick="cmSelectMarcaBorrar('ucma',this)">UCMA</button>
+    </div>
+    <div class="cm-confirm-actions">
+      <button class="cm-btn-cancel" onclick="cmCloseBorrarDatos()">Cancelar</button>
+      <button class="cm-btn-confirm-danger" id="cmBtnBorrarConfirm" disabled onclick="cmConfirmBorrarMarca()">Borrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL PLANTILLA DE MAIL ============ -->
+<div class="cm-confirm-overlay" id="cmOverlayMail">
+  <div class="cm-confirm-box" style="width:400px;">
+    <div class="cm-confirm-head">
+      <div class="cm-confirm-icon" style="background:#dcf3ee;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+      <div class="cm-confirm-title">Enviar plantilla de email</div>
+    </div>
+    <div class="cm-form-field">
+      <label class="cm-form-label">Remitente</label>
+      <input type="text" class="cm-form-input" id="cmMailRemitente" placeholder="atencioncobros@obsbusiness.school" onblur="cmSaveRemitente()">
+    </div>
+    <div class="cm-form-field">
+      <label class="cm-form-label">Destinatario (automático)</label>
+      <input type="text" class="cm-form-input" id="cmMailDestinatario" readonly style="background:#EEE8DF;">
+    </div>
+    <div class="cm-form-field">
+      <label class="cm-form-label">Asunto</label>
+      <input type="text" class="cm-form-input" id="cmMailAsunto" value="Aviso de pago pendiente">
+    </div>
+    <div class="cm-form-field">
+      <label class="cm-form-label">Cuerpo del mensaje</label>
+      <textarea class="cm-form-textarea" id="cmMailCuerpo">Estimado/a alumno/a,
+
+Te escribimos para recordarte que tienes un pago pendiente. En breve recibirás un link de pago para completar la operación.
+
+Un saludo,
+Atención Cobros — OBS Business School</textarea>
+    </div>
+    <div class="cm-confirm-actions">
+      <button class="cm-btn-cancel" onclick="cmCloseMailModal()">Cancelar</button>
+      <button class="cm-btn-confirm-ok" onclick="cmSendMail()">Abrir en mi correo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AVISO GENÉRICO "PRÓXIMAMENTE" ============ -->
+<div class="cm-confirm-overlay" id="cmOverlaySoon">
+  <div class="cm-confirm-box">
+    <div class="cm-confirm-head">
+      <div class="cm-confirm-icon" style="background:#dcf3ee;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div>
+      <div class="cm-confirm-title" id="cmSoonTitle">Próximamente</div>
+    </div>
+    <div class="cm-confirm-text" id="cmSoonText">Esta sección está en construcción.</div>
+    <div class="cm-confirm-actions">
+      <button class="cm-btn-confirm-ok" onclick="cmCloseSoon()">Entendido</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
