@@ -133,6 +133,12 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-help-files { background:#F5F0E8; border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#3a3128; line-height:1.7; font-family:'Courier New',monospace; }
 .cm-help-list { margin:0; padding-left:16px; font-size:11.5px; color:#4a4136; line-height:1.6; }
 .cm-search-row { padding:14px 20px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.cm-flow-card { flex:1; min-width:280px; background:linear-gradient(90deg,#e14b3a,#e0985c); border-radius:10px; padding:8px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; box-shadow:0 3px 10px rgba(225,75,58,0.25); }
+.cm-flow-title { font-size:10px; font-weight:800; letter-spacing:0.1em; color:#fff; background:rgba(255,255,255,0.22); border-radius:6px; padding:4px 8px; white-space:nowrap; }
+.cm-flow-step { font-size:11px; font-weight:600; color:#fff; white-space:nowrap; }
+.cm-flow-step i { font-weight:400; opacity:0.85; font-style:normal; }
+.cm-flow-sep { color:rgba(255,255,255,0.6); font-size:11px; }
+@media(max-width:900px){ .cm-flow-card { flex-basis:100%; order:3; } }
 .cm-search-input { flex:1; max-width:280px; background:#fff; border:0.5px solid rgba(58,49,40,0.15); border-radius:8px; padding:6px 10px; font-size:12px; color:#3a3128; font-family:inherit; }
 .cm-rounds-wrap { display:flex; justify-content:center; gap:56px; padding:16px 20px 6px; flex-wrap:wrap; }
 .cm-round-group { display:flex; flex-direction:column; align-items:center; }
@@ -145,7 +151,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-round-divider { width:1px; background:rgba(58,49,40,0.12); align-self:stretch; }
 .cm-table-wrap { padding:12px 16px 20px; overflow-x:auto; }
 .cm-table { background:#fff; border:0.5px solid rgba(58,49,40,0.1); border-radius:12px; overflow:hidden; min-width:1100px; }
-.cm-trow { display:grid; grid-template-columns:22px 24px 78px 1.2fr 0.9fr 0.85fr 0.75fr 0.5fr 0.5fr 0.7fr 28px 28px 1.1fr 0.8fr; padding:8px 10px; align-items:center; gap:4px; }
+.cm-trow { display:grid; grid-template-columns:22px 24px 78px 1.1fr 0.85fr 0.8fr 0.8fr 0.5fr 0.5fr 0.7fr 28px 28px 1fr 0.75fr; padding:8px 10px; align-items:center; gap:4px; }
 .cm-thead { background:rgba(58,49,40,0.05); border-bottom:0.5px solid rgba(58,49,40,0.1); }
 .cm-th { font-size:9px; letter-spacing:0.05em; text-transform:uppercase; color:#8a7d6a; font-weight:600; display:flex; align-items:center; gap:3px; }
 .cm-th.filt { cursor:pointer; }
@@ -185,7 +191,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-form-textarea { min-height:100px; resize:vertical; }
 .cm-file-hidden { display:none; }
 @media(max-width:700px){
-  .cm-trow { grid-template-columns:20px 22px 60px 1fr 0.8fr 0.7fr 0.65fr 0.45fr 0.45fr 0.6fr 24px 24px 0.9fr 0.65fr; }
+  .cm-trow { grid-template-columns:20px 22px 60px 1fr 0.75fr 0.7fr 0.65fr 0.45fr 0.45fr 0.6fr 24px 24px 0.85fr 0.6fr; }
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -498,6 +504,7 @@ const CM_MARCAS = {
 
 // Zonas horarias IANA por país (gestiona el horario de verano automáticamente)
 const CM_PAIS_TZ = {
+  // Español
   'españa':'Europe/Madrid','mexico':'America/Mexico_City','méxico':'America/Mexico_City',
   'colombia':'America/Bogota','argentina':'America/Argentina/Buenos_Aires','chile':'America/Santiago',
   'peru':'America/Lima','perú':'America/Lima','ecuador':'America/Guayaquil','venezuela':'America/Caracas',
@@ -508,13 +515,23 @@ const CM_PAIS_TZ = {
   'nicaragua':'America/Managua','cuba':'America/Havana','puerto rico':'America/Puerto_Rico',
   'estados unidos':'America/New_York','usa':'America/New_York','brasil':'America/Sao_Paulo',
   'portugal':'Europe/Lisbon','francia':'Europe/Paris','italia':'Europe/Rome','alemania':'Europe/Berlin',
-  'reino unido':'Europe/London','marruecos':'Africa/Casablanca','andorra':'Europe/Andorra'
+  'reino unido':'Europe/London','marruecos':'Africa/Casablanca','andorra':'Europe/Andorra',
+  // Inglés (tal como vienen en el Excel — columna Country)
+  'spain':'Europe/Madrid','mexico ':'America/Mexico_City','colombia ':'America/Bogota',
+  'dominican republic':'America/Santo_Domingo','brazil':'America/Sao_Paulo','united states of america':'America/New_York',
+  'united states':'America/New_York','canada':'America/Toronto','france':'Europe/Paris','germany':'Europe/Berlin',
+  'italy':'Europe/Rome','belgium':'Europe/Brussels','netherlands':'Europe/Amsterdam','switzerland':'Europe/Zurich',
+  'ireland':'Europe/Dublin','poland':'Europe/Warsaw','croatia':'Europe/Zagreb','ukraine':'Europe/Kyiv',
+  'turkey':'Europe/Istanbul','morocco':'Africa/Casablanca','angola':'Africa/Luanda','burundi':'Africa/Bujumbura',
+  'equatorial guinea':'Africa/Malabo','libya':'Africa/Tripoli','albania':'Europe/Tirane',
+  'jordan':'Asia/Amman','lebanon':'Asia/Beirut','saudi arabia':'Asia/Riyadh','united arab emirates':'Asia/Dubai',
+  'haiti':'America/Port-au-Prince'
 };
 
 let cmData = []; // registros de alumnos
 let cmFiltroMarca = null;
 let cmFiltroPais = null;
-let cmMarcaBorrarSeleccionada = null;
+let cmFiltroConvocatoria = null;
 
 function cmNormalize(str){
   return (str||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -661,6 +678,16 @@ function cmToggleFiltroPais(ev){
   cmFiltroPais = (isNaN(idx) || idx === 0) ? null : paises[idx-1];
   cmRenderTable();
 }
+function cmToggleFiltroConvocatoria(ev){
+  ev.stopPropagation();
+  const convs = [...new Set(cmData.map(r=>r.convocatoria).filter(Boolean))];
+  const opciones = ['(Todas)', ...convs];
+  const seleccion = prompt('Filtrar por convocatoria:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  cmFiltroConvocatoria = (isNaN(idx) || idx === 0) ? null : convs[idx-1];
+  cmRenderTable();
+}
 
 /* ---------- Semáforo horario por país ---------- */
 function cmGetPaisEstado(pais){
@@ -689,6 +716,7 @@ function cmRenderTable(){
   let rows = cmData.filter(r=>{
     if(cmFiltroMarca && r.marca !== cmFiltroMarca) return false;
     if(cmFiltroPais && r.pais !== cmFiltroPais) return false;
+    if(cmFiltroConvocatoria && r.convocatoria !== cmFiltroConvocatoria) return false;
     if(search){
       const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
       if(!hay) return false;
@@ -726,6 +754,7 @@ function cmRenderTable(){
         <span class="cm-badge-marca" style="${badgeStyle}">${marcaInfo.label}</span>
         <div class="cm-cell-name" title="${cmEscapeHtml(r.nombre)}">${cmEscapeHtml(r.nombre)}</div>
         <div class="cm-pais-pill" style="${paisStyle}" title="${paisEstado.hora!==null ? 'Hora local: '+paisEstado.hora+':00' : ''}">${paisTexto}</div>
+        <div class="cm-cell-mut" title="${cmEscapeHtml(r.convocatoria||'')}">${cmEscapeHtml(r.convocatoria||'—')}</div>
         <div class="cm-cell-mut">${cmEscapeHtml(r.idNacs||'—')}</div>
         <select class="cm-select" style="${cmGetSelectStyle('r1',r.link1)}" onchange="cmChangeLink('${r.id}','link1',this.value)">
           <option value="No" ${r.link1!=='Si'?'selected':''}>No</option>
@@ -748,6 +777,7 @@ function cmRenderTable(){
   const filtroTxt = [];
   if(cmFiltroMarca) filtroTxt.push('Marca: ' + (CM_MARCAS[cmFiltroMarca]?.label||cmFiltroMarca));
   if(cmFiltroPais) filtroTxt.push('País: ' + cmFiltroPais);
+  if(cmFiltroConvocatoria) filtroTxt.push('Convocatoria: ' + cmFiltroConvocatoria);
   document.getElementById('cmFiltroActivo').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
 
   cmUpdateCounters(rows);
@@ -819,56 +849,40 @@ function cmSendMail(){
   cmCloseMailModal();
 }
 
-/* ---------- Borrar datos por marca ---------- */
+/* ---------- Borrar todos los datos ---------- */
 function cmOpenBorrarDatos(){
-  cmMarcaBorrarSeleccionada = null;
-  document.querySelectorAll('#cmMarcaGridBorrar .cm-marca-opt').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('cmBtnBorrarConfirm').disabled = true;
   document.getElementById('cmOverlayBorrar').classList.add('show');
 }
 function cmCloseBorrarDatos(){ document.getElementById('cmOverlayBorrar').classList.remove('show'); }
-function cmSelectMarcaBorrar(marca, el){
-  cmMarcaBorrarSeleccionada = marca;
-  document.querySelectorAll('#cmMarcaGridBorrar .cm-marca-opt').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('cmBtnBorrarConfirm').disabled = false;
-}
-async function cmConfirmBorrarMarca(){
-  if(!cmMarcaBorrarSeleccionada) return;
-  cmData = cmData.filter(r=>r.marca !== cmMarcaBorrarSeleccionada);
+async function cmConfirmBorrarTodo(){
+  cmData = [];
   await cmSaveData();
   cmCloseBorrarDatos();
   cmRenderTable();
 }
 
-/* ---------- Importar Excel (SheetJS) ---------- */
-function cmDetectMarcaFromFilename(filename){
-  const n = cmNormalize(filename);
-  if(n.includes('obs')) return 'obs';
-  if(n.includes('inesdi')) return 'inesdi';
-  if(n.includes('esdesign')) return 'esdesign';
-  if(n.includes('ucma')) return 'ucma';
-  return null;
-}
+/* ---------- Importar Excel (SheetJS) — columnas reales del export ---------- */
+const CM_MARCA_MAP = { 'OBS':'obs', 'INESDI':'inesdi', 'ESDESIGN':'esdesign', 'UCMA':'ucma' };
+
 function cmFindColumn(headers, posibles){
   const normHeaders = headers.map(h=>cmNormalize(h));
+  // 1) coincidencia exacta
   for(const p of posibles){
     const idx = normHeaders.indexOf(cmNormalize(p));
     if(idx !== -1) return headers[idx];
   }
+  // 2) coincidencia parcial (contiene)
+  for(const p of posibles){
+    const pn = cmNormalize(p);
+    const idx = normHeaders.findIndex(h=>h.includes(pn) || pn.includes(h));
+    if(idx !== -1) return headers[idx];
+  }
   return null;
 }
-async function cmHandleFileUpload(ev){
+
+async function cmHandleFileUpload(ev, round){
   const file = ev.target.files[0];
   if(!file) return;
-
-  let marca = cmDetectMarcaFromFilename(file.name);
-  if(!marca){
-    const seleccion = prompt('No se ha detectado la marca por el nombre del archivo.\n¿A qué marca pertenece?\n1. OBS\n2. INESDI\n3. ESDESIGN\n4. UCMA\n\nEscribe el número:');
-    const map = {'1':'obs','2':'inesdi','3':'esdesign','4':'ucma'};
-    marca = map[seleccion];
-    if(!marca){ ev.target.value=''; return; }
-  }
 
   try{
     const buffer = await file.arrayBuffer();
@@ -878,33 +892,70 @@ async function cmHandleFileUpload(ev){
     if(json.length === 0){ alert('El archivo no contiene filas de datos.'); ev.target.value=''; return; }
 
     const headers = Object.keys(json[0]);
-    const colNombre = cmFindColumn(headers, ['nombre','alumno','nombre completo','nombre alumno']);
-    const colEmail  = cmFindColumn(headers, ['email','correo','e-mail','mail']);
-    const colId     = cmFindColumn(headers, ['id nacs','idnacs','id_nacs','nacs']);
-    const colPais   = cmFindColumn(headers, ['pais','país','country']);
+    const colMarca  = cmFindColumn(headers, ['owning business unit','business unit']);
+    const colNombre = cmFindColumn(headers, ['full name (student)','full name','nombre','alumno']);
+    const colId     = cmFindColumn(headers, ['key_ganet (student)','key_ganet','key ganet','ganet','id nacs','idnacs','nacs']);
+    const colEmail  = cmFindColumn(headers, ['primary email (created by (delegate))','primary email','email','correo']);
+    const colPais   = cmFindColumn(headers, ['country (student)','country','pais','país']);
+    const colConv   = cmFindColumn(headers, ['academic period','convocatoria']);
 
-    if(!colNombre){
-      alert('No se ha encontrado una columna de Nombre en el Excel. Revisa que el archivo tenga una columna "Nombre".');
+    if(!colMarca || !colNombre){
+      alert('No se han encontrado las columnas mínimas requeridas (Owning Business Unit / Full Name). Revisa el archivo.');
       ev.target.value=''; return;
     }
 
-    const nuevos = json.map(row=>({
-      id: cmGenId(),
-      marca,
-      nombre: row[colNombre] || '',
-      email: colEmail ? row[colEmail] : '',
-      idNacs: colId ? row[colId] : '',
-      pais: colPais ? row[colPais] : '',
-      link1: 'No', link2: 'No',
-      ultimaFecha: null, ultimoUsuario: null,
-      marcaEnviada: false, comentarios: ''
-    })).filter(r=>r.nombre);
+    let omitidas = 0;
+    const nuevosRaw = json.map(row=>{
+      const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
+      const marca = CM_MARCA_MAP[marcaOriginal];
+      if(!marca){ omitidas++; return null; }
+      return {
+        marca,
+        nombre: (row[colNombre]||'').toString().trim(),
+        email: colEmail ? (row[colEmail]||'').toString().trim() : '',
+        idNacs: colId ? (row[colId]||'').toString().trim() : '',
+        pais: colPais ? (row[colPais]||'').toString().trim() : '',
+        convocatoria: colConv ? (row[colConv]||'').toString().trim() : ''
+      };
+    }).filter(r=>r && r.nombre);
 
-    // Sustituye solo los datos de esa marca
-    cmData = cmData.filter(r=>r.marca !== marca).concat(nuevos);
+    if(round === 1){
+      // ROUND 1: sustituye todo el listado desde cero
+      cmData = nuevosRaw.map(r=>({
+        id: cmGenId(), ...r,
+        link1:'No', link2:'No',
+        ultimaFecha:null, ultimoUsuario:null,
+        marcaEnviada:false, comentarios:''
+      }));
+    } else {
+      // ROUND 2: fusiona por ID NACS, conserva estado de Link 1 / comentarios existentes
+      const existentesPorId = {};
+      cmData.forEach(r=>{ if(r.idNacs) existentesPorId[r.idNacs] = r; });
+
+      const nuevosFinal = nuevosRaw.map(r=>{
+        const previo = r.idNacs ? existentesPorId[r.idNacs] : null;
+        if(previo){
+          return {
+            ...previo,
+            marca: r.marca, nombre: r.nombre, email: r.email || previo.email,
+            pais: r.pais || previo.pais, convocatoria: r.convocatoria || previo.convocatoria
+          };
+        }
+        return {
+          id: cmGenId(), ...r,
+          link1:'No', link2:'No',
+          ultimaFecha:null, ultimoUsuario:null,
+          marcaEnviada:false, comentarios:''
+        };
+      });
+      cmData = nuevosFinal;
+    }
+
     await cmSaveData();
     cmRenderTable();
-    alert(`Importados ${nuevos.length} alumnos de ${CM_MARCAS[marca].label}.`);
+    let msg = `Importados ${nuevosRaw.length} alumnos (Round ${round}).`;
+    if(omitidas > 0) msg += `\n${omitidas} filas omitidas (marca no reconocida o "No filters applied").`;
+    alert(msg);
   }catch(e){
     console.error('Error importando Excel:', e);
     alert('Hubo un error leyendo el archivo. Comprueba que sea un .xlsx válido.');
@@ -921,6 +972,7 @@ function cmExportExcel(){
     'Email': r.email,
     'ID NACS': r.idNacs,
     'País': r.pais,
+    'Convocatoria': r.convocatoria || '',
     'Link 1': r.link1,
     'Link 2': r.link2,
     'Fecha último cambio': r.ultimaFecha || '',
@@ -1033,21 +1085,23 @@ document.addEventListener('click', (e)=>{
         </div>
       </div>
       <div class="cm-header-right">
-        <button class="cm-btn-white" onclick="document.getElementById('cmFileInput').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7f77dd" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M4 21h16"/></svg>Cargar listado</button>
-        <input type="file" id="cmFileInput" class="cm-file-hidden" accept=".xlsx,.xls" onchange="cmHandleFileUpload(event)">
+        <button class="cm-btn-white" onclick="document.getElementById('cmFileInputR1').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a85f0f" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M4 21h16"/></svg>Cargar listado Round 1</button>
+        <input type="file" id="cmFileInputR1" class="cm-file-hidden" accept=".xlsx,.xls" onchange="cmHandleFileUpload(event,1)">
+        <button class="cm-btn-white" onclick="document.getElementById('cmFileInputR2').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6a3fa0" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M4 21h16"/></svg>Cargar listado Round 2</button>
+        <input type="file" id="cmFileInputR2" class="cm-file-hidden" accept=".xlsx,.xls" onchange="cmHandleFileUpload(event,2)">
         <button class="cm-btn-white" onclick="cmExportExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f6e56" stroke-width="2"><path d="M12 15V3M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>Exportar</button>
-        <button class="cm-btn-white cm-btn-danger" onclick="cmOpenBorrarDatos()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Borrar datos</button>
+        <button class="cm-btn-white cm-btn-danger" onclick="cmOpenBorrarDatos()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Borrar todo</button>
         <button class="cm-btn-circle" onclick="cmToggleHelp()">?</button>
         <div class="cm-help-pop" id="cmHelpPop">
           <div class="cm-help-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Cómo usar esta herramienta</div>
-          <div class="cm-help-label">Nombres de archivo requeridos</div>
-          <div class="cm-help-files">OBS_COBROS.xlsx<br>INESDI_COBROS.xlsx<br>ESDESIGN_COBROS.xlsx<br>UCMA_COBROS.xlsx</div>
+          <div class="cm-help-label">Archivo a importar</div>
+          <div class="cm-help-files">Un único Excel con las 4 marcas (columna "Owning Business Unit" indica la marca de cada fila).</div>
           <div class="cm-help-label">Instrucciones</div>
           <ul class="cm-help-list">
-            <li>Cada carga sustituye únicamente los datos de esa marca; el resto no se modifica.</li>
-            <li>Link 1 y Link 2 se ponen en "No" por defecto para cada alumno nuevo.</li>
+            <li><strong>Cargar listado Round 1:</strong> sustituye todo el listado desde cero (reinicia Link 1 y Link 2).</li>
+            <li><strong>Cargar listado Round 2:</strong> conserva el estado de Link 1 ya registrado (por ID NACS) y solo actualiza datos; los alumnos nuevos entran limpios.</li>
             <li>El sobre para enviar la plantilla de email solo aparece en los alumnos de OBS.</li>
-            <li>"Borrar datos" elimina permanentemente la marca seleccionada; úsalo con cuidado.</li>
+            <li>"Borrar todo" elimina permanentemente todos los datos de esta tabla; úsalo con cuidado.</li>
           </ul>
         </div>
         <button class="cm-btn-circle" onclick="cmCloseAll()">×</button>
@@ -1057,6 +1111,16 @@ document.addEventListener('click', (e)=>{
       <div class="cm-search-row">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a89c88" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" class="cm-search-input" id="cmSearchInput" placeholder="Buscar alumno, email o ID NACS..." oninput="cmRenderTable()">
+        <div class="cm-flow-card">
+          <span class="cm-flow-title">FLUJO OBLIGATORIO</span>
+          <span class="cm-flow-step"><b>1.</b> Observaciones</span>
+          <span class="cm-flow-sep">→</span>
+          <span class="cm-flow-step"><b>2.</b> Confirmar que no hay tarjeta</span>
+          <span class="cm-flow-sep">→</span>
+          <span class="cm-flow-step"><b>3.</b> Envío link recurrente <i>(en lo posible)</i></span>
+          <span class="cm-flow-sep">→</span>
+          <span class="cm-flow-step"><b>4.</b> Envío mail a alumno <i>(OBS)</i></span>
+        </div>
         <span id="cmFiltroActivo" style="font-size:11px;color:#8a7d6a;"></span>
       </div>
 
@@ -1098,6 +1162,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th filt" onclick="cmToggleFiltroMarca(event)">Marca <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Alumno</div>
             <div class="cm-th filt" onclick="cmToggleFiltroPais(event)">País <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <div class="cm-th filt" onclick="cmToggleFiltroConvocatoria(event)">Convoc. <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">ID NACS</div>
             <div class="cm-th" style="color:#a85f0f;">L1</div>
             <div class="cm-th" style="color:#6a3fa0;">L2</div>
@@ -1114,24 +1179,17 @@ document.addEventListener('click', (e)=>{
   </div>
 </div>
 
-<!-- ============ CONFIRMAR BORRAR DATOS ============ -->
+<!-- ============ CONFIRMAR BORRAR TODO ============ -->
 <div class="cm-confirm-overlay" id="cmOverlayBorrar">
   <div class="cm-confirm-box">
     <div class="cm-confirm-head">
       <div class="cm-confirm-icon" style="background:#fde3d0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
       <div class="cm-confirm-title">¿Estás seguro?</div>
     </div>
-    <div class="cm-confirm-text">Esta acción borrará permanentemente los datos de la marca seleccionada en esta tabla. No se puede deshacer.</div>
-    <div class="cm-help-label">¿Qué archivo quieres borrar?</div>
-    <div class="cm-marca-grid" id="cmMarcaGridBorrar">
-      <button class="cm-marca-opt" data-marca="obs" style="background:#fdf6d8;color:#5a5142;" onclick="cmSelectMarcaBorrar('obs',this)">OBS</button>
-      <button class="cm-marca-opt" data-marca="inesdi" style="background:#dcf3ee;color:#0f6e56;" onclick="cmSelectMarcaBorrar('inesdi',this)">INESDI</button>
-      <button class="cm-marca-opt" data-marca="esdesign" style="background:#fde3d0;color:#a04a10;" onclick="cmSelectMarcaBorrar('esdesign',this)">ESDESIGN</button>
-      <button class="cm-marca-opt" data-marca="ucma" style="background:#1a2a52;color:#fff;border-color:#e8c94a;" onclick="cmSelectMarcaBorrar('ucma',this)">UCMA</button>
-    </div>
+    <div class="cm-confirm-text">Esta acción borrará <strong>permanentemente todos los datos</strong> de esta tabla (las 4 marcas). No se puede deshacer.</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseBorrarDatos()">Cancelar</button>
-      <button class="cm-btn-confirm-danger" id="cmBtnBorrarConfirm" disabled onclick="cmConfirmBorrarMarca()">Borrar</button>
+      <button class="cm-btn-confirm-danger" onclick="cmConfirmBorrarTodo()">Borrar todo</button>
     </div>
   </div>
 </div>
