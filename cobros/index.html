@@ -430,7 +430,7 @@ async function load(){
       });
     });
     const results=await Promise.all(
-      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}`).then(r=>r.json()).then(d=>({...f,data:d})))
+      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}`, { cache: 'no-store' }).then(r=>r.json()).then(d=>({...f,data:d})))
     );
     results.forEach(({anyo,marca,conv,data})=>{
       if(!cobrosData[anyo])cobrosData[anyo]={};
@@ -451,7 +451,7 @@ async function load(){
 // ── CAMPO "DATOS A CIERRE DE MES DE..." — persistencia en KV ──
 async function loadCierreLabel(){
   try{
-    const res=await fetch(`${WORKER_URL}/kv?key=${CIERRE_KV_KEY}`);
+    const res=await fetch(`${WORKER_URL}/kv?key=${CIERRE_KV_KEY}`, { cache: 'no-store' });
     const data=await res.json();
     if(data.value){
       const val=typeof data.value==='string'?JSON.parse(data.value):data.value;
@@ -626,7 +626,7 @@ function cmCloseAvisoRemesa(){ document.getElementById('cmOverlayAvisoRemesa').c
 /* ---------- Carga / guardado en KV ---------- */
 async function cmLoadData(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`);
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`, { cache: 'no-store' });
     const data = await res.json();
     if(data.value){
       const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -638,15 +638,22 @@ async function cmLoadData(){
 }
 async function cmSaveData(){
   try{
-    await fetch(`${WORKER_URL}/kv`,{
+    const res = await fetch(`${WORKER_URL}/kv`,{
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ key: CM_KV_DATA_KEY, value: JSON.stringify(cmData) })
     });
-  }catch(e){ console.error('Error guardando datos Links NO domiciliada:', e); }
+    if(!res.ok){
+      console.error('Guardado de datos rechazado por el servidor, status:', res.status);
+      alert('Aviso: los cambios podrían no haberse guardado correctamente (error del servidor). Revisa tu conexión y vuelve a intentarlo.');
+    }
+  }catch(e){
+    console.error('Error guardando datos Links NO domiciliada:', e);
+    alert('Aviso: no se ha podido guardar (sin conexión al servidor). Los últimos cambios podrían perderse si recargas la página.');
+  }
 }
 async function cmLoadRemitente(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_REMITENTE_KEY}`);
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_REMITENTE_KEY}`, { cache: 'no-store' });
     const data = await res.json();
     if(data.value){
       const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -667,7 +674,7 @@ async function cmSaveRemitente(){
 
 async function cmLoadRound2Flag(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_ROUND2_KEY}`);
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_ROUND2_KEY}`, { cache: 'no-store' });
     const data = await res.json();
     cmRound2Activo = data.value ? (typeof data.value === 'string' ? JSON.parse(data.value) : data.value) === true : false;
   }catch(e){ cmRound2Activo = false; }
@@ -898,7 +905,7 @@ function cmSendMail(){
 /* ---------- Historial de comentarios por alumno (persiste entre meses) ---------- */
 async function cmLoadComentariosHist(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_COMENTARIOS_HIST_KEY}`);
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_COMENTARIOS_HIST_KEY}`, { cache: 'no-store' });
     const data = await res.json();
     if(!data.value){ cmComentariosHist = {}; return; }
     const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -939,7 +946,7 @@ function cmCloseComentariosHist(){ document.getElementById('cmOverlayComentarios
 /* ---------- Histórico Round 1 (solo conteos, sin detalle) ---------- */
 async function cmLoadHistorico(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_HISTORICO_KEY}`);
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_HISTORICO_KEY}`, { cache: 'no-store' });
     const data = await res.json();
     if(!data.value) return [];
     const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
