@@ -1056,7 +1056,7 @@ async function cmHandleFileUpload(ev, round){
     alert(msg);
   }catch(e){
     console.error('Error importando Excel:', e);
-    alert('Hubo un error leyendo el archivo. Comprueba que sea un .xlsx válido.');
+    alert('Hubo un error leyendo el archivo: ' + e.message + '\n\n(Revisa la consola con F12 para más detalle)');
   }
   ev.target.value = '';
 }
