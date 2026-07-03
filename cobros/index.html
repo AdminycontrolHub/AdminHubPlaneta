@@ -885,7 +885,9 @@ async function cmLoadHistorico(){
   try{
     const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_HISTORICO_KEY}`);
     const data = await res.json();
-    return data.value ? (typeof data.value === 'string' ? JSON.parse(data.value) : data.value) : [];
+    if(!data.value) return [];
+    const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+    return Array.isArray(parsed) ? parsed : [];
   }catch(e){ return []; }
 }
 async function cmSaveHistoricoSnapshot(registros){
@@ -901,7 +903,8 @@ async function cmSaveHistoricoSnapshot(registros){
   });
   const snapshot = { fecha: new Date().toLocaleString('es-ES'), detalle };
 
-  const historico = await cmLoadHistorico();
+  let historico = await cmLoadHistorico();
+  if(!Array.isArray(historico)) historico = [];
   historico.unshift(snapshot); // más reciente primero
   try{
     await fetch(`${WORKER_URL}/kv`,{
@@ -914,7 +917,8 @@ async function cmOpenHistorico(){
   document.getElementById('cmOverlayHistorico').classList.add('show');
   const body = document.getElementById('cmHistoricoBody');
   body.innerHTML = `<div class="cm-empty-state">Cargando...</div>`;
-  const historico = await cmLoadHistorico();
+  let historico = await cmLoadHistorico();
+  if(!Array.isArray(historico)) historico = [];
   if(historico.length === 0){
     body.innerHTML = `<div class="cm-empty-state">Todavía no hay registros. Se generará uno automáticamente cada vez que cargues el listado de Round 1.</div>`;
     return;
