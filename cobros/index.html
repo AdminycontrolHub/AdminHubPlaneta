@@ -532,6 +532,7 @@ const CM_PAIS_TZ = {
 };
 
 let cmData = []; // registros de alumnos
+let cmDataLoadedOnce = false; // evita re-fetch desde KV si ya está cargado en esta sesión (KV tiene propagación no instantánea)
 let cmComentariosHist = {}; // { idNacs: [ {fecha, comentario, usuario, convocatoria}, ... ] }
 let cmRound2Activo = false;
 let cmFiltroMarca = null;
@@ -573,7 +574,10 @@ function cmBackToL2(){ document.getElementById('cmOverlayL3').classList.remove('
 async function cmOpenL3(){
   document.getElementById('cmOverlayL2').classList.remove('show');
   document.getElementById('cmOverlayL3').classList.add('show');
-  await cmLoadData();
+  if(!cmDataLoadedOnce){
+    await cmLoadData();
+    cmDataLoadedOnce = true;
+  }
   await cmLoadRemitente();
   await cmLoadRound2Flag();
   await cmLoadComentariosHist();
