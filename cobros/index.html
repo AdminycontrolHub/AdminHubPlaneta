@@ -671,11 +671,14 @@ function cmToggleFiltroMarca(ev){
 function cmToggleFiltroPais(ev){
   ev.stopPropagation();
   const paises = [...new Set(cmData.map(r=>r.pais).filter(Boolean))];
-  const opciones = ['(Todos)', ...paises];
+  const opciones = ['(Todos)', '🟢 Verde OK (dentro de horario)', '🔴 Rojo KO (fuera de horario)', ...paises];
   const seleccion = prompt('Filtrar por país:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
   if(seleccion === null) return;
   const idx = parseInt(seleccion);
-  cmFiltroPais = (isNaN(idx) || idx === 0) ? null : paises[idx-1];
+  if(isNaN(idx) || idx === 0){ cmFiltroPais = null; }
+  else if(idx === 1){ cmFiltroPais = 'VERDE_OK'; }
+  else if(idx === 2){ cmFiltroPais = 'ROJO_KO'; }
+  else { cmFiltroPais = paises[idx-3]; }
   cmRenderTable();
 }
 function cmToggleFiltroConvocatoria(ev){
@@ -692,13 +695,13 @@ function cmToggleFiltroConvocatoria(ev){
 /* ---------- Semáforo horario por país ---------- */
 function cmGetPaisEstado(pais){
   const tz = CM_PAIS_TZ[cmNormalize(pais)];
-  if(!tz) return { color:null, hora:null };
+  if(!tz) return { color:null, hora:null, enHorario:null };
   try{
     const horaStr = new Date().toLocaleString('en-US', { timeZone: tz, hour:'2-digit', hour12:false });
     const hora = parseInt(horaStr);
     const enHorario = hora >= 9 && hora < 14;
-    return { color: enHorario ? '#a8e0b8' : '#f0a8a8', textColor: enHorario ? '#0a4a2a' : '#7a1a1a', hora };
-  }catch(e){ return { color:null, hora:null }; }
+    return { color: enHorario ? '#a8e0b8' : '#f0a8a8', textColor: enHorario ? '#0a4a2a' : '#7a1a1a', hora, enHorario };
+  }catch(e){ return { color:null, hora:null, enHorario:null }; }
 }
 
 let cmHourlyInterval = null;
@@ -715,7 +718,12 @@ function cmRenderTable(){
   const search = cmNormalize(document.getElementById('cmSearchInput')?.value || '');
   let rows = cmData.filter(r=>{
     if(cmFiltroMarca && r.marca !== cmFiltroMarca) return false;
-    if(cmFiltroPais && r.pais !== cmFiltroPais) return false;
+    if(cmFiltroPais === 'VERDE_OK' || cmFiltroPais === 'ROJO_KO'){
+      const estado = cmGetPaisEstado(r.pais);
+      if(estado.enHorario === null) return false;
+      if(cmFiltroPais === 'VERDE_OK' && !estado.enHorario) return false;
+      if(cmFiltroPais === 'ROJO_KO' && estado.enHorario) return false;
+    } else if(cmFiltroPais && r.pais !== cmFiltroPais){ return false; }
     if(cmFiltroConvocatoria && r.convocatoria !== cmFiltroConvocatoria) return false;
     if(search){
       const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
@@ -776,7 +784,9 @@ function cmRenderTable(){
   // Filtro activo (texto informativo)
   const filtroTxt = [];
   if(cmFiltroMarca) filtroTxt.push('Marca: ' + (CM_MARCAS[cmFiltroMarca]?.label||cmFiltroMarca));
-  if(cmFiltroPais) filtroTxt.push('País: ' + cmFiltroPais);
+  if(cmFiltroPais === 'VERDE_OK') filtroTxt.push('País: 🟢 Verde OK');
+  else if(cmFiltroPais === 'ROJO_KO') filtroTxt.push('País: 🔴 Rojo KO');
+  else if(cmFiltroPais) filtroTxt.push('País: ' + cmFiltroPais);
   if(cmFiltroConvocatoria) filtroTxt.push('Convocatoria: ' + cmFiltroConvocatoria);
   document.getElementById('cmFiltroActivo').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
 
