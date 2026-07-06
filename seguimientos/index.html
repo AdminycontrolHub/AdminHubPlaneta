@@ -78,7 +78,6 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .hbtn.export{color:#0d44a1;border-color:#90caf9;}
 .hbtn.help{width:30px;height:30px;padding:0;border-radius:50%;font-size:13px;font-weight:800;color:#8B6914;border-color:#ffe082;justify-content:center;}
 .hbtn.cerrar{color:#c62828;border-color:#f48fb1;background:#fce4ec;}
-.hbtn.volver-hub{color:#0d44a1;border-color:#90caf9;background:#e3f2fd;text-decoration:none;}
 .lock-tag{font-size:9px;background:rgba(46,125,50,0.12);color:#1B5E20;padding:1px 5px;border-radius:3px;border:1px solid #a5d6a7;}
 
 /* search bar */
@@ -304,7 +303,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
   <div class="imodal">
     <h3>❓ Ayuda — Referidos OBS</h3>
     <div class="help-h4">Flujo</div>
-    <p class="help-p">Añadir por Admisiones → A validar Adm. Comercial → A validar Marketing → Pendiente de Pago → OK Pagado</p>
+    <p class="help-p">Añadir por Admisiones → A validar Marketing → A validar Adm. Comercial → Pendiente de Pago → OK Pagado</p>
     <div class="help-h4">Fechas de pago</div>
     <p class="help-p">Los cheques se emiten en julio y enero de cada año.</p>
     <div class="help-h4">Buscar alumno</div>
@@ -407,13 +406,13 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="obs-icon">🎓</div>
         <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Admisiones · Administración Comercial · Marketing · Control de Gestión</div></div>
       </div>
-      <div class="obs-close-bar-r" id="obsCloseBarR">
+      <div class="obs-close-bar-r">
         <button class="hbtn" id="btnWriteAccess" style="display:none;color:#0d44a1;border-color:#90caf9;" onclick="openWriteAccess()">🔑 Acceso escritura</button>
         <button class="hbtn" id="btnJeDv" style="display:none;color:#5a2aaa;border-color:#a878f0;" onclick="openJeDv()">👥 Gestionar JE/DV</button>
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
         <button class="hbtn export" onclick="exportCSV()">📤 Exportar</button>
         <button class="hbtn help" onclick="openHelp()">?</button>
-        <button class="hbtn cerrar" id="btnCerrarObs" onclick="closeObs()">✕ Cerrar</button>
+        <button class="hbtn cerrar" onclick="closeObs()">✕ Cerrar</button>
         <input type="file" id="fileInputObs" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
       </div>
     </div>
@@ -462,10 +461,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="arrow-h">›</div>
         <div class="flow-col">
           <div class="bub-note">Pagos julio y enero</div>
-          <div class="bub-wrap bub-2" onclick="bubClick(2)">
+          <div class="bub-wrap bub-3" onclick="bubClick(2)">
             <div class="bub-circle" id="bc2">
-              <div class="bub-icon">🔎</div>
-              <div class="bub-name">A validar Adm. Comercial</div>
+              <div class="bub-icon">📣</div>
+              <div class="bub-name">A validar Marketing</div>
               <div class="bub-count" id="cnt2"></div>
             </div>
           </div>
@@ -473,7 +472,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
           <div class="bub-wrap bub-r" onclick="bubClick('r2')">
             <div class="bub-circle" id="bc_r2" style="width:104px;height:104px;">
               <div class="bub-icon">👎</div>
-              <div class="bub-name">No cumple<br>Adm. Com.</div>
+              <div class="bub-name">No cumple<br>Marketing</div>
               <div class="bub-count" id="cnt_r2"></div>
             </div>
           </div>
@@ -481,10 +480,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="arrow-h">›</div>
         <div class="flow-col">
           <div class="bub-note"></div>
-          <div class="bub-wrap bub-3" onclick="bubClick(3)">
+          <div class="bub-wrap bub-2" onclick="bubClick(3)">
             <div class="bub-circle" id="bc3">
-              <div class="bub-icon">📣</div>
-              <div class="bub-name">A validar Marketing</div>
+              <div class="bub-icon">🔎</div>
+              <div class="bub-name">A validar Adm. Comercial</div>
               <div class="bub-count" id="cnt3"></div>
             </div>
           </div>
@@ -492,7 +491,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
           <div class="bub-wrap bub-r" onclick="bubClick('r3')">
             <div class="bub-circle" id="bc_r3" style="width:104px;height:104px;">
               <div class="bub-icon">👎</div>
-              <div class="bub-name">No cumple<br>Marketing</div>
+              <div class="bub-name">No cumple<br>Adm. Com.</div>
               <div class="bub-count" id="cnt_r3"></div>
             </div>
           </div>
@@ -695,18 +694,20 @@ function calcEstado(cumple, cumpleCheque, estadoPago, comentarios){
   if(ep.includes('PDT PAGO') || ep.includes('PENDIENTE')) return 'pago';
   if(ep.includes('MKTG') || cm.includes('PROMO DIGITAL') || cm.includes('MKTG')) return 'r_mkt';
   if(ep.includes('NO CORRESPONDE') || ep.includes('IMPAGO') || ep.includes('BAJA') || ep.includes('DESCUENTO') || ep.includes('MATRICULADO')) return 'r_adm';
-  if(cu==='SI' && cc==='SI') return 'mkt';
-  if(cu==='SI') return 'adm';
-  if(cu==='NO') return 'r_adm';
-  if(ep.includes('PDT REVISION') || ep.includes('REVISION')) return 'adm';
+  // Nuevo flujo: mkt primero, adm segundo
+  if(cu==='SI' && cc==='SI') return 'adm'; // cumple mkt y cumple adm → en adm (segundo paso)
+  if(cu==='SI') return 'mkt';              // cumple mkt → en mkt esperando validación adm
+  if(cu==='NO') return 'r_mkt';            // no cumple → rechazado en mkt (primer filtro)
+  if(ep.includes('PDT REVISION') || ep.includes('REVISION')) return 'mkt';
+  return 'mkt'; // por defecto entra en Marketing
   return 'adm';
 }
 
 function updateCounts(){
   const s=e=>recs.filter(r=>r.estado===e).length;
-  ['2','3','4','5'].forEach(n=>document.getElementById('cnt'+n).textContent=s({2:'adm',3:'mkt',4:'pago',5:'pagado'}[n])||'');
-  document.getElementById('cnt_r2').textContent=s('r_adm')||'';
-  document.getElementById('cnt_r3').textContent=s('r_mkt')||'';
+  ['2','3','4','5'].forEach(n=>document.getElementById('cnt'+n).textContent=s({2:'mkt',3:'adm',4:'pago',5:'pagado'}[n])||'');
+  document.getElementById('cnt_r2').textContent=s('r_mkt')||'';
+  document.getElementById('cnt_r3').textContent=s('r_adm')||'';
   const total=recs.filter(r=>r.estado!=='pagado').length;
   document.getElementById('statObsTotal').textContent=recs.length?total:'—';
 }
@@ -954,32 +955,33 @@ function saveNuevo(){
   document.getElementById('dupAlert').style.display='none';
 
   // Lógica primer referido + descuento
-  let estadoInicial='adm';
+  // Nuevo flujo: entrada → Marketing → Adm. Comercial → Pago → OK Pagado
+  let estadoInicial='mkt'; // por defecto entra en Marketing
   const tieneDescuento = rb==='Descuento 5%';
   if(primerRef==='Sí' && tieneDescuento){
-    estadoInicial='r_adm';
+    estadoInicial='r_mkt'; // primer referido con descuento → no cumple Marketing
   } else if(primerRef==='No'){
-    estadoInicial='mkt';
+    estadoInicial='adm'; // no es primer referido → salta directo a Adm. Comercial
   }
 
   recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,je,dv,fr_,cm_,
     primerRef,
     idnacs_ref:'',cartera_ref:'',idnacs_new:'',cartera_new:'',
     estado:estadoInicial,
-    cumple_adm: estadoInicial==='r_adm' ? 'No' : '',
-    motivo_adm: estadoInicial==='r_adm' ? 'Referidor no cumple (primer referido con descuento)' : '',
-    cumple_mkt:''});
+    cumple_mkt: estadoInicial==='r_mkt' ? 'No' : '',
+    motivo_mkt: estadoInicial==='r_mkt' ? 'Referidor no cumple (primer referido con descuento)' : '',
+    cumple_adm:''});
   updateCounts();saveKV();
   document.getElementById('fOk').style.display='';
   setTimeout(closeNuevo,1200);
 }
 
 // ── BURBUJAS ──
-const BUB_PWD={2:P_ADM,3:P_MKT,4:P_ADM};
-const BUB_LABEL={2:'A validar por Adm. Comercial',3:'A validar por Marketing',4:'Pendiente de Pago',5:'OK Pagado',r2:'No cumple — Adm. Comercial',r3:'No cumple — Marketing'};
-const BUB_CLS={2:'b-2',3:'b-3',4:'b-4',5:'b-5',r2:'b-r',r3:'b-r'};
-const BUB_ICON={2:'🔎',3:'📣',4:'💳',5:'✅',r2:'👎',r3:'👎'};
-const BUB_ESTADO={2:'adm',3:'mkt',4:'pago',5:'pagado',r2:'r_adm',r3:'r_mkt'};
+const BUB_PWD={2:P_MKT,3:P_ADM,4:P_ADM};
+const BUB_LABEL={2:'A validar por Marketing',3:'A validar por Adm. Comercial',4:'Pendiente de Pago',5:'OK Pagado',r2:'No cumple — Marketing',r3:'No cumple — Adm. Comercial'};
+const BUB_CLS={2:'b-3',3:'b-2',4:'b-4',5:'b-5',r2:'b-r',r3:'b-r'};
+const BUB_ICON={2:'📣',3:'🔎',4:'💳',5:'✅',r2:'👎',r3:'👎'};
+const BUB_ESTADO={2:'mkt',3:'adm',4:'pago',5:'pagado',r2:'r_mkt',r3:'r_adm'};
 
 function bubClick(n){
   if(curBub===n){closeTable();return;}
@@ -1009,23 +1011,26 @@ function fldChange(field,recId,val){
   if(!requireWrite())return;
   const r=recs.find(x=>x.id===recId);if(!r)return;
   r[field]=val;
-  if(field==='cumple_adm'){
+  if(field==='cumple_mkt'){
     if(val==='Sí'){
-      r.estado='mkt';r.cumple_mkt='';r.motivo_adm='';
+      // Marketing aprueba → pasa a Adm. Comercial
+      r.estado='adm';r.cumple_adm='';r.motivo_adm='';
       updateCounts();saveKV();setTimeout(()=>showBub(2),80);
+    } else if(val==='No'){
+      openMotivoModal(r.id,'mkt');
+    } else {
+      saveKV();
+    }
+  } else if(field==='cumple_adm'){
+    if(val==='Sí'){
+      // Adm. Comercial aprueba → pasa a Pendiente de Pago
+      r.estado='pago';r.fecha_pago='';
+      updateCounts();saveKV();setTimeout(()=>showBub(3),80);
     } else if(val==='No'){
       openMotivoModal(r.id,'adm');
     } else {
       saveKV();
     }
-  } else if(field==='cumple_mkt'){
-    if(val==='Sí'){
-      r.estado='pago';r.fecha_pago='';
-      updateCounts();saveKV();setTimeout(()=>showBub(3),80);
-    } else if(val==='No'){
-      r.estado='r_mkt';r.motivo_mkt='No cumple requisitos lead';
-      updateCounts();saveKV();setTimeout(()=>showBub(3),300);
-    } else { saveKV(); }
   } else if(field==='fecha_pago_iso'&&val){
     r.fecha_pago_iso = val;
     r.fecha_pago = formatFechaPagoLabel(val);
@@ -1074,8 +1079,8 @@ function cancelMotivoModal(){
   // revertimos el cumple_adm/cumple_mkt a vacío para que la persona pueda volver a intentarlo
   const r = recs.find(x=>x.id===motivoTargetId);
   if(r){
-    if(motivoTargetTipo==='adm') r.cumple_adm='';
     if(motivoTargetTipo==='mkt') r.cumple_mkt='';
+    if(motivoTargetTipo==='adm') r.cumple_adm='';
     saveKV();
     if(curBub) showBub(curBub);
   }
@@ -1088,19 +1093,19 @@ function confirmMotivoModal(){
   if(!v){ document.getElementById('motivoErr').style.display=''; return; }
   const r = recs.find(x=>x.id===motivoTargetId);
   if(r){
-    if(motivoTargetTipo==='adm'){
-      r.cumple_adm='No';
-      r.motivo_adm=v;
-      r.estado='r_adm';
-    } else if(motivoTargetTipo==='mkt'){
+    if(motivoTargetTipo==='mkt'){
       r.cumple_mkt='No';
       r.motivo_mkt=v;
       r.estado='r_mkt';
+    } else if(motivoTargetTipo==='adm'){
+      r.cumple_adm='No';
+      r.motivo_adm=v;
+      r.estado='r_adm';
     }
     updateCounts();saveKV();
   }
   document.getElementById('mMotivo').classList.remove('show');
-  const tipoBub = motivoTargetTipo==='adm' ? 2 : 3;
+  const tipoBub = motivoTargetTipo==='mkt' ? 2 : 3;
   motivoTargetId=null;motivoTargetTipo=null;
   setTimeout(()=>showBub(tipoBub),150);
 }
@@ -1119,6 +1124,22 @@ function deleteRecord(recId){
 function buildTable(n,rows){
   if(!rows.length)return'<p class="empty-msg">Sin registros en este estado</p>';
   if(n===2){
+    // Marketing — tabla simple con cumple_mkt
+    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>Referido</th><th>Conv.</th><th>Beneficio</th><th>Email</th><th>Comentarios</th><th>Cumple Requisitos Lead</th>${isFromHub?'<th></th>':''}</tr></thead><tbody>`;
+    rows.forEach(r=>{
+      h+=`<tr><td><input type="checkbox"/></td>
+        <td><span class="nm">${esc(r.rn)}</span><span class="xid">${esc(r.ri)}</span></td>
+        <td><span class="nm">${esc(r.nn)}</span><span class="xid">${esc(r.ni)}</span></td>
+        <td>${esc(r.nc)}</td><td>${esc(r.nb)}</td><td>${esc(r.ne)||'—'}</td>
+        <td><input class="edt" ${roAttr()} value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:120px;"/></td>
+        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cumple_mkt',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_mkt===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
+        ${isFromHub?`<td><button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button></td>`:''}
+      </tr>`;
+    });
+    return h+'</tbody></table>';
+  }
+  if(n===3){
+    // Adm. Comercial — tabla completa editable con ID NACS, Cartera, etc.
     let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>ID Ref.</th><th>Conv.</th><th>Beneficio Ref.</th><th>Referido</th><th>ID New</th><th>Conv.</th><th>Beneficio New</th><th>Email</th><th>Asesor</th><th>JE</th><th>Comentarios</th><th>ID NACS Ref.</th><th>Cartera Ref.</th><th>ID NACS New</th><th>Cartera New</th><th>Cumple Requisitos</th><th>Motivo No Cumple</th><th></th></tr></thead><tbody>`;
     rows.forEach(r=>{
       h+=`<tr><td><input type="checkbox"/></td>
@@ -1141,20 +1162,6 @@ function buildTable(n,rows){
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cumple_adm',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_adm===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
         <td><select class="edt-sel" ${roAttr()} onchange="fldChange('motivo_adm',${r.id},this.value)">${['','Referidor no cumple','Referido no cumple','Ambos no cumplen'].map(o=>`<option value="${o}" ${r.motivo_adm===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
         <td>${(isFromHub||isWriteUnlocked)?`<button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button>`:''}</td>
-      </tr>`;
-    });
-    return h+'</tbody></table>';
-  }
-  if(n===3){
-    let h=`<table><thead><tr><th><input type="checkbox"/></th><th>Referidor</th><th>Referido</th><th>Conv.</th><th>Beneficio</th><th>Email</th><th>Comentarios</th><th>Cumple Requisitos Lead</th>${isFromHub?'<th></th>':''}</tr></thead><tbody>`;
-    rows.forEach(r=>{
-      h+=`<tr><td><input type="checkbox"/></td>
-        <td><span class="nm">${esc(r.rn)}</span><span class="xid">${esc(r.ri)}</span></td>
-        <td><span class="nm">${esc(r.nn)}</span><span class="xid">${esc(r.ni)}</span></td>
-        <td>${esc(r.nc)}</td><td>${esc(r.nb)}</td><td>${esc(r.ne)||'—'}</td>
-        <td><input class="edt" ${roAttr()} value="${esc(r.cm_)}" onchange="fldChange('cm_',${r.id},this.value)" style="width:120px;"/></td>
-        <td><select class="edt-sel" ${roAttr()} onchange="fldChange('cumple_mkt',${r.id},this.value)">${['','Sí','No'].map(o=>`<option value="${o}" ${r.cumple_mkt===o?'selected':''}>${o||'— Sel. —'}</option>`).join('')}</select></td>
-        ${isFromHub?`<td><button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button></td>`:''}
       </tr>`;
     });
     return h+'</tbody></table>';
@@ -1186,11 +1193,11 @@ function buildTable(n,rows){
     return h;
   }
   if(n==='r2'||n==='r3'){
-    const mf=n==='r2'?'motivo_adm':'motivo_mkt';
+    const mf=n==='r2'?'motivo_mkt':'motivo_adm';
     let h=`<table><thead><tr><th>Referidor</th><th>ID</th><th>Referido</th><th>ID</th><th>Asesor</th><th>Conv.</th><th>Comentarios</th><th>Motivo</th><th></th><th></th></tr></thead><tbody>`;
     rows.forEach(r=>{
       const reclamarBtn = `<td><button onclick="reclamarCaso(${r.id},'${n}')" style="background:#fff3e0;border:1px solid #ffcc80;color:#c45200;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;" title="Enviar reclamación por email">✉️</button></td>`;
-      const devolverLabel = n==='r2' ? 'A validar Adm. Comercial' : 'A validar Marketing';
+      const devolverLabel = n==='r2' ? 'A validar Marketing' : 'A validar Adm. Comercial';
       const devolverBtn = `<td><button onclick="devolverCaso(${r.id},'${n}')" style="background:#e3f2fd;border:1px solid #90caf9;color:#0d44a1;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:10px;font-weight:700;white-space:nowrap;" title="Devolver a ${devolverLabel}">↩ Devolver</button></td>`;
       h+=`<tr><td><span class="nm">${esc(r.rn)}</span></td><td><span class="xid">${esc(r.ri)}</span></td><td><span class="nm">${esc(r.nn)}</span></td><td><span class="xid">${esc(r.ni)}</span></td><td>${esc(r.as_)||'—'}</td><td>${esc(r.nc)}</td><td>${esc(r.cm_)||'—'}</td><td><span class="badge b-r">✗ ${esc(r[mf])||'—'}</span></td>${reclamarBtn}${devolverBtn}</tr>`;
     });
@@ -1204,26 +1211,26 @@ function devolverCaso(recId, tipo){
   if(!r) return;
   const doIt = () => {
     if(tipo==='r2'){
-      r.estado = 'adm';
-      r.cumple_adm = '';
-      r.motivo_adm = '';
-    } else {
       r.estado = 'mkt';
       r.cumple_mkt = '';
       r.motivo_mkt = '';
+    } else {
+      r.estado = 'adm';
+      r.cumple_adm = '';
+      r.motivo_adm = '';
     }
     updateCounts(); saveKV();
     if(curBub) showBub(curBub);
   };
   if(isFromHub){ doIt(); return; }
-  const lbl = tipo==='r2' ? 'Administración Comercial' : 'Marketing';
-  openPwd('🔒 Devolver a validación', `Solo ${lbl} puede revertir este caso.`, tipo==='r2'?P_ADM:P_MKT, doIt);
+  const lbl = tipo==='r2' ? 'Marketing' : 'Administración Comercial';
+  openPwd('🔒 Devolver a validación', `Solo ${lbl} puede revertir este caso.`, tipo==='r2'?P_MKT:P_ADM, doIt);
 }
 
 function reclamarCaso(recId, tipo){
   const r=recs.find(x=>x.id===recId);if(!r)return;
-  const motivo = tipo==='r2' ? (r.motivo_adm||'—') : (r.motivo_mkt||'—');
-  const origen = tipo==='r2' ? 'Administración Comercial' : 'el Lead de Marketing';
+  const motivo = tipo==='r2' ? (r.motivo_mkt||'—') : (r.motivo_adm||'—');
+  const origen = tipo==='r2' ? 'el Lead de Marketing' : 'Administración Comercial';
   const subject = encodeURIComponent(`Reclamación — Referido no cumple requisitos (${r.rn} → ${r.nn})`);
   const body = encodeURIComponent(
 `Buenos días,
@@ -1438,33 +1445,21 @@ const cameFromInternalNav = document.referrer && (
 if(cameFromInternalNav){
   sessionStorage.setItem('viaHub','1');
 }
+// el modal de Referidos OBS NUNCA se abre automáticamente — solo con clic explícito en la burbuja o stat card
+// (auto-apertura por hash deshabilitada para evitar tapar la página de Seguimientos)
+
+// EXCEPCIÓN controlada: si la pestaña se abrió SIN historial previo (entry_type navigate, sin referrer)
+// y trae el hash externo, se interpreta como acceso directo por link compartido.
+(function(){
+  const noReferrer = !document.referrer;
+  const hasHash = window.location.hash === '#referidos-obs';
+  if(noReferrer && hasHash){
+    window.addEventListener('load', function(){ openObs(); });
+  }
+})();
 
 // ahora que todo está declarado, detectamos el modo de acceso
 detectAccessMode();
-
-// ── ACCESO DIRECTO POR URL #referidos-obs ──
-// Si la URL trae el hash, se abre el modal SIEMPRE (sin depender del referrer).
-// Si el acceso es externo (no viene navegando desde dentro del Hub), además se
-// oculta toda la página de Seguimientos que queda detrás y se sustituye el
-// botón "✕ Cerrar" por "← Volver al Hub", porque no hay nada a lo que "cerrar".
-function checkHashReferidosObs(){
-  if(window.location.hash.toLowerCase() !== '#referidos-obs') return;
-
-  openObs();
-
-  if(!isFromHub){
-    document.querySelectorAll('.topbar,.page-head,.nodes-area,.divider,.stats-grid,.sys-tag').forEach(function(el){
-      el.style.display = 'none';
-    });
-    const cerrarBtn = document.getElementById('btnCerrarObs');
-    if(cerrarBtn) cerrarBtn.remove();
-    const importBtn = document.querySelector('.obs-close-bar-r .hbtn.import');
-    if(importBtn) importBtn.remove();
-  }
-}
-window.addEventListener('hashchange', checkHashReferidosObs);
-window.addEventListener('load', checkHashReferidosObs);
-checkHashReferidosObs();
 </script>
 </body>
 </html>
