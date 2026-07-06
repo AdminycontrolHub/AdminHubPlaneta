@@ -765,7 +765,7 @@ function updateCounts(){
   // mostrar/ocultar burbuja espera y badge deadline
   const enBloqueo=enPeriodoBloqueo();
   document.getElementById('esperaSection').style.display=enBloqueo?'flex':'none';
-  document.getElementById('deadlineBadge').style.display=enBloqueo?'':'none';
+  document.getElementById('deadlineBadge').style.display='';
   document.getElementById('noDeadlineSpacer').style.display=enBloqueo?'none':'';
   // vuelco automático 1 agosto / 1 febrero
   if(esFechaVuelco()){
