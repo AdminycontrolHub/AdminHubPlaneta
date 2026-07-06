@@ -120,6 +120,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-body { overflow-y:auto; overflow-x:hidden; flex:1; }
 .cm-bubbles-l1 { display:flex; justify-content:center; gap:48px; padding:52px 20px; flex-wrap:wrap; }
 .cm-bnode { display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer; transition:transform .2s; }
+.cm-bnode-l2 { display:grid; grid-template-rows:16px 112px auto; row-gap:12px; justify-items:center; align-items:start; cursor:pointer; transition:transform .2s; }
+.cm-bnode-l2:hover { transform:scale(1.06); }
 .cm-bnode:hover { transform:scale(1.06); }
 .cm-bcircle { width:104px; height:104px; border-radius:50%; background:#F5F0E8; display:flex; align-items:center; justify-content:center; transition:all .2s; }
 .cm-bnode span.cm-blabel { font-size:13px; font-weight:600; text-align:center; }
@@ -610,7 +612,7 @@ function cmRenderL2Bubbles(){
   const activoRound2 = hoy >= 15 && hoy <= 31;
   const wrap = document.getElementById('cmL2Bubbles');
   wrap.innerHTML = `
-    <div class="cm-bnode" onclick="cmOpenL3()">
+    <div class="cm-bnode-l2" onclick="cmOpenL3()">
       <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;visibility:hidden;">Round 1</div>
       <div class="cm-bcircle-l2" style="${activoRound1 ? 'background:#a8548a;box-shadow:0 6px 18px rgba(168,84,138,0.35);' : 'background:#F5F0E8;border:2px solid #d97fa0;'}">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${activoRound1?'#fff':'#a8548a'}" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
@@ -620,7 +622,7 @@ function cmRenderL2Bubbles(){
         <div style="color:#a8548a;font-size:12.5px;font-weight:600;line-height:1.3;">Links tarjeta NO domiciliada</div>
       </div>
     </div>
-    <div class="cm-bnode" onclick="cmOpenAvisoRemesa()">
+    <div class="cm-bnode-l2" onclick="cmOpenAvisoRemesa()">
       <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#2f8f8a;">Round 2</div>
       <div class="cm-bcircle-l2" style="${activoRound2 ? 'background:#2f8f8a;box-shadow:0 6px 18px rgba(47,143,138,0.35);' : 'background:#F5F0E8;border:2px solid #6ec4bd;'}">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${activoRound2?'#fff':'#2f8f8a'}" stroke-width="1.8"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>
