@@ -437,7 +437,7 @@ async function load(){
       });
     });
     const results=await Promise.all(
-      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}`, { cache: 'no-store' }).then(r=>r.json()).then(d=>({...f,data:d})))
+      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}&_ts=${Date.now()}`, { cache: 'no-store' }).then(r=>r.json()).then(d=>({...f,data:d})))
     );
     results.forEach(({anyo,marca,conv,data})=>{
       if(!cobrosData[anyo])cobrosData[anyo]={};
@@ -458,7 +458,7 @@ async function load(){
 // ── CAMPO "DATOS A CIERRE DE MES DE..." — persistencia en KV ──
 async function loadCierreLabel(){
   try{
-    const res=await fetch(`${WORKER_URL}/kv?key=${CIERRE_KV_KEY}`, { cache: 'no-store' });
+    const res=await fetch(`${WORKER_URL}/kv?key=${CIERRE_KV_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
     const data=await res.json();
     if(data.value){
       const val=typeof data.value==='string'?JSON.parse(data.value):data.value;
@@ -645,7 +645,7 @@ function cmCloseAvisoRemesa(){ document.getElementById('cmOverlayAvisoRemesa').c
 /* ---------- Carga / guardado en KV ---------- */
 async function cmLoadData(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if(data.value){
       const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -711,7 +711,7 @@ async function cmSaveData(){
       let confirmado = false;
       for(let intento=0; intento<3 && !confirmado; intento++){
         if(intento>0) await cmSleep(1500);
-        const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`, { cache:'no-store' });
+        const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
         const checkData = await check.json();
         const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
         if(checkVal === payload) confirmado = true;
@@ -728,7 +728,7 @@ async function cmSaveData(){
 }
 async function cmLoadRemitente(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_REMITENTE_KEY}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_REMITENTE_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if(data.value){
       const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -951,7 +951,7 @@ function cmSendMail(){
 /* ---------- Historial de comentarios por alumno (persiste entre meses) ---------- */
 async function cmLoadComentariosHist(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_COMENTARIOS_HIST_KEY}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_COMENTARIOS_HIST_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if(!data.value){ cmComentariosHist = {}; return; }
     const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -1008,7 +1008,7 @@ function cmToggleHelpR2(){ document.getElementById('cmHelpPopR2').classList.togg
 
 async function cmLoadDataR2(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if(data.value){
       const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
@@ -1034,7 +1034,7 @@ async function cmSaveDataR2(){
       let confirmado = false;
       for(let intento=0; intento<3 && !confirmado; intento++){
         if(intento>0) await cmSleep(1500);
-        const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}`, { cache:'no-store' });
+        const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
         const checkData = await check.json();
         const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
         if(checkVal === payload) confirmado = true;
@@ -1290,7 +1290,7 @@ async function cmConfirmBorrarTodoR2(){
 /* ---------- Histórico Round 1 (solo conteos, sin detalle) ---------- */
 async function cmLoadHistorico(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_HISTORICO_KEY}`, { cache: 'no-store' });
+    const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_HISTORICO_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
     const data = await res.json();
     if(!data.value) return [];
     const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
