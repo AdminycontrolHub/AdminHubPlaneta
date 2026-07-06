@@ -460,8 +460,9 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 
         <!-- AÑADIR -->
         <div class="flow-col">
-          <div id="deadlineBadge" class="badge-deadline" style="display:none;">⚠ Cierra 9 jul · 9 ene</div>
-          <div id="noDeadlineSpacer" class="bub-note" style="min-height:13px;"></div>
+          <div style="min-height:33px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;">
+            <div id="deadlineBadge" class="badge-deadline">⚠ Cierra 9 jul · 9 ene</div>
+          </div>
           <div class="bub-wrap bub-1" id="wrapAnadir" onclick="openNuevo()">
             <div class="bub-circle" id="bc1">
               <div class="bub-icon">📥</div>
@@ -762,11 +763,9 @@ function updateCounts(){
   document.getElementById('cnt_espera').textContent=s('espera')||'';
   const total=recs.filter(r=>r.estado!=='pagado').length;
   document.getElementById('statObsTotal').textContent=recs.length?total:'—';
-  // mostrar/ocultar burbuja espera y badge deadline
+  // mostrar/ocultar burbuja espera
   const enBloqueo=enPeriodoBloqueo();
   document.getElementById('esperaSection').style.display=enBloqueo?'flex':'none';
-  document.getElementById('deadlineBadge').style.display='';
-  document.getElementById('noDeadlineSpacer').style.display=enBloqueo?'none':'';
   // vuelco automático 1 agosto / 1 febrero
   if(esFechaVuelco()){
     const enEspera=recs.filter(r=>r.estado==='espera');
