@@ -116,6 +116,15 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .bub-r .bub-circle{background:#fff5f5;border:3px solid #e53935!important;}
 .bub-r .bub-name{color:#c62828;} .bub-r .bub-count{color:#c62828;}
 .bub-r .bub-circle.selected{box-shadow:0 0 0 4px rgba(229,57,53,0.18);}
+.bub-wait .bub-circle{background:#E8F0F4;border:3px dashed #6B9AB8!important;}
+.bub-wait .bub-name{color:#1a3a50;} .bub-wait .bub-count{color:#1a3a50;}
+.bub-wait .bub-circle.selected{box-shadow:0 0 0 4px rgba(107,154,184,0.25);}
+.badge-deadline{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:14px;font-size:9.5px;font-weight:700;background:#FCEBEB;color:#791F1F;border:1.5px dashed #F09595;white-space:nowrap;margin-bottom:4px;}
+.badge-bloqueo{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#FCEBEB;color:#791F1F;border:1px solid #F09595;margin-top:4px;}
+.badge-vuelco{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:9px;font-weight:700;background:#E1F5EE;color:#085041;border:1px solid #5DCAA5;margin-top:2px;white-space:nowrap;}
+.bub-espera-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:4px;}
+.espera-arrow{font-size:15px;color:#6B9AB8;opacity:0.8;line-height:1;}
+.b-wait{background:#E8F0F4;color:#1a3a50;border:1px solid #6B9AB8;}
 .arrow-h{font-size:32px;color:#2a7f8a;opacity:0.65;padding:0 4px;font-weight:900;flex-shrink:0;padding-top:68px;}
 
 /* tabla */
@@ -448,19 +457,37 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <!-- burbujas -->
     <div class="obs-bubbles">
       <div class="flow-row">
+
+        <!-- AÑADIR -->
         <div class="flow-col">
-          <div class="bub-note"></div>
-          <div class="bub-wrap bub-1" onclick="openNuevo()">
+          <div id="deadlineBadge" class="badge-deadline" style="display:none;">⚠ Cierra 9 jul · 9 ene</div>
+          <div id="noDeadlineSpacer" class="bub-note" style="min-height:13px;"></div>
+          <div class="bub-wrap bub-1" id="wrapAnadir" onclick="openNuevo()">
             <div class="bub-circle" id="bc1">
               <div class="bub-icon">📥</div>
               <div class="bub-name">Añadir nuevo referido</div>
               <div class="bub-count" id="cnt1"></div>
             </div>
           </div>
+          <div id="esperaSection" style="display:none;flex-direction:column;align-items:center;gap:2px;margin-top:4px;">
+            <div class="badge-bloqueo">🔒 Bloqueado enlace externo</div>
+            <div class="espera-arrow">↓</div>
+            <div class="bub-wrap bub-wait" onclick="bubClick('espera')">
+              <div class="bub-circle" id="bc_espera" style="width:100px;height:100px;">
+                <div class="bub-icon">⏳</div>
+                <div class="bub-name">En espera<br>próxima remesa</div>
+                <div class="bub-count" id="cnt_espera"></div>
+              </div>
+            </div>
+            <div class="badge-vuelco">🔄 Vuelco 1 ago · 1 feb</div>
+          </div>
         </div>
+
         <div class="arrow-h">›</div>
+
+        <!-- MARKETING -->
         <div class="flow-col">
-          <div class="bub-note">Pagos julio y enero</div>
+          <div class="bub-note" style="font-size:9.5px;background:#F3EAFA;color:#5C27A0;border:1.5px solid #C49FE8;border-radius:14px;padding:4px 9px;white-space:nowrap;">📅 10–15 julio · enero</div>
           <div class="bub-wrap bub-3" onclick="bubClick(2)">
             <div class="bub-circle" id="bc2">
               <div class="bub-icon">📣</div>
@@ -477,9 +504,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
             </div>
           </div>
         </div>
+
         <div class="arrow-h">›</div>
+
+        <!-- ADM COMERCIAL -->
         <div class="flow-col">
-          <div class="bub-note"></div>
+          <div class="bub-note" style="font-size:9.5px;background:#FFF0D6;color:#7A3500;border:1.5px solid #F5BC6A;border-radius:14px;padding:4px 9px;white-space:nowrap;">📅 15–25 julio · enero</div>
           <div class="bub-wrap bub-2" onclick="bubClick(3)">
             <div class="bub-circle" id="bc3">
               <div class="bub-icon">🔎</div>
@@ -496,9 +526,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
             </div>
           </div>
         </div>
+
         <div class="arrow-h">›</div>
+
+        <!-- PENDIENTE PAGO -->
         <div class="flow-col">
-          <div class="bub-note"></div>
+          <div class="bub-note" style="font-size:9.5px;background:#FFFBDE;color:#5A3D00;border:1.5px solid #E8D875;border-radius:14px;padding:4px 9px;white-space:nowrap;">📅 30 julio · enero</div>
           <div class="bub-wrap bub-4" onclick="bubClick(4)">
             <div class="bub-circle" id="bc4">
               <div class="bub-icon">💳</div>
@@ -507,7 +540,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
             </div>
           </div>
         </div>
+
         <div class="arrow-h">›</div>
+
+        <!-- OK PAGADO -->
         <div class="flow-col">
           <div class="bub-note"></div>
           <div class="bub-wrap bub-5" onclick="bubClick(5)">
@@ -518,6 +554,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -681,8 +718,22 @@ let unlocked={2:false,3:false,4:false};
 let nextId=1,recs=[];
 
 function norm(s){return(s||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
-function estadoLabel(e){return{adm:'A validar Adm. Comercial',mkt:'A validar Marketing',pago:'Pendiente de Pago',pagado:'OK Pagado',r_adm:'No cumple — Adm. Comercial',r_mkt:'No cumple — Marketing'}[e]||e;}
-function estadoCls(e){return{adm:'b-2',mkt:'b-3',pago:'b-4',pagado:'b-5',r_adm:'b-r',r_mkt:'b-r'}[e]||'b-1';}
+function estadoLabel(e){return{adm:'A validar Adm. Comercial',mkt:'A validar Marketing',pago:'Pendiente de Pago',pagado:'OK Pagado',r_adm:'No cumple — Adm. Comercial',r_mkt:'No cumple — Marketing',espera:'En espera — próxima remesa'}[e]||e;}
+function estadoCls(e){return{adm:'b-2',mkt:'b-3',pago:'b-4',pagado:'b-5',r_adm:'b-r',r_mkt:'b-r',espera:'b-wait'}[e]||'b-1';}
+
+// ── DETECCIÓN PERIODO DE BLOQUEO (10–30 julio / 10–30 enero) ──
+function enPeriodoBloqueo(){
+  const hoy=new Date();
+  const mes=hoy.getMonth()+1; // 1-12
+  const dia=hoy.getDate();
+  return (mes===7||mes===1) && dia>=10 && dia<=30;
+}
+function esFechaVuelco(){
+  const hoy=new Date();
+  const mes=hoy.getMonth()+1;
+  const dia=hoy.getDate();
+  return (mes===8||mes===2) && dia===1;
+}
 
 // ── Asignar estado desde Excel ──
 function calcEstado(cumple, cumpleCheque, estadoPago, comentarios){
@@ -708,8 +759,22 @@ function updateCounts(){
   ['2','3','4','5'].forEach(n=>document.getElementById('cnt'+n).textContent=s({2:'mkt',3:'adm',4:'pago',5:'pagado'}[n])||'');
   document.getElementById('cnt_r2').textContent=s('r_mkt')||'';
   document.getElementById('cnt_r3').textContent=s('r_adm')||'';
+  document.getElementById('cnt_espera').textContent=s('espera')||'';
   const total=recs.filter(r=>r.estado!=='pagado').length;
   document.getElementById('statObsTotal').textContent=recs.length?total:'—';
+  // mostrar/ocultar burbuja espera y badge deadline
+  const enBloqueo=enPeriodoBloqueo();
+  document.getElementById('esperaSection').style.display=enBloqueo?'flex':'none';
+  document.getElementById('deadlineBadge').style.display=enBloqueo?'':'none';
+  document.getElementById('noDeadlineSpacer').style.display=enBloqueo?'none':'';
+  // vuelco automático 1 agosto / 1 febrero
+  if(esFechaVuelco()){
+    const enEspera=recs.filter(r=>r.estado==='espera');
+    if(enEspera.length){
+      enEspera.forEach(r=>{r.estado='mkt';});
+      saveKV();
+    }
+  }
 }
 
 // ── KV ──
@@ -906,6 +971,11 @@ function getFiltered(estado){
 // ── NUEVO REFERIDO ──
 function openNuevo(){
   if(!requireWrite())return;
+  // si estamos en periodo de bloqueo y acceso externo: bloqueado
+  if(enPeriodoBloqueo() && !isFromHub){
+    alert('⚠ Periodo de cierre de remesa (10–30 julio / 10–30 enero).\n\nNo es posible añadir nuevos referidos desde el acceso externo. Contacta con Administración Comercial para introducir una excepción.');
+    return;
+  }
   ['rn','ri','rmail','nn','ni','ne','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['rb','primerRef','je_','dv_'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
   document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
@@ -956,12 +1026,15 @@ function saveNuevo(){
 
   // Lógica primer referido + descuento
   // Nuevo flujo: entrada → Marketing → Adm. Comercial → Pago → OK Pagado
-  let estadoInicial='mkt'; // por defecto entra en Marketing
+  // Si estamos en periodo de bloqueo y el Hub añade manualmente → va a "En espera"
+  let estadoInicial='mkt';
   const tieneDescuento = rb==='Descuento 5%';
-  if(primerRef==='Sí' && tieneDescuento){
-    estadoInicial='r_mkt'; // primer referido con descuento → no cumple Marketing
+  if(enPeriodoBloqueo() && isFromHub){
+    estadoInicial='espera'; // excepción manual del Hub: queda en espera hasta vuelco
+  } else if(primerRef==='Sí' && tieneDescuento){
+    estadoInicial='r_mkt';
   } else if(primerRef==='No'){
-    estadoInicial='adm'; // no es primer referido → salta directo a Adm. Comercial
+    estadoInicial='adm';
   }
 
   recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,je,dv,fr_,cm_,
@@ -978,10 +1051,10 @@ function saveNuevo(){
 
 // ── BURBUJAS ──
 const BUB_PWD={2:P_MKT,3:P_ADM,4:P_ADM};
-const BUB_LABEL={2:'A validar por Marketing',3:'A validar por Adm. Comercial',4:'Pendiente de Pago',5:'OK Pagado',r2:'No cumple — Marketing',r3:'No cumple — Adm. Comercial'};
-const BUB_CLS={2:'b-3',3:'b-2',4:'b-4',5:'b-5',r2:'b-r',r3:'b-r'};
-const BUB_ICON={2:'📣',3:'🔎',4:'💳',5:'✅',r2:'👎',r3:'👎'};
-const BUB_ESTADO={2:'mkt',3:'adm',4:'pago',5:'pagado',r2:'r_mkt',r3:'r_adm'};
+const BUB_LABEL={2:'A validar por Marketing',3:'A validar por Adm. Comercial',4:'Pendiente de Pago',5:'OK Pagado',r2:'No cumple — Marketing',r3:'No cumple — Adm. Comercial',espera:'En espera — próxima remesa'};
+const BUB_CLS={2:'b-3',3:'b-2',4:'b-4',5:'b-5',r2:'b-r',r3:'b-r',espera:'b-wait'};
+const BUB_ICON={2:'📣',3:'🔎',4:'💳',5:'✅',r2:'👎',r3:'👎',espera:'⏳'};
+const BUB_ESTADO={2:'mkt',3:'adm',4:'pago',5:'pagado',r2:'r_mkt',r3:'r_adm',espera:'espera'};
 
 function bubClick(n){
   if(curBub===n){closeTable();return;}
@@ -994,7 +1067,7 @@ function bubClick(n){
 function showBub(n){
   curBub=n;
   document.querySelectorAll('.bub-circle').forEach(e=>e.classList.remove('selected'));
-  const elId=n==='r2'?'bc_r2':n==='r3'?'bc_r3':'bc'+n;
+  const elId=n==='r2'?'bc_r2':n==='r3'?'bc_r3':n==='espera'?'bc_espera':'bc'+n;
   const el=document.getElementById(elId);if(el)el.classList.add('selected');
   document.getElementById('tBadge').className='tsec-badge badge '+BUB_CLS[n];
   document.getElementById('tBadge').textContent=BUB_ICON[n];
@@ -1191,6 +1264,22 @@ function buildTable(n,rows){
       h+='</tbody></table>';
     });
     return h;
+  }
+  if(n==='espera'){
+    let h=`<table><thead><tr><th>Referidor</th><th>ID</th><th>Referido</th><th>ID</th><th>Conv.</th><th>Asesor</th><th>Fecha entrada</th>${isFromHub?'<th></th>':''}</tr></thead><tbody>`;
+    rows.forEach(r=>{
+      h+=`<tr>
+        <td><span class="nm">${esc(r.rn)}</span></td>
+        <td><span class="xid">${esc(r.ri)}</span></td>
+        <td><span class="nm">${esc(r.nn)}</span></td>
+        <td><span class="xid">${esc(r.ni)}</span></td>
+        <td>${esc(r.nc)}</td>
+        <td>${esc(r.as_)||'—'}</td>
+        <td><span class="fecha">${esc(r.fr_)||'—'}</span></td>
+        ${isFromHub?`<td><button onclick="deleteRecord(${r.id})" style="background:#fce4ec;border:1px solid #f48fb1;color:#c62828;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:13px;" title="Eliminar registro">🗑️</button></td>`:''}
+      </tr>`;
+    });
+    return h+'</tbody></table>';
   }
   if(n==='r2'||n==='r3'){
     const mf=n==='r2'?'motivo_mkt':'motivo_adm';
