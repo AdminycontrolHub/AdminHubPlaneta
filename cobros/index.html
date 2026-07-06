@@ -151,6 +151,11 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-round-label { font-size:10px; font-weight:600; }
 .cm-alert-badge { position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:#fff; border:2px solid #e14b3a; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
 .cm-round-divider { width:1px; background:rgba(58,49,40,0.12); align-self:stretch; }
+.cm-save-btn { display:flex; flex-direction:column; align-items:center; gap:5px; background:none; border:none; cursor:pointer; font-family:inherit; padding:0; }
+.cm-save-circle { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:transform .15s, background .2s; }
+.cm-save-btn:hover .cm-save-circle { transform:scale(1.08); }
+.cm-save-btn:active .cm-save-circle { transform:scale(0.94); }
+.cm-save-label { font-size:9.5px; font-weight:600; }
 .cm-table-wrap { padding:12px 16px 20px; overflow-x:auto; }
 .cm-table { background:#fff; border:0.5px solid rgba(58,49,40,0.1); border-radius:12px; overflow:hidden; min-width:1100px; }
 .cm-trow { display:grid; grid-template-columns:22px 24px 78px 1.1fr 0.85fr 0.8fr 0.8fr 0.6fr 0.7fr 28px 28px 1fr 0.75fr; padding:8px 10px; align-items:center; gap:4px; }
@@ -663,6 +668,32 @@ async function cmWaitForPendingSaves(){
   await Promise.all(cmPendingSaves);
 }
 
+function cmSleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+async function cmManualSave(esR2){
+  const btn = document.getElementById(esR2 ? 'cmBtnGuardarR2' : 'cmBtnGuardarR1');
+  const circle = btn.querySelector('.cm-save-circle');
+  const label = btn.querySelector('.cm-save-label');
+  const iconOriginal = circle.innerHTML;
+  const labelOriginal = label.textContent;
+  const colorOriginal = circle.style.background;
+
+  circle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.7s" repeatCount="indefinite"/></path></svg>';
+  label.textContent = 'Guardando…';
+  btn.disabled = true;
+
+  if(esR2){ await cmSaveDataR2(); } else { await cmSaveData(); }
+
+  circle.style.background = '#1dcc84';
+  circle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+  label.textContent = 'Guardado ✓';
+  await cmSleep(1800);
+  circle.style.background = colorOriginal;
+  circle.innerHTML = iconOriginal;
+  label.textContent = labelOriginal;
+  btn.disabled = false;
+}
+
 async function cmSaveData(){
   return cmTrackSave((async()=>{
     try{
@@ -676,13 +707,18 @@ async function cmSaveData(){
         alert('Aviso: los cambios podrían no haberse guardado correctamente (error del servidor). Revisa tu conexión y vuelve a intentarlo.');
         return;
       }
-      // Verificación: releer del servidor para confirmar que el guardado realmente llegó
-      const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`, { cache:'no-store' });
-      const checkData = await check.json();
-      const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
-      if(checkVal !== payload){
-        console.error('Verificación de guardado fallida: el servidor no devuelve lo que se acaba de guardar.');
-        alert('⚠️ Aviso importante: el guardado no se ha confirmado en el servidor. No cierres esta pestaña ni salgas de la herramienta; vuelve a intentar el cambio.');
+      // Verificación con reintento (KV puede tardar unos segundos en propagar el valor)
+      let confirmado = false;
+      for(let intento=0; intento<3 && !confirmado; intento++){
+        if(intento>0) await cmSleep(1500);
+        const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`, { cache:'no-store' });
+        const checkData = await check.json();
+        const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
+        if(checkVal === payload) confirmado = true;
+      }
+      if(!confirmado){
+        console.error('Verificación de guardado fallida tras varios intentos.');
+        alert('⚠️ Aviso importante: el guardado no se ha confirmado en el servidor tras varios intentos. No cierres esta pestaña; vuelve a intentar el cambio.');
       }
     }catch(e){
       console.error('Error guardando datos Links NO domiciliada:', e);
@@ -995,12 +1031,17 @@ async function cmSaveDataR2(){
         alert('Aviso: los cambios podrían no haberse guardado correctamente. Revisa tu conexión.');
         return;
       }
-      const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}`, { cache:'no-store' });
-      const checkData = await check.json();
-      const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
-      if(checkVal !== payload){
-        console.error('Verificación de guardado Round 2 fallida.');
-        alert('⚠️ Aviso importante: el guardado no se ha confirmado en el servidor. No cierres esta pestaña; vuelve a intentar el cambio.');
+      let confirmado = false;
+      for(let intento=0; intento<3 && !confirmado; intento++){
+        if(intento>0) await cmSleep(1500);
+        const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}`, { cache:'no-store' });
+        const checkData = await check.json();
+        const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
+        if(checkVal === payload) confirmado = true;
+      }
+      if(!confirmado){
+        console.error('Verificación de guardado Round 2 fallida tras varios intentos.');
+        alert('⚠️ Aviso importante: el guardado no se ha confirmado en el servidor tras varios intentos. No cierres esta pestaña; vuelve a intentar el cambio.');
       }
     }catch(e){
       console.error('Error guardando datos Round 2:', e);
@@ -1601,6 +1642,13 @@ document.addEventListener('click', (e)=>{
             </div>
           </div>
         </div>
+        <div class="cm-round-divider"></div>
+        <button class="cm-save-btn" id="cmBtnGuardarR1" onclick="cmManualSave(false)">
+          <div class="cm-save-circle" style="background:#6a3fa0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          </div>
+          <span class="cm-save-label" style="color:#6a3fa0;">Guardar</span>
+        </button>
       </div>
 
       <div class="cm-table-wrap">
@@ -1680,6 +1728,13 @@ document.addEventListener('click', (e)=>{
             </div>
           </div>
         </div>
+        <div class="cm-round-divider"></div>
+        <button class="cm-save-btn" id="cmBtnGuardarR2" onclick="cmManualSave(true)">
+          <div class="cm-save-circle" style="background:#2f8f8a;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+          </div>
+          <span class="cm-save-label" style="color:#2f8f8a;">Guardar</span>
+        </button>
       </div>
 
       <div class="cm-table-wrap">
