@@ -220,7 +220,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <div class="brand-dept">Gestión Cobros</div>
     </div>
   </div>
-  <a href="../index.html" class="back-btn">
+  <a href="../index.html" class="back-btn" id="btnVolverHub">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     Volver al Hub
   </a>
@@ -650,20 +650,45 @@ async function cmLoadData(){
     }
   }catch(e){ console.error('Error cargando datos Links NO domiciliada:', e); cmData = []; }
 }
+// ---- Rastreo de guardados pendientes (para poder esperarlos antes de navegar fuera) ----
+let cmPendingSaves = [];
+function cmTrackSave(promise){
+  const wrapped = promise.catch(()=>{});
+  cmPendingSaves.push(wrapped);
+  wrapped.finally(()=>{ cmPendingSaves = cmPendingSaves.filter(p=>p!==wrapped); });
+  return promise;
+}
+async function cmWaitForPendingSaves(){
+  if(cmPendingSaves.length === 0) return;
+  await Promise.all(cmPendingSaves);
+}
+
 async function cmSaveData(){
-  try{
-    const res = await fetch(`${WORKER_URL}/kv`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ key: CM_KV_DATA_KEY, value: JSON.stringify(cmData) })
-    });
-    if(!res.ok){
-      console.error('Guardado de datos rechazado por el servidor, status:', res.status);
-      alert('Aviso: los cambios podrían no haberse guardado correctamente (error del servidor). Revisa tu conexión y vuelve a intentarlo.');
+  return cmTrackSave((async()=>{
+    try{
+      const payload = JSON.stringify(cmData);
+      const res = await fetch(`${WORKER_URL}/kv`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key: CM_KV_DATA_KEY, value: payload })
+      });
+      if(!res.ok){
+        console.error('Guardado de datos rechazado por el servidor, status:', res.status);
+        alert('Aviso: los cambios podrían no haberse guardado correctamente (error del servidor). Revisa tu conexión y vuelve a intentarlo.');
+        return;
+      }
+      // Verificación: releer del servidor para confirmar que el guardado realmente llegó
+      const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}`, { cache:'no-store' });
+      const checkData = await check.json();
+      const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
+      if(checkVal !== payload){
+        console.error('Verificación de guardado fallida: el servidor no devuelve lo que se acaba de guardar.');
+        alert('⚠️ Aviso importante: el guardado no se ha confirmado en el servidor. No cierres esta pestaña ni salgas de la herramienta; vuelve a intentar el cambio.');
+      }
+    }catch(e){
+      console.error('Error guardando datos Links NO domiciliada:', e);
+      alert('Aviso: no se ha podido guardar (sin conexión al servidor). Los últimos cambios podrían perderse si recargas la página.');
     }
-  }catch(e){
-    console.error('Error guardando datos Links NO domiciliada:', e);
-    alert('Aviso: no se ha podido guardar (sin conexión al servidor). Los últimos cambios podrían perderse si recargas la página.');
-  }
+  })());
 }
 async function cmLoadRemitente(){
   try{
@@ -958,19 +983,30 @@ async function cmLoadDataR2(){
   }catch(e){ console.error('Error cargando datos Round 2:', e); cmDataR2 = []; }
 }
 async function cmSaveDataR2(){
-  try{
-    const res = await fetch(`${WORKER_URL}/kv`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ key: CM_KV_DATA_R2_KEY, value: JSON.stringify(cmDataR2) })
-    });
-    if(!res.ok){
-      console.error('Guardado Round 2 rechazado, status:', res.status);
-      alert('Aviso: los cambios podrían no haberse guardado correctamente. Revisa tu conexión.');
+  return cmTrackSave((async()=>{
+    try{
+      const payload = JSON.stringify(cmDataR2);
+      const res = await fetch(`${WORKER_URL}/kv`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key: CM_KV_DATA_R2_KEY, value: payload })
+      });
+      if(!res.ok){
+        console.error('Guardado Round 2 rechazado, status:', res.status);
+        alert('Aviso: los cambios podrían no haberse guardado correctamente. Revisa tu conexión.');
+        return;
+      }
+      const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}`, { cache:'no-store' });
+      const checkData = await check.json();
+      const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
+      if(checkVal !== payload){
+        console.error('Verificación de guardado Round 2 fallida.');
+        alert('⚠️ Aviso importante: el guardado no se ha confirmado en el servidor. No cierres esta pestaña; vuelve a intentar el cambio.');
+      }
+    }catch(e){
+      console.error('Error guardando datos Round 2:', e);
+      alert('Aviso: no se ha podido guardar (sin conexión al servidor).');
     }
-  }catch(e){
-    console.error('Error guardando datos Round 2:', e);
-    alert('Aviso: no se ha podido guardar (sin conexión al servidor).');
-  }
+  })());
 }
 
 function cmToggleFiltroMarcaR2(ev){
@@ -1390,6 +1426,27 @@ function cmExportExcel(){
   XLSX.utils.book_append_sheet(wb, ws, 'Links NO domiciliada');
   XLSX.writeFile(wb, `Links_tarjeta_NO_domiciliada_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
+
+// Interceptar "Volver al Hub" para esperar a que terminen los guardados pendientes
+const btnVolverHub = document.getElementById('btnVolverHub');
+if(btnVolverHub){
+  btnVolverHub.addEventListener('click', async (e)=>{
+    if(cmPendingSaves.length === 0) return; // nada pendiente, navega normal
+    e.preventDefault();
+    const textoOriginal = btnVolverHub.innerHTML;
+    btnVolverHub.innerHTML = '<span style="font-size:11px;">Guardando…</span>';
+    await cmWaitForPendingSaves();
+    window.location.href = btnVolverHub.getAttribute('href');
+  });
+}
+
+// Aviso si se intenta cerrar/recargar con guardados aún en curso
+window.addEventListener('beforeunload', (e)=>{
+  if(cmPendingSaves.length > 0){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 // Cerrar popover de ayuda al clicar fuera
 document.addEventListener('click', (e)=>{
