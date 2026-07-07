@@ -939,13 +939,42 @@ function cmOpenMailModal(id, esR2){
 }
 function cmCloseMailModal(){ document.getElementById('cmOverlayMail').classList.remove('show'); }
 const CM_HERMES_EMAIL_URL = 'https://activaplaneta.crm4.dynamics.com/main.aspx?appid=ada95c3f-5c6c-44b9-b8d9-8613dc867926&pagetype=entityrecord&etn=email';
+const CM_REMITENTE_NOMBRE = 'Atención Cobros';
+const CM_REMITENTE_EMAIL_FIJO = 'atencioncobros@obsbusiness.school';
 
-async function cmOpenInHermes(){
+function cmSanitizeFilename(str){
+  return (str||'email').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60) || 'email';
+}
+
+function cmDownloadEmlAndOpenHermes(){
   const destinatario = document.getElementById('cmMailDestinatario').value;
   const asunto = document.getElementById('cmMailAsunto').value;
   const cuerpo = document.getElementById('cmMailCuerpo').value;
-  const texto = `Para: ${destinatario}\nAsunto: ${asunto}\n\n${cuerpo}`;
-  try{ await navigator.clipboard.writeText(texto); }catch(e){ console.error('Error copiando al portapapeles:', e); }
+
+  const fecha = new Date().toUTCString();
+  const cuerpoEml = cuerpo.replace(/\n/g, '\r\n');
+  const emlContent =
+`From: ${CM_REMITENTE_NOMBRE} <${CM_REMITENTE_EMAIL_FIJO}>
+To: ${destinatario}
+Subject: ${asunto}
+Date: ${fecha}
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+${cuerpoEml}
+`;
+
+  const blob = new Blob([emlContent], { type: 'message/rfc822' });
+  const url = URL.createObjectURL(blob);
+  const nombreArchivo = `Email_${cmSanitizeFilename(destinatario.split('@')[0])}.eml`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+
   window.open(CM_HERMES_EMAIL_URL, '_blank');
   cmCloseMailModal();
 }
@@ -1902,11 +1931,11 @@ Una vez realizado el pago con éxito, debe enviarnos una captura de pantalla del
 Saludos cordiales,
 Departamento de Atención Cobros</textarea>
     </div>
-    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">Al clicar "Abrir en Hermes" se copia el texto y se abre el formulario de correo de Hermes en una pestaña nueva: pega (Ctrl+V) el contenido y selecciona "De: Atención Cobros" antes de enviar.</div>
+    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">"Descargar y abrir Hermes" descarga un archivo .eml y abre Hermes: arrastra el archivo a la zona "Coloque archivos..." para que la IA rellene el correo automáticamente.</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseMailModal()">Cancelar</button>
       <button class="cm-btn-cancel" id="cmBtnCopiarMail" onclick="cmCopyMailToClipboard()">Copiar texto</button>
-      <button class="cm-btn-confirm-ok" onclick="cmOpenInHermes()">Abrir en Hermes</button>
+      <button class="cm-btn-confirm-ok" onclick="cmDownloadEmlAndOpenHermes()">Descargar y abrir Hermes</button>
     </div>
   </div>
 </div>
