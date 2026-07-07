@@ -797,7 +797,7 @@ function cmToggleFiltroLink(ev){
 }
 function cmToggleFiltroComentario(ev){
   ev.stopPropagation();
-  const opciones = ['(Todos)', '(Sin comentario)', '(Con cualquier comentario)', ...cmFrasesRapidas()];
+  const opciones = ['(Todos)', '(Sin comentario)', ...cmFrasesRapidas()];
   const seleccion = prompt('Filtrar por comentario:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
   if(seleccion === null) return;
   const idx = parseInt(seleccion);
