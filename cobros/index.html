@@ -947,67 +947,9 @@ const CM_HERMES_EMAIL_URL = 'https://activaplaneta.crm4.dynamics.com/main.aspx?a
 const CM_REMITENTE_NOMBRE = 'Atención Cobros';
 const CM_REMITENTE_EMAIL_FIJO = 'atencioncobros@obsbusiness.school';
 
-function cmSanitizeFilename(str){
-  return (str||'email').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60) || 'email';
-}
-
-function cmXmlEscape(str){
-  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
-}
-
-async function cmDownloadEmlAndOpenHermes(){
+async function cmCopyEmailAndOpenHermes(){
   const destinatario = document.getElementById('cmMailDestinatario').value;
-  const asunto = document.getElementById('cmMailAsunto').value;
-  const cuerpo = document.getElementById('cmMailCuerpo').value;
-
-  // Construir los párrafos del documento: campos + líneas del cuerpo
-  const lineasCuerpo = cuerpo.split('\n');
-  const parrafos = [];
-  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">De: </w:t></w:r><w:r><w:t xml:space="preserve">${cmXmlEscape(CM_REMITENTE_NOMBRE)} &lt;${cmXmlEscape(CM_REMITENTE_EMAIL_FIJO)}&gt;</w:t></w:r></w:p>`);
-  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Para: </w:t></w:r><w:r><w:t xml:space="preserve">${cmXmlEscape(destinatario)}</w:t></w:r></w:p>`);
-  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Asunto: </w:t></w:r><w:r><w:t xml:space="preserve">${cmXmlEscape(asunto)}</w:t></w:r></w:p>`);
-  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Cuerpo del correo electrónico:</w:t></w:r></w:p>`);
-  parrafos.push(`<w:p><w:r><w:t xml:space="preserve"></w:t></w:r></w:p>`);
-  lineasCuerpo.forEach(linea=>{
-    parrafos.push(`<w:p><w:r><w:t xml:space="preserve">${cmXmlEscape(linea)}</w:t></w:r></w:p>`);
-  });
-
-  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-<w:body>
-${parrafos.join('\n')}
-<w:sectPr/>
-</w:body>
-</w:document>`;
-
-  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-</Types>`;
-
-  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>`;
-
-  const zip = new JSZip();
-  zip.file('[Content_Types].xml', contentTypesXml);
-  zip.folder('_rels').file('.rels', relsXml);
-  zip.folder('word').file('document.xml', documentXml);
-
-  const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-  const url = URL.createObjectURL(blob);
-  const nombreArchivo = `Email_${cmSanitizeFilename(destinatario.split('@')[0])}.docx`;
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = nombreArchivo;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 3000);
-
+  try{ await navigator.clipboard.writeText(destinatario); }catch(e){ console.error('Error copiando al portapapeles:', e); }
   window.open(CM_HERMES_EMAIL_URL, '_blank');
   cmCloseMailModal();
 }
@@ -1966,11 +1908,11 @@ Una vez realizado el pago con éxito, debe enviarnos una captura de pantalla del
 Saludos cordiales,
 Departamento de Atención Cobros</textarea>
     </div>
-    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">"Descargar y abrir Hermes" descarga un Word (.docx) con De/Para/Asunto/Cuerpo y abre Hermes: arrastra el archivo a la zona "Coloque archivos..." para que la IA rellene el correo automáticamente.</div>
+    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">"Copiar mail y abrir Hermes" copia el email del alumno al portapapeles y abre Hermes: solo tienes que pegarlo (Ctrl+V) en el campo "Para".</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseMailModal()">Cancelar</button>
       <button class="cm-btn-cancel" id="cmBtnCopiarMail" onclick="cmCopyMailToClipboard()">Copiar texto</button>
-      <button class="cm-btn-confirm-ok" onclick="cmDownloadEmlAndOpenHermes()">Descargar y abrir Hermes</button>
+      <button class="cm-btn-confirm-ok" onclick="cmCopyEmailAndOpenHermes()">Copiar mail y abrir Hermes</button>
     </div>
   </div>
 </div>
