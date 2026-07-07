@@ -938,6 +938,18 @@ function cmOpenMailModal(id, esR2){
   document.getElementById('cmOverlayMail').classList.add('show');
 }
 function cmCloseMailModal(){ document.getElementById('cmOverlayMail').classList.remove('show'); }
+const CM_HERMES_EMAIL_URL = 'https://activaplaneta.crm4.dynamics.com/main.aspx?appid=ada95c3f-5c6c-44b9-b8d9-8613dc867926&pagetype=entityrecord&etn=email';
+
+async function cmOpenInHermes(){
+  const destinatario = document.getElementById('cmMailDestinatario').value;
+  const asunto = document.getElementById('cmMailAsunto').value;
+  const cuerpo = document.getElementById('cmMailCuerpo').value;
+  const texto = `Para: ${destinatario}\nAsunto: ${asunto}\n\n${cuerpo}`;
+  try{ await navigator.clipboard.writeText(texto); }catch(e){ console.error('Error copiando al portapapeles:', e); }
+  window.open(CM_HERMES_EMAIL_URL, '_blank');
+  cmCloseMailModal();
+}
+
 function cmSendMail(){
   const destinatario = document.getElementById('cmMailDestinatario').value;
   const asunto = document.getElementById('cmMailAsunto').value;
@@ -945,6 +957,22 @@ function cmSendMail(){
   const mailto = `mailto:${encodeURIComponent(destinatario)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
   window.location.href = mailto;
   cmCloseMailModal();
+}
+async function cmCopyMailToClipboard(){
+  const destinatario = document.getElementById('cmMailDestinatario').value;
+  const asunto = document.getElementById('cmMailAsunto').value;
+  const cuerpo = document.getElementById('cmMailCuerpo').value;
+  const texto = `Para: ${destinatario}\nAsunto: ${asunto}\n\n${cuerpo}`;
+  const btn = document.getElementById('cmBtnCopiarMail');
+  const textoOriginal = btn.textContent;
+  try{
+    await navigator.clipboard.writeText(texto);
+    btn.textContent = '✓ Copiado';
+  }catch(e){
+    console.error('Error copiando al portapapeles:', e);
+    btn.textContent = 'Error al copiar';
+  }
+  setTimeout(()=>{ btn.textContent = textoOriginal; }, 1800);
 }
 
 /* ---------- Historial de comentarios por alumno (persiste entre meses) ---------- */
@@ -1874,9 +1902,11 @@ Una vez realizado el pago con éxito, debe enviarnos una captura de pantalla del
 Saludos cordiales,
 Departamento de Atención Cobros</textarea>
     </div>
+    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">Al clicar "Abrir en Hermes" se copia el texto y se abre el formulario de correo de Hermes en una pestaña nueva: pega (Ctrl+V) el contenido y selecciona "De: Atención Cobros" antes de enviar.</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseMailModal()">Cancelar</button>
-      <button class="cm-btn-confirm-ok" onclick="cmSendMail()">Abrir en mi correo</button>
+      <button class="cm-btn-cancel" id="cmBtnCopiarMail" onclick="cmCopyMailToClipboard()">Copiar texto</button>
+      <button class="cm-btn-confirm-ok" onclick="cmOpenInHermes()">Abrir en Hermes</button>
     </div>
   </div>
 </div>
