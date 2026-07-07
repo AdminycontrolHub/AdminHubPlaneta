@@ -174,6 +174,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-mail-btn:hover { background:rgba(47,143,138,0.22); }
 .cm-mail-btn:disabled { opacity:0.25; cursor:not-allowed; }
 .cm-comment-input { background:#F5F0E8; border:0.5px solid rgba(58,49,40,0.12); border-radius:6px; padding:3px 6px; font-size:10.5px; color:#3a3128; width:100%; font-family:inherit; }
+.cm-quick-comment { flex-shrink:0; width:22px; height:22px; border:none; border-radius:6px; background:rgba(47,143,138,0.12); color:#2f8f8a; font-size:11px; cursor:pointer; font-family:inherit; padding:0; text-align:center; }
 .cm-checkbox { width:13px; height:13px; cursor:pointer; }
 .cm-empty-state { text-align:center; padding:40px 20px; color:#8a7d6a; font-size:13px; }
 .cm-confirm-overlay { position:fixed; inset:0; z-index:300; background:rgba(58,49,40,0.4); display:none; align-items:center; justify-content:center; }
@@ -545,6 +546,7 @@ let cmComentariosHist = {}; // { idNacs: [ {fecha, comentario, usuario, convocat
 let cmFiltroMarca = null;
 let cmFiltroPais = null;
 let cmFiltroConvocatoria = null;
+let cmFiltroLink = null;
 
 // ---- Módulo Round 2 (Links no atendidos + Remesa devueltos) ----
 let cmDataR2 = [];
@@ -552,6 +554,7 @@ let cmDataR2LoadedOnce = false;
 let cmFiltroMarcaR2 = null;
 let cmFiltroPaisR2 = null;
 let cmFiltroConvocatoriaR2 = null;
+let cmFiltroLinkR2 = null;
 
 function cmNormalize(str){
   return (str||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -781,6 +784,15 @@ function cmToggleFiltroConvocatoria(ev){
   cmFiltroConvocatoria = (isNaN(idx) || idx === 0) ? null : convs[idx-1];
   cmRenderTable();
 }
+function cmToggleFiltroLink(ev){
+  ev.stopPropagation();
+  const opciones = ['(Todos)', 'Sí', 'No'];
+  const seleccion = prompt('Filtrar por Link:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  cmFiltroLink = (isNaN(idx) || idx === 0) ? null : (idx === 1 ? 'Si' : 'No');
+  cmRenderTable();
+}
 
 /* ---------- Semáforo horario por país ---------- */
 function cmGetPaisEstado(pais){
@@ -815,6 +827,7 @@ function cmRenderTable(){
       if(cmFiltroPais === 'ROJO_KO' && estado.enHorario) return false;
     } else if(cmFiltroPais && r.pais !== cmFiltroPais){ return false; }
     if(cmFiltroConvocatoria && r.convocatoria !== cmFiltroConvocatoria) return false;
+    if(cmFiltroLink && r.link1 !== cmFiltroLink) return false;
     if(search){
       const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
       if(!hay) return false;
@@ -862,6 +875,10 @@ function cmRenderTable(){
         ${mailBtn}
         <input type="checkbox" class="cm-checkbox" style="justify-self:center;" ${r.marcaEnviada?'checked':''} onchange="cmToggleMarcaEnviada('${r.id}',this.checked)">
         <div style="display:flex;align-items:center;gap:4px;min-width:0;">
+          <select class="cm-quick-comment" title="Frase rápida" onchange="cmQuickComment(this,'${r.id}',false)">
+            <option value="">⚡</option>
+            ${cmQuickCommentOptionsHtml()}
+          </select>
           <input type="text" class="cm-comment-input" value="${cmEscapeHtml(r.comentarios||'')}" placeholder="Comentario..." onblur="cmChangeComentario('${r.id}',this.value)">
           ${(cmComentariosHist[r.idNacs] && cmComentariosHist[r.idNacs].length > 0) ? `<button onclick="cmOpenComentariosHist('${cmEscapeHtml(r.idNacs)}','${cmEscapeHtml(r.nombre).replace(/'/g,"\\'")}')" title="Ver historial de comentarios anteriores" style="flex-shrink:0;width:20px;height:20px;border:none;border-radius:50%;background:#fde3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a5300" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
@@ -879,6 +896,7 @@ function cmRenderTable(){
   else if(cmFiltroPais === 'ROJO_KO') filtroTxt.push('País: 🔴 Rojo KO');
   else if(cmFiltroPais) filtroTxt.push('País: ' + cmFiltroPais);
   if(cmFiltroConvocatoria) filtroTxt.push('Convocatoria: ' + cmFiltroConvocatoria);
+  if(cmFiltroLink) filtroTxt.push('Link: ' + (cmFiltroLink==='Si'?'Sí':'No'));
   document.getElementById('cmFiltroActivo').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
 
   cmUpdateCounters(rows);
@@ -907,6 +925,29 @@ async function cmChangeLink(id, campo, valor){
   await cmSaveData();
   cmRenderTable();
 }
+function cmMesActualCapitalizado(){
+  const mes = new Date().toLocaleString('es-ES', { month: 'long' });
+  return mes.charAt(0).toUpperCase() + mes.slice(1);
+}
+function cmFrasesRapidas(){
+  return [
+    'Sin factura',
+    `Se le envió link de ${cmMesActualCapitalizado()}.`,
+    'No enviar'
+  ];
+}
+function cmQuickCommentOptionsHtml(){
+  return cmFrasesRapidas().map(f=>`<option value="${cmEscapeHtml(f)}">${cmEscapeHtml(f)}</option>`).join('');
+}
+function cmQuickComment(selectEl, id, esR2){
+  const valor = selectEl.value;
+  if(!valor) return;
+  const input = selectEl.nextElementSibling;
+  input.value = valor;
+  if(esR2){ cmChangeComentarioR2(id, valor); } else { cmChangeComentario(id, valor); }
+  selectEl.value = '';
+}
+
 async function cmChangeComentario(id, valor){
   const r = cmData.find(x=>x.id===id);
   if(!r) return;
@@ -1143,6 +1184,15 @@ function cmToggleFiltroConvocatoriaR2(ev){
   cmFiltroConvocatoriaR2 = (isNaN(idx) || idx === 0) ? null : convs[idx-1];
   cmRenderTableR2();
 }
+function cmToggleFiltroLinkR2(ev){
+  ev.stopPropagation();
+  const opciones = ['(Todos)', 'Sí', 'No'];
+  const seleccion = prompt('Filtrar por Link:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  cmFiltroLinkR2 = (isNaN(idx) || idx === 0) ? null : (idx === 1 ? 'Si' : 'No');
+  cmRenderTableR2();
+}
 
 function cmRenderTableR2(){
   const search = cmNormalize(document.getElementById('cmSearchInputR2')?.value || '');
@@ -1155,6 +1205,7 @@ function cmRenderTableR2(){
       if(cmFiltroPaisR2 === 'ROJO_KO' && estado.enHorario) return false;
     } else if(cmFiltroPaisR2 && r.pais !== cmFiltroPaisR2){ return false; }
     if(cmFiltroConvocatoriaR2 && r.convocatoria !== cmFiltroConvocatoriaR2) return false;
+    if(cmFiltroLinkR2 && r.link !== cmFiltroLinkR2) return false;
     if(search){
       const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
       if(!hay) return false;
@@ -1201,6 +1252,10 @@ function cmRenderTableR2(){
         ${mailBtn}
         <input type="checkbox" class="cm-checkbox" style="justify-self:center;" ${r.marcaEnviada?'checked':''} onchange="cmToggleMarcaEnviadaR2('${r.id}',this.checked)">
         <div style="display:flex;align-items:center;gap:4px;min-width:0;">
+          <select class="cm-quick-comment" title="Frase rápida" onchange="cmQuickComment(this,'${r.id}',true)">
+            <option value="">⚡</option>
+            ${cmQuickCommentOptionsHtml()}
+          </select>
           <input type="text" class="cm-comment-input" value="${cmEscapeHtml(r.comentarios||'')}" placeholder="Comentario..." onblur="cmChangeComentarioR2('${r.id}',this.value)">
           ${(cmComentariosHist[r.idNacs] && cmComentariosHist[r.idNacs].length > 0) ? `<button onclick="cmOpenComentariosHist('${cmEscapeHtml(r.idNacs)}','${cmEscapeHtml(r.nombre).replace(/'/g,"\\'")}')" title="Ver historial de comentarios anteriores" style="flex-shrink:0;width:20px;height:20px;border:none;border-radius:50%;background:#fde3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a5300" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
@@ -1217,6 +1272,7 @@ function cmRenderTableR2(){
   else if(cmFiltroPaisR2 === 'ROJO_KO') filtroTxt.push('País: 🔴 Rojo KO');
   else if(cmFiltroPaisR2) filtroTxt.push('País: ' + cmFiltroPaisR2);
   if(cmFiltroConvocatoriaR2) filtroTxt.push('Convocatoria: ' + cmFiltroConvocatoriaR2);
+  if(cmFiltroLinkR2) filtroTxt.push('Link: ' + (cmFiltroLinkR2==='Si'?'Sí':'No'));
   document.getElementById('cmFiltroActivoR2').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
 
   const pend = rows.filter(r=>r.link!=='Si').length;
@@ -1722,7 +1778,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th filt" onclick="cmToggleFiltroPais(event)">País <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th filt" onclick="cmToggleFiltroConvocatoria(event)">Convoc. <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">ID NACS</div>
-            <div class="cm-th" style="color:#6a3fa0;">Link</div>
+            <div class="cm-th filt" style="color:#6a3fa0;" onclick="cmToggleFiltroLink(event)">Link <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Fecha</div>
             <div></div>
             <div class="cm-th" style="justify-content:center;">M.</div>
@@ -1807,7 +1863,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th filt" onclick="cmToggleFiltroPaisR2(event)">País <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th filt" onclick="cmToggleFiltroConvocatoriaR2(event)">Convoc. <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">ID NACS</div>
-            <div class="cm-th" style="color:#2f8f8a;">Link</div>
+            <div class="cm-th filt" style="color:#2f8f8a;" onclick="cmToggleFiltroLinkR2(event)">Link <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Fecha</div>
             <div></div>
             <div class="cm-th" style="justify-content:center;">M.</div>
