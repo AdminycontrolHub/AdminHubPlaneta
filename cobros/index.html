@@ -938,9 +938,6 @@ function cmOpenMailModal(id, esR2){
   cmMailAlumnoActivo = id;
   document.getElementById('cmMailDestinatario').value = r.email || '(sin email en el listado)';
   document.getElementById('cmOverlayMail').classList.add('show');
-  if(r.email){
-    window.open(`${CM_HERMES_BASE}&pagetype=search&searchtext=${encodeURIComponent(r.email)}`, '_blank');
-  }
 }
 function cmCloseMailModal(){ document.getElementById('cmOverlayMail').classList.remove('show'); }
 const CM_HERMES_EMAIL_URL = 'https://activaplaneta.crm4.dynamics.com/main.aspx?appid=ada95c3f-5c6c-44b9-b8d9-8613dc867926&pagetype=entityrecord&etn=email';
@@ -954,11 +951,10 @@ function cmCopyEmailAndOpenHermes(){
 async function cmCopyDestinatario(){
   const destinatario = document.getElementById('cmMailDestinatario').value;
   const btn = document.getElementById('cmBtnCopiarDestinatario');
-  try{
-    await navigator.clipboard.writeText(destinatario);
+  const ok = await cmCopiarAlPortapapeles(destinatario);
+  if(ok){
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1dcc84" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
-  }catch(e){
-    console.error('Error copiando destinatario:', e);
+  }else{
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e14b3a" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   }
   setTimeout(()=>{
@@ -974,17 +970,41 @@ function cmSendMail(){
   window.location.href = mailto;
   cmCloseMailModal();
 }
+async function cmCopiarAlPortapapeles(texto){
+  // 1) API moderna
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(texto);
+      return true;
+    }
+  }catch(e){ console.warn('Clipboard API falló, probando fallback:', e); }
+  // 2) Fallback: textarea oculto + execCommand
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok) return true;
+  }catch(e){ console.error('Fallback de copiado también falló:', e); }
+  return false;
+}
+
 async function cmCopyMailToClipboard(){
   const cuerpo = document.getElementById('cmMailCuerpo').value;
-  const texto = cuerpo;
   const btn = document.getElementById('cmBtnCopiarMail');
   const textoOriginal = btn.textContent;
-  try{
-    await navigator.clipboard.writeText(texto);
+  const ok = await cmCopiarAlPortapapeles(cuerpo);
+  if(ok){
     btn.textContent = '✓ Copiado';
-  }catch(e){
-    console.error('Error copiando al portapapeles:', e);
+  } else {
     btn.textContent = 'Error al copiar';
+    alert('No se ha podido copiar automáticamente. Selecciona y copia el texto manualmente del campo "Cuerpo del mensaje".');
   }
   setTimeout(()=>{ btn.textContent = textoOriginal; }, 1800);
 }
