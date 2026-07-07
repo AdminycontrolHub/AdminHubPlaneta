@@ -797,7 +797,7 @@ function cmToggleFiltroLink(ev){
 }
 function cmToggleFiltroComentario(ev){
   ev.stopPropagation();
-  const opciones = ['(Todos)', '(Sin comentario)', ...cmFrasesRapidas()];
+  const opciones = ['(Todos)', '(Sin comentario)', '(Con cualquier comentario)', ...cmFrasesRapidas()];
   const seleccion = prompt('Filtrar por comentario:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
   if(seleccion === null) return;
   const idx = parseInt(seleccion);
@@ -1443,6 +1443,13 @@ async function cmConfirmBorrarTodoR2(){
 
 
 /* ---------- Histórico Round 1 (solo conteos, sin detalle) ---------- */
+function cmObtenerMesClave(entrada){
+  if(entrada.mesClave) return entrada.mesClave;
+  // Entradas antiguas sin mesClave: intentamos deducirlo de la fecha "D/M/YYYY, HH:MM:SS"
+  const m = (entrada.fecha||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}`;
+  return entrada.fecha || Math.random().toString(); // último recurso: no deduplicar si no se puede determinar
+}
 async function cmLoadHistorico(){
   try{
     const res = await fetch(`${WORKER_URL}/kv?key=${CM_KV_HISTORICO_KEY}&_ts=${Date.now()}`, { cache: 'no-store' });
@@ -1463,10 +1470,14 @@ async function cmSaveHistoricoSnapshot(registros){
     const [marca,convocatoria] = key.split('||');
     return { marca, convocatoria, total };
   });
-  const snapshot = { fecha: new Date().toLocaleString('es-ES'), detalle };
+  const ahora = new Date();
+  const mesClave = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}`;
+  const snapshot = { fecha: ahora.toLocaleString('es-ES'), mesClave, detalle };
 
   let historico = await cmLoadHistorico();
   if(!Array.isArray(historico)) historico = [];
+  // Quita cualquier entrada existente del mismo mes (con o sin mesClave, usando la fecha como respaldo)
+  historico = historico.filter(h => cmObtenerMesClave(h) !== mesClave);
   historico.unshift(snapshot); // más reciente primero
   try{
     await fetch(`${WORKER_URL}/kv`,{
@@ -1481,6 +1492,24 @@ async function cmOpenHistorico(){
   body.innerHTML = `<div class="cm-empty-state">Cargando...</div>`;
   let historico = await cmLoadHistorico();
   if(!Array.isArray(historico)) historico = [];
+  const totalOriginal = historico.length;
+  // Deduplicar por mes (se queda con la primera = más reciente de cada mes)
+  const vistos = new Set();
+  historico = historico.filter(h=>{
+    const clave = cmObtenerMesClave(h);
+    if(vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
+  if(historico.length !== totalOriginal){
+    // Había duplicados: limpiamos permanentemente en el servidor
+    try{
+      await fetch(`${WORKER_URL}/kv`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key: CM_KV_HISTORICO_KEY, value: historico })
+      });
+    }catch(e){ console.error('Error limpiando duplicados del histórico:', e); }
+  }
   if(historico.length === 0){
     body.innerHTML = `<div class="cm-empty-state">Todavía no hay registros. Se generará uno automáticamente cada vez que cargues el listado de Round 1.</div>`;
     return;
