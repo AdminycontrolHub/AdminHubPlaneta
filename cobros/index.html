@@ -547,6 +547,7 @@ let cmFiltroMarca = null;
 let cmFiltroPais = null;
 let cmFiltroConvocatoria = null;
 let cmFiltroLink = null;
+let cmFiltroComentario = null;
 
 // ---- Módulo Round 2 (Links no atendidos + Remesa devueltos) ----
 let cmDataR2 = [];
@@ -555,6 +556,7 @@ let cmFiltroMarcaR2 = null;
 let cmFiltroPaisR2 = null;
 let cmFiltroConvocatoriaR2 = null;
 let cmFiltroLinkR2 = null;
+let cmFiltroComentarioR2 = null;
 
 function cmNormalize(str){
   return (str||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -793,6 +795,18 @@ function cmToggleFiltroLink(ev){
   cmFiltroLink = (isNaN(idx) || idx === 0) ? null : (idx === 1 ? 'Si' : 'No');
   cmRenderTable();
 }
+function cmToggleFiltroComentario(ev){
+  ev.stopPropagation();
+  const opciones = ['(Todos)', '(Sin comentario)', '(Con cualquier comentario)', ...cmFrasesRapidas()];
+  const seleccion = prompt('Filtrar por comentario:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  if(isNaN(idx) || idx === 0){ cmFiltroComentario = null; }
+  else if(idx === 1){ cmFiltroComentario = 'VACIO'; }
+  else if(idx === 2){ cmFiltroComentario = 'CUALQUIERA'; }
+  else { cmFiltroComentario = opciones[idx]; }
+  cmRenderTable();
+}
 
 /* ---------- Semáforo horario por país ---------- */
 function cmGetPaisEstado(pais){
@@ -828,6 +842,9 @@ function cmRenderTable(){
     } else if(cmFiltroPais && r.pais !== cmFiltroPais){ return false; }
     if(cmFiltroConvocatoria && r.convocatoria !== cmFiltroConvocatoria) return false;
     if(cmFiltroLink && r.link1 !== cmFiltroLink) return false;
+    if(cmFiltroComentario === 'VACIO' && (r.comentarios && r.comentarios.trim())) return false;
+    else if(cmFiltroComentario === 'CUALQUIERA' && !(r.comentarios && r.comentarios.trim())) return false;
+    else if(cmFiltroComentario && cmFiltroComentario !== 'VACIO' && cmFiltroComentario !== 'CUALQUIERA' && r.comentarios !== cmFiltroComentario) return false;
     if(search){
       const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
       if(!hay) return false;
@@ -897,6 +914,9 @@ function cmRenderTable(){
   else if(cmFiltroPais) filtroTxt.push('País: ' + cmFiltroPais);
   if(cmFiltroConvocatoria) filtroTxt.push('Convocatoria: ' + cmFiltroConvocatoria);
   if(cmFiltroLink) filtroTxt.push('Link: ' + (cmFiltroLink==='Si'?'Sí':'No'));
+  if(cmFiltroComentario === 'VACIO') filtroTxt.push('Comentarios: sin comentario');
+  else if(cmFiltroComentario === 'CUALQUIERA') filtroTxt.push('Comentarios: con comentario');
+  else if(cmFiltroComentario) filtroTxt.push('Comentario: ' + cmFiltroComentario);
   document.getElementById('cmFiltroActivo').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
 
   cmUpdateCounters(rows);
@@ -933,7 +953,8 @@ function cmFrasesRapidas(){
   return [
     'Sin factura',
     `Se le envió link de ${cmMesActualCapitalizado()}.`,
-    'No enviar'
+    'No enviar',
+    'OK Gestionado'
   ];
 }
 function cmQuickCommentOptionsHtml(){
@@ -1193,6 +1214,18 @@ function cmToggleFiltroLinkR2(ev){
   cmFiltroLinkR2 = (isNaN(idx) || idx === 0) ? null : (idx === 1 ? 'Si' : 'No');
   cmRenderTableR2();
 }
+function cmToggleFiltroComentarioR2(ev){
+  ev.stopPropagation();
+  const opciones = ['(Todos)', '(Sin comentario)', '(Con cualquier comentario)', ...cmFrasesRapidas()];
+  const seleccion = prompt('Filtrar por comentario:\n' + opciones.map((o,i)=>`${i}. ${o}`).join('\n') + '\n\nEscribe el número:');
+  if(seleccion === null) return;
+  const idx = parseInt(seleccion);
+  if(isNaN(idx) || idx === 0){ cmFiltroComentarioR2 = null; }
+  else if(idx === 1){ cmFiltroComentarioR2 = 'VACIO'; }
+  else if(idx === 2){ cmFiltroComentarioR2 = 'CUALQUIERA'; }
+  else { cmFiltroComentarioR2 = opciones[idx]; }
+  cmRenderTableR2();
+}
 
 function cmRenderTableR2(){
   const search = cmNormalize(document.getElementById('cmSearchInputR2')?.value || '');
@@ -1206,6 +1239,9 @@ function cmRenderTableR2(){
     } else if(cmFiltroPaisR2 && r.pais !== cmFiltroPaisR2){ return false; }
     if(cmFiltroConvocatoriaR2 && r.convocatoria !== cmFiltroConvocatoriaR2) return false;
     if(cmFiltroLinkR2 && r.link !== cmFiltroLinkR2) return false;
+    if(cmFiltroComentarioR2 === 'VACIO' && (r.comentarios && r.comentarios.trim())) return false;
+    else if(cmFiltroComentarioR2 === 'CUALQUIERA' && !(r.comentarios && r.comentarios.trim())) return false;
+    else if(cmFiltroComentarioR2 && cmFiltroComentarioR2 !== 'VACIO' && cmFiltroComentarioR2 !== 'CUALQUIERA' && r.comentarios !== cmFiltroComentarioR2) return false;
     if(search){
       const hay = cmNormalize(r.nombre).includes(search) || cmNormalize(r.email).includes(search) || cmNormalize(r.idNacs).includes(search);
       if(!hay) return false;
@@ -1273,6 +1309,9 @@ function cmRenderTableR2(){
   else if(cmFiltroPaisR2) filtroTxt.push('País: ' + cmFiltroPaisR2);
   if(cmFiltroConvocatoriaR2) filtroTxt.push('Convocatoria: ' + cmFiltroConvocatoriaR2);
   if(cmFiltroLinkR2) filtroTxt.push('Link: ' + (cmFiltroLinkR2==='Si'?'Sí':'No'));
+  if(cmFiltroComentarioR2 === 'VACIO') filtroTxt.push('Comentarios: sin comentario');
+  else if(cmFiltroComentarioR2 === 'CUALQUIERA') filtroTxt.push('Comentarios: con comentario');
+  else if(cmFiltroComentarioR2) filtroTxt.push('Comentario: ' + cmFiltroComentarioR2);
   document.getElementById('cmFiltroActivoR2').textContent = filtroTxt.length ? ('Filtro activo — ' + filtroTxt.join(' · ') + ' (clic en cabecera para cambiar)') : '';
 
   const pend = rows.filter(r=>r.link!=='Si').length;
@@ -1782,7 +1821,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th">Fecha</div>
             <div></div>
             <div class="cm-th" style="justify-content:center;">M.</div>
-            <div class="cm-th">Comentarios</div>
+            <div class="cm-th filt" onclick="cmToggleFiltroComentario(event)">Comentarios <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Usuario</div>
           </div>
           <div id="cmTableBody"></div>
@@ -1867,7 +1906,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th">Fecha</div>
             <div></div>
             <div class="cm-th" style="justify-content:center;">M.</div>
-            <div class="cm-th">Comentarios</div>
+            <div class="cm-th filt" onclick="cmToggleFiltroComentarioR2(event)">Comentarios <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Usuario</div>
           </div>
           <div id="cmTableBodyR2"></div>
