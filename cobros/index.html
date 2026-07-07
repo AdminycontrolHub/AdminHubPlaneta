@@ -931,12 +931,16 @@ async function cmToggleMarcaEnviada(id, checked){
 
 /* ---------- Plantilla de mail ---------- */
 let cmMailAlumnoActivo = null;
+const CM_HERMES_BASE = 'https://activaplaneta.crm4.dynamics.com/main.aspx?appid=ada95c3f-5c6c-44b9-b8d9-8613dc867926';
 function cmOpenMailModal(id, esR2){
   const r = esR2 ? cmDataR2.find(x=>x.id===id) : cmData.find(x=>x.id===id);
   if(!r) return;
   cmMailAlumnoActivo = id;
   document.getElementById('cmMailDestinatario').value = r.email || '(sin email en el listado)';
   document.getElementById('cmOverlayMail').classList.add('show');
+  if(r.email){
+    window.open(`${CM_HERMES_BASE}&pagetype=search&searchtext=${encodeURIComponent(r.email)}`, '_blank');
+  }
 }
 function cmCloseMailModal(){ document.getElementById('cmOverlayMail').classList.remove('show'); }
 const CM_HERMES_EMAIL_URL = 'https://activaplaneta.crm4.dynamics.com/main.aspx?appid=ada95c3f-5c6c-44b9-b8d9-8613dc867926&pagetype=entityrecord&etn=email';
