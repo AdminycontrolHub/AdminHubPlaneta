@@ -202,6 +202,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="bg-overlay"></div>
@@ -946,27 +947,55 @@ function cmSanitizeFilename(str){
   return (str||'email').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,60) || 'email';
 }
 
-function cmDownloadEmlAndOpenHermes(){
+function cmXmlEscape(str){
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+async function cmDownloadEmlAndOpenHermes(){
   const destinatario = document.getElementById('cmMailDestinatario').value;
   const asunto = document.getElementById('cmMailAsunto').value;
   const cuerpo = document.getElementById('cmMailCuerpo').value;
 
-  const fecha = new Date().toUTCString();
-  const cuerpoEml = cuerpo.replace(/\n/g, '\r\n');
-  const emlContent =
-`From: ${CM_REMITENTE_NOMBRE} <${CM_REMITENTE_EMAIL_FIJO}>
-To: ${destinatario}
-Subject: ${asunto}
-Date: ${fecha}
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+  // Construir los párrafos del documento: campos + líneas del cuerpo
+  const lineasCuerpo = cuerpo.split('\n');
+  const parrafos = [];
+  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">De: </w:t></w:r><w:r><w:t xml:space="preserve">${cmXmlEscape(CM_REMITENTE_NOMBRE)} &lt;${cmXmlEscape(CM_REMITENTE_EMAIL_FIJO)}&gt;</w:t></w:r></w:p>`);
+  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Para: </w:t></w:r><w:r><w:t xml:space="preserve">${cmXmlEscape(destinatario)}</w:t></w:r></w:p>`);
+  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Asunto: </w:t></w:r><w:r><w:t xml:space="preserve">${cmXmlEscape(asunto)}</w:t></w:r></w:p>`);
+  parrafos.push(`<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Cuerpo del correo electrónico:</w:t></w:r></w:p>`);
+  parrafos.push(`<w:p><w:r><w:t xml:space="preserve"></w:t></w:r></w:p>`);
+  lineasCuerpo.forEach(linea=>{
+    parrafos.push(`<w:p><w:r><w:t xml:space="preserve">${cmXmlEscape(linea)}</w:t></w:r></w:p>`);
+  });
 
-${cuerpoEml}
-`;
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+${parrafos.join('\n')}
+<w:sectPr/>
+</w:body>
+</w:document>`;
 
-  const blob = new Blob([emlContent], { type: 'message/rfc822' });
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypesXml);
+  zip.folder('_rels').file('.rels', relsXml);
+  zip.folder('word').file('document.xml', documentXml);
+
+  const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
   const url = URL.createObjectURL(blob);
-  const nombreArchivo = `Email_${cmSanitizeFilename(destinatario.split('@')[0])}.eml`;
+  const nombreArchivo = `Email_${cmSanitizeFilename(destinatario.split('@')[0])}.docx`;
   const a = document.createElement('a');
   a.href = url;
   a.download = nombreArchivo;
@@ -1931,7 +1960,7 @@ Una vez realizado el pago con éxito, debe enviarnos una captura de pantalla del
 Saludos cordiales,
 Departamento de Atención Cobros</textarea>
     </div>
-    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">"Descargar y abrir Hermes" descarga un archivo .eml y abre Hermes: arrastra el archivo a la zona "Coloque archivos..." para que la IA rellene el correo automáticamente.</div>
+    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">"Descargar y abrir Hermes" descarga un Word (.docx) con De/Para/Asunto/Cuerpo y abre Hermes: arrastra el archivo a la zona "Coloque archivos..." para que la IA rellene el correo automáticamente.</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseMailModal()">Cancelar</button>
       <button class="cm-btn-cancel" id="cmBtnCopiarMail" onclick="cmCopyMailToClipboard()">Copiar texto</button>
