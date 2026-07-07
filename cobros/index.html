@@ -697,10 +697,10 @@ async function cmManualSave(esR2){
 async function cmSaveData(){
   return cmTrackSave((async()=>{
     try{
-      const payload = JSON.stringify(cmData);
+      const payload = JSON.stringify(cmData); // esto es lo que el Worker guardará realmente en KV
       const res = await fetch(`${WORKER_URL}/kv`,{
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ key: CM_KV_DATA_KEY, value: payload })
+        body: JSON.stringify({ key: CM_KV_DATA_KEY, value: cmData })
       });
       if(!res.ok){
         console.error('Guardado de datos rechazado por el servidor, status:', res.status);
@@ -713,8 +713,7 @@ async function cmSaveData(){
         if(intento>0) await cmSleep(1500);
         const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
         const checkData = await check.json();
-        const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
-        if(checkVal === payload) confirmado = true;
+        if(checkData.value === payload) confirmado = true;
       }
       if(!confirmado){
         console.error('Verificación de guardado fallida tras varios intentos.');
@@ -742,7 +741,7 @@ async function cmSaveRemitente(){
   try{
     await fetch(`${WORKER_URL}/kv`,{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ key: CM_KV_REMITENTE_KEY, value: JSON.stringify(val) })
+      body: JSON.stringify({ key: CM_KV_REMITENTE_KEY, value: val })
     });
   }catch(e){ console.error('Error guardando remitente:', e); }
 }
@@ -965,7 +964,7 @@ async function cmAddComentarioHist(idNacs, entry){
   try{
     await fetch(`${WORKER_URL}/kv`,{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ key: CM_KV_COMENTARIOS_HIST_KEY, value: JSON.stringify(cmComentariosHist) })
+      body: JSON.stringify({ key: CM_KV_COMENTARIOS_HIST_KEY, value: cmComentariosHist })
     });
   }catch(e){ console.error('Error guardando historial de comentarios:', e); }
 }
@@ -1024,7 +1023,7 @@ async function cmSaveDataR2(){
       const payload = JSON.stringify(cmDataR2);
       const res = await fetch(`${WORKER_URL}/kv`,{
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ key: CM_KV_DATA_R2_KEY, value: payload })
+        body: JSON.stringify({ key: CM_KV_DATA_R2_KEY, value: cmDataR2 })
       });
       if(!res.ok){
         console.error('Guardado Round 2 rechazado, status:', res.status);
@@ -1036,8 +1035,7 @@ async function cmSaveDataR2(){
         if(intento>0) await cmSleep(1500);
         const check = await fetch(`${WORKER_URL}/kv?key=${CM_KV_DATA_R2_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
         const checkData = await check.json();
-        const checkVal = checkData.value ? (typeof checkData.value==='string' ? checkData.value : JSON.stringify(checkData.value)) : null;
-        if(checkVal === payload) confirmado = true;
+        if(checkData.value === payload) confirmado = true;
       }
       if(!confirmado){
         console.error('Verificación de guardado Round 2 fallida tras varios intentos.');
@@ -1316,7 +1314,7 @@ async function cmSaveHistoricoSnapshot(registros){
   try{
     await fetch(`${WORKER_URL}/kv`,{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ key: CM_KV_HISTORICO_KEY, value: JSON.stringify(historico) })
+      body: JSON.stringify({ key: CM_KV_HISTORICO_KEY, value: historico })
     });
   }catch(e){ console.error('Error guardando histórico Round 1:', e); }
 }
