@@ -175,6 +175,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-mail-btn:disabled { opacity:0.25; cursor:not-allowed; }
 .cm-comment-input { background:#F5F0E8; border:0.5px solid rgba(58,49,40,0.12); border-radius:6px; padding:3px 6px; font-size:10.5px; color:#3a3128; width:100%; font-family:inherit; }
 .cm-quick-comment { flex-shrink:0; width:22px; height:22px; border:none; border-radius:6px; background:rgba(47,143,138,0.12); color:#2f8f8a; font-size:11px; cursor:pointer; font-family:inherit; padding:0; text-align:center; }
+.cm-copy-id-btn { flex-shrink:0; width:16px; height:16px; border:none; background:none; color:#a89c88; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+.cm-copy-id-btn:hover { color:#2f8f8a; }
 .cm-checkbox { width:13px; height:13px; cursor:pointer; }
 .cm-empty-state { text-align:center; padding:40px 20px; color:#8a7d6a; font-size:13px; }
 .cm-confirm-overlay { position:fixed; inset:0; z-index:300; background:rgba(58,49,40,0.4); display:none; align-items:center; justify-content:center; }
@@ -883,7 +885,10 @@ function cmRenderTable(){
         <div class="cm-cell-name" title="${cmEscapeHtml(r.nombre)}">${cmEscapeHtml(r.nombre)}</div>
         <div class="cm-pais-pill" style="${paisStyle}" title="${paisEstado.hora!==null ? 'Hora local: '+paisEstado.hora+':00' : ''}">${paisTexto}</div>
         <div class="cm-cell-mut" title="${cmEscapeHtml(r.convocatoria||'')}">${cmEscapeHtml(r.convocatoria||'—')}</div>
-        <div class="cm-cell-mut">${cmEscapeHtml(r.idNacs||'—')}</div>
+        <div class="cm-cell-mut" style="display:flex;align-items:center;gap:3px;">
+          <span>${cmEscapeHtml(r.idNacs||'—')}</span>
+          ${r.idNacs ? `<button type="button" class="cm-copy-id-btn" title="Copiar ID NACS" onclick="cmCopyIdNacs(this,'${cmEscapeHtml(r.idNacs)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>` : ''}
+        </div>
         <select class="cm-select" style="${cmGetSelectStyle('r1',r.link1)}" onchange="cmChangeLink('${r.id}','link1',this.value)">
           <option value="No" ${r.link1!=='Si'?'selected':''}>No</option>
           <option value="Si" ${r.link1==='Si'?'selected':''}>Sí</option>
@@ -945,6 +950,15 @@ async function cmChangeLink(id, campo, valor){
   await cmSaveData();
   cmRenderTable();
 }
+async function cmCopyIdNacs(btn, idNacs){
+  const ok = await cmCopiarAlPortapapeles(idNacs);
+  const iconoOriginal = btn.innerHTML;
+  btn.innerHTML = ok
+    ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1dcc84" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+    : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e14b3a" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  setTimeout(()=>{ btn.innerHTML = iconoOriginal; }, 1200);
+}
+
 function cmMesActualCapitalizado(){
   const mes = new Date().toLocaleString('es-ES', { month: 'long' });
   return mes.charAt(0).toUpperCase() + mes.slice(1);
@@ -1279,7 +1293,10 @@ function cmRenderTableR2(){
         <div class="cm-cell-name" title="${cmEscapeHtml(r.nombre)}">${cmEscapeHtml(r.nombre)}</div>
         <div class="cm-pais-pill" style="${paisStyle}" title="${paisEstado.hora!==null ? 'Hora local: '+paisEstado.hora+':00' : ''}">${paisTexto}</div>
         <div class="cm-cell-mut" title="${cmEscapeHtml(r.convocatoria||'')}">${cmEscapeHtml(r.convocatoria||'—')}</div>
-        <div class="cm-cell-mut">${cmEscapeHtml(r.idNacs||'—')}</div>
+        <div class="cm-cell-mut" style="display:flex;align-items:center;gap:3px;">
+          <span>${cmEscapeHtml(r.idNacs||'—')}</span>
+          ${r.idNacs ? `<button type="button" class="cm-copy-id-btn" title="Copiar ID NACS" onclick="cmCopyIdNacs(this,'${cmEscapeHtml(r.idNacs)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>` : ''}
+        </div>
         <select class="cm-select" style="${selStyle}" onchange="cmChangeLinkR2('${r.id}',this.value)">
           <option value="No" ${r.link!=='Si'?'selected':''}>No</option>
           <option value="Si" ${r.link==='Si'?'selected':''}>Sí</option>
