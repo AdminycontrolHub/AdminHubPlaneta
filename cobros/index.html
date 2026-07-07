@@ -975,9 +975,8 @@ function cmSendMail(){
   cmCloseMailModal();
 }
 async function cmCopyMailToClipboard(){
-  const asunto = document.getElementById('cmMailAsunto').value;
   const cuerpo = document.getElementById('cmMailCuerpo').value;
-  const texto = `Asunto: ${asunto}\n\n${cuerpo}`;
+  const texto = cuerpo;
   const btn = document.getElementById('cmBtnCopiarMail');
   const textoOriginal = btn.textContent;
   try{
@@ -1909,7 +1908,10 @@ document.addEventListener('click', (e)=>{
         </button>
       </div>
     </div>
-    
+    <div class="cm-form-field">
+      <label class="cm-form-label">Asunto</label>
+      <input type="text" class="cm-form-input" id="cmMailAsunto" value="Información sobre Link de Pago">
+    </div>
     <div class="cm-form-field">
       <label class="cm-form-label">Cuerpo del mensaje</label>
       <textarea class="cm-form-textarea" id="cmMailCuerpo">Buenos días,
