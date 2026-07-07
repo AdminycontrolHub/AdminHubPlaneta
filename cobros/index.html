@@ -947,11 +947,23 @@ const CM_HERMES_EMAIL_URL = 'https://activaplaneta.crm4.dynamics.com/main.aspx?a
 const CM_REMITENTE_NOMBRE = 'Atención Cobros';
 const CM_REMITENTE_EMAIL_FIJO = 'atencioncobros@obsbusiness.school';
 
-async function cmCopyEmailAndOpenHermes(){
-  const destinatario = document.getElementById('cmMailDestinatario').value;
-  try{ await navigator.clipboard.writeText(destinatario); }catch(e){ console.error('Error copiando al portapapeles:', e); }
+function cmCopyEmailAndOpenHermes(){
   window.open(CM_HERMES_EMAIL_URL, '_blank');
   cmCloseMailModal();
+}
+async function cmCopyDestinatario(){
+  const destinatario = document.getElementById('cmMailDestinatario').value;
+  const btn = document.getElementById('cmBtnCopiarDestinatario');
+  try{
+    await navigator.clipboard.writeText(destinatario);
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1dcc84" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+  }catch(e){
+    console.error('Error copiando destinatario:', e);
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e14b3a" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  }
+  setTimeout(()=>{
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  }, 1500);
 }
 
 function cmSendMail(){
@@ -963,10 +975,9 @@ function cmSendMail(){
   cmCloseMailModal();
 }
 async function cmCopyMailToClipboard(){
-  const destinatario = document.getElementById('cmMailDestinatario').value;
   const asunto = document.getElementById('cmMailAsunto').value;
   const cuerpo = document.getElementById('cmMailCuerpo').value;
-  const texto = `Para: ${destinatario}\nAsunto: ${asunto}\n\n${cuerpo}`;
+  const texto = `Asunto: ${asunto}\n\n${cuerpo}`;
   const btn = document.getElementById('cmBtnCopiarMail');
   const textoOriginal = btn.textContent;
   try{
@@ -1891,7 +1902,12 @@ document.addEventListener('click', (e)=>{
     </div>
     <div class="cm-form-field">
       <label class="cm-form-label">Destinatario (automático)</label>
-      <input type="text" class="cm-form-input" id="cmMailDestinatario" readonly style="background:#EEE8DF;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="text" class="cm-form-input" id="cmMailDestinatario" readonly style="background:#EEE8DF;flex:1;">
+        <button type="button" id="cmBtnCopiarDestinatario" onclick="cmCopyDestinatario()" title="Copiar email" style="flex-shrink:0;width:32px;height:32px;border:0.5px solid rgba(58,49,40,0.15);border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
     </div>
     <div class="cm-form-field">
       <label class="cm-form-label">Asunto</label>
@@ -1908,11 +1924,11 @@ Una vez realizado el pago con éxito, debe enviarnos una captura de pantalla del
 Saludos cordiales,
 Departamento de Atención Cobros</textarea>
     </div>
-    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">"Copiar mail y abrir Hermes" copia el email del alumno al portapapeles y abre Hermes: solo tienes que pegarlo (Ctrl+V) en el campo "Para".</div>
+    <div style="font-size:10.5px;color:#8a7d6a;margin-bottom:10px;">Usa el icono de copiar junto al email del alumno antes de abrir Hermes, y pégalo (Ctrl+V) en el campo "Para".</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseMailModal()">Cancelar</button>
       <button class="cm-btn-cancel" id="cmBtnCopiarMail" onclick="cmCopyMailToClipboard()">Copiar texto</button>
-      <button class="cm-btn-confirm-ok" onclick="cmCopyEmailAndOpenHermes()">Copiar mail y abrir Hermes</button>
+      <button class="cm-btn-confirm-ok" onclick="cmCopyEmailAndOpenHermes()">Abrir Hermes</button>
     </div>
   </div>
 </div>
