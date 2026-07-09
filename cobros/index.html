@@ -1931,7 +1931,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th filt" onclick="cmToggleFiltroPais(event)">País <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th filt" onclick="cmToggleFiltroConvocatoria(event)">Convoc. <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">ID NACS</div>
-            <div class="cm-th filt" style="color:#6a3fa0;" onclick="cmToggleFiltroLink(event)">Link <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <div class="cm-th filt" style="color:#6a3fa0;" onclick="cmToggleFiltroLink(event)">Gestionado <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Fecha</div>
             <div></div>
             <div class="cm-th" style="justify-content:center;">M.</div>
@@ -1966,7 +1966,7 @@ document.addEventListener('click', (e)=>{
         <div class="cm-help-pop" id="cmHelpPopR2">
           <div class="cm-help-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Cómo usar esta herramienta</div>
           <div class="cm-help-label">Archivo a importar</div>
-          <div class="cm-help-files">Excel que <i>Activa</i> envía cada día 15 con los alumnos SIN tarjeta que no han pagado tras Round 1.</div>
+          <div class="cm-help-files">Excel descargado del DataHub de Académico: Cuotas vencidas mes actual en GP (Link y Tarjeta) — Segundo intento de cobro.</div>
           <div class="cm-help-label">Instrucciones</div>
           <ul class="cm-help-list">
             <li>Cada carga sustituye todo el listado desde cero.</li>
@@ -2016,7 +2016,7 @@ document.addEventListener('click', (e)=>{
             <div class="cm-th filt" onclick="cmToggleFiltroPaisR2(event)">País <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th filt" onclick="cmToggleFiltroConvocatoriaR2(event)">Convoc. <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">ID NACS</div>
-            <div class="cm-th filt" style="color:#2f8f8a;" onclick="cmToggleFiltroLinkR2(event)">Link <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <div class="cm-th filt" style="color:#2f8f8a;" onclick="cmToggleFiltroLinkR2(event)">Gestionado <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
             <div class="cm-th">Fecha</div>
             <div></div>
             <div class="cm-th" style="justify-content:center;">M.</div>
@@ -2052,7 +2052,7 @@ document.addEventListener('click', (e)=>{
       <div class="cm-confirm-icon" style="background:#e4d6f7;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6a3fa0" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></div>
       <div class="cm-confirm-title">Archivo Round 2</div>
     </div>
-    <div class="cm-confirm-text">Archivo que <b><i>Activa</i></b> nos envía cada día 15 de los alumnos SIN tarjeta que no han pagado en Round 1.</div>
+    <div class="cm-confirm-text">Archivo que descargamos del <b>DataHub de Académico</b>: Cuotas vencidas mes actual en GP, tanto Link como Tarjeta — Segundo intento de cobro.</div>
     <div class="cm-confirm-actions">
       <button class="cm-btn-cancel" onclick="cmCloseInfoR2()">Cancelar</button>
       <button class="cm-btn-confirm-ok" onclick="cmCloseInfoR2(); document.getElementById('cmFileInputR2').click();">Continuar</button>
