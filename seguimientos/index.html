@@ -1045,11 +1045,13 @@ function saveNuevo(){
   // Lógica primer referido + descuento
   // Nuevo flujo: entrada → Marketing → Adm. Comercial → Pago → OK Pagado
   // Toda alta nueva entra siempre por Marketing primero (nunca directa a Adm. Comercial).
-  // Si estamos en periodo de bloqueo (Hub o externo vía burbuja "en espera") → va a "En espera"
+  // Desde el Hub, "Añadir nuevo referido" funciona en cualquier momento como vía de excepciones
+  // y sigue el flujo normal (Marketing), sin pasar por "En espera".
+  // "En espera" solo aplica al acceso externo durante el periodo de bloqueo (burbuja "En espera próxima remesa").
   let estadoInicial='mkt';
   const tieneDescuento = rb==='Descuento 5%';
-  if(enPeriodoBloqueo()){
-    estadoInicial='espera'; // excepción: queda en espera hasta vuelco
+  if(enPeriodoBloqueo() && !isFromHub){
+    estadoInicial='espera'; // acceso externo en bloqueo: queda en espera hasta vuelco
   } else if(primerRef==='Sí' && tieneDescuento){
     estadoInicial='r_mkt';
   }
