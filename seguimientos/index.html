@@ -473,7 +473,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
           <div id="esperaSection" style="display:none;flex-direction:column;align-items:center;gap:2px;margin-top:4px;">
             <div class="badge-bloqueo">🔒 Bloqueado enlace externo</div>
             <div class="espera-arrow">↓</div>
-            <div class="bub-wrap bub-wait" onclick="bubClick('espera')">
+            <div class="bub-wrap bub-wait" onclick="onEsperaClick()">
               <div class="bub-circle" id="bc_espera" style="width:100px;height:100px;">
                 <div class="bub-icon">⏳</div>
                 <div class="bub-name">En espera<br>próxima remesa</div>
@@ -985,6 +985,25 @@ function openNuevo(){
   renderJeDvSelects();
   document.getElementById('mNuevo').classList.add('show');
 }
+// Alta desde la burbuja "En espera próxima remesa" — disponible también en acceso externo,
+// ya que esta burbuja solo es visible durante el periodo de bloqueo (10-30 julio / 10-30 enero).
+function openNuevoEspera(){
+  if(!requireWrite())return;
+  ['rn','ri','rmail','nn','ni','ne','as_','cm_'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['rb','primerRef','je_','dv_'].forEach(id=>{const e=document.getElementById(id);if(e)e.selectedIndex=0;});
+  document.getElementById('fr_').value=new Date().toISOString().split('T')[0];
+  document.getElementById('dupAlert').style.display='none';
+  document.getElementById('fErr').style.display='none';
+  document.getElementById('fOk').style.display='none';
+  renderConvSel();
+  renderJeDvSelects();
+  document.getElementById('mNuevo').classList.add('show');
+}
+// En Hub, la burbuja "En espera" sigue mostrando el listado; en acceso externo abre el alta directamente.
+function onEsperaClick(){
+  if(!isFromHub){ openNuevoEspera(); return; }
+  bubClick('espera');
+}
 function closeNuevo(){document.getElementById('mNuevo').classList.remove('show');}
 function chkDup(val){
   const v=norm(val);if(v.length<3){document.getElementById('dupAlert').style.display='none';return;}
@@ -1025,11 +1044,11 @@ function saveNuevo(){
 
   // Lógica primer referido + descuento
   // Nuevo flujo: entrada → Marketing → Adm. Comercial → Pago → OK Pagado
-  // Si estamos en periodo de bloqueo y el Hub añade manualmente → va a "En espera"
+  // Si estamos en periodo de bloqueo (Hub o externo vía burbuja "en espera") → va a "En espera"
   let estadoInicial='mkt';
   const tieneDescuento = rb==='Descuento 5%';
-  if(enPeriodoBloqueo() && isFromHub){
-    estadoInicial='espera'; // excepción manual del Hub: queda en espera hasta vuelco
+  if(enPeriodoBloqueo()){
+    estadoInicial='espera'; // excepción: queda en espera hasta vuelco
   } else if(primerRef==='Sí' && tieneDescuento){
     estadoInicial='r_mkt';
   } else if(primerRef==='No'){
