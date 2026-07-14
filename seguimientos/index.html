@@ -243,9 +243,9 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <div class="fsec">
       <div class="fsec-t">Alumno referidor</div>
       <div class="fgrid">
-        <div class="ff"><label>Nombre *</label><input type="text" id="rn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)"/></div>
-        <div class="ff"><label>ID oportunidad *</label><input type="text" id="ri" placeholder="2021-XXXXXXXXX"/></div>
-        <div class="ff"><label>Correo electrónico *</label><input type="text" id="rmail" placeholder="email@ejemplo.com"/></div>
+        <div class="ff"><label>Nombre *</label><input type="text" id="rn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)" autocomplete="off"/></div>
+        <div class="ff"><label>ID oportunidad *</label><input type="text" id="ri" placeholder="2021-XXXXXXXXX" autocomplete="off"/></div>
+        <div class="ff"><label>Correo electrónico *</label><input type="text" id="rmail" placeholder="email@ejemplo.com" autocomplete="off"/></div>
         <div class="ff"><label>Beneficio matrícula *</label>
           <select id="rb"><option value="">—</option><option>Cheque Amazon</option><option>Descuento 5%</option><option>Sin beneficio</option></select></div>
         <div class="ff full"><label>¿Primer referido? *</label>
@@ -255,20 +255,20 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <div class="fsec">
       <div class="fsec-t">Nuevo alumno referido</div>
       <div class="fgrid">
-        <div class="ff"><label>Nombre *</label><input type="text" id="nn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)"/></div>
-        <div class="ff"><label>ID oportunidad *</label><input type="text" id="ni" placeholder="2021-XXXXXXXXX"/></div>
+        <div class="ff"><label>Nombre *</label><input type="text" id="nn" placeholder="Nombre y apellidos" oninput="chkDup(this.value)" autocomplete="off"/></div>
+        <div class="ff"><label>ID oportunidad *</label><input type="text" id="ni" placeholder="2021-XXXXXXXXX" autocomplete="off"/></div>
         <div class="ff"><label>Convocatoria *</label><select id="nc"></select></div>
-        <div class="ff"><label>Email *</label><input type="text" id="ne" placeholder="email@ejemplo.com"/></div>
+        <div class="ff"><label>Email *</label><input type="text" id="ne" placeholder="email@ejemplo.com" autocomplete="off"/></div>
       </div>
     </div>
     <div class="fsec">
       <div class="fsec-t">Gestión</div>
       <div class="fgrid g3" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
-        <div class="ff"><label>Asesor *</label><input type="text" id="as_" placeholder="Nombre asesor"/></div>
+        <div class="ff"><label>Asesor *</label><input type="text" id="as_" placeholder="Nombre asesor" autocomplete="off"/></div>
         <div class="ff"><label>JE *</label><select id="je_"></select></div>
         <div class="ff"><label>DV *</label><select id="dv_"></select></div>
-        <div class="ff"><label>Fecha registro *</label><input type="date" id="fr_"/></div>
-        <div class="ff"><label>Comentarios</label><input type="text" id="cm_" placeholder="Opcional"/></div>
+        <div class="ff"><label>Fecha registro *</label><input type="date" id="fr_" autocomplete="off"/></div>
+        <div class="ff"><label>Comentarios</label><input type="text" id="cm_" placeholder="Opcional" autocomplete="off"/></div>
       </div>
     </div>
     <div class="modal-err" id="fErr">Completa todos los campos obligatorios (*)</div>
@@ -1044,6 +1044,7 @@ function saveNuevo(){
 
   // Lógica primer referido + descuento
   // Nuevo flujo: entrada → Marketing → Adm. Comercial → Pago → OK Pagado
+  // Toda alta nueva entra siempre por Marketing primero (nunca directa a Adm. Comercial).
   // Si estamos en periodo de bloqueo (Hub o externo vía burbuja "en espera") → va a "En espera"
   let estadoInicial='mkt';
   const tieneDescuento = rb==='Descuento 5%';
@@ -1051,8 +1052,6 @@ function saveNuevo(){
     estadoInicial='espera'; // excepción: queda en espera hasta vuelco
   } else if(primerRef==='Sí' && tieneDescuento){
     estadoInicial='r_mkt';
-  } else if(primerRef==='No'){
-    estadoInicial='adm';
   }
 
   recs.push({id:nextId++,rn,ri,ne_ref:rmail,nn,ni,nc,rb,ne,as_,je,dv,fr_,cm_,
