@@ -133,6 +133,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-help-title { font-size:13px; font-weight:600; color:#3a3128; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
 .cm-help-label { font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:#8a7d6a; margin-bottom:4px; }
 .cm-help-files { background:#F5F0E8; border-radius:8px; padding:8px 10px; margin-bottom:12px; font-size:11px; color:#3a3128; line-height:1.7; font-family:'Courier New',monospace; }
+.cm-help-prose { background:#F5F0E8; border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:12.5px; color:#3a3128; line-height:1.65; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
 .cm-help-list { margin:0; padding-left:16px; font-size:11.5px; color:#4a4136; line-height:1.6; }
 .cm-search-row { padding:14px 20px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .cm-flow-card { flex:1 1 320px; min-width:280px; background:linear-gradient(120deg,#fff5e6,#ffe9f0,#eee5ff); border:1.5px solid rgba(168,84,138,0.2); border-radius:14px; padding:8px 16px; display:flex; align-items:center; gap:10px; overflow-x:auto; white-space:nowrap; box-shadow:0 3px 12px rgba(168,84,138,0.12); }
@@ -2029,7 +2030,7 @@ document.addEventListener('click', (e)=>{
         <button class="cm-btn-circle" onclick="cmToggleOrigenR1()">?</button>
         <div class="cm-help-pop" id="cmOrigenPopR1" style="right:auto;left:20px;">
           <div class="cm-help-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Origen del listado</div>
-          <div class="cm-help-files">Vista Atenea "AdminHub Cobros".</div>
+          <div class="cm-help-prose">Vista Atenea "AdminHub Cobros".</div>
           <div class="cm-help-label">Cuándo y quién lo sube</div>
           <ul class="cm-help-list">
             <li>Este listado se sube <strong>únicamente al inicio del ciclo</strong> a gestionar.</li>
@@ -2140,7 +2141,7 @@ document.addEventListener('click', (e)=>{
         <button class="cm-btn-circle" onclick="cmToggleOrigenR2()">?</button>
         <div class="cm-help-pop" id="cmOrigenPopR2" style="right:auto;left:20px;">
           <div class="cm-help-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Origen del listado</div>
-          <div class="cm-help-files">Pestaña $ del DataHub de Coordinación.<br>Filtro: todas las marcas · convocatorias actuales · vencimiento mes actual · exportación detalle de cuotas.</div>
+          <div class="cm-help-prose">Pestaña $ del DataHub de Coordinación.<br>Filtro: todas las marcas · convocatorias actuales · vencimiento mes actual · exportación detalle de cuotas.</div>
           <div class="cm-help-label">Cuándo y quién lo sube</div>
           <ul class="cm-help-list">
             <li>Este listado se sube <strong>únicamente al inicio del ciclo</strong> a gestionar.</li>
