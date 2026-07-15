@@ -608,6 +608,11 @@ async function cmOpenL3(){
   await cmAplicarCodigosIdAutomatico(cmData, cmSaveData);
   await cmComprobarCompletadoR1(true);
   cmCompletadoMesR1 = await cmLoadCompletadoMes(CM_KV_COMPLETADO_MES_R1_KEY);
+  // Migración: tablas que ya estaban vacías antes de que existiera este aviso
+  if(cmData.length === 0 && !cmCompletadoMesR1){
+    cmCompletadoMesR1 = cmMesActualConAño();
+    await cmSaveCompletadoMes(CM_KV_COMPLETADO_MES_R1_KEY, cmCompletadoMesR1);
+  }
   cmRenderTable();
   cmStartHourlyRefresh();
 }
@@ -1201,6 +1206,10 @@ async function cmOpenR2(){
   await cmAplicarCodigosIdAutomatico(cmDataR2, cmSaveDataR2);
   await cmComprobarCompletadoR2(true);
   cmCompletadoMesR2 = await cmLoadCompletadoMes(CM_KV_COMPLETADO_MES_R2_KEY);
+  if(cmDataR2.length === 0 && !cmCompletadoMesR2){
+    cmCompletadoMesR2 = cmMesActualConAño();
+    await cmSaveCompletadoMes(CM_KV_COMPLETADO_MES_R2_KEY, cmCompletadoMesR2);
+  }
   cmRenderTableR2();
 }
 function cmBackToL2FromR2(){ document.getElementById('cmOverlayR2').classList.remove('show'); document.getElementById('cmOverlayL2').classList.add('show'); }
