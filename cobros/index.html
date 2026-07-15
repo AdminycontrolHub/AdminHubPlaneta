@@ -601,6 +601,7 @@ async function cmOpenL3(){
   }
   await cmLoadRemitente();
   await cmLoadComentariosHist();
+  await cmAplicarCodigosIdAutomatico(cmData, cmSaveData);
   cmRenderTable();
   cmStartHourlyRefresh();
 }
@@ -950,6 +951,18 @@ async function cmChangeLink(id, campo, valor){
   r.ultimoUsuario = cmGetUserName();
   await cmSaveData();
   cmRenderTable();
+  await cmComprobarCompletadoR1();
+}
+/* Cuando todos los casos de Round 1 quedan gestionados (Link = Sí), el recuento ya
+   está registrado en el Histórico (se guarda al importar); vaciamos la tabla para
+   dejarla lista para la carga del día 1 del mes siguiente. */
+async function cmComprobarCompletadoR1(){
+  if(cmData.length > 0 && cmData.every(r=>r.link1 === 'Si')){
+    cmData = [];
+    await cmSaveData();
+    cmRenderTable();
+    alert('Todos los casos de "Links tarjeta NO domiciliada" están gestionados. El recuento ha quedado guardado en el Histórico y la tabla se ha vaciado, lista para la próxima carga del día 1.');
+  }
 }
 async function cmCopyIdNacs(btn, idNacs){
   const ok = await cmCopiarAlPortapapeles(idNacs);
@@ -1139,6 +1152,7 @@ async function cmOpenR2(){
     cmDataR2LoadedOnce = true;
   }
   await cmLoadComentariosHist();
+  await cmAplicarCodigosIdAutomatico(cmDataR2, cmSaveDataR2);
   cmRenderTableR2();
 }
 function cmBackToL2FromR2(){ document.getElementById('cmOverlayR2').classList.remove('show'); document.getElementById('cmOverlayL2').classList.add('show'); }
@@ -1346,6 +1360,17 @@ async function cmChangeLinkR2(id, valor){
   r.ultimoUsuario = cmGetUserName();
   await cmSaveDataR2();
   cmRenderTableR2();
+  await cmComprobarCompletadoR2();
+}
+/* Cuando todos los casos de Round 2 quedan gestionados (Link = Sí), vaciamos la
+   tabla para dejarla lista para la próxima carga. */
+async function cmComprobarCompletadoR2(){
+  if(cmDataR2.length > 0 && cmDataR2.every(r=>r.link === 'Si')){
+    cmDataR2 = [];
+    await cmSaveDataR2();
+    cmRenderTableR2();
+    alert('Todos los casos de "Round 2" están gestionados. La tabla se ha vaciado, lista para la próxima carga.');
+  }
 }
 async function cmChangeComentarioR2(id, valor){
   const r = cmDataR2.find(x=>x.id===id);
@@ -1576,48 +1601,25 @@ function cmCloseHistorico(){ document.getElementById('cmOverlayHistorico').class
 function cmOpenInfoR2(){ document.getElementById('cmOverlayInfoR2').classList.add('show'); }
 function cmCloseInfoR2(){ document.getElementById('cmOverlayInfoR2').classList.remove('show'); }
 
-/* ---------- Borrar todos los datos ---------- */
-function cmOpenReprocesarIdNacs(){ document.getElementById('cmOverlayReprocesar').classList.add('show'); }
-function cmCloseReprocesarIdNacs(){ document.getElementById('cmOverlayReprocesar').classList.remove('show'); }
-
-async function cmConfirmReprocesarIdNacs(){
-  cmCloseReprocesarIdNacs();
-
-  // Asegurarnos de tener el historial de comentarios y los datos de Round 2 cargados antes de migrar/guardar
-  await cmLoadComentariosHist();
-  if(!cmDataR2LoadedOnce){
-    await cmLoadDataR2();
-    cmDataR2LoadedOnce = true;
-  }
-
-  const migracion = []; // { antiguo, nuevo }
-
-  cmData.forEach(r=>{
+/* ---------- Aplicación automática de códigos de marca al ID NACS ----------
+   Se ejecuta sola (sin botón) cada vez que se cargan los datos de Round 1 / Round 2,
+   asegurando que todos los ID NACS tengan 9 dígitos y empiecen por un prefijo
+   válido de marca (OBS 40/44 · INESDI 22/23 · UCMA 32/33 · ESDESIGN 72/73). */
+async function cmAplicarCodigosIdAutomatico(lista, guardarFn){
+  let cambios = 0;
+  lista.forEach(r=>{
     const nuevo = cmAplicarCodigoIdNacs(r.idNacs, r.marca);
     if(nuevo && nuevo !== r.idNacs){
-      migracion.push({ antiguo: r.idNacs, nuevo });
+      if(r.idNacs && cmComentariosHist[r.idNacs] && !cmComentariosHist[nuevo]){
+        cmComentariosHist[nuevo] = cmComentariosHist[r.idNacs];
+        delete cmComentariosHist[r.idNacs];
+      }
       r.idNacs = nuevo;
+      cambios++;
     }
   });
-  cmDataR2.forEach(r=>{
-    const nuevo = cmAplicarCodigoIdNacs(r.idNacs, r.marca);
-    if(nuevo && nuevo !== r.idNacs){
-      migracion.push({ antiguo: r.idNacs, nuevo });
-      r.idNacs = nuevo;
-    }
-  });
-
-  // Migrar claves del historial de comentarios (idNacs antiguo -> nuevo)
-  migracion.forEach(({antiguo,nuevo})=>{
-    if(antiguo && cmComentariosHist[antiguo] && !cmComentariosHist[nuevo]){
-      cmComentariosHist[nuevo] = cmComentariosHist[antiguo];
-      delete cmComentariosHist[antiguo];
-    }
-  });
-
-  await cmSaveData();
-  await cmSaveDataR2();
-  if(migracion.length > 0){
+  if(cambios > 0){
+    await guardarFn();
     try{
       await fetch(`${WORKER_URL}/kv`,{
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -1625,10 +1627,7 @@ async function cmConfirmReprocesarIdNacs(){
       });
     }catch(e){ console.error('Error migrando historial de comentarios:', e); }
   }
-
-  cmRenderTable();
-  cmRenderTableR2();
-  alert(`Aplicados códigos de marca a ${migracion.length} ID NACS (Round 1 + Round 2).`);
+  return cambios;
 }
 
 function cmOpenBorrarDatos(){
@@ -1932,7 +1931,6 @@ document.addEventListener('click', (e)=>{
         <button class="cm-btn-white" onclick="cmExportExcel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f6e56" stroke-width="2"><path d="M12 15V3M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>Exportar</button>
         <button class="cm-btn-white cm-btn-danger" onclick="cmOpenBorrarDatos()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Borrar todo</button>
         <button class="cm-btn-white" onclick="cmOpenHistorico()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6a3fa0" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>Histórico</button>
-        <button class="cm-btn-white" onclick="cmOpenReprocesarIdNacs()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e0985c" stroke-width="2"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg>Aplicar códigos ID</button>
         <button class="cm-btn-circle" onclick="cmToggleHelp()">?</button>
         <div class="cm-help-pop" id="cmHelpPop">
           <div class="cm-help-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2f8f8a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>Cómo usar esta herramienta</div>
@@ -2173,20 +2171,6 @@ document.addEventListener('click', (e)=>{
   </div>
 </div>
 
-<!-- ============ REPROCESAR IDs NACS EXISTENTES ============ -->
-<div class="cm-confirm-overlay" id="cmOverlayReprocesar">
-  <div class="cm-confirm-box">
-    <div class="cm-confirm-head">
-      <div class="cm-confirm-icon" style="background:#fde3d0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a04a10" stroke-width="2"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
-      <div class="cm-confirm-title">Aplicar códigos de marca al ID NACS</div>
-    </div>
-    <div class="cm-confirm-text">Se añadirá el código de marca (OBS 40 · ESDESIGN 72 · INESDI 22 · UCMA 32) al ID NACS de <strong>todos los alumnos ya cargados</strong> (Round 1 y Round 2), hasta completar 9 dígitos. Link y Comentarios no se modifican; el historial de comentarios se migra automáticamente para seguir enlazado.</div>
-    <div class="cm-confirm-actions">
-      <button class="cm-btn-cancel" onclick="cmCloseReprocesarIdNacs()">Cancelar</button>
-      <button class="cm-btn-confirm-ok" onclick="cmConfirmReprocesarIdNacs()">Aplicar ahora</button>
-    </div>
-  </div>
-</div>
 
 <!-- ============ CONFIRMAR BORRAR TODO ============ -->
 <div class="cm-confirm-overlay" id="cmOverlayBorrar">
