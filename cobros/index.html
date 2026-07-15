@@ -1395,7 +1395,7 @@ async function cmHandleFileUploadR2(ev){
     }
 
     let omitidas = 0;
-    const nuevosRaw = json.map(row=>{
+    const nuevosRawConId = json.map(row=>{
       let marca = null;
       if(colMarca){
         const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
@@ -1411,9 +1411,20 @@ async function cmHandleFileUploadR2(ev){
         email: colEmail ? (row[colEmail]||'').toString().trim() : '',
         idNacs: cmAplicarCodigoIdNacs(colId ? (row[colId]||'').toString().trim() : '', marca),
         pais: colPais ? (row[colPais]||'').toString().trim() : '',
-        convocatoria: colConv ? (row[colConv]||'').toString().trim() : ''
+        convocatoria: colConv ? (row[colConv]||'').toString().trim() : '',
+        _customerId: (colCustomerId ? row[colCustomerId] : (colId ? row[colId] : '')).toString().trim()
       };
     }).filter(r=>r && r.nombre);
+
+    let duplicadas = 0;
+    const customerIdsVistos = new Set();
+    const nuevosRaw = nuevosRawConId.filter(r=>{
+      const key = cmNormalize(r._customerId);
+      if(!key) return true; // sin customerId no se puede deduplicar por este criterio
+      if(customerIdsVistos.has(key)){ duplicadas++; return false; }
+      customerIdsVistos.add(key);
+      return true;
+    }).map(r=>{ const { _customerId, ...resto } = r; return resto; });
 
     cmDataR2 = nuevosRaw.map(r=>({
       id: cmGenId(), ...r,
@@ -1426,6 +1437,7 @@ async function cmHandleFileUploadR2(ev){
     cmRenderTableR2();
     let msg = `Importados ${nuevosRaw.length} alumnos en Round 2.`;
     if(omitidas > 0) msg += `\n${omitidas} filas omitidas (marca no reconocida o "No filters applied").`;
+    if(duplicadas > 0) msg += `\n${duplicadas} filas omitidas por tener un Customer ID duplicado (se ha mantenido solo la primera aparición).`;
     alert(msg);
   }catch(e){
     console.error('Error importando Excel Round 2:', e);
@@ -1702,7 +1714,7 @@ async function cmHandleFileUpload(ev, round){
     }
 
     let omitidas = 0;
-    const nuevosRaw = json.map(row=>{
+    const nuevosRawConId = json.map(row=>{
       let marca = null;
       if(colMarca){
         const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
@@ -1718,9 +1730,20 @@ async function cmHandleFileUpload(ev, round){
         email: colEmail ? (row[colEmail]||'').toString().trim() : '',
         idNacs: cmAplicarCodigoIdNacs(colId ? (row[colId]||'').toString().trim() : '', marca),
         pais: colPais ? (row[colPais]||'').toString().trim() : '',
-        convocatoria: colConv ? (row[colConv]||'').toString().trim() : ''
+        convocatoria: colConv ? (row[colConv]||'').toString().trim() : '',
+        _customerId: (colCustomerId ? row[colCustomerId] : (colId ? row[colId] : '')).toString().trim()
       };
     }).filter(r=>r && r.nombre);
+
+    let duplicadas = 0;
+    const customerIdsVistos = new Set();
+    const nuevosRaw = nuevosRawConId.filter(r=>{
+      const key = cmNormalize(r._customerId);
+      if(!key) return true; // sin customerId no se puede deduplicar por este criterio
+      if(customerIdsVistos.has(key)){ duplicadas++; return false; }
+      customerIdsVistos.add(key);
+      return true;
+    }).map(r=>{ const { _customerId, ...resto } = r; return resto; });
 
     cmData = nuevosRaw.map(r=>({
       id: cmGenId(), ...r,
@@ -1734,6 +1757,7 @@ async function cmHandleFileUpload(ev, round){
     cmRenderTable();
     let msg = `Importados ${nuevosRaw.length} alumnos.`;
     if(omitidas > 0) msg += `\n${omitidas} filas omitidas (marca no reconocida o "No filters applied").`;
+    if(duplicadas > 0) msg += `\n${duplicadas} filas omitidas por tener un Customer ID duplicado (se ha mantenido solo la primera aparición).`;
     alert(msg);
   }catch(e){
     console.error('Error importando Excel:', e);
