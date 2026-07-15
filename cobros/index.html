@@ -1382,21 +1382,28 @@ async function cmHandleFileUploadR2(ev){
 
     const headers = Object.keys(json[0]);
     const colMarca  = cmFindColumn(headers, ['owning business unit','business unit']);
-    const colNombre = cmFindColumn(headers, ['full name (student)','full name','nombre','alumno']);
-    const colId     = cmFindColumn(headers, ['key_ganet (student)','key_ganet','key ganet','ganet','id nacs','idnacs','nacs']);
+    const colCustomerId = cmFindColumn(headers, ['customerid','customer id']);
+    const colNombre = cmFindColumn(headers, ['full name (student)','full name','fullname','nombre','alumno']);
+    const colId     = cmFindColumn(headers, ['key_ganet (student)','key_ganet','key ganet','ganet','id nacs','idnacs','nacs','customerid','customer id']);
     const colEmail  = cmFindColumn(headers, ['primary email (created by (delegate))','primary email','email','correo']);
     const colPais   = cmFindColumn(headers, ['country (student)','country','pais','país']);
     const colConv   = cmFindColumn(headers, ['academic period','convocatoria']);
 
-    if(!colMarca || !colNombre){
-      alert('No se han encontrado las columnas mínimas requeridas (Owning Business Unit / Full Name). Revisa el archivo.');
+    if((!colMarca && !colCustomerId) || !colNombre){
+      alert('No se han encontrado las columnas mínimas requeridas (Owning Business Unit / CustomerId y Full Name). Revisa el archivo.');
       ev.target.value=''; return;
     }
 
     let omitidas = 0;
     const nuevosRaw = json.map(row=>{
-      const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
-      const marca = CM_MARCA_MAP[marcaOriginal];
+      let marca = null;
+      if(colMarca){
+        const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
+        marca = CM_MARCA_MAP[marcaOriginal] || null;
+      }
+      if(!marca && colCustomerId){
+        marca = cmMarcaFromCustomerId(row[colCustomerId]);
+      }
       if(!marca){ omitidas++; return null; }
       return {
         marca,
@@ -1626,6 +1633,21 @@ async function cmConfirmBorrarTodo(){
 const CM_MARCA_MAP = { 'OBS':'obs', 'INESDI':'inesdi', 'ESDESIGN':'esdesign', 'UCMA':'ucma' };
 
 const CM_CODIGO_MARCA = { obs:'40', esdesign:'72', inesdi:'22', ucma:'32' };
+
+// Prefijos de 2 dígitos de la columna customerId que identifican la marca cuando
+// no viene informado el campo "Owning Business Unit" en el Excel.
+const CM_CUSTOMERID_MARCA_PREFIJOS = {
+  '40':'obs', '44':'obs',
+  '23':'inesdi', '22':'inesdi',
+  '32':'ucma', '33':'ucma',
+  '72':'esdesign', '73':'esdesign'
+};
+function cmMarcaFromCustomerId(customerIdRaw){
+  const digitos = (customerIdRaw||'').toString().replace(/\D/g,'');
+  if(!digitos) return null;
+  return CM_CUSTOMERID_MARCA_PREFIJOS[digitos.slice(0,2)] || null;
+}
+
 function cmAplicarCodigoIdNacs(idNacsRaw, marca){
   const codigo = CM_CODIGO_MARCA[marca];
   if(!codigo) return (idNacsRaw||'').toString();
@@ -1667,21 +1689,28 @@ async function cmHandleFileUpload(ev, round){
 
     const headers = Object.keys(json[0]);
     const colMarca  = cmFindColumn(headers, ['owning business unit','business unit']);
-    const colNombre = cmFindColumn(headers, ['full name (student)','full name','nombre','alumno']);
-    const colId     = cmFindColumn(headers, ['key_ganet (student)','key_ganet','key ganet','ganet','id nacs','idnacs','nacs']);
+    const colCustomerId = cmFindColumn(headers, ['customerid','customer id']);
+    const colNombre = cmFindColumn(headers, ['full name (student)','full name','fullname','nombre','alumno']);
+    const colId     = cmFindColumn(headers, ['key_ganet (student)','key_ganet','key ganet','ganet','id nacs','idnacs','nacs','customerid','customer id']);
     const colEmail  = cmFindColumn(headers, ['primary email (created by (delegate))','primary email','email','correo']);
     const colPais   = cmFindColumn(headers, ['country (student)','country','pais','país']);
     const colConv   = cmFindColumn(headers, ['academic period','convocatoria']);
 
-    if(!colMarca || !colNombre){
-      alert('No se han encontrado las columnas mínimas requeridas (Owning Business Unit / Full Name). Revisa el archivo.');
+    if((!colMarca && !colCustomerId) || !colNombre){
+      alert('No se han encontrado las columnas mínimas requeridas (Owning Business Unit / CustomerId y Full Name). Revisa el archivo.');
       ev.target.value=''; return;
     }
 
     let omitidas = 0;
     const nuevosRaw = json.map(row=>{
-      const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
-      const marca = CM_MARCA_MAP[marcaOriginal];
+      let marca = null;
+      if(colMarca){
+        const marcaOriginal = (row[colMarca]||'').toString().trim().toUpperCase();
+        marca = CM_MARCA_MAP[marcaOriginal] || null;
+      }
+      if(!marca && colCustomerId){
+        marca = cmMarcaFromCustomerId(row[colCustomerId]);
+      }
       if(!marca){ omitidas++; return null; }
       return {
         marca,
