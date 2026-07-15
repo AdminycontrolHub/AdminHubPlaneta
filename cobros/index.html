@@ -508,6 +508,8 @@ const CM_KV_REMITENTE_KEY = 'adminhub_cobros_remitente_v1';
 const CM_KV_DATA_R2_KEY = 'adminhub_cobros_round2_v1';
 const CM_KV_HISTORICO_KEY = 'adminhub_cobros_historico_r1';
 const CM_KV_COMENTARIOS_HIST_KEY = 'adminhub_cobros_comentarios_historial';
+const CM_KV_COMPLETADO_MES_R1_KEY = 'adminhub_cobros_completado_mes_r1';
+const CM_KV_COMPLETADO_MES_R2_KEY = 'adminhub_cobros_completado_mes_r2';
 
 const CM_MARCAS = {
   obs:      { label:'OBS',      badgeBg:'#f0dfa0', badgeColor:'#5a5142', rowBg:'#fdf6d8', hasMail:true  },
@@ -550,6 +552,7 @@ let cmFiltroPais = null;
 let cmFiltroConvocatoria = null;
 let cmFiltroLink = null;
 let cmFiltroComentario = null;
+let cmCompletadoMesR1 = null; // p.ej. "Julio 2026" cuando la tabla está vacía por gestión al 100%
 
 // ---- Módulo Round 2 (Links no atendidos + Remesa devueltos) ----
 let cmDataR2 = [];
@@ -559,6 +562,7 @@ let cmFiltroPaisR2 = null;
 let cmFiltroConvocatoriaR2 = null;
 let cmFiltroLinkR2 = null;
 let cmFiltroComentarioR2 = null;
+let cmCompletadoMesR2 = null;
 
 function cmNormalize(str){
   return (str||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -602,6 +606,8 @@ async function cmOpenL3(){
   await cmLoadRemitente();
   await cmLoadComentariosHist();
   await cmAplicarCodigosIdAutomatico(cmData, cmSaveData);
+  await cmComprobarCompletadoR1(true);
+  cmCompletadoMesR1 = await cmLoadCompletadoMes(CM_KV_COMPLETADO_MES_R1_KEY);
   cmRenderTable();
   cmStartHourlyRefresh();
 }
@@ -864,7 +870,11 @@ function cmRenderTable(){
   const hoy = new Date().getDate();
 
   if(rows.length === 0){
-    tbody.innerHTML = `<div class="cm-empty-state">No hay alumnos que coincidan con la búsqueda/filtro. Usa "Cargar listado" para importar datos.</div>`;
+    if(cmData.length === 0 && cmCompletadoMesR1){
+      tbody.innerHTML = cmBannerCompletado(cmCompletadoMesR1, 'Links tarjeta NO domiciliada');
+    } else {
+      tbody.innerHTML = `<div class="cm-empty-state">No hay alumnos que coincidan con la búsqueda/filtro. Usa "Cargar listado" para importar datos.</div>`;
+    }
   } else {
     let contadorPorMarca = {};
     tbody.innerHTML = rows.map(r=>{
@@ -954,14 +964,15 @@ async function cmChangeLink(id, campo, valor){
   await cmComprobarCompletadoR1();
 }
 /* Cuando todos los casos de Round 1 quedan gestionados (Link = Sí), el recuento ya
-   está registrado en el Histórico (se guarda al importar); vaciamos la tabla para
-   dejarla lista para la carga del día 1 del mes siguiente. */
-async function cmComprobarCompletadoR1(){
+   está registrado en el Histórico (se guarda al importar); vaciamos la tabla y dejamos
+   un aviso fijo y visual hasta la carga del día 1 del mes siguiente. */
+async function cmComprobarCompletadoR1(silencioso){
   if(cmData.length > 0 && cmData.every(r=>r.link1 === 'Si')){
     cmData = [];
     await cmSaveData();
+    cmCompletadoMesR1 = cmMesActualConAño();
+    await cmSaveCompletadoMes(CM_KV_COMPLETADO_MES_R1_KEY, cmCompletadoMesR1);
     cmRenderTable();
-    alert('Todos los casos de "Links tarjeta NO domiciliada" están gestionados. El recuento ha quedado guardado en el Histórico y la tabla se ha vaciado, lista para la próxima carga del día 1.');
   }
 }
 async function cmCopyIdNacs(btn, idNacs){
@@ -976,6 +987,41 @@ async function cmCopyIdNacs(btn, idNacs){
 function cmMesActualCapitalizado(){
   const mes = new Date().toLocaleString('es-ES', { month: 'long' });
   return mes.charAt(0).toUpperCase() + mes.slice(1);
+}
+
+/* ---------- Aviso "Mes gestionado al 100%" (persistido en KV) ---------- */
+async function cmLoadCompletadoMes(kvKey){
+  try{
+    const res = await fetch(`${WORKER_URL}/kv?key=${kvKey}&_ts=${Date.now()}`, { cache: 'no-store' });
+    const data = await res.json();
+    if(!data.value) return null;
+    const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+    return (val && typeof val === 'string') ? val : null;
+  }catch(e){ return null; }
+}
+async function cmSaveCompletadoMes(kvKey, texto){
+  try{
+    await fetch(`${WORKER_URL}/kv`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: kvKey, value: texto })
+    });
+  }catch(e){ console.error('Error guardando aviso de mes completado:', e); }
+}
+async function cmClearCompletadoMes(kvKey){
+  await cmSaveCompletadoMes(kvKey, '');
+}
+function cmMesActualConAño(){
+  return `${cmMesActualCapitalizado()} ${new Date().getFullYear()}`;
+}
+function cmBannerCompletado(mesTexto, tituloHerramienta){
+  return `<div style="text-align:center;padding:56px 24px;">
+    <div style="display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#1dcc84,#2f8f8a);box-shadow:0 8px 24px rgba(29,204,132,0.35);margin-bottom:18px;">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:20px;font-weight:800;color:#0f6e56;margin-bottom:6px;">🎉 ¡${cmEscapeHtml(mesTexto)} gestionado al 100%!</div>
+    <div style="font-size:13.5px;color:#4a4136;max-width:420px;margin:0 auto;line-height:1.6;">Todos los casos de <strong>${cmEscapeHtml(tituloHerramienta)}</strong> han sido gestionados y el recuento ha quedado guardado en el Histórico.</div>
+    <div style="margin-top:14px;display:inline-block;background:#dcf3ee;color:#0f6e56;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:6px 14px;border-radius:20px;">Esperando la próxima carga</div>
+  </div>`;
 }
 function cmFrasesRapidas(){
   return [
@@ -1153,6 +1199,8 @@ async function cmOpenR2(){
   }
   await cmLoadComentariosHist();
   await cmAplicarCodigosIdAutomatico(cmDataR2, cmSaveDataR2);
+  await cmComprobarCompletadoR2(true);
+  cmCompletadoMesR2 = await cmLoadCompletadoMes(CM_KV_COMPLETADO_MES_R2_KEY);
   cmRenderTableR2();
 }
 function cmBackToL2FromR2(){ document.getElementById('cmOverlayR2').classList.remove('show'); document.getElementById('cmOverlayL2').classList.add('show'); }
@@ -1284,7 +1332,11 @@ function cmRenderTableR2(){
   const tbody = document.getElementById('cmTableBodyR2');
 
   if(rows.length === 0){
-    tbody.innerHTML = `<div class="cm-empty-state">No hay alumnos que coincidan con la búsqueda/filtro. Usa "Cargar listado" para importar datos.</div>`;
+    if(cmDataR2.length === 0 && cmCompletadoMesR2){
+      tbody.innerHTML = cmBannerCompletado(cmCompletadoMesR2, 'Round 2 · Links no atendidos + Remesa devueltos');
+    } else {
+      tbody.innerHTML = `<div class="cm-empty-state">No hay alumnos que coincidan con la búsqueda/filtro. Usa "Cargar listado" para importar datos.</div>`;
+    }
   } else {
     let contadorPorMarca = {};
     tbody.innerHTML = rows.map(r=>{
@@ -1363,13 +1415,14 @@ async function cmChangeLinkR2(id, valor){
   await cmComprobarCompletadoR2();
 }
 /* Cuando todos los casos de Round 2 quedan gestionados (Link = Sí), vaciamos la
-   tabla para dejarla lista para la próxima carga. */
-async function cmComprobarCompletadoR2(){
+   tabla y dejamos un aviso fijo y visual hasta la próxima carga. */
+async function cmComprobarCompletadoR2(silencioso){
   if(cmDataR2.length > 0 && cmDataR2.every(r=>r.link === 'Si')){
     cmDataR2 = [];
     await cmSaveDataR2();
+    cmCompletadoMesR2 = cmMesActualConAño();
+    await cmSaveCompletadoMes(CM_KV_COMPLETADO_MES_R2_KEY, cmCompletadoMesR2);
     cmRenderTableR2();
-    alert('Todos los casos de "Round 2" están gestionados. La tabla se ha vaciado, lista para la próxima carga.');
   }
 }
 async function cmChangeComentarioR2(id, valor){
@@ -1458,6 +1511,8 @@ async function cmHandleFileUploadR2(ev){
       ultimaFecha:null, ultimoUsuario:null,
       marcaEnviada:false, comentarios:''
     }));
+    cmCompletadoMesR2 = null;
+    await cmClearCompletadoMes(CM_KV_COMPLETADO_MES_R2_KEY);
 
     await cmSaveDataR2();
     cmRenderTableR2();
@@ -1498,6 +1553,8 @@ function cmCloseBorrarDatosR2(){ document.getElementById('cmOverlayBorrarR2').cl
 async function cmConfirmBorrarTodoR2(){
   cmDataR2 = [];
   await cmSaveDataR2();
+  cmCompletadoMesR2 = null;
+  await cmClearCompletadoMes(CM_KV_COMPLETADO_MES_R2_KEY);
   cmCloseBorrarDatosR2();
   cmRenderTableR2();
 }
@@ -1637,6 +1694,8 @@ function cmCloseBorrarDatos(){ document.getElementById('cmOverlayBorrar').classL
 async function cmConfirmBorrarTodo(){
   cmData = [];
   await cmSaveData();
+  cmCompletadoMesR1 = null;
+  await cmClearCompletadoMes(CM_KV_COMPLETADO_MES_R1_KEY);
   cmCloseBorrarDatos();
   cmRenderTable();
 }
@@ -1769,6 +1828,8 @@ async function cmHandleFileUpload(ev, round){
       marcaEnviada:false, comentarios:''
     }));
     await cmSaveHistoricoSnapshot(cmData); // registro histórico de casos a gestionar por marca/convocatoria
+    cmCompletadoMesR1 = null;
+    await cmClearCompletadoMes(CM_KV_COMPLETADO_MES_R1_KEY);
 
     await cmSaveData();
     cmRenderTable();
