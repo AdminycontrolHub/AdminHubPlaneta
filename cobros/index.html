@@ -1654,6 +1654,10 @@ const CM_CUSTOMERID_MARCA_PREFIJOS = {
   '32':'ucma', '33':'ucma',
   '72':'esdesign', '73':'esdesign'
 };
+// Todos los prefijos de 2 dígitos que un ID de 9 dígitos puede llevar ya válidamente
+// para cada marca (además del prefijo "principal" de CM_CODIGO_MARCA usado al rellenar).
+const CM_CODIGOS_MARCA_VALIDOS = { obs:['40','44'], esdesign:['72','73'], inesdi:['22','23'], ucma:['32','33'] };
+
 function cmMarcaFromCustomerId(customerIdRaw){
   const digitos = (customerIdRaw||'').toString().replace(/\D/g,'');
   if(!digitos) return null;
@@ -1663,10 +1667,23 @@ function cmMarcaFromCustomerId(customerIdRaw){
 function cmAplicarCodigoIdNacs(idNacsRaw, marca){
   const codigo = CM_CODIGO_MARCA[marca];
   if(!codigo) return (idNacsRaw||'').toString();
-  const soloDigitos = (idNacsRaw||'').toString().replace(/\D/g,'');
+  let soloDigitos = (idNacsRaw||'').toString().replace(/\D/g,'');
   if(!soloDigitos) return '';
-  // Ya tiene 9 dígitos y empieza por el código correcto: no volver a aplicar (evita duplicarlo)
-  if(soloDigitos.length === 9 && soloDigitos.startsWith(codigo)) return soloDigitos;
+  const codigosValidos = CM_CODIGOS_MARCA_VALIDOS[marca] || [codigo];
+
+  // Reparación de corrupción previa: si el código de marca se antepuso por error a un ID
+  // que ya tenía 9 dígitos y empezaba por un prefijo válido (p.ej. 44 en vez de 40), el
+  // resultado quedó con más de 9 dígitos. Detectamos y quitamos ese prefijo sobrante.
+  if(soloDigitos.length > 9 && soloDigitos.startsWith(codigo)){
+    const resto = soloDigitos.slice(codigo.length);
+    if(resto.length === 9 && codigosValidos.some(c=>resto.startsWith(c))){
+      soloDigitos = resto;
+    }
+  }
+
+  // Ya tiene 9 dígitos y empieza por alguno de los prefijos válidos de la marca: no tocar
+  if(soloDigitos.length === 9 && codigosValidos.some(c=>soloDigitos.startsWith(c))) return soloDigitos;
+
   const relleno = 9 - codigo.length;
   const idPadded = soloDigitos.padStart(relleno,'0');
   return codigo + idPadded;
