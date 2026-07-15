@@ -814,7 +814,7 @@ function cmToggleFiltroComentario(ev){
 function cmGetPaisEstado(pais){
   const tz = CM_PAIS_TZ[cmNormalize(pais)];
   if(!tz) return { color:null, hora:null, enHorario:null };
-  if(tz.startsWith('Europe/')) return { color:null, hora:null, enHorario:null };
+  if(tz.startsWith('Europe/')) return { color:'#a8e0b8', textColor:'#0a4a2a', hora:null, enHorario:true };
   try{
     const horaStr = new Date().toLocaleString('en-US', { timeZone: tz, hour:'2-digit', hour12:false });
     const hora = parseInt(horaStr);
