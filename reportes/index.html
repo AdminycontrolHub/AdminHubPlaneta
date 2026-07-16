@@ -218,6 +218,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .lh-filters { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center; }
 .lh-filters select, .lh-filters input { font-size:12px; padding:6px 10px; border:1px solid rgba(0,100,140,0.22); border-radius:8px; background:rgba(255,252,245,0.9); color:#1a3a50; font-family:inherit; outline:none; }
 .lh-sel-count { font-size:12px; color:#6a8a9a; margin-left:auto; }
+.lh-fecha-limite { background:linear-gradient(90deg,#ff3caf,#ff8a3c 30%,#ffe23c 55%,#3cf0ff 78%,#a23cff); background-size:300% 100%; animation:psyshift 4s ease-in-out infinite; border-radius:10px; padding:8px 16px; display:flex; align-items:center; justify-content:center; flex:1; min-width:260px; box-shadow:0 0 18px rgba(255,60,175,0.55), 0 0 34px rgba(60,240,255,0.35); }
+.lh-fecha-limite span { color:#fff; font-size:12px; font-weight:700; letter-spacing:0.04em; text-align:center; white-space:nowrap; text-shadow:0 0 6px rgba(0,0,0,0.35); }
+@keyframes psyshift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
 /* Tabla */
 .lh-table-wrap { overflow-x:auto; border:1px solid rgba(0,100,140,0.12); border-radius:12px; }
 .lh-table { width:100%; border-collapse:collapse; font-size:12px; }
@@ -599,6 +602,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
           <option value="Adm. Comercial">Adm. Comercial</option>
         </select>
         <input type="text" id="lh-filter-search" placeholder="Buscar candidato…" oninput="renderLHTable()" style="min-width:150px;">
+        <div class="lh-fecha-limite" id="lh-fecha-limite">
+          <span>FECHA LÍMITE DE MATRICULACIÓN: 31 DE JULIO</span>
+        </div>
         <span class="lh-sel-count" id="lh-sel-label"></span>
       </div>
       <!-- Tabla -->
