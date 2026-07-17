@@ -35,18 +35,18 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .node { display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer; transition:transform 0.28s cubic-bezier(0.34,1.56,0.64,1); position:relative; }
 .node:hover { transform:scale(1.1); }
 .node.active { transform:scale(1.08); }
-.bubble { width:108px; height:108px; border-radius:50%; background:rgba(3,10,20,0.92); border:1.5px solid rgba(0,212,240,0.15); display:flex; align-items:center; justify-content:center; position:relative; transition:border-color 0.2s, box-shadow 0.2s, background 0.2s; box-shadow:inset 0 0 22px rgba(0,80,140,0.1); }
-.node:hover .bubble { border-color:rgba(0,212,240,0.6); box-shadow:0 0 22px rgba(0,212,240,0.14),inset 0 0 22px rgba(0,100,160,0.12); }
-.node.active .bubble { border-color:rgba(0,212,240,0.72); background:rgba(0,38,62,0.95); box-shadow:0 0 26px rgba(0,212,240,0.2),inset 0 0 24px rgba(0,180,255,0.07); }
-.node.active .bubble::after { content:''; position:absolute; width:106px; height:106px; border-radius:50%; border:1px solid rgba(0,212,240,0.18); animation:node-pulse 2.5s ease-in-out infinite; }
+.bubble{width:108px;height:108px;border-radius:50%;background:#030d18;border:1.5px solid var(--nc,rgba(0,212,240,0.35));display:flex;align-items:center;justify-content:center;position:relative;transition:transform 0.2s,box-shadow 0.2s;box-shadow:inset 0 0 20px rgba(0,0,0,0.45);color:var(--nc,#00D4F0);}
+.node:hover .bubble{box-shadow:0 0 22px var(--nc-glow,rgba(0,212,240,0.22)),inset 0 0 20px rgba(0,0,0,0.45);}
+.node.active .bubble{box-shadow:0 0 26px var(--nc-glow,rgba(0,212,240,0.28)),inset 0 0 22px rgba(0,0,0,0.45);}
+.node.active .bubble::after{content:'';position:absolute;width:106px;height:106px;border-radius:50%;border:1px solid var(--nc,rgba(0,212,240,0.25));animation:node-pulse 2.5s ease-in-out infinite;}
 @keyframes node-pulse { 0%,100%{opacity:.2;transform:scale(1);} 50%{opacity:.75;transform:scale(1.07);} }
-.status-badge { position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-radius:50%; border:2.5px solid #041C2E; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+.status-badge{position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:#08192a;border:1.5px solid var(--nc,rgba(0,212,240,0.6));display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--nc,#00D4F0);}
 .badge-ok   { background:#16a96b; color:#fff; }
 .badge-warn { background:#d9911a; color:#fff; }
 .badge-info { background:#1e7fc0; color:#fff; }
 .badge-lock { background:#6b34b8; color:#fff; }
-.node-label { font-size:12px; font-weight:500; color:rgba(0,190,220,0.45); text-align:center; line-height:1.3; max-width:96px; transition:color 0.2s; }
-.node:hover .node-label, .node.active .node-label { color:#00D4F0; }
+.node-label{font-size:12px;font-weight:600;color:var(--nc,rgba(0,190,220,0.7));text-align:center;line-height:1.3;max-width:96px;transition:opacity 0.2s;opacity:0.82;}
+.node:hover .node-label,.node.active .node-label{opacity:1;}
 .divider { position:relative; z-index:10; margin:28px 32px 0; height:1px; background:rgba(0,212,240,0.07); }
 .conv-selector-wrap { position:relative; z-index:10; padding:20px 32px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .conv-btn { padding:8px 24px; border-radius:8px; border:2px solid #7a50c0; background:rgba(168,120,240,0.15); color:#a878f0; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; font-family:inherit; transition:all 0.2s; }
@@ -268,31 +268,39 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <circle cx="450" cy="130" r="155" fill="none" stroke="rgba(0,180,220,0.03)" stroke-width="1"/>
   </svg>
   <div class="nodes-row">
-<div class="node active" onclick="window.open('https://powerbiportal.psoplaneta.com/report/2028a745-e041-4cc6-b83d-0880377bc6a4/d9a3efd861feb14743e8', '_blank')">
+<div class="node active" style="--nc:#22D3EE;--nc-glow:rgba(34,211,238,0.28);" onclick="window.open('https://powerbiportal.psoplaneta.com/report/2028a745-e041-4cc6-b83d-0880377bc6a4/d9a3efd861feb14743e8', '_blank')">
       <div class="bubble">
-        <div class="status-badge badge-ok">✓</div>
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="15" r="7" stroke="#00D4F0" stroke-width="1.6"/><path d="M6 32c0-7 5.8-11 13-11s13 4 13 11" stroke="#00D4F0" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div class="status-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="15" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M6 32c0-7 5.8-11 13-11s13 4 13 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </div>
       <span class="node-label">Activa</span>
     </div>
-    <div class="node" onclick="setActive(this); cmOpenL1();">
+    <div class="node" style="--nc:#34D399;--nc-glow:rgba(52,211,153,0.28);" onclick="setActive(this); cmOpenL1();">
       <div class="bubble">
-        <div class="status-badge badge-ok">✓</div>
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="5" y="9" width="28" height="20" rx="3" stroke="#40C8E0" stroke-width="1.6"/><path d="M5 15h28" stroke="#40C8E0" stroke-width="1.4"/><circle cx="14" cy="23" r="3.5" stroke="#40C8E0" stroke-width="1.4"/><path d="M21 22h9M21 25h6" stroke="#40C8E0" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <div class="status-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="5" y="9" width="28" height="20" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M5 15h28" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="23" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M21 22h9M21 25h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       </div>
       <span class="node-label">Cobros al día</span>
     </div>
-    <div class="node" onclick="setActive(this)">
+    <div class="node" style="--nc:#F5A623;--nc-glow:rgba(245,166,35,0.28);" onclick="setActive(this)">
       <div class="bubble">
-        <div class="status-badge badge-warn">!</div>
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="4" y="10" width="30" height="19" rx="3" stroke="#40C8E0" stroke-width="1.6"/><path d="M4 16h30" stroke="#40C8E0" stroke-width="1.4"/><path d="M11 23h8M11 26h5" stroke="#40C8E0" stroke-width="1.3" stroke-linecap="round"/><circle cx="29" cy="27" r="5" fill="#d9911a"/><text x="29" y="31" text-anchor="middle" font-size="8" font-weight="700" fill="#fff" font-family="sans-serif">!</text></svg>
+        <div class="status-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="4" y="10" width="30" height="19" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M4 16h30" stroke="currentColor" stroke-width="1.4"/><path d="M11 23h8M11 26h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="29" cy="27" r="5" fill="currentColor"/><text x="29" y="31" text-anchor="middle" font-size="8" font-weight="700" fill="#030d18" font-family="sans-serif">!</text></svg>
       </div>
       <span class="node-label">Tarjetas pendientes</span>
     </div>
-    <div class="node" onclick="setActive(this)">
+    <div class="node" style="--nc:#A78BFA;--nc-glow:rgba(167,139,250,0.28);" onclick="setActive(this)">
       <div class="bubble">
-        <div class="status-badge badge-info">i</div>
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="7" y="4" width="24" height="30" rx="3" stroke="#22D3EE" stroke-width="1.6"/><path d="M12 13h14M12 18h14M12 23h9" stroke="#22D3EE" stroke-width="1.4" stroke-linecap="round"/><path d="M21 28l2.5 2.5 4.5-5" stroke="#22D3EE" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="status-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none"><rect x="7" y="4" width="24" height="30" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M12 13h14M12 18h14M12 23h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M21 28l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <span class="node-label">Cierre Contable</span>
     </div>
