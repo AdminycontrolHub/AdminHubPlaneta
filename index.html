@@ -105,24 +105,24 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .bubble { border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s; }
 .node-label { font-size: 12px; font-weight: 500; text-align: center; line-height: 1.2; max-width: 80px; transition: color 0.2s; opacity: 0.55; }
 .node:hover .node-label { opacity: 1; }
-.node[data-k="reportes"] .bubble   { border: 1.5px solid rgba(0,230,255,0.7);   box-shadow: 0 0 10px rgba(0,230,255,0.18); }
-.node[data-k="cobros"] .bubble     { border: 1.5px solid rgba(29,204,132,0.7);  box-shadow: 0 0 10px rgba(29,204,132,0.18); }
-.node[data-k="tareas"] .bubble     { border: 1.5px solid rgba(168,120,240,0.7); box-shadow: 0 0 10px rgba(168,120,240,0.18); }
-.node[data-k="convo"] .bubble      { border: 1.5px solid rgba(58,171,240,0.7);  box-shadow: 0 0 10px rgba(58,171,240,0.18); }
-.node[data-k="manuales"] .bubble   { border: 1.5px solid rgba(240,168,48,0.7);  box-shadow: 0 0 10px rgba(240,168,48,0.18); }
-.node[data-k="comisiones"] .bubble { border: 1.5px solid rgba(255,100,180,0.7); box-shadow: 0 0 10px rgba(255,100,180,0.18); }
+.node[data-k="reportes"] .bubble   { border: 1.5px solid #00E6FF;  box-shadow: 0 0 14px rgba(0,230,255,0.35); }
+.node[data-k="cobros"] .bubble     { border: 1.5px solid #1dcc84;  box-shadow: 0 0 14px rgba(29,204,132,0.35); }
+.node[data-k="tareas"] .bubble     { border: 1.5px solid #a878f0;  box-shadow: 0 0 14px rgba(168,120,240,0.35); }
+.node[data-k="convo"] .bubble      { border: 1.5px solid #3aabf0;  box-shadow: 0 0 14px rgba(58,171,240,0.35); }
+.node[data-k="manuales"] .bubble   { border: 1.5px solid #f0a830;  box-shadow: 0 0 14px rgba(240,168,48,0.35); }
+.node[data-k="comisiones"] .bubble { border: 1.5px solid #ff64b4;  box-shadow: 0 0 14px rgba(255,100,180,0.35); }
 .node[data-k="reportes"] .node-label   { color: #00E6FF; }
 .node[data-k="cobros"] .node-label     { color: #1dcc84; }
 .node[data-k="tareas"] .node-label     { color: #a878f0; }
 .node[data-k="convo"] .node-label      { color: #3aabf0; }
 .node[data-k="manuales"] .node-label   { color: #f0a830; }
 .node[data-k="comisiones"] .node-label { color: #ff64b4; }
-.node[data-k="reportes"]:hover .bubble   { border-color: #00E6FF;  box-shadow: 0 0 22px rgba(0,230,255,0.6),  inset 0 0 18px rgba(0,200,255,0.08); }
-.node[data-k="cobros"]:hover .bubble     { border-color: #1dcc84;  box-shadow: 0 0 22px rgba(29,204,132,0.6), inset 0 0 18px rgba(29,204,132,0.08); }
-.node[data-k="tareas"]:hover .bubble     { border-color: #a878f0;  box-shadow: 0 0 22px rgba(168,120,240,0.6),inset 0 0 18px rgba(168,120,240,0.08); }
-.node[data-k="convo"]:hover .bubble      { border-color: #3aabf0;  box-shadow: 0 0 22px rgba(58,171,240,0.6), inset 0 0 18px rgba(58,171,240,0.08); }
-.node[data-k="manuales"]:hover .bubble   { border-color: #f0a830;  box-shadow: 0 0 22px rgba(240,168,48,0.6), inset 0 0 18px rgba(240,168,48,0.08); }
-.node[data-k="comisiones"]:hover .bubble { border-color: #ff64b4;  box-shadow: 0 0 22px rgba(255,100,180,0.6),inset 0 0 18px rgba(255,100,180,0.08); }
+.node[data-k="reportes"]:hover .bubble   { border-color: #00E6FF;  box-shadow: 0 0 28px rgba(0,230,255,0.75),  inset 0 0 18px rgba(0,200,255,0.1); }
+.node[data-k="cobros"]:hover .bubble     { border-color: #1dcc84;  box-shadow: 0 0 28px rgba(29,204,132,0.75), inset 0 0 18px rgba(29,204,132,0.1); }
+.node[data-k="tareas"]:hover .bubble     { border-color: #a878f0;  box-shadow: 0 0 28px rgba(168,120,240,0.75),inset 0 0 18px rgba(168,120,240,0.1); }
+.node[data-k="convo"]:hover .bubble      { border-color: #3aabf0;  box-shadow: 0 0 28px rgba(58,171,240,0.75), inset 0 0 18px rgba(58,171,240,0.1); }
+.node[data-k="manuales"]:hover .bubble   { border-color: #f0a830;  box-shadow: 0 0 28px rgba(240,168,48,0.75), inset 0 0 18px rgba(240,168,48,0.1); }
+.node[data-k="comisiones"]:hover .bubble { border-color: #ff64b4;  box-shadow: 0 0 28px rgba(255,100,180,0.75),inset 0 0 18px rgba(255,100,180,0.1); }
 .node[data-k="ctrl"] { z-index: 20; }
 .node[data-k="ctrl"] .ctrl-outer { width: 140px; height: 140px; border-radius: 50%; border: 1.5px solid rgba(0,255,180,0.35); display: flex; align-items: center; justify-content: center; animation: ctrl-outer-pulse 3.5s ease-in-out infinite; transition: border-color 0.2s; }
 .node[data-k="ctrl"] .ctrl-inner { width: 118px; height: 118px; border-radius: 50%; background: rgba(120,220,160,0.25); border: 2.5px solid rgba(0,255,180,0.85); box-shadow: 0 0 14px rgba(0,255,180,0.3), inset 0 0 12px rgba(0,255,180,0.06); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s, box-shadow 0.2s; }
@@ -700,15 +700,18 @@ Las URLs son relativas al hub. Usa siempre este formato para los enlaces de nave
 
 MÓDULOS DISPONIBLES:
 - Reportes → reportes/index.html
+- Becas (Becas l'Hospitalet) → reportes/index.html#becas-lh (dentro del módulo Reportes)
 - Cobros y Morosidad → cobros/index.html
 - Tareas / Seguimientos → seguimientos/index.html
-- Convo '27 → convo/index.html
+- Convo '27 → convo/index.html (incluye "Fechas clave por marca" y la "Herramienta de cruce de datos", ambas son funciones dentro de esta misma página, no páginas aparte)
 - Manuales → manuales/index.html
 - Comisiones → comisiones/index.html
 - Control de Gestión → acceso restringido con contraseña, solo personal autorizado.
 - Referidos OBS → seguimientos/index.html#referidos-obs (gestión de recompensas de alumnos referidos, dentro de Tareas/Seguimientos)
 
 Si el usuario pregunta por "referidos", "recompensas de referidos", "alumnos referidos" o similar, enlaza siempre a seguimientos/index.html#referidos-obs explicando que es el módulo de Referidos OBS dentro de Tareas/Seguimientos.
+Si el usuario pregunta por "becas" o "Becas l'Hospitalet", enlaza siempre a reportes/index.html#becas-lh explicando que está dentro del módulo Reportes.
+Si el usuario pregunta por "fechas clave", "cruce de datos" o "convo 27", enlaza siempre a convo/index.html.
 
 ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo ⚡) contiene accesos directos a herramientas externas. Cuando el usuario pida cualquiera de estos elementos, dile que pulse el icono ⚡ en el lateral derecho para abrirlo: Sudoku OBS, Bloqueo Campus, Hermes, PayComet, Paygold, Referidos, Planner, Calendario Comisiones, Puntuación Master.
 
@@ -1271,17 +1274,17 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   }
 
   const QUICK_BTNS = [
-    { icon:'📊', label:'Nº matrículas por marca y convocatoria', color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
-    { icon:'📉', label:'Datos de morosidad',                     color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros' },
-    { icon:'🔵', label:'Power BI Activa',                        color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros' },
-    { icon:'🎓', label:'Referidos OBS',                          color:'#2a7f8a', bg:'rgba(42,127,138,0.1)', tagBg:'rgba(42,127,138,0.12)', tagColor:'#1a5560', tag:'Tareas' },
-    { icon:'🔗', label:'SXDataHUB',                              color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
-    { icon:'⚡', label:'Sudoku OBS',                             color:'#f0a830', bg:'rgba(240,168,48,0.1)', tagBg:'rgba(240,168,48,0.12)', tagColor:'#8a5a00', tag:'Accesos rápidos' },
-    { icon:'📅', label:'Fechas clave por marca',                 color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27" },
-    { icon:'🔀', label:'Herramienta cruce de datos',             color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27" },
-    { icon:'✅', label:'Resumen de tareas pendientes',           color:'#a878f0', bg:'rgba(168,120,240,0.1)', tagBg:'rgba(168,120,240,0.12)', tagColor:'#5a2aaa', tag:'Tareas' },
-    { icon:'🗂️', label:'Histórico cierres pasados',             color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
-    { icon:'🏅', label:'Becas',                                  color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes' },
+    { icon:'📊', label:'Nº matrículas por marca y convocatoria', color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes', url:'reportes/index.html' },
+    { icon:'📉', label:'Datos de morosidad',                     color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros', url:'cobros/index.html' },
+    { icon:'🔵', label:'Power BI Activa',                        color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros', url:'cobros/index.html' },
+    { icon:'🎓', label:'Referidos OBS',                          color:'#2a7f8a', bg:'rgba(42,127,138,0.1)', tagBg:'rgba(42,127,138,0.12)', tagColor:'#1a5560', tag:'Tareas', url:'seguimientos/index.html#referidos-obs' },
+    { icon:'🔗', label:'SXDataHUB',                              color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes', url:'reportes/index.html' },
+    { icon:'⚡', label:'Sudoku OBS',                             color:'#f0a830', bg:'rgba(240,168,48,0.1)', tagBg:'rgba(240,168,48,0.12)', tagColor:'#8a5a00', tag:'Accesos rápidos', openAccesos:true },
+    { icon:'📅', label:'Fechas clave por marca',                 color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27", url:'convo/index.html' },
+    { icon:'🔀', label:'Herramienta cruce de datos',             color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27", url:'convo/index.html' },
+    { icon:'✅', label:'Resumen de tareas pendientes',           color:'#a878f0', bg:'rgba(168,120,240,0.1)', tagBg:'rgba(168,120,240,0.12)', tagColor:'#5a2aaa', tag:'Tareas', url:'seguimientos/index.html' },
+    { icon:'🗂️', label:'Histórico cierres pasados',             color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes', url:'reportes/index.html' },
+    { icon:'🏅', label:'Becas',                                  color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes', url:'reportes/index.html#becas-lh' },
   ];
 
   function appendQuickButtons() {
@@ -1290,7 +1293,8 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
       const btn = document.createElement('button'); btn.className='quick-btn';
       btn.innerHTML = `<div class="qb-accent" style="background:${b.color};"></div><div class="qb-icon" style="background:${b.bg};">${b.icon}</div><span class="qb-text">${b.label}</span><span class="qb-tag" style="background:${b.tagBg};color:${b.tagColor};">${b.tag}</span>`;
       btn.addEventListener('click', () => {
-        if (b.label === 'Referidos OBS') { window.location.href = 'seguimientos/index.html#referidos-obs'; return; }
+        if (b.openAccesos) { wrap.remove(); document.getElementById('accesosWrap').classList.add('open'); return; }
+        if (b.url) { window.location.href = b.url; return; }
         wrap.remove(); chatInput.value=b.label; sendMessage();
       });
       wrap.appendChild(btn);
