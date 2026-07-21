@@ -80,23 +80,25 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cat-node .bubble {
   width: 102px; height: 102px; border-radius: 50%;
   background: rgba(0,21,32,0.92);
-  border: 1.5px solid rgba(0,230,255,0.15);
+  border: 1.5px solid var(--nc,rgba(0,230,255,0.15));
   display: flex; align-items: center; justify-content: center;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   position: relative;
+  color: var(--nc,#00E6FF);
 }
-.cat-node:hover .bubble { border-color: rgba(0,230,255,0.65); }
+.cat-node:hover .bubble { border-color: var(--nc,rgba(0,230,255,0.65)); }
 .cat-node.active .bubble {
-  border-color: rgba(0,230,255,0.7);
+  border-color: var(--nc,rgba(0,230,255,0.7));
   background: rgba(0,40,65,0.95);
-  box-shadow: 0 0 22px rgba(0,230,255,0.18), inset 0 0 20px rgba(0,180,255,0.06);
+  box-shadow: 0 0 22px var(--nc-glow,rgba(0,230,255,0.18)), inset 0 0 20px rgba(0,180,255,0.06);
 }
 .cat-node.active .bubble::after {
   content: '';
   position: absolute;
   width: 100px; height: 100px; border-radius: 50%;
-  border: 1px solid rgba(0,230,255,0.18);
+  border: 1px solid var(--nc,rgba(0,230,255,0.18));
   animation: cat-pulse 2.5s ease-in-out infinite;
+  pointer-events: none;
 }
 @keyframes cat-pulse { 0%,100%{opacity:.25;transform:scale(1);} 50%{opacity:.8;transform:scale(1.06);} }
 .cat-node .bubble .cat-count {
@@ -116,13 +118,14 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   text-align: center; line-height: 1.2; max-width: 90px;
   transition: color 0.2s;
 }
-.cat-node:hover .node-label, .cat-node.active .node-label { color: #00E6FF; }
+.cat-node:hover .node-label, .cat-node.active .node-label { color: var(--nc,#00E6FF); }
 .cat-node.drag-over .bubble {
   border-color: #00E6FF !important;
   background: rgba(0,100,160,0.4) !important;
   box-shadow: 0 0 32px rgba(0,230,255,0.3) !important;
 }
 .cat-node.drag-over { transform: scale(1.14); }
+.cat-status-badge{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:50%;background:#08192a;border:1.5px solid var(--nc,rgba(0,230,255,0.6));display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--nc,#00E6FF);z-index:3;}
 
 /* ── Divider ── */
 .divider { position:relative; z-index:10; margin:22px 32px 0; height:1px; background:rgba(0,230,255,0.07); }
@@ -194,6 +197,46 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .btn-cancel:hover { background:#ddd7cd; color:#1a3a5c; }
 .btn-save { background:#d4cfc6; border:1px solid #c0b9af; border-radius:9px; padding:9px 20px; color:#1a3a5c; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .btn-save:hover { background:#c8c2b8; }
+
+/* ===== GESTOR COMÚN DE CATEGORÍAS ===== */
+.bm-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,5,15,0.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem;}
+.bm-overlay.open{display:flex;}
+.bm-modal{background:#030E1E;border:1px solid rgba(0,230,255,0.3);border-radius:18px;width:min(640px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 0 60px rgba(0,180,255,0.12);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#E0F7FF;}
+.bm-header{border-bottom:1px solid rgba(0,230,255,0.1);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#030E1E;}
+.bm-header-left{display:flex;align-items:center;gap:10px;}
+.bm-header-icon{width:28px;height:28px;border-radius:50%;border:1.5px solid #00E6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bm-title{color:#00E6FF;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin:0;}
+.bm-sub{color:rgba(255,255,255,0.35);font-size:10px;margin:2px 0 0;}
+.bm-close{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+.bm-close:hover{border-color:rgba(0,230,255,0.5);color:#00E6FF;}
+.bm-body{padding:20px 22px 26px;}
+.bm-layout{display:grid;grid-template-columns:150px 1fr;gap:16px;}
+.bm-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;padding-right:2px;}
+.bm-list-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid rgba(0,230,255,0.12);background:rgba(0,20,40,0.5);cursor:pointer;font-size:12px;color:rgba(224,247,255,0.75);text-align:left;font-family:inherit;width:100%;}
+.bm-list-item:hover{border-color:rgba(0,230,255,0.4);}
+.bm-list-item.selected{border-color:#00E6FF;background:rgba(0,230,255,0.1);color:#fff;}
+.bm-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.bm-detail{background:rgba(0,20,40,0.5);border:1px solid rgba(0,230,255,0.15);border-radius:12px;padding:16px;}
+.bm-field{margin-bottom:12px;}
+.bm-field label{display:block;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:rgba(0,200,230,0.4);margin-bottom:5px;}
+.bm-field input[type=text]{width:100%;background:rgba(0,20,40,0.8);border:1px solid rgba(0,230,255,0.25);border-radius:7px;padding:7px 9px;color:#E0F7FF;font-size:12.5px;font-family:inherit;outline:none;box-sizing:border-box;}
+.bm-field input:focus{border-color:#00E6FF;}
+.bm-swatches{display:flex;flex-wrap:wrap;gap:7px;}
+.bm-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;padding:0;}
+.bm-swatch.selected{border-color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,0.4);}
+.bm-icons{display:flex;flex-wrap:wrap;gap:6px;}
+.bm-icon-opt{width:32px;height:32px;border-radius:8px;border:1px solid rgba(0,230,255,0.2);background:rgba(0,20,40,0.6);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(0,200,230,0.6);padding:0;}
+.bm-icon-opt.selected{border-color:#00E6FF;color:#00E6FF;background:rgba(0,230,255,0.12);}
+.bm-actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px;}
+.bm-btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:inherit;}
+.bm-btn-save{background:#00E6FF;color:#031420;}
+.bm-btn-save:hover{background:#4de8ff;}
+.bm-btn-delete{background:rgba(225,75,58,0.15);color:#ff8a75;}
+.bm-btn-delete:hover{background:rgba(225,75,58,0.28);}
+.bm-btn-delete:disabled{opacity:0.35;cursor:not-allowed;}
+.bm-btn-add{background:rgba(0,230,255,0.08);color:#00E6FF;border:1px dashed rgba(0,230,255,0.4);width:100%;padding:10px;margin-top:14px;}
+.bm-btn-add:hover{background:rgba(0,230,255,0.16);}
+@media(max-width:560px){.bm-layout{grid-template-columns:1fr;}}
 
 @media(max-width:600px){
   .topbar,.page-head,.toolbar,.cats-section,.grid{ padding-left:16px; padding-right:16px; }
@@ -280,39 +323,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <span class="node-label">Todos</span>
   </div>
 
-  <div class="cat-node" id="node-admc" data-cat="Administración Comercial"
-       onclick="setActiveCat('Administración Comercial')"
-       ondragover="onBubbleDragOver(event,'Administración Comercial')"
-       ondragleave="onBubbleDragLeave(event,'Administración Comercial')"
-       ondrop="onBubbleDrop(event,'Administración Comercial')">
-    <div class="bubble">
-      <span class="cat-count" id="badge-admc">0</span>
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-        <path d="M3 24V10a2 2 0 0 1 2-2h20a2 2 0 0 1 2 2v14" stroke="#40C8E0" stroke-width="1.7" stroke-linecap="round"/>
-        <path d="M1 24h28" stroke="#40C8E0" stroke-width="1.7" stroke-linecap="round"/>
-        <path d="M10 18V12M15 18V9M20 18V14" stroke="#40C8E0" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <span class="node-label">Administración Comercial</span>
-  </div>
-
-  <div class="cat-node" id="node-cobros" data-cat="Atención Cobros"
-       onclick="setActiveCat('Atención Cobros')"
-       ondragover="onBubbleDragOver(event,'Atención Cobros')"
-       ondragleave="onBubbleDragLeave(event,'Atención Cobros')"
-       ondrop="onBubbleDrop(event,'Atención Cobros')">
-    <div class="bubble">
-      <span class="cat-count" id="badge-cobros">0</span>
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-        <rect x="4" y="2" width="22" height="26" rx="3" stroke="#22D3EE" stroke-width="1.7"/>
-        <path d="M9 10h12M9 15h10M9 20h7" stroke="#22D3EE" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M7 10l1.5 1.5 2-2.5" stroke="#22D3EE" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M7 15l1.5 1.5 2-2.5" stroke="#22D3EE" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M7 20l1.5 1.5 2-2.5" stroke="#22D3EE" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <span class="node-label">Atención Cobros</span>
-  </div>
+  <div id="catNodesDynamic" style="display:contents;"></div>
 </div>
 
 <div class="divider"></div>
@@ -349,8 +360,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <label>Área *</label>
       <select id="fTag">
         <option value="">— Selecciona una categoría —</option>
-        <option value="Administración Comercial">Administración Comercial</option>
-        <option value="Atención Cobros">Atención Cobros</option>
       </select>
       <div class="area-hint">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -365,6 +374,31 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </button>
       <button class="btn-cancel" onclick="closeOverlay('formOverlay')">Cancelar</button>
       <button class="btn-save" onclick="saveManual()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Gestionar categorías -->
+<div class="bm-overlay" id="bmOverlay" onclick="bmOverlayClick(event)">
+  <div class="bm-modal">
+    <div class="bm-header">
+      <div class="bm-header-left">
+        <div class="bm-header-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00E6FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <div>
+          <p class="bm-title">Gestionar categorías</p>
+          <p class="bm-sub">Nombre, color e icono de cada categoría</p>
+        </div>
+      </div>
+      <button class="bm-close" onclick="closeBubbleManager()">✕</button>
+    </div>
+    <div class="bm-body">
+      <div class="bm-layout">
+        <div class="bm-list" id="bmList"></div>
+        <div class="bm-detail" id="bmDetail"></div>
+      </div>
+      <button class="bm-btn bm-btn-add" onclick="bmAddBubble()">+ Nueva categoría</button>
     </div>
   </div>
 </div>
@@ -424,13 +458,12 @@ function setActiveCat(cat) {
 
 function updateBadges() {
   const total  = items.length;
-  const admc   = items.filter(m => m.tag === 'Administración Comercial').length;
-  const cobros = items.filter(m => m.tag === 'Atención Cobros').length;
-  ['all','admc','cobros'].forEach(k => {
-    const el = document.getElementById('badge-'+k);
-    const n  = k==='all'?total:k==='admc'?admc:cobros;
-    el.textContent = n;
-    el.classList.toggle('show', n > 0);
+  document.getElementById('badge-all').textContent = total;
+  document.getElementById('badge-all').classList.toggle('show', total > 0);
+  bmBubbles.forEach(b=>{
+    const n = items.filter(m => m.tag === b.name).length;
+    const el = document.getElementById('badge-cat-'+b.id);
+    if(el){ el.textContent = n; el.classList.toggle('show', n > 0); }
   });
   document.getElementById('totalPill').textContent = total + ' manual' + (total!==1?'es':'');
 }
@@ -447,6 +480,15 @@ function iconFor(tag){
   return '📄';
 }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+function colorForTag(tag){
+  const b = bmBubbles.find(x=>x.name===tag);
+  return b ? b.color : '#22D3EE';
+}
 
 function renderGrid() {
   const q = document.getElementById('searchInput').value.toLowerCase();
@@ -475,15 +517,19 @@ function renderGrid() {
 
   function cardHtml(m, fi) {
     const ri = items.indexOf(m);
-    return `<div class="m-card" draggable="true" data-idx="${ri}" style="animation-delay:${fi*0.045}s"
+    const hex = colorForTag(m.tag);
+    const {r,g,b} = hexToRgb(hex);
+    const cardStyle = `border-color:rgba(${r},${g},${b},0.65);background:linear-gradient(160deg,rgba(${r},${g},${b},0.24),rgba(0,18,38,0.9) 62%);`;
+    const iconStyle = `background:rgba(${r},${g},${b},0.32);border-color:rgba(${r},${g},${b},0.55);`;
+    return `<div class="m-card" draggable="true" data-idx="${ri}" style="animation-delay:${fi*0.045}s;${cardStyle}"
       ondragstart="onDragStart(event,${ri})" ondragend="onDragEnd()"
       onclick="if(!event.target.closest('.icon-btn')&&!event.target.closest('.drag-handle')&&'${esc(m.url)}') window.open('${esc(m.url)}','_blank')">
       <div class="drag-handle" title="Arrastra a una categoría">⠿</div>
       <div class="card-top">
-        <div class="card-icon">${iconFor(m.tag)}</div>
+        <div class="card-icon" style="${iconStyle}">${iconFor(m.tag)}</div>
         <div class="card-title-block">
           <div class="card-title">${esc(m.title)}</div>
-          ${m.tag?`<span class="card-tag">${esc(m.tag)}</span>`:''}
+          ${m.tag?`<span class="card-tag" style="background:rgba(${r},${g},${b},0.14);border-color:rgba(${r},${g},${b},0.35);color:rgb(${Math.min(255,r+60)},${Math.min(255,g+60)},${Math.min(255,b+60)});">${esc(m.tag)}</span>`:''}
         </div>
       </div>
       ${m.desc?`<div class="card-desc">${esc(m.desc.substring(0,100))}${m.desc.length>100?'…':''}</div>`:''}
@@ -519,7 +565,11 @@ function onDragEnd(){
   document.querySelectorAll('.cat-node').forEach(n=>n.classList.remove('drag-over'));
   dragIdx=null;
 }
-function nodeId(cat){ return cat==='Administración Comercial'?'node-admc':cat==='Atención Cobros'?'node-cobros':'node-all'; }
+function nodeId(cat){
+  if(cat==='all') return 'node-all';
+  const b = bmBubbles.find(x=>x.name===cat);
+  return b ? 'node-cat-'+b.id : 'node-all';
+}
 function onBubbleDragOver(e,cat){
   if(dragIdx===null||cat==='all') return;
   e.preventDefault(); e.dataTransfer.dropEffect='move';
@@ -578,7 +628,240 @@ function openOverlay(id){ document.getElementById(id).classList.add('open'); }
 function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
 
+/* ================================================================
+   GESTOR DE CATEGORÍAS — nombre, color, icono, borrar, añadir
+   El renombrado actualiza en cascada los manuales que usan esa categoría.
+   Persistido en KV, compartido para todo el equipo.
+   ================================================================ */
+const BM_KV_KEY = 'adminhub_manuales_categorias_v1';
+
+const BM_ICONS = {
+  briefcase: `<path d="M3 24V10a2 2 0 0 1 2-2h20a2 2 0 0 1 2 2v14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M1 24h28" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10 18V12M15 18V9M20 18V14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  doccheck:  `<rect x="4" y="2" width="22" height="26" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M9 10h12M9 15h10M9 20h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 10l1.5 1.5 2-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 15l1.5 1.5 2-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 20l1.5 1.5 2-2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>`,
+  folder:    `<path d="M4 8a2 2 0 0 1 2-2h6l2 3h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>`,
+  star:      `<path d="M15 4l3.09 6.26L25 11.27l-5 4.87L21.18 23 15 19.77 8.82 23l1.18-6.86L5 11.27l6.91-1.01L15 4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>`,
+  flag:      `<path d="M7 3v24" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M7 5h14l-3 5 3 5H7" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>`,
+  bolt:      `<path d="M16 3L6 17h7l-1.5 10L23 12h-7l0-9z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>`
+};
+const BM_COLORS = ['#40C8E0','#22D3EE','#34D399','#A78BFA','#F5A623','#FF2E9F','#00FFB2','#FFD966'];
+
+const BM_DEFAULT_BUBBLES = [
+  { id:'admc',   name:'Administración Comercial', color:'#34D399', icon:'briefcase' },
+  { id:'cobros', name:'Atención Cobros',           color:'#F5A623', icon:'doccheck' }
+];
+
+let bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
+let bmSelectedId = null;
+let bmPendingColor = null;
+let bmPendingIcon = null;
+
+function bmEscapeHtml(s){ const d=document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+function bmGlow(hex){
+  const {r,g,b} = hexToRgb(hex);
+  return `rgba(${r},${g},${b},0.28)`;
+}
+
+async function bmLoadBubbles(){
+  try{
+    const res = await fetch(`${WORKER_URL}/kv?key=${BM_KV_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
+    const d = await res.json();
+    if(d.value){
+      const parsed = typeof d.value==='string' ? JSON.parse(d.value) : d.value;
+      if(Array.isArray(parsed) && parsed.length){
+        bmBubbles = parsed;
+      } else {
+        bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
+        await bmSaveBubbles();
+      }
+    } else {
+      bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
+      await bmSaveBubbles();
+    }
+  }catch(e){
+    console.error('Error cargando categorías:', e);
+    bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
+  }
+  bmRenderCatNodes();
+  bmRenderTagOptions();
+  renderGrid();
+}
+async function bmSaveBubbles(){
+  try{
+    await fetch(`${WORKER_URL}/kv`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: BM_KV_KEY, value: bmBubbles })
+    });
+  }catch(e){ console.error('Error guardando categorías:', e); }
+}
+
+function bmRenderCatNodes(){
+  const wrap = document.getElementById('catNodesDynamic');
+  wrap.innerHTML = bmBubbles.map(b=>{
+    const glow = bmGlow(b.color);
+    const iconSvg = BM_ICONS[b.icon] || BM_ICONS.star;
+    const catNameAttr = bmEscapeHtml(b.name).replace(/'/g,"\\'");
+    return `
+    <div class="cat-node" id="node-cat-${b.id}" data-cat="${bmEscapeHtml(b.name)}" style="--nc:${b.color};--nc-glow:${glow};"
+         onclick="setActiveCat('${catNameAttr}')"
+         ondragover="onBubbleDragOver(event,'${catNameAttr}')"
+         ondragleave="onBubbleDragLeave(event,'${catNameAttr}')"
+         ondrop="onBubbleDrop(event,'${catNameAttr}')">
+      <div class="bubble">
+        <span class="cat-count" id="badge-cat-${b.id}">0</span>
+        <div class="cat-status-badge" onclick="event.stopPropagation(); openBubbleManager('${b.id}')" title="Gestionar esta categoría">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </div>
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none">${iconSvg}</svg>
+      </div>
+      <span class="node-label">${bmEscapeHtml(b.name)}</span>
+    </div>`;
+  }).join('');
+  updateBadges();
+}
+
+function bmRenderTagOptions(){
+  const sel = document.getElementById('fTag');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Selecciona una categoría —</option>' +
+    bmBubbles.map(b=>`<option value="${bmEscapeHtml(b.name)}">${bmEscapeHtml(b.name)}</option>`).join('');
+  if(current) sel.value = current;
+}
+
+function openBubbleManager(preselectId){
+  bmSelectedId = preselectId || (bmBubbles[0] && bmBubbles[0].id) || null;
+  bmRenderList();
+  bmRenderDetail();
+  document.getElementById('bmOverlay').classList.add('open');
+}
+function closeBubbleManager(){
+  document.getElementById('bmOverlay').classList.remove('open');
+}
+function bmOverlayClick(e){
+  if(e.target === document.getElementById('bmOverlay')) closeBubbleManager();
+}
+
+function bmRenderList(){
+  const list = document.getElementById('bmList');
+  list.innerHTML = bmBubbles.map(b=>`
+    <button type="button" class="bm-list-item${b.id===bmSelectedId?' selected':''}" onclick="bmSelectBubble('${b.id}')">
+      <span class="bm-dot" style="background:${b.color};"></span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${bmEscapeHtml(b.name)}</span>
+    </button>
+  `).join('');
+}
+function bmSelectBubble(id){
+  bmSelectedId = id;
+  bmRenderList();
+  bmRenderDetail();
+}
+
+function bmRenderDetail(){
+  const detail = document.getElementById('bmDetail');
+  const b = bmBubbles.find(x=>x.id===bmSelectedId);
+  if(!b){
+    detail.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,0.4);">Selecciona una categoría de la lista.</p>';
+    return;
+  }
+  bmPendingColor = b.color;
+  bmPendingIcon = b.icon;
+  const nUsos = items.filter(m=>m.tag===b.name).length;
+  detail.innerHTML = `
+    <div class="bm-field">
+      <label>Nombre</label>
+      <input type="text" id="bmName" value="${bmEscapeHtml(b.name)}" maxlength="40">
+    </div>
+    <div class="bm-field">
+      <label>Color</label>
+      <div class="bm-swatches" id="bmSwatches">
+        ${BM_COLORS.map(c=>`<button type="button" class="bm-swatch${c.toUpperCase()===b.color.toUpperCase()?' selected':''}" style="background:${c};" onclick="bmPickColor('${c}',this)"></button>`).join('')}
+      </div>
+    </div>
+    <div class="bm-field">
+      <label>Icono</label>
+      <div class="bm-icons" id="bmIcons">
+        ${Object.keys(BM_ICONS).map(k=>`<button type="button" class="bm-icon-opt${k===b.icon?' selected':''}" onclick="bmPickIcon('${k}',this)" title="${k}"><svg width="18" height="18" viewBox="0 0 30 30" fill="none">${BM_ICONS[k]}</svg></button>`).join('')}
+      </div>
+    </div>
+    <p style="font-size:10.5px;color:rgba(0,230,255,0.4);margin-bottom:10px;">${nUsos} manual${nUsos!==1?'es':''} usa${nUsos!==1?'n':''} esta categoría. Si renombras, se actualizan automáticamente.</p>
+    <div class="bm-actions">
+      <button class="bm-btn bm-btn-delete" onclick="bmDeleteBubble('${b.id}')" ${bmBubbles.length<=1?'disabled title="Debe quedar al menos una categoría"':''}>Eliminar categoría</button>
+      <button class="bm-btn bm-btn-save" onclick="bmSaveDetail('${b.id}')">Guardar cambios</button>
+    </div>
+  `;
+}
+
+function bmPickColor(c, el){
+  bmPendingColor = c;
+  document.querySelectorAll('#bmSwatches .bm-swatch').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function bmPickIcon(k, el){
+  bmPendingIcon = k;
+  document.querySelectorAll('#bmIcons .bm-icon-opt').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function bmSaveDetail(id){
+  const b = bmBubbles.find(x=>x.id===id);
+  if(!b) return;
+  const nameVal = document.getElementById('bmName').value.trim();
+  if(!nameVal){ alert('El nombre no puede estar vacío.'); return; }
+  const oldName = b.name;
+  b.name = nameVal;
+  b.color = bmPendingColor || b.color;
+  b.icon = bmPendingIcon || b.icon;
+  await bmSaveBubbles();
+  if(oldName !== nameVal){
+    let cambiados = 0;
+    items.forEach(m=>{ if(m.tag===oldName){ m.tag=nameVal; cambiados++; } });
+    if(cambiados>0) await persist();
+    if(activeCat===oldName) activeCat=nameVal;
+  }
+  bmRenderCatNodes();
+  bmRenderTagOptions();
+  bmRenderList();
+  bmRenderDetail();
+  renderGrid();
+}
+
+function bmAddBubble(){
+  const id = 'custom_' + Date.now();
+  const nueva = { id, name:'Nueva categoría', color:'#22D3EE', icon:'star' };
+  bmBubbles.push(nueva);
+  bmSelectedId = id;
+  bmSaveBubbles();
+  bmRenderCatNodes();
+  bmRenderTagOptions();
+  bmRenderList();
+  bmRenderDetail();
+}
+
+async function bmDeleteBubble(id){
+  if(bmBubbles.length<=1) return;
+  const b = bmBubbles.find(x=>x.id===id);
+  if(!b) return;
+  const nUsos = items.filter(m=>m.tag===b.name).length;
+  const msg = nUsos>0
+    ? `¿Eliminar "${b.name}"? ${nUsos} manual${nUsos!==1?'es':''} se quedará${nUsos!==1?'n':''} sin categoría asignada.`
+    : `¿Eliminar la categoría "${b.name}"?`;
+  if(!confirm(msg)) return;
+  bmBubbles = bmBubbles.filter(x=>x.id!==id);
+  bmSelectedId = (bmBubbles[0] && bmBubbles[0].id) || null;
+  await bmSaveBubbles();
+  if(nUsos>0){
+    items.forEach(m=>{ if(m.tag===b.name) m.tag=''; });
+    await persist();
+  }
+  if(activeCat===b.name) activeCat='all';
+  bmRenderCatNodes();
+  bmRenderTagOptions();
+  bmRenderList();
+  bmRenderDetail();
+  renderGrid();
+}
+
 load();
+bmLoadBubbles();
 </script>
 </body>
 </html>
