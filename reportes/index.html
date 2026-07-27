@@ -1496,13 +1496,21 @@ function renderHistBody(){
   }
   body.innerHTML=lhHistorico.map((h,hi)=>{
     const brands=['OBS','INESDI','ESDESIGN','UCMA'];
-    const brandPills=brands.map(b=>{
-      const n=h.porBrand[b]||0;
-      if(!n)return'';
-      const col=BRAND_COLORS[b]||'#00E6FF';
-      return `<span class="lh-badge" style="background:${col}18;color:${col};border:1px solid ${col}44">${b} ${n}</span>`;
-    }).join('');
     const rows=h.candidatos||[];
+    const brandBreakdown=brands.map(b=>{
+      const candsB=rows.filter(c=>c.brand===b);
+      if(!candsB.length)return'';
+      const matrB=candsB.filter(c=>c.estado==='Matriculado').length;
+      const factB=candsB.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+      const col=BRAND_COLORS[b]||'#00E6FF';
+      const bg=BRAND_BG[b]||'rgba(0,100,160,0.06)';
+      return `<div class="lh-bc" style="background:${bg};border-color:${col}33;border-top:3px solid ${col};padding:9px 11px">
+        <div class="lh-bc-name" style="color:${col};font-size:10px;margin-bottom:4px">${b}</div>
+        <div class="lh-bc-plazas" style="font-size:16px;margin-bottom:2px">${matrB}<span style="font-size:10px">/${candsB.length}</span></div>
+        <div class="lh-bc-fact-lbl" style="font-size:9px">Facturación</div>
+        <div class="lh-bc-fact" style="color:${col};font-size:12px">${factB.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</div>
+      </div>`;
+    }).join('');
     const detailRows=rows.map(c=>{
       const col=BRAND_COLORS[c.brand]||'#00E6FF';
       const stStyle=ESTADO_STYLES[c.estado]||'';
@@ -1519,14 +1527,14 @@ function renderHistBody(){
       <div class="hist-year-summary">
         <div>
           <div class="hist-year-title">${esc(h.convocatoria||'')} ${esc(h.year||'')} <span style="font-size:11px;font-weight:400;color:#6a8a9a">· Cerrada ${esc(h.fechaCierre||'')}</span></div>
-          <div class="hist-brand-pills">${brandPills}</div>
         </div>
         <div class="hist-year-stats">
           <div class="hist-stat">Matriculados: <strong>${h.totalMatriculados||0}</strong></div>
           <div class="hist-stat">No aptos: <strong>${h.totalNoAptos||0}</strong></div>
-          <div class="hist-stat">Facturación: <strong>${(h.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</strong></div>
+          <div class="hist-stat">Facturación total: <strong>${(h.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</strong></div>
         </div>
       </div>
+      <div class="lh-brand-cards" style="margin-top:10px;margin-bottom:0">${brandBreakdown}</div>
       <button class="hist-toggle-btn" onclick="toggleHistDetail(${hi},this)">Ver detalle ▾</button>
       <div class="hist-detail" id="hist-detail-${hi}">
         <div style="overflow-x:auto">
