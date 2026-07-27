@@ -905,6 +905,15 @@ function loadMarcaData(data){
 function openRutasModal(){document.getElementById('rutasOverlay').classList.add('open');}
 function closeRutasModal(){document.getElementById('rutasOverlay').classList.remove('open');}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* Normaliza a "Nombre Apellidos" para mostrar, aunque el dato esté guardado como "Apellidos, Nombre" */
+function lhFormatNombre(nombre){
+  const n=String(nombre||'').trim();
+  if(n.includes(',')){
+    const[ape,nom]=n.split(',').map(s=>s.trim());
+    return `${nom} ${ape}`.trim();
+  }
+  return n;
+}
 function renderGrid(){
   const q=document.getElementById('searchInput').value.toLowerCase();
   const filtered=items.filter(r=>!q||r.title.toLowerCase().includes(q)||(r.desc||'').toLowerCase().includes(q));
@@ -1348,7 +1357,7 @@ function renderLHTable(){
         <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
-      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span> <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
+      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span> <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
       <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
       <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="updateCand(${idx},'pct',+this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year)*(+this.value/100)))"><option value="100" ${c.pct===100?'selected':''}>${pBase.toLocaleString('es-ES')}€ · 100%</option><option value="50" ${c.pct===50?'selected':''}>${Math.round(pBase/2).toLocaleString('es-ES')}€ · 50%</option></select>`;})():`<span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span>`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
@@ -1672,7 +1681,7 @@ function renderHistBody(){
       }
       return `<tr>
         <td><span class="lh-badge" style="font-size:9px;background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span></td>
-        <td>${esc(c.nombre)}${nota}</td>
+        <td>${esc(lhFormatNombre(c.nombre))}${nota}</td>
         <td style="color:#6a8a9a;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.master)}</td>
         <td style="white-space:nowrap">${(c.importe||0).toLocaleString('es-ES')} € · ${c.pct}%</td>
         <td><span style="font-size:10px;padding:2px 7px;border-radius:3px;${stStyle}">${esc(c.estado)}</span></td>
@@ -1791,7 +1800,7 @@ function pinLHTooltip(evt,idx){
 }
 
 function _renderTooltip(c){
-  document.getElementById('lh-tt-nombre').textContent=c.nombre||'';
+  document.getElementById('lh-tt-nombre').textContent=lhFormatNombre(c.nombre)||'';
   document.getElementById('lh-tt-email').textContent=c.email||'(sin email)';
   document.getElementById('lh-tt-tel').textContent=c.tel||'(sin teléfono)';
   document.getElementById('lh-tt-copy').dataset.email=c.email||'';
@@ -1813,7 +1822,7 @@ const LH_BRAND_DISPLAY={OBS:'OBS',INESDI:'Inesdi',ESDESIGN:'ESDesign',UCMA:'UCMA
 function lhMailtoTemplate(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
   const subject="¡Enhorabuena por tu Beca L'Hospitalet! 🎓";
-  const body=`Hola ${c.nombre||''},
+  const body=`Hola ${lhFormatNombre(c.nombre)||''},
 
 ¡Enhorabuena! 🎉 Nos hace mucha ilusión darte la bienvenida como
 beneficiario/a de la Beca L'Hospitalet en ${marca}, para cursar:
