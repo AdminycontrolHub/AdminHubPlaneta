@@ -721,9 +721,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <button onclick="closeLHTooltip()" style="background:none;border:none;cursor:pointer;color:#6a8a9a;font-size:14px;padding:0 2px">✕</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-    <button id="lh-tt-envelope" onclick="openLHMailto()" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;flex-shrink:0">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-    </button>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a6a80" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
     <span id="lh-tt-email" style="font-size:12px;color:#3a5a70;flex:1;word-break:break-all"></span>
     <button id="lh-tt-copy" onclick="copyLHEmail()" style="background:rgba(0,100,160,0.08);border:1px solid rgba(0,100,160,0.2);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:10px;color:#005080;font-family:inherit">Copiar</button>
   </div>
@@ -1350,7 +1348,7 @@ function renderLHTable(){
         <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
-      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
+      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span> <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
       <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
       <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="updateCand(${idx},'pct',+this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year)*(+this.value/100)))"><option value="100" ${c.pct===100?'selected':''}>${pBase.toLocaleString('es-ES')}€ · 100%</option><option value="50" ${c.pct===50?'selected':''}>${Math.round(pBase/2).toLocaleString('es-ES')}€ · 50%</option></select>`;})():`<span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span>`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
@@ -1851,8 +1849,7 @@ esta nueva etapa.
 Equipo de Admisiones · ${marca}`;
   return{subject,body};
 }
-function openLHMailto(){
-  const id=document.getElementById('lh-contact-tooltip').dataset.candId;
+function openLHMailto(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
   if(!c.email){alert('Este candidato no tiene email registrado.');return;}
