@@ -991,23 +991,40 @@ function loadLHExcel(evt){
     try{
       const wb=XLSX.read(e.target.result,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+
+      /* Detectar automáticamente la fila de cabecera real, por si hay una fila 1 en blanco */
+      const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let headerRowIdx=rawRows.findIndex(r=>r.some(cell=>String(cell).trim()!==''));
+      if(headerRowIdx<0)headerRowIdx=0;
+      const headers=rawRows[headerRowIdx].map(h=>String(h).trim());
+      const dataRows=rawRows.slice(headerRowIdx+1).filter(r=>r.some(cell=>String(cell).trim()!==''));
+      const rows=dataRows.map(r=>{
+        const obj={};
+        headers.forEach((h,i)=>{ if(h) obj[h]=r[i]!==undefined?r[i]:''; });
+        return obj;
+      });
+
       if(!rows.length){alert('El archivo no contiene datos.');return;}
 
-      /* Detectar convocatoria y año desde primera fila */
-      const firstRow=rows[0];
-      const convRaw=String(firstRow['Convocatoria']||'');
-      /* Formato esperado: Beques-LH-2025 */
-      const yearMatch=convRaw.match(/(\d{4})/);
-      const year=yearMatch?yearMatch[1]:'';
-      /* Detectar mes por columna o por defecto */
-      const conv=convRaw.toLowerCase().includes('abr')||convRaw.toLowerCase().includes('apr')?'Abril':'Octubre';
+      /* Detectar formato: "simple" (MARCA/CANDIDATO/MASTER/BECA) vs "completo" (Convocatoria/Nombre/Apellidos/Curso Preferido) */
+      const first=rows[0];
+      const esFormatoSimple = 'MARCA' in first || 'CANDIDATO' in first || 'MASTER' in first || 'BECA' in first;
 
+      /* Detectar convocatoria y año */
+      const convRaw=String(first['Convocatoria']||'');
+      const yearMatch=convRaw.match(/(\d{4})/);
+      const year=yearMatch?yearMatch[1]:String(new Date().getFullYear());
+      const conv=convRaw.toLowerCase().includes('abr')||convRaw.toLowerCase().includes('apr')?'Abril':'Octubre';
       lhMeta={convocatoria:conv,year};
 
-      /* Detectar brand desde Centro preferido */
-      const brandMap={'OBS':'OBS','INESDI':'INESDI','ESDESIGN':'ESDESIGN','UCMA':'UCMA','ESDESIGN':'ESDESIGN'};
+      /* Detección de marca: SIEMPRE prioriza la columna MARCA si existe (formato simple),
+         y usa Centro preferido / Centro secundario como alternativa (formato completo) */
       function detectBrand(row){
+        const m=String(row['MARCA']||'').toUpperCase().trim();
+        if(m.includes('OBS'))return'OBS';
+        if(m.includes('INESDI')||m.includes('INE'))return'INESDI';
+        if(m.includes('ESDESIGN')||m.includes('ESD'))return'ESDESIGN';
+        if(m.includes('UCMA'))return'UCMA';
         const centro=String(row['Centro preferido']||row['Centro secundario']||'').toUpperCase();
         if(centro.includes('OBS'))return'OBS';
         if(centro.includes('INESDI')||centro.includes('INE'))return'INESDI';
@@ -1016,26 +1033,44 @@ function loadLHExcel(evt){
         return'OBS';
       }
 
-      /* Construir candidatos — preservar campos gestionados si ya existen */
-      const newCands=rows.map((row,i)=>{
-        const nombre=String(row['Nombre']||'').trim();
-        const apellidos=String(row['Apellidos']||'').trim();
-        const fullName=`${apellidos}, ${nombre}`.trim().replace(/^, /,'');
-        const master=String(row['Curso Preferido']||'').replace(/\(Online\)/g,'').replace(/\s+/g,' ').trim();
-        const brand=detectBrand(row);
-        const tipoBeca=String(row['Tipo de beca']||'100');
-        const pct=tipoBeca==='50'?50:100;
+      /* Extrae {pct, importe} desde un texto tipo "7500€ 100%" o "3750€ 50%" */
+      function parseBecaSimple(row){
+        const txt=String(row['BECA']||'');
+        const pctMatch=txt.match(/(\d+)\s*%/);
+        const pct=pctMatch?parseInt(pctMatch[1],10):100;
         const precio=7500;
         const importe=Math.round(precio*(pct/100));
-        const dni=String(row['DNI']||'').trim();
-        const email=String(row['Email']||row['email']||row['E-mail']||'').trim();
-        const tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
-        /* buscar si ya existe para conservar estado/campos */
-        const existing=lhCandidatos.find(c=>c.dni&&c.dni===dni&&dni)||lhCandidatos[i];
+        return{pct,importe};
+      }
+
+      const newCands=rows.map((row,i)=>{
+        let nombre, master, brand, dni, email, tel, pct, importe;
+        brand=detectBrand(row);
+        if(esFormatoSimple){
+          nombre=String(row['CANDIDATO']||'').trim();
+          master=String(row['MASTER']||'').replace(/\(Online\)/g,'').replace(/\s+/g,' ').trim();
+          dni=String(row['DNI']||'').trim();
+          email=String(row['Email']||row['email']||row['E-mail']||'').trim();
+          tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
+          const beca=parseBecaSimple(row);
+          pct=beca.pct;importe=beca.importe;
+        }else{
+          const nom=String(row['Nombre']||'').trim();
+          const ape=String(row['Apellidos']||'').trim();
+          nombre=`${ape}, ${nom}`.trim().replace(/^, /,'');
+          master=String(row['Curso Preferido']||'').replace(/\(Online\)/g,'').replace(/\s+/g,' ').trim();
+          dni=String(row['DNI']||'').trim();
+          email=String(row['Email']||row['email']||row['E-mail']||'').trim();
+          tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
+          const tipoBeca=String(row['Tipo de beca']||'100');
+          pct=tipoBeca==='50'?50:100;
+          const precio=7500;
+          importe=Math.round(precio*(pct/100));
+        }
+        const existing=lhCandidatos.find(c=>c.dni&&dni&&c.dni===dni)||lhCandidatos[i];
         return {
           id:existing?.id||`lh_${Date.now()}_${i}`,
-          nombre:fullName,
-          dni,email,tel,
+          nombre,dni,email,tel,
           master,brand,
           pct,importe,
           convocatoria:convRaw,
@@ -1189,7 +1224,7 @@ function renderLHTable(){
         <option value="" ${!c.dv?'selected':''}>—</option>
         <option value="Xènia" ${c.dv==='Xènia'?'selected':''}>Xènia</option>
         <option value="Mariana" ${c.dv==='Mariana'?'selected':''}>Mariana</option>
-         <option value="Maria" ${c.dv==='Maria'?'selected':''}>Maria</option>
+        <option value="Maria" ${c.dv==='Maria'?'selected':''}>Maria</option>
       </select></td>
       <td><select class="st-select" style="max-width:68px" onchange="updateCand(${idx},'asignadoA',this.value)">
         <option value="" ${!c.asignadoA?'selected':''}>—</option>
