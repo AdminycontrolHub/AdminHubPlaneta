@@ -576,6 +576,11 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
           Cargar listado
         </button>
         <input type="file" accept=".xlsx,.xls" style="display:none" id="lhFileInput" onchange="loadLHExcel(event)">
+        <button class="lh-btn" onclick="document.getElementById('lhHistImportInput').click()" title="Importa un Excel ya cerrado (con facturación real) directamente al Histórico, sin pasar por el listado en vivo">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Importar histórico
+        </button>
+        <input type="file" accept=".xlsx,.xls" style="display:none" id="lhHistImportInput" onchange="importLHHistoricoFinal(event)">
         <button class="lh-btn danger" onclick="borrarDatosLH()" id="lh-borrar-btn" style="display:none">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Borrar datos
@@ -993,6 +998,107 @@ function updateLHMeta(){
   }
 }
 
+/* ===================== IMPORTAR HISTÓRICO FINAL (Excel ya cerrado, con facturación real) ===================== */
+function importLHHistoricoFinal(evt){
+  const file=evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+
+      /* Detectar cabecera real, por si hubiera una fila 1 en blanco */
+      const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let headerRowIdx=rawRows.findIndex(r=>r.some(cell=>String(cell).trim()!==''));
+      if(headerRowIdx<0)headerRowIdx=0;
+      const headers=rawRows[headerRowIdx].map(h=>String(h).trim());
+      const dataRows=rawRows.slice(headerRowIdx+1).filter(r=>r.some(cell=>String(cell).trim()!==''));
+      const rows=dataRows.map(r=>{
+        const obj={};
+        headers.forEach((h,i)=>{ if(h) obj[h]=r[i]!==undefined?r[i]:''; });
+        return obj;
+      }).filter(row=>String(row['MARCA']||'').trim()!=='');
+
+      if(!rows.length){alert('El archivo no contiene filas con datos (columna MARCA vacía).');return;}
+
+      function normalizeBrand(v){
+        const m=String(v||'').toUpperCase().trim();
+        if(m.includes('OBS'))return'OBS';
+        if(m.includes('INESDI')||m.includes('INE'))return'INESDI';
+        if(m.includes('ESDESIGN')||m.includes('ESD'))return'ESDESIGN';
+        if(m.includes('UCMA'))return'UCMA';
+        return m||'OBS';
+      }
+
+      /* Año: de la columna CONVOCATORIA (numérica o texto), o preguntado si no aparece */
+      const yearsFound=[...new Set(rows.map(r=>String(r['CONVOCATORIA']||'').match(/\d{4}/)).filter(Boolean).map(m=>m[0]))];
+      let year=yearsFound[0];
+      if(!year){
+        const yrInput=prompt('Este archivo no indica el año de la convocatoria.\n\n¿A qué año corresponde?',String(new Date().getFullYear()));
+        year=(yrInput&&/^\d{4}$/.test(yrInput.trim()))?yrInput.trim():String(new Date().getFullYear());
+      }
+
+      const candidatosArchivo=rows.map((row,i)=>{
+        const brand=normalizeBrand(row['MARCA']);
+        const seguimiento=String(row['SEGUIMIENTO']||'');
+        const pctMatch=seguimiento.match(/(\d+)\s*%/);
+        const pct=pctMatch?parseInt(pctMatch[1],10):100;
+        const importe=Number(row['FACTURACIÓN']||row['FACTURACION']||0)||0;
+        return{
+          id:'lh_hist_'+year+'_'+i+'_'+Date.now(),
+          nombre:String(row['NOMBRES APELLIDOS']||row['CANDIDATO']||'').trim(),
+          dni:String(row['DNI']||'').trim(),
+          email:'',tel:'',
+          master:String(row['PROGRAMA']||row['MASTER']||'').trim(),
+          brand,pct,importe,
+          convocatoria:String(row['CONVOCATORIA']||year),
+          estado:'Matriculado',
+          leadCreado:'',dv:'',asignadoA:'',
+          tejado:'Adm. Comercial',notificado:false,
+          sustituido:'',enPrograma:'',
+          observaciones:String(row['ID OPORTUNIDAD']||'')?('Id oportunidad: '+String(row['ID OPORTUNIDAD'])):''
+        };
+      });
+
+      const brandsList=['OBS','INESDI','ESDESIGN','UCMA'];
+      const porBrand={};
+      brandsList.forEach(b=>{porBrand[b]=candidatosArchivo.filter(c=>c.brand===b).length;});
+      const factTotal=candidatosArchivo.reduce((s,c)=>s+(c.importe||0),0);
+
+      const existingIdx=lhHistorico.findIndex(h=>h.year===year);
+      const existing=existingIdx>=0?lhHistorico[existingIdx]:null;
+      if(existing){
+        const factExistente=(existing.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+        const seguir=confirm(`Ya existe un histórico archivado para ${year} (${existing.totalMatriculados||0} matriculados, ${factExistente}).\n\n¿Quieres SOBRESCRIBIRLO con los datos de este Excel (${candidatosArchivo.length} matriculados, ${factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})})?`);
+        if(!seguir){evt.target.value='';return;}
+      }
+
+      const snapshot={
+        year,
+        convocatoria:'',
+        fechaCierre:new Date().toLocaleDateString('es-ES'),
+        fechaActualizacion:'',
+        totalMatriculados:candidatosArchivo.length,
+        totalNoAptos:0,
+        facturacion:factTotal,
+        porBrand,
+        candidatos:candidatosArchivo
+      };
+      if(existingIdx>=0){lhHistorico[existingIdx]=snapshot;}else{lhHistorico.unshift(snapshot);}
+      await kvSet(LH_HIST_KEY,lhHistorico);
+
+      alert(`✓ Histórico ${year} importado: ${candidatosArchivo.length} matriculados, ${factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})} de facturación, desglosado por marca.`);
+      if(document.getElementById('histOverlay').classList.contains('open'))renderHistBody();
+      evt.target.value='';
+    }catch(err){
+      console.error(err);
+      alert('Error al importar el histórico: '+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 /* ===================== CARGAR EXCEL LH ===================== */
 function loadLHExcel(evt){
   const file=evt.target.files[0];
@@ -1390,6 +1496,11 @@ function updateEstado(idx,sel){
   updateNoAptoHeaders();
   renderLHBrandCards();
   updateBecasFactExtra();
+  const factTotalEl=document.getElementById('lh-fact-total');
+  if(factTotalEl){
+    const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+    factTotalEl.textContent=factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  }
 }
 
 /* ===================== SELECCIÓN ===================== */
