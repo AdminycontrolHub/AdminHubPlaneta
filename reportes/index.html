@@ -571,12 +571,12 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Histórico
         </button>
-        <button class="lh-btn primary" onclick="openLHPasswordGate()">
+        <button class="lh-btn primary" onclick="openLHPasswordGate()" id="lh-cargar-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Cargar listado
         </button>
         <input type="file" accept=".xlsx,.xls" style="display:none" id="lhFileInput" onchange="loadLHExcel(event)">
-        <button class="lh-btn" onclick="document.getElementById('lhHistImportInput').click()" title="Importa un Excel ya cerrado (con facturación real) directamente al Histórico, sin pasar por el listado en vivo">
+        <button class="lh-btn" onclick="document.getElementById('lhHistImportInput').click()" title="Importa un Excel ya cerrado (con facturación real) directamente al Histórico, sin pasar por el listado en vivo" id="lh-import-hist-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Importar histórico
         </button>
@@ -589,7 +589,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar selección (<span id="lh-sel-count">0</span>)
         </button>
-        <button class="lh-btn success" onclick="exportLHFinal()">
+        <button class="lh-btn success" onclick="exportLHFinal()" id="lh-extraccion-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
           Extracción final
         </button>
@@ -808,6 +808,7 @@ let convActiva='abril',marcaDataCompleta=null;
 
 /* ===================== LH STATE ===================== */
 let lhCandidatos=[];
+let lhExternalMode=false; /* true cuando se accede vía el link externo #becas-lh — oculta acciones administrativas */
 let lhHistorico=[];
 let lhMeta={convocatoria:'',year:''};
 
@@ -1305,7 +1306,7 @@ function renderLHTable(){
     return;
   }
   empty.style.display='none';
-  if(borrarBtn)borrarBtn.style.display='flex';
+  if(borrarBtn)borrarBtn.style.display=lhExternalMode?'none':'flex';
   if(addRowWrap)addRowWrap.style.display='block';
 
   const brandOrder=['OBS','INESDI','ESDESIGN','UCMA'];
@@ -1821,6 +1822,7 @@ document.addEventListener('click',e=>{
 function checkHashBecasLH(){
   const h=window.location.hash.replace('/','').toLowerCase();
   if(h==='#becas-lh'){
+    lhExternalMode=true;
     /* Ocultar todo el Admin Hub */
     document.querySelectorAll('.topbar,.page-head,.toolbar,.section-lbl,.marca-grid,.conv-selector-wrap,.rutas-btn-wrap,.bubbles-wrap,.sys-tag').forEach(el=>{el.style.display='none';});
     /* Abrir herramienta LH a pantalla completa */
@@ -1837,6 +1839,11 @@ function checkHashBecasLH(){
     updateLHMeta();renderLHBrandCards();renderLHTable();
     /* Ocultar botón cerrar */
     document.querySelectorAll('.lh-close').forEach(btn=>btn.style.display='none');
+    /* Ocultar acciones administrativas: solo Admisiones/Marketing internos pueden usarlas, no el acceso externo */
+    ['lh-cargar-btn','lh-import-hist-btn','lh-borrar-btn','lh-extraccion-btn'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.style.display='none';
+    });
   }
 }
 window.addEventListener('hashchange',checkHashBecasLH);
