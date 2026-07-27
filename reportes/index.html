@@ -1189,10 +1189,11 @@ function renderLHTable(){
         <option value="" ${!c.dv?'selected':''}>—</option>
         <option value="Xènia" ${c.dv==='Xènia'?'selected':''}>Xènia</option>
         <option value="Mariana" ${c.dv==='Mariana'?'selected':''}>Mariana</option>
+         <option value="Maria" ${c.dv==='Maria'?'selected':''}>Maria</option>
       </select></td>
       <td><select class="st-select" style="max-width:68px" onchange="updateCand(${idx},'asignadoA',this.value)">
         <option value="" ${!c.asignadoA?'selected':''}>—</option>
-        ${['Carlos','Victor','Dani','Alexandra','Liliana','Omar'].map(n=>`<option value="${n}" ${c.asignadoA===n?'selected':''}>${n}</option>`).join('')}
+        ${['Carlos','Victor','Dani','Alexandra','Liliana','Omar','Matias','Lisel'].map(n=>`<option value="${n}" ${c.asignadoA===n?'selected':''}>${n}</option>`).join('')}
       </select></td>
       <td>
         <select class="st-select" style="${stStyle};max-width:145px" onchange="updateEstado(${idx},this)">
