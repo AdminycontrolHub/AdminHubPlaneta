@@ -189,7 +189,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 /* ===================== BECAS LH MODAL ===================== */
 .lh-overlay { position:fixed; inset:0; z-index:400; background:rgba(0,5,15,0.92); backdrop-filter:blur(8px); display:none; align-items:flex-start; justify-content:center; padding:1rem; overflow-y:auto; }
 .lh-overlay.open { display:flex; }
-.lh-modal { background:#F5F0E8; border-radius:18px; width:min(1500px,99vw); margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.4); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#1a3a50; }
+.lh-modal { background:#F5F0E8; border-radius:18px; width:min(1900px,99vw); margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.4); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#1a3a50; }
 .lh-header { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid rgba(0,100,140,0.12); background:#F5F0E8; border-radius:18px 18px 0 0; position:sticky; top:0; z-index:10; flex-wrap:wrap; gap:10px; }
 .lh-header-left { display:flex; align-items:center; gap:12px; }
 .lh-header-left h2 { font-size:16px; font-weight:700; color:#1a3a50; margin:0; }
@@ -278,7 +278,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .hist-table td { padding:7px 8px; border-bottom:1px solid rgba(0,100,140,0.05); color:#3a5a70; }
 .hist-table tr:last-child td { border-bottom:none; }
 /* Tooltip para máster largo */
-.master-cell { max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.master-cell { max-width:340px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* Filas añadidas posteriormente */
 .lh-table tr.lh-row-added td { background:rgba(245,170,30,0.13) !important; }
 .lh-table tr.lh-row-added:hover td { background:rgba(245,170,30,0.22) !important; }
@@ -784,6 +784,17 @@ const ESTADO_STYLES={
   'No apto':'border:1px solid #dc2626;color:#991b1b;background:#fef2f2'
 };
 const ADM_COM_ESTADOS=['Apto – enviado gestión','Matriculado'];
+/* Precio base (100%) por marca y año de convocatoria. Si la marca/año no está aquí, se usa el precio por defecto (7500€). */
+const LH_PRECIOS={
+  '2025':{OBS:3750,ESDESIGN:2850},
+  '2026':{OBS:3850,ESDESIGN:3050}
+};
+function getPrecioBase(brand,year){
+  const yMatch=String(year||'').match(/\d{4}/);
+  const yy=yMatch?yMatch[0]:'';
+  if(LH_PRECIOS[yy]&&LH_PRECIOS[yy][brand]!=null)return LH_PRECIOS[yy][brand];
+  return 7500;
+}
 
 let items=[],editIdx=null;
 const bdata={cierres:[],becas:[]};
@@ -1033,12 +1044,12 @@ function loadLHExcel(evt){
         return'OBS';
       }
 
-      /* Extrae {pct, importe} desde un texto tipo "7500€ 100%" o "3750€ 50%" */
-      function parseBecaSimple(row){
+      /* Extrae {pct, importe} desde un texto tipo "7500€ 100%" o "3750€ 50%", usando el precio base según marca y año */
+      function parseBecaSimple(row,brand,yr){
         const txt=String(row['BECA']||'');
         const pctMatch=txt.match(/(\d+)\s*%/);
         const pct=pctMatch?parseInt(pctMatch[1],10):100;
-        const precio=7500;
+        const precio=getPrecioBase(brand,yr);
         const importe=Math.round(precio*(pct/100));
         return{pct,importe};
       }
@@ -1052,7 +1063,7 @@ function loadLHExcel(evt){
           dni=String(row['DNI']||'').trim();
           email=String(row['Email']||row['email']||row['E-mail']||'').trim();
           tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
-          const beca=parseBecaSimple(row);
+          const beca=parseBecaSimple(row,brand,year);
           pct=beca.pct;importe=beca.importe;
         }else{
           const nom=String(row['Nombre']||'').trim();
@@ -1064,7 +1075,7 @@ function loadLHExcel(evt){
           tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
           const tipoBeca=String(row['Tipo de beca']||'100');
           pct=tipoBeca==='50'?50:100;
-          const precio=7500;
+          const precio=getPrecioBase(brand,year);
           importe=Math.round(precio*(pct/100));
         }
         const existing=lhCandidatos.find(c=>c.dni&&dni&&c.dni===dni)||lhCandidatos[i];
@@ -1209,7 +1220,7 @@ function renderLHTable(){
         const sustCell = buildSustCell(anyNoApto, isNoApto, idx, c);
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
       <td><input type="checkbox" class="lh-row-check" data-idx="${idx}" onchange="updateSelCount()"></td>
-      <td>${c.added?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(7500*(lhCandidatos[${idx}].pct/100)))">
+      <td>${c.added?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(this.value,lhMeta.year)*(lhCandidatos[${idx}].pct/100)))">
         ${['OBS','INESDI','ESDESIGN','UCMA'].map(b=>`<option value="${b}" ${c.brand===b?'selected':''}>${b}</option>`).join('')}
       </select>`:`<span class="lh-badge" style="background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span>`}</td>
       <td><select class="st-select" style="max-width:52px" onchange="updateCand(${idx},'leadCreado',this.value)">
@@ -1218,8 +1229,8 @@ function renderLHTable(){
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
       <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(c.nombre)}</span>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
-      <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:130px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
-      <td style="white-space:nowrap">${c.added?`<select class="st-select" style="max-width:90px" onchange="updateCand(${idx},'pct',+this.value);updateCand(${idx},'importe',Math.round(7500*(+this.value/100)))"><option value="100" ${c.pct===100?'selected':''}>7.500€ · 100%</option><option value="50" ${c.pct===50?'selected':''}>3.750€ · 50%</option></select>`:`<span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span>`}</td>
+      <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
+      <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="updateCand(${idx},'pct',+this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year)*(+this.value/100)))"><option value="100" ${c.pct===100?'selected':''}>${pBase.toLocaleString('es-ES')}€ · 100%</option><option value="50" ${c.pct===50?'selected':''}>${Math.round(pBase/2).toLocaleString('es-ES')}€ · 50%</option></select>`;})():`<span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span>`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
         <option value="" ${!c.dv?'selected':''}>—</option>
         <option value="Xènia" ${c.dv==='Xènia'?'selected':''}>Xènia</option>
@@ -1434,7 +1445,7 @@ async function exportLHFinal(){
     CAMPUS:c.brand,FechaInscripcion:new Date().toISOString().slice(0,10),
     Curso:c.master,Convocatoria:lhMeta.convocatoria,
     APELLIDOS_NOMBRE:c.nombre,Nacionalidad:'Espana',PaisResidencia:'Espana',
-    PROVINCIA:'Barcelona',PRECIO_CURSO:7500,
+    PROVINCIA:'Barcelona',PRECIO_CURSO:getPrecioBase(c.brand,lhMeta.year),
     FACTURACION_NETA:Number(c.importe)||0,
     TIPOLOGIA_MATRICULA:'BECA',TIPOLOGIA_ALUMNO:'NUEVA MATRICULA',
     Observaciones:'Beca Hospitalet '+String(lhMeta.year||'')
@@ -1577,7 +1588,7 @@ function addLHRow(){
   const newRow={
     id:'lh_manual_'+Date.now(),
     nombre:'',dni:'',email:'',tel:'',master:'',brand:'OBS',
-    pct:100,importe:7500,convocatoria:lhMeta.convocatoria||'',
+    pct:100,importe:getPrecioBase('OBS',lhMeta.year),convocatoria:lhMeta.convocatoria||'',
     estado:'Pendiente contacto',dv:'',asignadoA:'',
     tejado:'Admisiones',notificado:false,
     sustituido:'',enPrograma:'',observaciones:'',
