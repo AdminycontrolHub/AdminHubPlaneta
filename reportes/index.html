@@ -1652,9 +1652,19 @@ function renderHistBody(){
     const detailRows=rows.map(c=>{
       const col=BRAND_COLORS[c.brand]||'#00E6FF';
       const stStyle=ESTADO_STYLES[c.estado]||'';
+      let nota='';
+      if(c.cambioDeId){
+        const original=rows.find(r=>r.id===c.cambioDeId);
+        nota=`<div style="font-size:9px;color:#6a8a9a;font-style:italic">↳ cambio de programa${original?' (antes: '+esc(original.master)+')':''}</div>`;
+      }else if(c.sustitutoDeId){
+        const original=rows.find(r=>r.id===c.sustitutoDeId);
+        nota=`<div style="font-size:9px;color:#6a8a9a;font-style:italic">↳ sustituto${original?' de '+esc(original.nombre):''} (baja)</div>`;
+      }else if(c.sustituido){
+        nota=`<div style="font-size:9px;color:#6a8a9a;font-style:italic">↳ sustituido por ${esc(c.sustituido)}</div>`;
+      }
       return `<tr>
         <td><span class="lh-badge" style="font-size:9px;background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span></td>
-        <td>${esc(c.nombre)}</td>
+        <td>${esc(c.nombre)}${nota}</td>
         <td style="color:#6a8a9a;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.master)}</td>
         <td style="white-space:nowrap">${(c.importe||0).toLocaleString('es-ES')} € · ${c.pct}%</td>
         <td><span style="font-size:10px;padding:2px 7px;border-radius:3px;${stStyle}">${esc(c.estado)}</span></td>
