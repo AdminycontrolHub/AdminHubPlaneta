@@ -1024,7 +1024,13 @@ function loadLHExcel(evt){
       /* Detectar convocatoria y año */
       const convRaw=String(first['Convocatoria']||'');
       const yearMatch=convRaw.match(/(\d{4})/);
-      const year=yearMatch?yearMatch[1]:String(new Date().getFullYear());
+      let year;
+      if(yearMatch){
+        year=yearMatch[1];
+      }else{
+        const yrInput=prompt('Este archivo no indica el año de la convocatoria.\n\n¿A qué año corresponde? (ej. 2025)',String(new Date().getFullYear()));
+        year=(yrInput&&/^\d{4}$/.test(yrInput.trim()))?yrInput.trim():String(new Date().getFullYear());
+      }
       const conv=convRaw.toLowerCase().includes('abr')||convRaw.toLowerCase().includes('apr')?'Abril':'Octubre';
       lhMeta={convocatoria:conv,year};
 
@@ -1440,6 +1446,17 @@ async function exportLHFinal(){
     const ok=confirm(`Atención: hay ${noMatr.length} candidatos que aún no están en estado final (Matriculado o No apto). ¿Confirmas que quieres hacer la extracción final igualmente?`);
     if(!ok)return;
   }
+
+  const yr=lhMeta.year||String(new Date().getFullYear());
+  const existingIdx=lhHistorico.findIndex(h=>h.year===yr&&h.convocatoria===lhMeta.convocatoria);
+  const existing=existingIdx>=0?lhHistorico[existingIdx]:null;
+
+  if(existing){
+    const factExistente=(existing.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+    const seguir=confirm(`Ya existe un histórico archivado para ${lhMeta.convocatoria||''} ${yr} (archivado el ${existing.fechaCierre}, con ${existing.totalMatriculados||0} matriculados y ${factExistente} de facturación).\n\n¿Quieres SOBRESCRIBIRLO con los datos actuales? Se perderá lo que había archivado antes.`);
+    if(!seguir)return;
+  }
+
   /* Generar Excel formato entrega */
   const wsDataFinal=lhCandidatos.filter(c=>c.estado==='Matriculado').map(c=>sanitizeForXLSX({
     CAMPUS:c.brand,FechaInscripcion:new Date().toISOString().slice(0,10),
@@ -1460,12 +1477,13 @@ async function exportLHFinal(){
     XLSX.writeFile(wb2,'BecasLH_Final_'+String(lhMeta.year||new Date().getFullYear())+'.xlsx');
   }catch(err){console.error(err);alert('Error al exportar: '+err.message);return;}
 
-  /* Guardar en histórico */
+  /* Guardar en histórico — sobrescribe el archivo existente de esta convocatoria/año solo si el usuario lo confirmó arriba */
   const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
   const snapshot={
-    year:lhMeta.year||String(new Date().getFullYear()),
+    year:yr,
     convocatoria:lhMeta.convocatoria,
     fechaCierre:new Date().toLocaleDateString('es-ES'),
+    fechaActualizacion:'',
     totalMatriculados:lhCandidatos.filter(c=>c.estado==='Matriculado').length,
     totalNoAptos:lhCandidatos.filter(c=>c.estado==='No apto').length,
     facturacion:factTotal,
@@ -1477,9 +1495,7 @@ async function exportLHFinal(){
     },
     candidatos:JSON.parse(JSON.stringify(lhCandidatos))
   };
-  /* Evitar duplicado del mismo año/conv */
-  lhHistorico=lhHistorico.filter(h=>!(h.year===snapshot.year&&h.convocatoria===snapshot.convocatoria));
-  lhHistorico.unshift(snapshot);
+  if(existingIdx>=0){lhHistorico[existingIdx]=snapshot;}else{lhHistorico.unshift(snapshot);}
   await kvSet(LH_HIST_KEY,lhHistorico);
 
   /* Resetear candidatos actuales */
@@ -1490,7 +1506,7 @@ async function exportLHFinal(){
   renderLHBrandCards();
   renderLHTable();
   updateBecasFactExtra();
-  alert('✓ Extracción final completada y guardada en el histórico.');
+  alert(existing?'✓ Histórico sobrescrito con los datos actuales.':'✓ Extracción final completada y guardada en el histórico.');
 }
 
 /* ===================== HISTÓRICO ===================== */
@@ -1537,7 +1553,7 @@ function renderHistBody(){
     return `<div class="hist-year-card">
       <div class="hist-year-summary">
         <div>
-          <div class="hist-year-title">${esc(h.convocatoria||'')} ${esc(h.year||'')} <span style="font-size:11px;font-weight:400;color:#6a8a9a">· Cerrada ${esc(h.fechaCierre||'')}</span></div>
+          <div class="hist-year-title">${esc(h.year||'')} <span style="font-size:11px;font-weight:400;color:#6a8a9a">· Archivada ${esc(h.fechaCierre||'')}${h.fechaActualizacion?` · Última actualización ${esc(h.fechaActualizacion)}`:''}</span></div>
         </div>
         <div class="hist-year-stats">
           <div class="hist-stat">Matriculados: <strong>${h.totalMatriculados||0}</strong></div>
