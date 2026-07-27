@@ -654,7 +654,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       </div>
       <!-- Fila añadir nueva entrada -->
       <div id="lh-add-row-wrap" style="display:none;padding:6px 0">
-        <button onclick="addLHRow()" style="width:100%;padding:8px;border:1.5px dashed rgba(0,100,140,0.3);border-radius:8px;background:transparent;color:#3a6a80;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <button onclick="openLHPasswordGate('añadir')" style="width:100%;padding:8px;border:1.5px dashed rgba(0,100,140,0.3);border-radius:8px;background:transparent;color:#3a6a80;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Añadir candidato
         </button>
@@ -721,7 +721,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <button onclick="closeLHTooltip()" style="background:none;border:none;cursor:pointer;color:#6a8a9a;font-size:14px;padding:0 2px">✕</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3a6a80" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+    <button id="lh-tt-envelope" onclick="openLHMailto()" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:2px;display:flex;align-items:center;flex-shrink:0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+    </button>
     <span id="lh-tt-email" style="font-size:12px;color:#3a5a70;flex:1;word-break:break-all"></span>
     <button id="lh-tt-copy" onclick="copyLHEmail()" style="background:rgba(0,100,160,0.08);border:1px solid rgba(0,100,160,0.2);border-radius:5px;padding:3px 7px;cursor:pointer;font-size:10px;color:#005080;font-family:inherit">Copiar</button>
   </div>
@@ -963,7 +965,9 @@ function lhShowSecretHint(){
   lhSecretHintTimeout = setTimeout(()=>{ tip.style.display = 'none'; }, 2500);
 }
 const LH_UPLOAD_PWD='AdminHub';
-function openLHPasswordGate(){
+let lhPwdPendingAction=null;
+function openLHPasswordGate(action){
+  lhPwdPendingAction=action||'cargar';
   document.getElementById('lhPwdInput').value='';
   document.getElementById('lhPwdErr').style.display='none';
   document.getElementById('lhPwdOverlay').classList.add('open');
@@ -976,7 +980,12 @@ function lhCheckPwd(){
   const v=document.getElementById('lhPwdInput').value;
   if(v===LH_UPLOAD_PWD){
     closeLHPwd();
-    document.getElementById('lhFileInput').click();
+    if(lhPwdPendingAction==='añadir'){
+      addLHRow();
+    }else{
+      document.getElementById('lhFileInput').click();
+    }
+    lhPwdPendingAction=null;
   } else {
     document.getElementById('lhPwdErr').style.display='block';
   }
@@ -1788,6 +1797,7 @@ function _renderTooltip(c){
   document.getElementById('lh-tt-email').textContent=c.email||'(sin email)';
   document.getElementById('lh-tt-tel').textContent=c.tel||'(sin teléfono)';
   document.getElementById('lh-tt-copy').dataset.email=c.email||'';
+  document.getElementById('lh-contact-tooltip').dataset.candId=c.id||'';
 }
 
 function _posTooltip(evt){
@@ -1801,6 +1811,54 @@ function closeLHTooltip(){
   tooltipPinned=false;
 }
 
+const LH_BRAND_DISPLAY={OBS:'OBS',INESDI:'Inesdi',ESDESIGN:'ESDesign',UCMA:'UCMA'};
+function lhMailtoTemplate(c){
+  const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
+  const subject="¡Enhorabuena por tu Beca L'Hospitalet! 🎓";
+  const body=`Hola ${c.nombre||''},
+
+¡Enhorabuena! 🎉 Nos hace mucha ilusión darte la bienvenida como
+beneficiario/a de la Beca L'Hospitalet en ${marca}, para cursar:
+
+   → ${c.master||''}
+
+
+DOCUMENTACIÓN NECESARIA
+────────────────────────
+Para avanzar con tu proceso, necesitamos que nos envíes:
+
+   • Currículum Vitae actualizado
+   • Título(s) académico(s)
+   • DNI
+
+
+¿QUÉ PASA DESPUÉS?
+────────────────────────
+✓ Si cumples los requisitos mínimos para el máster solicitado,
+  seguiremos adelante con tu matriculación sin más trámites.
+
+✓ Si tu perfil no encajara al 100% con este programa, no te
+  preocupes: nos pondremos en contacto contigo para ofrecerte la
+  alternativa formativa que mejor se adapte a tu trayectoria.
+
+
+Puedes responder directamente a este correo con los documentos
+adjuntos. Desde ${marca} estaremos encantados de acompañarte en
+esta nueva etapa.
+
+¡Un saludo muy cordial y enhorabuena de nuevo!
+
+Equipo de Admisiones · ${marca}`;
+  return{subject,body};
+}
+function openLHMailto(){
+  const id=document.getElementById('lh-contact-tooltip').dataset.candId;
+  const c=lhCandidatos.find(x=>x.id===id);
+  if(!c){return;}
+  if(!c.email){alert('Este candidato no tiene email registrado.');return;}
+  const{subject,body}=lhMailtoTemplate(c);
+  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 function copyLHEmail(){
   const email=document.getElementById('lh-tt-copy').dataset.email;
   if(!email)return;
