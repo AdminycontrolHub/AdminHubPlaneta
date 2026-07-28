@@ -1386,9 +1386,12 @@ function renderLHTable(){
         ${['Carlos','Victor','Dani','Alexandra','Liliana','Omar','Matias','Lisel'].map(n=>`<option value="${n}" ${c.asignadoA===n?'selected':''}>${n}</option>`).join('')}
       </select></td>
       <td>
-        <select class="st-select" style="${stStyle};max-width:145px" onchange="updateEstado(${idx},this)">
-          ${['Pendiente contacto','Docs solicitados','Apto – no enviado','Apto – enviado gestión','Matriculado','No apto'].map(s=>`<option value="${s}" ${c.estado===s?'selected':''}>${s}</option>`).join('')}
-        </select>
+        <div class="estado-row" style="display:flex;align-items:center;gap:4px">
+          <select class="st-select" style="${stStyle};max-width:145px" onchange="updateEstado(${idx},this)">
+            ${['Pendiente contacto','Docs solicitados','Apto – no enviado','Apto – enviado gestión','Matriculado','No apto'].map(s=>`<option value="${s}" ${c.estado===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          ${isNoApto?`<button class="no-apto-mail-btn" onclick="openLHMailtoNoApto('${c.id}')" title="Enviar email de alternativa" style="background:none;border:none;cursor:pointer;padding:1px 2px;display:inline-flex;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a03030" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`:''}
+        </div>
         ${isNoApto?`<div class="notif-check"><input type="checkbox" id="notif_${idx}" ${c.notificado?'checked':''} onchange="updateCand(${idx},'notificado',this.checked)"><label for="notif_${idx}">Candidato notificado</label></div>`:''}
       </td>
       <td class="tejado-cell">${esc(c.tejado)}</td>
@@ -1494,6 +1497,7 @@ function updateEstado(idx,sel){
   if(row){
     const tc=row.querySelector('.tejado-cell');
     if(tc)tc.textContent=tejado;
+    const td=sel.closest('td');
     /* Mostrar/ocultar notif checkbox */
     let notifDiv=row.querySelector('.notif-check');
     if(val==='No apto'){
@@ -1502,10 +1506,25 @@ function updateEstado(idx,sel){
         notifDiv.className='notif-check';
         const uid='notif_'+idx+'_'+Date.now();
         notifDiv.innerHTML=`<input type="checkbox" id="${uid}" onchange="updateCand(${idx},'notificado',this.checked)"><label for="${uid}">Candidato notificado</label>`;
-        sel.parentElement.appendChild(notifDiv);
+        td.appendChild(notifDiv);
       }
     } else {
       if(notifDiv)notifDiv.remove();
+    }
+    /* Mostrar/ocultar el sobre de email de alternativa */
+    let mailBtn=row.querySelector('.no-apto-mail-btn');
+    if(val==='No apto'){
+      if(!mailBtn){
+        mailBtn=document.createElement('button');
+        mailBtn.className='no-apto-mail-btn';
+        mailBtn.title='Enviar email de alternativa';
+        mailBtn.style.cssText='background:none;border:none;cursor:pointer;padding:1px 2px;display:inline-flex;flex-shrink:0';
+        mailBtn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a03030" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>';
+        mailBtn.onclick=function(){ openLHMailtoNoApto(lhCandidatos[idx].id); };
+        sel.parentElement.appendChild(mailBtn);
+      }
+    } else {
+      if(mailBtn)mailBtn.remove();
     }
     /* Habilitar/deshabilitar inputs de sustituido y cambio programa */
     const noAptoCells=row.querySelectorAll('.lh-td-noApto input');
@@ -1885,6 +1904,50 @@ function openLHMailto(id){
   if(!c){return;}
   if(!c.email){alert('Este candidato no tiene email registrado.');return;}
   const{subject,body}=lhMailtoTemplate(c);
+  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function lhMailtoTemplateNoApto(c){
+  const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
+  const alternativa=(c.enPrograma&&c.enPrograma.trim())?c.enPrograma.trim():'_______________________________';
+  const subject="Sobre tu solicitud — Beca L'Hospitalet 🎓";
+  const body=`Hola ${lhFormatNombre(c.nombre)||''},
+
+Hemos revisado con detalle tu documentación para la Beca
+L'Hospitalet en ${marca}, correspondiente a:
+
+   → ${c.master||''}
+
+
+NUESTRA VALORACIÓN
+────────────────────────
+Tu trayectoria profesional nos parece sólida y con mucho
+potencial 🎓. Sin embargo, tras el análisis de tu perfil, hemos
+concluido que este programa en concreto no encaja del todo con
+tu recorrido.
+
+
+UNA ALTERNATIVA PARA TI
+────────────────────────
+De forma alternativa, nos gustaría ofrecerte:
+
+   → ${alternativa}
+
+
+Nos encantaría que consideraras esta opción. Quedamos a la
+espera de tu respuesta, ya sea de aceptación o de rechazo de
+este nuevo programa, para poder seguir adelante con los
+siguientes pasos.
+
+Un cordial saludo,
+
+Equipo de Admisiones · ${marca}`;
+  return{subject,body};
+}
+function openLHMailtoNoApto(id){
+  const c=lhCandidatos.find(x=>x.id===id);
+  if(!c){return;}
+  if(!c.email){alert('Este candidato no tiene email registrado.');return;}
+  const{subject,body}=lhMailtoTemplateNoApto(c);
   window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function copyLHEmail(){
