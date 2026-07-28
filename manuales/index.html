@@ -238,6 +238,22 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .bm-btn-add:hover{background:rgba(0,230,255,0.16);}
 @media(max-width:560px){.bm-layout{grid-template-columns:1fr;}}
 
+/* ===== MODAL CONTRASEÑA ===== */
+.pwd-overlay { position:fixed; inset:0; z-index:600; background:rgba(0,5,15,0.9); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
+.pwd-overlay.open { display:flex; }
+.pwd-modal { background:#030E1E; border:1px solid rgba(0,230,255,0.3); border-radius:18px; width:min(380px,94vw); box-shadow:0 0 60px rgba(0,180,255,0.12); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:22px; }
+.pwd-modal h3 { color:#00E6FF; font-size:14px; font-weight:700; margin-bottom:6px; }
+.pwd-modal p { color:rgba(224,247,255,0.5); font-size:11px; margin-bottom:14px; line-height:1.5; }
+.pwd-modal input[type=password] { width:100%; background:rgba(0,20,40,0.8); border:1px solid rgba(0,230,255,0.25); border-radius:8px; padding:9px 11px; color:#E0F7FF; font-size:13px; font-family:inherit; outline:none; box-sizing:border-box; }
+.pwd-modal input[type=password]:focus { border-color:#00E6FF; }
+.pwd-err { color:#ff8a75; font-size:11px; font-weight:600; margin-top:8px; display:none; }
+.pwd-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.pwd-btn { padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; border:none; cursor:pointer; font-family:inherit; }
+.pwd-btn.cancel { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+.pwd-btn.cancel:hover { background:rgba(255,255,255,0.14); }
+.pwd-btn.ok { background:#00E6FF; color:#031420; }
+.pwd-btn.ok:hover { background:#4de8ff; }
+
 @media(max-width:600px){
   .topbar,.page-head,.toolbar,.cats-section,.grid{ padding-left:16px; padding-right:16px; }
   .grid{ grid-template-columns:1fr; }
@@ -399,6 +415,20 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
         <div class="bm-detail" id="bmDetail"></div>
       </div>
       <button class="bm-btn bm-btn-add" onclick="bmAddBubble()">+ Nueva categoría</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Contraseña -->
+<div class="pwd-overlay" id="bmPwdOverlay" onclick="if(event.target===this)bmCancelPassword()">
+  <div class="pwd-modal">
+    <h3>🔒 Acceso restringido</h3>
+    <p id="bmPwdMsg">Introduce la contraseña para continuar.</p>
+    <input type="password" id="bmPwdInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')bmConfirmPassword()">
+    <div class="pwd-err" id="bmPwdErr">Contraseña incorrecta</div>
+    <div class="pwd-btns">
+      <button class="pwd-btn cancel" onclick="bmCancelPassword()">Cancelar</button>
+      <button class="pwd-btn ok" onclick="bmConfirmPassword()">Confirmar</button>
     </div>
   </div>
 </div>
@@ -784,7 +814,7 @@ function bmRenderDetail(){
     </div>
     <p style="font-size:10.5px;color:rgba(0,230,255,0.4);margin-bottom:10px;">${nUsos} manual${nUsos!==1?'es':''} usa${nUsos!==1?'n':''} esta categoría. Si renombras, se actualizan automáticamente.</p>
     <div class="bm-actions">
-      <button class="bm-btn bm-btn-delete" onclick="bmDeleteBubble('${b.id}')" ${bmBubbles.length<=1?'disabled title="Debe quedar al menos una categoría"':''}>Eliminar categoría</button>
+      <button class="bm-btn bm-btn-delete" onclick="bmConfirmarYPedirPassword('${b.id}')" ${bmBubbles.length<=1?'disabled title="Debe quedar al menos una categoría"':''}>Eliminar categoría</button>
       <button class="bm-btn bm-btn-save" onclick="bmSaveDetail('${b.id}')">Guardar cambios</button>
     </div>
   `;
@@ -836,15 +866,22 @@ function bmAddBubble(){
   bmRenderDetail();
 }
 
+/* Antes de pedir la contraseña, avisa cuántos manuales quedarán sin categoría (si aplica) */
+function bmConfirmarYPedirPassword(id){
+  const b = bmBubbles.find(x=>x.id===id);
+  if(!b) return;
+  const nUsos = items.filter(m=>m.tag===b.name).length;
+  const aviso = nUsos>0
+    ? `Vas a eliminar "${b.name}". ${nUsos} manual${nUsos!==1?'es':''} se quedará${nUsos!==1?'n':''} sin categoría asignada. Introduce la contraseña para continuar.`
+    : `Vas a eliminar la categoría "${b.name}". Introduce la contraseña para continuar.`;
+  bmRequestPassword(()=>bmDeleteBubble(id), aviso);
+}
+
 async function bmDeleteBubble(id){
   if(bmBubbles.length<=1) return;
   const b = bmBubbles.find(x=>x.id===id);
   if(!b) return;
   const nUsos = items.filter(m=>m.tag===b.name).length;
-  const msg = nUsos>0
-    ? `¿Eliminar "${b.name}"? ${nUsos} manual${nUsos!==1?'es':''} se quedará${nUsos!==1?'n':''} sin categoría asignada.`
-    : `¿Eliminar la categoría "${b.name}"?`;
-  if(!confirm(msg)) return;
   bmBubbles = bmBubbles.filter(x=>x.id!==id);
   bmSelectedId = (bmBubbles[0] && bmBubbles[0].id) || null;
   await bmSaveBubbles();
@@ -858,6 +895,34 @@ async function bmDeleteBubble(id){
   bmRenderList();
   bmRenderDetail();
   renderGrid();
+}
+
+/* ===== CONTRASEÑA — protege acciones administrativas (eliminar categoría) ===== */
+const BM_PASSWORD = 'AdminHub';
+let bmPasswordCallback = null;
+function bmRequestPassword(callback, mensaje){
+  bmPasswordCallback = callback;
+  const input = document.getElementById('bmPwdInput');
+  input.value = '';
+  document.getElementById('bmPwdErr').style.display = 'none';
+  document.getElementById('bmPwdMsg').textContent = mensaje || 'Introduce la contraseña para continuar.';
+  document.getElementById('bmPwdOverlay').classList.add('open');
+  setTimeout(()=>input.focus(), 50);
+}
+function bmCancelPassword(){
+  document.getElementById('bmPwdOverlay').classList.remove('open');
+  bmPasswordCallback = null;
+}
+function bmConfirmPassword(){
+  const val = document.getElementById('bmPwdInput').value;
+  if(val === BM_PASSWORD){
+    document.getElementById('bmPwdOverlay').classList.remove('open');
+    const cb = bmPasswordCallback;
+    bmPasswordCallback = null;
+    if(cb) cb();
+  } else {
+    document.getElementById('bmPwdErr').style.display = 'block';
+  }
 }
 
 load();
