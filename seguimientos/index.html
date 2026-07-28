@@ -1866,7 +1866,7 @@ function bmRenderDetail(){
       }
     </div>
     <div class="bm-actions">
-      <button class="bm-btn bm-btn-delete" onclick="bmDeleteBubble('${b.id}')" ${bmBubbles.length<=1?'disabled title="Debe quedar al menos una burbuja"':''}>Eliminar burbuja</button>
+      <button class="bm-btn bm-btn-delete" onclick="openPwd('🔒 Eliminar burbuja','Introduce la contraseña de administrador para eliminar esta burbuja.',P_ADM,()=>bmDeleteBubble('${b.id}'))" ${bmBubbles.length<=1?'disabled title="Debe quedar al menos una burbuja"':''}>Eliminar burbuja</button>
       <button class="bm-btn bm-btn-save" onclick="bmSaveDetail('${b.id}')">Guardar cambios</button>
     </div>
   `;
@@ -1914,7 +1914,6 @@ function bmAddBubble(){
 
 async function bmDeleteBubble(id){
   if(bmBubbles.length<=1) return;
-  if(!confirm('¿Eliminar esta burbuja? Esta acción no se puede deshacer.')) return;
   bmBubbles = bmBubbles.filter(x=>x.id!==id);
   bmSelectedId = (bmBubbles[0] && bmBubbles[0].id) || null;
   await bmSaveBubbles();
