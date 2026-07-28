@@ -508,7 +508,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="field"><label>Enlace</label><input type="url" id="fUrl" placeholder="https://…"></div>
     <div class="field"><label>Color</label><div class="color-swatches" id="formSwatches"></div><input type="hidden" id="fColor" value="#00E6FF"></div>
     <div class="modal-foot">
-      <button class="btn-delete" id="deleteBtn" onclick="deleteReport()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Eliminar</button>
+      <button class="btn-delete" id="deleteBtn" onclick="openLHPasswordGate('eliminarReporte')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Eliminar</button>
       <button class="btn-cancel" onclick="closeOverlay()">Cancelar</button>
       <button class="btn-save" onclick="saveReport()">Guardar</button>
     </div>
@@ -551,7 +551,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div class="field"><label>Nombre *</label><input type="text" id="eNombre" placeholder="Nombre…"></div>
     <div class="field"><label>URL</label><input type="url" id="eUrl" placeholder="https://…"></div>
     <div class="field"><label>Color</label><div class="color-swatches" id="entrySwatches"></div></div>
-    <div class="modal-foot"><button class="btn-delete" id="deleteEntryBtn" style="display:none;" onclick="deleteEntry()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Eliminar</button><button class="btn-cancel" onclick="closeAddEntry()">Cancelar</button><button class="btn-save" onclick="saveEntry()">Guardar</button></div>
+    <div class="modal-foot"><button class="btn-delete" id="deleteEntryBtn" style="display:none;" onclick="openLHPasswordGate('eliminarEntry')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Eliminar</button><button class="btn-cancel" onclick="closeAddEntry()">Cancelar</button><button class="btn-save" onclick="saveEntry()">Guardar</button></div>
   </div>
 </div>
 
@@ -576,12 +576,12 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
           Cargar listado
         </button>
         <input type="file" accept=".xlsx,.xls" style="display:none" id="lhFileInput" onchange="loadLHExcel(event)">
-        <button class="lh-btn" onclick="document.getElementById('lhHistImportInput').click()" title="Importa un Excel ya cerrado (con facturación real) directamente al Histórico, sin pasar por el listado en vivo" id="lh-import-hist-btn">
+        <button class="lh-btn" onclick="openLHPasswordGate('importarHist')" title="Importa un Excel ya cerrado (con facturación real) directamente al Histórico, sin pasar por el listado en vivo" id="lh-import-hist-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Importar histórico
         </button>
         <input type="file" accept=".xlsx,.xls" style="display:none" id="lhHistImportInput" onchange="importLHHistoricoFinal(event)">
-        <button class="lh-btn danger" onclick="borrarDatosLH()" id="lh-borrar-btn" style="display:none">
+        <button class="lh-btn danger" onclick="openLHPasswordGate('borrarDatosLH')" id="lh-borrar-btn" style="display:none">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           Borrar datos
         </button>
@@ -948,13 +948,13 @@ function closeAddEntry(){document.getElementById('addEntryOverlay').classList.re
 function renderEntrySwatches(){document.getElementById('entrySwatches').innerHTML=SWATCH_COLORS.map(c=>`<div class="swatch ${c===selectedSwatchColor?'selected':''}" style="background:${c};" onclick="selectEntrySwatch('${c}')"></div>`).join('');}
 function selectEntrySwatch(color){selectedSwatchColor=color;renderEntrySwatches();}
 async function saveEntry(){const nombre=document.getElementById('eNombre').value.trim();if(!nombre){alert('El nombre es obligatorio.');return;}const url=document.getElementById('eUrl').value.trim();const obj={nombre,url,color:selectedSwatchColor};if(editEntryIdx!==null)bdata[activeCollection][editEntryIdx]=obj;else bdata[activeCollection].push(obj);await persistBData(activeCollection);closeAddEntry();renderBNodes(activeCollection);}
-async function deleteEntry(){const c=bdata[activeCollection][editEntryIdx];if(!c||!confirm(`¿Eliminar "${c.nombre}"?`))return;bdata[activeCollection].splice(editEntryIdx,1);await persistBData(activeCollection);closeAddEntry();renderBNodes(activeCollection);}
+async function deleteEntryConfirmed(){const c=bdata[activeCollection][editEntryIdx];if(!c)return;bdata[activeCollection].splice(editEntryIdx,1);await persistBData(activeCollection);closeAddEntry();renderBNodes(activeCollection);}
 async function persistBData(type){try{await fetch(`${WORKER_URL}/kv`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:BMODAL_KEYS[type],value:bdata[type]})});}catch(e){console.error('KV error:',e);}}
 function renderFormSwatches(selected){const el=document.getElementById('formSwatches');if(!el)return;el.innerHTML=SWATCH_COLORS.map(c=>`<div class="swatch ${c===selected?'selected':''}" style="background:${c};" onclick="document.getElementById('fColor').value='${c}';renderFormSwatches('${c}')"></div>`).join('');}
 function openAdd(){editIdx=null;document.getElementById('formTitle').textContent='Nuevo reporte';document.getElementById('fTitle').value='';document.getElementById('fDesc').value='';document.getElementById('fUrl').value='';document.getElementById('fColor').value='#00E6FF';document.getElementById('deleteBtn').style.display='none';renderFormSwatches('#00E6FF');document.getElementById('formOverlay').classList.add('open');}
 function openEdit(idx){const r=items[idx];if(!r)return;editIdx=idx;document.getElementById('formTitle').textContent='Editar reporte';document.getElementById('fTitle').value=r.title;document.getElementById('fDesc').value=r.desc||'';const specialUrls=['__CIERRES__','__BECAS__'];document.getElementById('fUrl').value=specialUrls.includes(r.url)?'':(r.url||'');document.getElementById('fColor').value=r.color||'#00E6FF';document.getElementById('deleteBtn').style.display='flex';renderFormSwatches(r.color||'#00E6FF');document.getElementById('formOverlay').classList.add('open');}
 async function saveReport(){const title=document.getElementById('fTitle').value.trim();if(!title){alert('El nombre es obligatorio.');return;}const rawUrl=document.getElementById('fUrl').value.trim();const prevUrl=editIdx!==null?items[editIdx]?.url:'';const specialUrls=['__CIERRES__','__BECAS__'];const obj={title,desc:document.getElementById('fDesc').value.trim(),url:specialUrls.includes(prevUrl)?prevUrl:rawUrl,color:document.getElementById('fColor').value,date:editIdx!==null?items[editIdx].date:new Date().toLocaleDateString('es-ES')};if(editIdx!==null)items[editIdx]=obj;else items.unshift(obj);await persist();closeOverlay();renderGrid();}
-async function deleteReport(){const r=items[editIdx];if(!r||!confirm(`¿Eliminar "${r.title}"?`))return;items.splice(editIdx,1);await persist();closeOverlay();renderGrid();}
+async function deleteReportConfirmed(){const r=items[editIdx];if(!r)return;items.splice(editIdx,1);await persist();closeOverlay();renderGrid();}
 async function persist(){try{await fetch(`${WORKER_URL}/kv`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:STORE_KEY,value:items})});}catch(e){console.error('KV error:',e);}}
 function closeOverlay(){document.getElementById('formOverlay').classList.remove('open');}
 document.getElementById('formOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('formOverlay'))closeOverlay();});
@@ -993,6 +993,16 @@ function lhCheckPwd(){
       addLHRow();
     }else if(lhPwdPendingAction==='borrarHist'){
       deleteLHHistoricoEntryConfirmed(lhPwdPendingData);
+    }else if(lhPwdPendingAction==='eliminarReporte'){
+      deleteReportConfirmed();
+    }else if(lhPwdPendingAction==='eliminarEntry'){
+      deleteEntryConfirmed();
+    }else if(lhPwdPendingAction==='importarHist'){
+      document.getElementById('lhHistImportInput').click();
+    }else if(lhPwdPendingAction==='eliminarFilaLH'){
+      deleteLHRowConfirmed(lhPwdPendingData);
+    }else if(lhPwdPendingAction==='borrarDatosLH'){
+      borrarDatosLHConfirmed();
     }else{
       document.getElementById('lhFileInput').click();
     }
@@ -1384,7 +1394,7 @@ function renderLHTable(){
       <td class="tejado-cell">${esc(c.tejado)}</td>
       ${sustCell}
       <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
-      ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="deleteLHRow('${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
+      ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="openLHPasswordGate('eliminarFilaLH','${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
     </tr>`;
   }).join('');
 
@@ -1734,8 +1744,7 @@ async function deleteLHHistoricoEntryConfirmed(hi){
 }
 
 /* ===================== ELIMINAR FILA INDIVIDUAL ===================== */
-async function deleteLHRow(cid){
-  if(!confirm('¿Eliminar esta fila?'))return;
+async function deleteLHRowConfirmed(cid){
   // Eliminar también la fila cambio asociada si existe
   lhCandidatos=lhCandidatos.filter(c=>c.id!==cid&&c.cambioDeId!==cid&&c.sustitutoDeId!==cid);
   await kvSet(LH_CANDS_KEY,lhCandidatos);
@@ -1743,8 +1752,7 @@ async function deleteLHRow(cid){
 }
 
 /* ===================== BORRAR DATOS LH ===================== */
-async function borrarDatosLH(){
-  if(!confirm('¿Seguro que quieres borrar todos los datos de esta convocatoria? Esta acción no se puede deshacer.'))return;
+async function borrarDatosLHConfirmed(){
   lhCandidatos=[];lhMeta={convocatoria:'',year:''};
   await kvSet(LH_CANDS_KEY,lhCandidatos);
   await kvSet(LH_META_KEY,lhMeta);
