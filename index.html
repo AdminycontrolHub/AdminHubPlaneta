@@ -337,6 +337,21 @@ body { background: #0a2540; margin: 0; padding: 0; }
   .chat-input { font-size: 16px; }
   .topbar-center { display: none; }
 }
+/* ── Modal Contraseña genérico (eliminar accesos / DISC) ── */
+.pwd-overlay { position:fixed; inset:0; z-index:900; background:rgba(0,5,15,0.9); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
+.pwd-overlay.open { display:flex; }
+.pwd-modal { background:#030E1E; border:1px solid rgba(0,230,255,0.3); border-radius:18px; width:min(380px,94vw); box-shadow:0 0 60px rgba(0,180,255,0.12); padding:22px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.pwd-modal h3 { color:#00E6FF; font-size:14px; font-weight:700; margin-bottom:6px; }
+.pwd-modal p { color:rgba(224,247,255,0.5); font-size:11px; margin-bottom:14px; line-height:1.5; }
+.pwd-modal input[type=password] { width:100%; background:rgba(0,20,40,0.8); border:1px solid rgba(0,230,255,0.25); border-radius:8px; padding:9px 11px; color:#E0F7FF; font-size:13px; font-family:inherit; outline:none; box-sizing:border-box; }
+.pwd-modal input[type=password]:focus { border-color:#00E6FF; }
+.pwd-err { color:#ff8a75; font-size:11px; font-weight:600; margin-top:8px; display:none; }
+.pwd-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.pwd-btn { padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; border:none; cursor:pointer; font-family:inherit; }
+.pwd-btn.cancel { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); }
+.pwd-btn.cancel:hover { background:rgba(255,255,255,0.14); }
+.pwd-btn.ok { background:#00E6FF; color:#031420; }
+.pwd-btn.ok:hover { background:#4de8ff; }
 </style>
 </head>
 <body>
@@ -666,6 +681,20 @@ body { background: #0a2540; margin: 0; padding: 0; }
   </div>
 </div>
 
+<!-- Modal Contraseña genérico — eliminar accesos / DISC -->
+<div class="pwd-overlay" id="genPwdOverlay" onclick="if(event.target===this)closeGenPwd()">
+  <div class="pwd-modal">
+    <h3>🔒 Acceso restringido</h3>
+    <p id="genPwdMsg">Introduce la contraseña para continuar.</p>
+    <input type="password" id="genPwdInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')confirmGenPwd()">
+    <div class="pwd-err" id="genPwdErr">Contraseña incorrecta</div>
+    <div class="pwd-btns">
+      <button class="pwd-btn cancel" onclick="closeGenPwd()">Cancelar</button>
+      <button class="pwd-btn ok" onclick="confirmGenPwd()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Tour guiado -->
 <div class="tour-overlay" id="tourOverlay">
   <div class="tour-spotlight" id="tourSpotlight"></div>
@@ -747,6 +776,33 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     const val = document.getElementById('ctrlPwInput').value;
     if (val === CTRL_PASSWORD) { closeCtrlModal(); window.open(CTRL_URL, '_blank'); }
     else { document.getElementById('ctrlPwError').textContent = 'Contraseña incorrecta. Inténtalo de nuevo.'; document.getElementById('ctrlPwInput').value = ''; document.getElementById('ctrlPwInput').focus(); }
+  }
+
+  // ── Contraseña genérica — protege acciones administrativas (eliminar accesos / DISC) ──
+  const GEN_PASSWORD = 'AdminHub';
+  let genPwdCallback = null;
+  function requestGenPwd(mensaje, cb) {
+    genPwdCallback = cb;
+    const input = document.getElementById('genPwdInput');
+    input.value = '';
+    document.getElementById('genPwdErr').style.display = 'none';
+    document.getElementById('genPwdMsg').textContent = mensaje || 'Introduce la contraseña para continuar.';
+    document.getElementById('genPwdOverlay').classList.add('open');
+    setTimeout(() => input.focus(), 50);
+  }
+  function closeGenPwd() {
+    document.getElementById('genPwdOverlay').classList.remove('open');
+    genPwdCallback = null;
+  }
+  function confirmGenPwd() {
+    const val = document.getElementById('genPwdInput').value;
+    if (val === GEN_PASSWORD) {
+      document.getElementById('genPwdOverlay').classList.remove('open');
+      const cb = genPwdCallback; genPwdCallback = null;
+      if (cb) cb();
+    } else {
+      document.getElementById('genPwdErr').style.display = 'block';
+    }
   }
 
   // ── Canvas background ──
@@ -836,8 +892,10 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
   });
   document.getElementById('accBtnDelete').addEventListener('click', async function() {
     if (accEditIdx === null) return;
-    if (!confirm(`¿Eliminar "${accesos[accEditIdx].nombre}"?`)) return;
-    accesos.splice(accEditIdx, 1); await persistAccesos(); closeAccModal(); renderAccesos();
+    const nombre = accesos[accEditIdx].nombre;
+    requestGenPwd(`Vas a eliminar "${nombre}". Introduce la contraseña para continuar.`, async () => {
+      accesos.splice(accEditIdx, 1); await persistAccesos(); closeAccModal(); renderAccesos();
+    });
   });
   loadAccesos();
 
@@ -1039,10 +1097,11 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
       delBtn.innerHTML = '×';
       delBtn.title = 'Eliminar';
       delBtn.addEventListener('click', async () => {
-        if (!confirm(`¿Eliminar a "${p.name}"?`)) return;
-        discData.splice(i, 1);
-        renderDiscList();
-        await persistDiscData();
+        requestGenPwd(`Vas a eliminar a "${p.name}". Introduce la contraseña para continuar.`, async () => {
+          discData.splice(i, 1);
+          renderDiscList();
+          await persistDiscData();
+        });
       });
       row.appendChild(delBtn);
 
