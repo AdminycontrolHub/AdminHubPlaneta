@@ -1697,6 +1697,7 @@ function renderHistBody(){
           <div class="hist-stat">Matriculados: <strong>${h.totalMatriculados||0}</strong></div>
           <div class="hist-stat">No aptos: <strong>${h.totalNoAptos||0}</strong></div>
           <div class="hist-stat">Facturación total: <strong>${(h.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</strong></div>
+          <button onclick="deleteLHHistoricoEntry(${hi})" title="Eliminar esta convocatoria del histórico" style="background:none;border:1px solid rgba(180,60,60,0.3);border-radius:6px;color:#a03030;cursor:pointer;padding:4px 6px;display:${lhExternalMode?'none':'flex'};align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
         </div>
       </div>
       <div class="lh-brand-cards" style="margin-top:10px;margin-bottom:0">${brandBreakdown}</div>
@@ -1717,6 +1718,17 @@ function toggleHistDetail(i,btn){
   if(!el)return;
   const open=el.classList.toggle('open');
   btn.textContent=open?'Ocultar detalle ▴':'Ver detalle ▾';
+}
+
+async function deleteLHHistoricoEntry(hi){
+  const h=lhHistorico[hi];
+  if(!h)return;
+  const fact=(h.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  const ok=confirm(`¿Eliminar del histórico la convocatoria ${h.year||''} (${h.totalMatriculados||0} matriculados, ${fact})?\n\nEsta acción no se puede deshacer.`);
+  if(!ok)return;
+  lhHistorico.splice(hi,1);
+  await kvSet(LH_HIST_KEY,lhHistorico);
+  renderHistBody();
 }
 
 /* ===================== ELIMINAR FILA INDIVIDUAL ===================== */
