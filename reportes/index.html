@@ -1522,7 +1522,7 @@ async function updateCand(idx,field,value){
     await kvSet(LH_CANDS_KEY,lhCandidatos);
     renderLHBrandCards();renderLHTable();updateBecasFactExtra();
     if(value==='Si'){
-      alert('Continuar simplemente con matriculación.');
+      alert('Continuar con matriculación en Atenea y envío de HM.');
     } else if(value==='No'){
       alert('Administración Comercial solicitará e incluirá datos de nuevo candidato y nuevo Máster.');
     }
@@ -1897,9 +1897,9 @@ Equipo de Admisiones · ${marca}`;
 function openLHMailto(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
-  if(!c.email){alert('Este candidato no tiene email registrado.');return;}
+  if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplate(c);
-  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function lhMailtoTemplateNoApto(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
@@ -1941,9 +1941,9 @@ Equipo de Admisiones · ${marca}`;
 function openLHMailtoNoApto(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
-  if(!c.email){alert('Este candidato no tiene email registrado.');return;}
+  if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplateNoApto(c);
-  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function lhMailtoTemplateDocs(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
@@ -1981,9 +1981,9 @@ Equipo de Admisiones · ${marca}`;
 function openLHMailtoDocs(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
-  if(!c.email){alert('Este candidato no tiene email registrado.');return;}
+  if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplateDocs(c);
-  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function copyLHEmail(){
   const email=document.getElementById('lh-tt-copy').dataset.email;
