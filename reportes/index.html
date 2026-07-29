@@ -1522,11 +1522,19 @@ async function updateCand(idx,field,value){
     await kvSet(LH_CANDS_KEY,lhCandidatos);
     renderLHBrandCards();renderLHTable();updateBecasFactExtra();
     if(value==='Si'){
-      alert('Continuar con matriculación en Atenea y envío de HM.');
+      alert('Continuar simplemente con matriculación.');
     } else if(value==='No'){
-      alert('Administración Comercial solicitará e incluirá datos de nuevo candidato y nuevo Máster.Nuevo mail destinatario en Observaciones');
+      alert('Administración Comercial solicitará e incluirá datos de nuevo candidato y nuevo Máster.');
     }
     return;
+  }
+  if(field==='observaciones'){
+    if(lhCandidatos[idx].tejado==='Adm. Comercial'&&lhCandidatos[idx].aceptaPropuesta==='No'&&value.trim()){
+      lhCandidatos[idx].tejado='Admisiones';
+      await kvSet(LH_CANDS_KEY,lhCandidatos);
+      renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+      return;
+    }
   }
   await kvSet(LH_CANDS_KEY,lhCandidatos);
   if(field==='estado'){renderLHBrandCards();updateBecasFactExtra();}
