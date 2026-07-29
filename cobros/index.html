@@ -568,7 +568,11 @@ async function load(){
       });
     });
     const results=await Promise.all(
-      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}&_ts=${Date.now()}`, { cache: 'no-store' }).then(r=>r.json()).then(d=>({...f,data:d})))
+      fetches.map(f=>fetch(`${WORKER_URL}/kv?key=${f.key}&_ts=${Date.now()}`, { cache: 'no-store' })
+        .then(r=>r.json())
+        .then(d=>({...f,data:d}))
+        .catch(err=>{ console.error('Error cargando',f.key,err); return {...f,data:{value:null}}; })
+      )
     );
     results.forEach(({anyo,marca,conv,data})=>{
       if(!cobrosData[anyo])cobrosData[anyo]={};
@@ -583,7 +587,7 @@ async function load(){
       }
     });
     renderCards();
-  }catch(e){console.error('KV error:',e);}
+  }catch(e){console.error('KV error:',e); renderCards();}
 }
 
 // ── CAMPO "DATOS A CIERRE DE MES DE..." — persistencia en KV ──
@@ -657,6 +661,7 @@ async function guardarDatosEditados(){
   const btn = document.getElementById('edBtnGuardar');
   btn.disabled = true;
   btn.textContent = 'Guardando…';
+  const fallos=[];
   try{
     await Promise.all(MARCAS.map(async m=>{
       const pctVal = document.getElementById(`ed-pct-${m}`).value.trim();
@@ -665,19 +670,40 @@ async function guardarDatosEditados(){
         pct: pctVal==='' ? '' : (parseFloat(pctVal)/100).toString(),
         importe: impVal==='' ? '' : impVal
       };
+      const payload = JSON.stringify(value);
       const key = kvKeyFor(m, convActiva, yearActivo);
-      await fetch(`${WORKER_URL}/kv`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ key, value: JSON.stringify(value) })
-      });
+      try{
+        const res = await fetch(`${WORKER_URL}/kv`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ key, value: payload })
+        });
+        if(!res.ok){ fallos.push(MARCA_LABELS[m]+' (error del servidor)'); return; }
+        // Verificación con reintento — el KV puede tardar unos segundos en propagar el valor
+        let confirmado=false;
+        for(let intento=0; intento<3 && !confirmado; intento++){
+          if(intento>0) await new Promise(r=>setTimeout(r,1200));
+          const check = await fetch(`${WORKER_URL}/kv?key=${key}&_ts=${Date.now()}`, { cache:'no-store' });
+          const checkData = await check.json();
+          if(checkData.value===payload) confirmado=true;
+        }
+        if(!confirmado){ fallos.push(MARCA_LABELS[m]+' (no confirmado en el servidor)'); return; }
+      }catch(errMarca){
+        console.error('Error guardando',key,errMarca);
+        fallos.push(MARCA_LABELS[m]+' (sin conexión)');
+        return;
+      }
       if(!cobrosData[yearActivo]) cobrosData[yearActivo]={};
       if(!cobrosData[yearActivo][m]) cobrosData[yearActivo][m]={};
       cobrosData[yearActivo][m][convActiva] = value;
     }));
     renderCards();
-    document.getElementById('edStatus').classList.add('show');
-    setTimeout(()=>{ closeEditarDatos(); }, 900);
+    if(fallos.length){
+      alert('⚠️ Algunos datos NO se han guardado correctamente:\n\n'+fallos.join('\n')+'\n\nVuelve a intentarlo — no cierres esta pestaña hasta confirmarlo.');
+    } else {
+      document.getElementById('edStatus').classList.add('show');
+      setTimeout(()=>{ closeEditarDatos(); }, 900);
+    }
   }catch(e){
     console.error('Error guardando datos editados:', e);
     alert('No se ha podido guardar. Revisa tu conexión e inténtalo de nuevo.');
