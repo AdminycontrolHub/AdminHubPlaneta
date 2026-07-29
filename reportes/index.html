@@ -646,6 +646,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
               <th>Tejado de</th>
               <th class="lh-th-noApto">Master sustituto</th>
               <th class="lh-th-noApto">Alumno sustituto</th>
+              <th class="lh-th-noApto" style="width:90px">¿Acepta propuesta?</th>
               <th>Observaciones</th>
               <th style="width:28px"></th>
               <th style="width:90px">Alumno excluido</th>
@@ -791,10 +792,10 @@ const ESTADO_STYLES={
   'No apto':'border:1px solid #dc2626;color:#991b1b;background:#fef2f2'
 };
 const ADM_COM_ESTADOS=['Apto – enviado gestión','Matriculado'];
-/* Calcula el tejado según el estado y, para "No apto", si ya se notificó al candidato */
-function computeTejado(estado,notificado){
-  if(estado==='No apto'&&notificado)return'Adm. Comercial';
-  if(estado==='Apto – no enviado')return'Marketing';
+/* Calcula el tejado según el estado, si ya se notificó (No apto) y si Marketing ya creó el lead (Apto – no enviado) */
+function computeTejado(estado,notificado,leadCreado){
+  if(estado==='No apto')return'Admisiones';
+  if(estado==='Apto – no enviado')return leadCreado==='Si'?'Admisiones':'Marketing';
   if(ADM_COM_ESTADOS.includes(estado))return'Adm. Comercial';
   return'Admisiones';
 }
@@ -1398,7 +1399,7 @@ function renderLHTable(){
       <td>
         <div class="estado-row" style="display:flex;align-items:center;gap:4px">
           <select class="st-select" style="${stStyle};max-width:145px" onchange="updateEstado(${idx},this)">
-            ${['Pendiente contacto','Docs solicitados','Apto – no enviado','Apto – enviado gestión','Matriculado','No apto'].map(s=>`<option value="${s}" ${c.estado===s?'selected':''}>${s}</option>`).join('')}
+            ${['Pendiente contacto','Docs solicitados','Apto – no enviado','Matriculado','No apto'].map(s=>`<option value="${s}" ${c.estado===s?'selected':''}>${s}</option>`).join('')}
           </select>
           ${isNoApto?`<button class="no-apto-mail-btn" onclick="openLHMailtoNoApto('${c.id}')" title="Enviar email de alternativa" style="background:none;border:none;cursor:pointer;padding:1px 2px;display:inline-flex;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a03030" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`:''}
           ${c.estado==='Docs solicitados'?`<button class="docs-mail-btn" onclick="openLHMailtoDocs('${c.id}')" title="Enviar recordatorio de documentación" style="background:none;border:none;cursor:pointer;padding:1px 2px;display:inline-flex;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`:''}
@@ -1407,6 +1408,11 @@ function renderLHTable(){
       </td>
       <td class="tejado-cell">${esc(c.tejado)}</td>
       ${sustCell}
+      <td><select class="st-select" style="max-width:70px" ${isNoApto?'':'disabled style="background:rgba(0,0,0,0.04);cursor:not-allowed"'} onchange="updateCand(${idx},'aceptaPropuesta',this.value)">
+        <option value="" ${!c.aceptaPropuesta?'selected':''}>—</option>
+        <option value="Si" ${c.aceptaPropuesta==='Si'?'selected':''}>Sí</option>
+        <option value="No" ${c.aceptaPropuesta==='No'?'selected':''}>No</option>
+      </select></td>
       <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
       ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="openLHPasswordGate('eliminarFilaLH','${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
       <td style="text-align:center"><input type="checkbox" ${c.excluido?'checked':''} disabled style="accent-color:${c.excluido?'#dc2626':'#9ca3af'};opacity:0.85;cursor:not-allowed" title="Se marca automáticamente al introducir un Alumno sustituto"></td>
@@ -1496,7 +1502,13 @@ async function updateCand(idx,field,value){
     return;
   }
   if(field==='notificado'){
-    lhCandidatos[idx].tejado=computeTejado(lhCandidatos[idx].estado,value);
+    lhCandidatos[idx].tejado=computeTejado(lhCandidatos[idx].estado,value,lhCandidatos[idx].leadCreado);
+    await kvSet(LH_CANDS_KEY,lhCandidatos);
+    renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+    return;
+  }
+  if(field==='leadCreado'){
+    lhCandidatos[idx].tejado=computeTejado(lhCandidatos[idx].estado,lhCandidatos[idx].notificado,value);
     await kvSet(LH_CANDS_KEY,lhCandidatos);
     renderLHBrandCards();renderLHTable();updateBecasFactExtra();
     return;
@@ -1508,12 +1520,13 @@ async function updateCand(idx,field,value){
 function updateEstado(idx,sel){
   const val=sel.value;
   lhCandidatos[idx].estado=val;
-  lhCandidatos[idx].tejado=computeTejado(val,lhCandidatos[idx].notificado);
+  lhCandidatos[idx].tejado=computeTejado(val,lhCandidatos[idx].notificado,lhCandidatos[idx].leadCreado);
   if(val!=='No apto'){
     /* Al salir de "No apto" se limpian sustituto/cambio de programa, igual que antes */
     lhCandidatos[idx].sustituido='';
     lhCandidatos[idx].enPrograma='';
     lhCandidatos[idx].excluido=false;
+    lhCandidatos[idx].aceptaPropuesta='';
   }
   kvSet(LH_CANDS_KEY,lhCandidatos);
   renderLHBrandCards();
