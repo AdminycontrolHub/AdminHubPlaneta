@@ -1409,7 +1409,7 @@ function renderLHTable(){
       ${sustCell}
       <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
       ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="openLHPasswordGate('eliminarFilaLH','${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
-      <td style="text-align:center"><input type="checkbox" ${c.excluido<td style="text-align:center"><input type="checkbox" ${c.excluido?'checked':''} disabled style="accent-color:${c.excluido?'#dc2626':'#9ca3af'};opacity:0.85;cursor:not-allowed" title="Se marca automáticamente al introducir un Alumno sustituto"></td>
+      <td style="text-align:center"><input type="checkbox" ${c.excluido?'checked':''} disabled style="accent-color:${c.excluido?'#dc2626':'#9ca3af'};opacity:0.85;cursor:not-allowed" title="Se marca automáticamente al introducir un Alumno sustituto"></td>
     </tr>`;
   }).join('');
 
