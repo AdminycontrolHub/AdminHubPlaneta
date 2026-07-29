@@ -504,8 +504,9 @@ function setActive(el){
 
 const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 const MARCAS=['inesdi','obs','esdesign','ucma'];
-// Años con datos en el KV — añadir aquí cuando se incorporen nuevos años
-const AÑOS_CON_DATOS=['2025','2026'];
+// Años a consultar en el KV — se toman directamente de las opciones del selector de año,
+// así no hay que acordarse de ampliar una lista fija cada vez que se añade un año nuevo.
+const AÑOS_CON_DATOS=Array.from(document.getElementById('yearSelect').options).map(o=>o.value);
 const CIERRE_KV_KEY='adminhub_cierre_mes_label';
 
 let convActiva='abril';
