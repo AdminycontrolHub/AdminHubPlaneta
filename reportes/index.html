@@ -1383,7 +1383,7 @@ function renderLHTable(){
         <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
-      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span> <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`}${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
+      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span>`} <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
       <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
       <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="updateCand(${idx},'pct',+this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year)*(+this.value/100)))"><option value="100" ${c.pct===100?'selected':''}>${pBase.toLocaleString('es-ES')}€ · 100%</option><option value="50" ${c.pct===50?'selected':''}>${Math.round(pBase/2).toLocaleString('es-ES')}€ · 50%</option></select>`;})():`<span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span>`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
@@ -1415,7 +1415,7 @@ function renderLHTable(){
       </select></td>
       <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
       ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="openLHPasswordGate('eliminarFilaLH','${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
-      <td style="text-align:center"><input type="checkbox" ${c.excluido?'checked':''} disabled style="accent-color:${c.excluido?'#dc2626':'#9ca3af'};opacity:0.85;cursor:not-allowed" title="Se marca automáticamente al introducir un Alumno sustituto"></td>
+      <td style="text-align:center"><span style="display:inline-block;width:15px;height:15px;border-radius:4px;${c.excluido?'background:#dc2626;border:1px solid #b91c1c':'background:#e5e7eb;border:1px solid #d1d5db'}" title="${c.excluido?'Alumno excluido':'No excluido'}"></span></td>
     </tr>`;
   }).join('');
 
@@ -1511,6 +1511,21 @@ async function updateCand(idx,field,value){
     lhCandidatos[idx].tejado=computeTejado(lhCandidatos[idx].estado,lhCandidatos[idx].notificado,value);
     await kvSet(LH_CANDS_KEY,lhCandidatos);
     renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+    return;
+  }
+  if(field==='aceptaPropuesta'){
+    if(value==='Si'){
+      lhCandidatos[idx].tejado='Admisiones';
+    } else if(value==='No'){
+      lhCandidatos[idx].tejado='Adm. Comercial';
+    }
+    await kvSet(LH_CANDS_KEY,lhCandidatos);
+    renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+    if(value==='Si'){
+      alert('Continuar simplemente con matriculación.');
+    } else if(value==='No'){
+      alert('Administración Comercial solicitará e incluirá datos de nuevo candidato y nuevo Máster.');
+    }
     return;
   }
   await kvSet(LH_CANDS_KEY,lhCandidatos);
