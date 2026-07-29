@@ -1522,9 +1522,9 @@ async function updateCand(idx,field,value){
     await kvSet(LH_CANDS_KEY,lhCandidatos);
     renderLHBrandCards();renderLHTable();updateBecasFactExtra();
     if(value==='Si'){
-      alert('Continuar simplemente con matriculación.');
+      alert('Continuar con matriculación en Atenea.');
     } else if(value==='No'){
-      alert('Administración Comercial solicitará e incluirá datos de nuevo candidato y nuevo Máster.');
+      alert('Administración Comercial solicitará e incluirá datos de nuevo candidato y nuevo Máster. Incluirá dirección de email del nuevo candidato en observaciones.');
     }
     return;
   }
