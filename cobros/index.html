@@ -676,7 +676,7 @@ async function guardarDatosEditados(){
         const res = await fetch(`${WORKER_URL}/kv`, {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ key, value: payload })
+          body: JSON.stringify({ key, value: value })
         });
         if(!res.ok){ fallos.push(MARCA_LABELS[m]+' (error del servidor)'); return; }
         // Verificación con reintento — el KV puede tardar unos segundos en propagar el valor
