@@ -882,7 +882,7 @@ async function load(){
 }
 
 function updateBecasFactExtra(){
-  const total=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+  const total=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
   const el=document.getElementById('becas-fact-extra');
   if(el)el.textContent=total>0?total.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'— €';
 }
@@ -1093,7 +1093,7 @@ function importLHHistoricoFinal(evt){
           dni:String(row['DNI']||'').trim(),
           email:'',tel:'',
           master:String(row['PROGRAMA']||row['MASTER']||'').trim(),
-          brand,pct,importe,
+          brand,pct,importe,facturacion:importe,importeAlumno:0,
           convocatoria:String(row['CONVOCATORIA']||year),
           estado:'Matriculado',
           leadCreado:'',dv:'',asignadoA:'',
@@ -1205,11 +1205,12 @@ function loadLHExcel(evt){
         const pct=pctMatch?parseInt(pctMatch[1],10):100;
         const precio=getPrecioBase(brand,yr);
         const importe=Math.round(precio*(pct/100));
-        return{pct,importe};
+        const importeAlumno=precio-importe;
+        return{pct,importe,importeAlumno,facturacion:precio};
       }
 
       const newCands=rows.map((row,i)=>{
-        let nombre, master, brand, dni, email, tel, pct, importe;
+        let nombre, master, brand, dni, email, tel, pct, importe, importeAlumno, facturacion;
         brand=detectBrand(row);
         if(esFormatoSimple){
           nombre=String(row['CANDIDATO']||'').trim();
@@ -1218,7 +1219,7 @@ function loadLHExcel(evt){
           email=String(row['Email']||row['email']||row['E-mail']||'').trim();
           tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
           const beca=parseBecaSimple(row,brand,year);
-          pct=beca.pct;importe=beca.importe;
+          pct=beca.pct;importe=beca.importe;importeAlumno=beca.importeAlumno;facturacion=beca.facturacion;
         }else{
           const nom=String(row['Nombre']||'').trim();
           const ape=String(row['Apellidos']||'').trim();
@@ -1227,17 +1228,20 @@ function loadLHExcel(evt){
           dni=String(row['DNI']||'').trim();
           email=String(row['Email']||row['email']||row['E-mail']||'').trim();
           tel=String(row['Teléfono']||row['Telefono']||row['Tel']||row['telefono']||row['Phone']||'').trim();
-          const tipoBeca=String(row['Tipo de beca']||'100');
+          const tipoBecaKey=Object.keys(row).find(k=>k.trim().toLowerCase()==='tipo de beca');
+          const tipoBeca=String((tipoBecaKey?row[tipoBecaKey]:null)||'100').trim();
           pct=tipoBeca==='50'?50:100;
           const precio=getPrecioBase(brand,year);
           importe=Math.round(precio*(pct/100));
+          importeAlumno=precio-importe;
+          facturacion=precio;
         }
         const existing=lhCandidatos.find(c=>c.dni&&dni&&c.dni===dni)||lhCandidatos[i];
         return {
           id:existing?.id||`lh_${Date.now()}_${i}`,
           nombre,dni,email,tel,
           master,brand,
-          pct,importe,
+          pct,importe,importeAlumno,facturacion,
           convocatoria:convRaw,
           estado:existing?.estado||'Pendiente contacto',
           leadCreado:existing?.leadCreado||'',
@@ -1284,7 +1288,7 @@ function renderLHBrandCards(){
     const matr=cands.filter(c=>c.estado==='Matriculado').length;
     const proc=cands.filter(c=>!['Matriculado','No apto'].includes(c.estado)).length;
     const noApto=cands.filter(c=>c.estado==='No apto').length;
-    const fact=cands.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+    const fact=cands.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
     const col=BRAND_COLORS[b]||'#00E6FF';
     const bg=BRAND_BG[b]||'rgba(0,100,160,0.06)';
     return `<div class="lh-bc" style="background:${bg};border-color:${col}33;border-top:3px solid ${col}">
@@ -1362,7 +1366,7 @@ function renderLHTable(){
   /* Sort solo para visualización — no modifica lhCandidatos */
   if(!filterBrand) filtered=[...filtered].sort((a,b)=>brandOrder.indexOf(a.brand)-brandOrder.indexOf(b.brand));
 
-  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
   document.getElementById('lh-fact-total').textContent=factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 
   const anyNoApto=true; /* columnas siempre visibles */
@@ -1375,7 +1379,7 @@ function renderLHTable(){
         const sustCell = buildSustCell(anyNoApto, isNoApto, idx, c);
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
       <td><input type="checkbox" class="lh-row-check" data-idx="${idx}" onchange="updateSelCount()"></td>
-      <td>${c.added?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(this.value,lhMeta.year)*(lhCandidatos[${idx}].pct/100)))">
+      <td>${c.added?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);const _p=getPrecioBase(this.value,lhMeta.year);const _imp=Math.round(_p*(lhCandidatos[${idx}].pct/100));updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)">
         ${['OBS','INESDI','ESDESIGN','UCMA'].map(b=>`<option value="${b}" ${c.brand===b?'selected':''}>${b}</option>`).join('')}
       </select>`:`<span class="lh-badge" style="background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span>`}</td>
       <td><select class="st-select" style="max-width:52px" onchange="updateCand(${idx},'leadCreado',this.value)">
@@ -1385,7 +1389,7 @@ function renderLHTable(){
       </select></td>
       <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span>`} <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
       <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
-      <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="updateCand(${idx},'pct',+this.value);updateCand(${idx},'importe',Math.round(getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year)*(+this.value/100)))"><option value="100" ${c.pct===100?'selected':''}>${pBase.toLocaleString('es-ES')}€ · 100%</option><option value="50" ${c.pct===50?'selected':''}>${Math.round(pBase/2).toLocaleString('es-ES')}€ · 50%</option></select>`;})():`<span style="font-weight:600">${(c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">${c.pct}%</span>`}</td>
+      <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="const _pct=+this.value;const _p=getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year);const _imp=Math.round(_p*(_pct/100));updateCand(${idx},'pct',_pct);updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)"><option value="100" ${c.pct===100?'selected':''}>Beca 100% (factura ${pBase.toLocaleString('es-ES')}€)</option><option value="50" ${c.pct===50?'selected':''}>Beca 50% (alumno paga ${Math.round(pBase/2).toLocaleString('es-ES')}€)</option></select>`;})():`<span style="font-weight:600">${(c.facturacion||c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">Beca ${c.pct}%</span>${c.pct<100?`<br><span style="font-size:10px;color:#e0663a;font-weight:700">⚠ Alumno paga ${(c.importeAlumno||0).toLocaleString('es-ES')} €</span>`:''}`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
         <option value="" ${!c.dv?'selected':''}>—</option>
         <option value="Xènia" ${c.dv==='Xènia'?'selected':''}>Xènia</option>
@@ -1452,7 +1456,7 @@ async function updateCand(idx,field,value){
         id:'lh_prog_'+candId+'_'+Date.now(),
         nombre:cand.nombre,dni:'',email:'',tel:'',
         master:value.trim(),brand:cand.brand,
-        pct:cand.pct,importe:cand.importe,
+        pct:cand.pct,importe:cand.importe,importeAlumno:cand.importeAlumno,facturacion:cand.facturacion,
         convocatoria:cand.convocatoria,
         estado:'Pendiente contacto',dv:'',asignadoA:'',
         tejado:'Admisiones',notificado:false,
@@ -1482,7 +1486,7 @@ async function updateCand(idx,field,value){
         id:'lh_sub_'+candId+'_'+Date.now(),
         nombre:value.trim(),dni:'',email:'',tel:'',
         master:cand.master,brand:cand.brand,
-        pct:cand.pct,importe:cand.importe,
+        pct:cand.pct,importe:cand.importe,importeAlumno:cand.importeAlumno,facturacion:cand.facturacion,
         convocatoria:cand.convocatoria,
         estado:'Pendiente contacto',dv:'',asignadoA:'',
         tejado:'Admisiones',notificado:false,
@@ -1586,8 +1590,9 @@ function exportLHSeleccion(){
   const sel=idxs.map(i=>lhCandidatos[i]);
   const wsData=sel.map(c=>sanitizeForXLSX({
     Marca:c.brand,Candidato:c.nombre,DNI:c.dni,Email:c.email,
-    Master:c.master,BecaEUR:Number(c.importe)||0,
-    BecaPct:String(c.pct||0)+'%',DV:c.dv,
+    Master:c.master,FacturacionEUR:Number(c.facturacion||c.importe)||0,
+    BecaEUR:Number(c.importe)||0,BecaPct:String(c.pct||0)+'%',
+    ImporteAlumnoEUR:Number(c.importeAlumno)||0,DV:c.dv,
     AsignadoA:c.asignadoA,Estado:c.estado,TejadoDe:c.tejado,
     Notificado:c.notificado?'Si':'No',
     SustituidoPor:c.sustituido,EnElPrograma:c.enPrograma,
@@ -1628,7 +1633,8 @@ async function exportLHFinal(){
     Curso:c.master,Convocatoria:lhMeta.convocatoria,
     APELLIDOS_NOMBRE:c.nombre,Nacionalidad:'Espana',PaisResidencia:'Espana',
     PROVINCIA:'Barcelona',PRECIO_CURSO:getPrecioBase(c.brand,lhMeta.year),
-    FACTURACION_NETA:Number(c.importe)||0,
+    FACTURACION_NETA:Number(c.facturacion||c.importe)||0,
+    BECA_PCT:String(c.pct||0)+'%',IMPORTE_A_CARGO_ALUMNO:Number(c.importeAlumno)||0,
     TIPOLOGIA_MATRICULA:'BECA',TIPOLOGIA_ALUMNO:'NUEVA MATRICULA',
     Observaciones:'Beca Hospitalet '+String(lhMeta.year||'')
   }));
@@ -1643,7 +1649,7 @@ async function exportLHFinal(){
   }catch(err){console.error(err);alert('Error al exportar: '+err.message);return;}
 
   /* Guardar en histórico — sobrescribe el archivo existente de esta convocatoria/año solo si el usuario lo confirmó arriba */
-  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
   const snapshot={
     year:yr,
     convocatoria:lhMeta.convocatoria,
@@ -1693,7 +1699,7 @@ function renderHistBody(){
       const candsB=rows.filter(c=>c.brand===b);
       if(!candsB.length)return'';
       const matrB=candsB.filter(c=>c.estado==='Matriculado').length;
-      const factB=candsB.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.importe||0),0);
+      const factB=candsB.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
       const col=BRAND_COLORS[b]||'#00E6FF';
       const bg=BRAND_BG[b]||'rgba(0,100,160,0.06)';
       return `<div class="lh-bc" style="background:${bg};border-color:${col}33;border-top:3px solid ${col};padding:9px 11px">
@@ -1720,7 +1726,7 @@ function renderHistBody(){
         <td><span class="lh-badge" style="font-size:9px;background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span></td>
         <td>${esc(lhFormatNombre(c.nombre))}${nota}</td>
         <td style="color:#6a8a9a;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(c.master)}</td>
-        <td style="white-space:nowrap">${(c.importe||0).toLocaleString('es-ES')} € · ${c.pct}%</td>
+        <td style="white-space:nowrap">${(c.facturacion||c.importe||0).toLocaleString('es-ES')} € · Beca ${c.pct}%${c.pct<100?`<br><span style="color:#e0663a;font-size:9px;font-weight:700">⚠ Alumno pagó ${(c.importeAlumno||0).toLocaleString('es-ES')} €</span>`:''}</td>
         <td><span style="font-size:10px;padding:2px 7px;border-radius:3px;${stStyle}">${esc(c.estado)}</span></td>
         <td style="color:#6a8a9a;font-size:10px">${esc(c.observaciones||'')}</td>
       </tr>`;
@@ -1786,7 +1792,7 @@ function addLHRow(){
   const newRow={
     id:'lh_manual_'+Date.now(),
     nombre:'',dni:'',email:'',tel:'',master:'',brand:'OBS',
-    pct:100,importe:getPrecioBase('OBS',lhMeta.year),convocatoria:lhMeta.convocatoria||'',
+    pct:100,importe:getPrecioBase('OBS',lhMeta.year),importeAlumno:0,facturacion:getPrecioBase('OBS',lhMeta.year),convocatoria:lhMeta.convocatoria||'',
     estado:'Pendiente contacto',dv:'',asignadoA:'',
     tejado:'Admisiones',notificado:false,
     sustituido:'',enPrograma:'',observaciones:'',
