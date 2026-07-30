@@ -1877,6 +1877,40 @@ function closeLHTooltip(){
 }
 
 const LH_BRAND_DISPLAY={OBS:'OBS',INESDI:'Inesdi',ESDESIGN:'ESDesign',UCMA:'UCMA'};
+/* Intenta abrir mailto: y, si el sistema no tiene programa de correo predeterminado
+   (no pasa nada visible), muestra un modal de respaldo con el contenido para copiar */
+function lhTryMailto(email,subject,body){
+  let opened=false;
+  const onBlur=()=>{opened=true;};
+  window.addEventListener('blur',onBlur);
+  window.location.href=`mailto:${email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  setTimeout(()=>{
+    window.removeEventListener('blur',onBlur);
+    if(!opened){
+      lhShowMailFallback(email,subject,body);
+    }
+  },700);
+}
+function lhShowMailFallback(email,subject,body){
+  document.getElementById('lhFallbackTo').value=email||'(sin email registrado)';
+  document.getElementById('lhFallbackSubject').value=subject;
+  document.getElementById('lhFallbackBody').value=body;
+  document.getElementById('lhMailFallbackOverlay').classList.add('open');
+}
+function lhCloseMailFallback(){
+  document.getElementById('lhMailFallbackOverlay').classList.remove('open');
+}
+function lhCopyMailFallback(){
+  const to=document.getElementById('lhFallbackTo').value;
+  const subject=document.getElementById('lhFallbackSubject').value;
+  const body=document.getElementById('lhFallbackBody').value;
+  const text=`Para: ${to}\nAsunto: ${subject}\n\n${body}`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('lhFallbackCopyBtn');
+    btn.textContent='✓ Copiado';
+    setTimeout(()=>btn.textContent='Copiar todo',1800);
+  });
+}
 function lhMailtoTemplate(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
   const subject="¡Enhorabuena por tu Beca L'Hospitalet! 🎓";
@@ -1921,7 +1955,7 @@ function openLHMailto(id){
   if(!c){return;}
   if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplate(c);
-  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  lhTryMailto(c.email,subject,body);
 }
 function lhMailtoTemplateNoApto(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
@@ -1965,7 +1999,7 @@ function openLHMailtoNoApto(id){
   if(!c){return;}
   if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplateNoApto(c);
-  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  lhTryMailto(c.email,subject,body);
 }
 function lhMailtoTemplateDocs(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
@@ -2005,7 +2039,7 @@ function openLHMailtoDocs(id){
   if(!c){return;}
   if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplateDocs(c);
-  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  lhTryMailto(c.email,subject,body);
 }
 function copyLHEmail(){
   const email=document.getElementById('lh-tt-copy').dataset.email;
@@ -2057,5 +2091,29 @@ window.addEventListener('hashchange',checkHashBecasLH);
 
 load();
 </script>
+<!-- MODAL FALLBACK MAILTO -->
+<div class="lh-pwd-overlay" id="lhMailFallbackOverlay" onclick="if(event.target===this)lhCloseMailFallback()">
+  <div class="lh-pwd-modal" style="width:480px">
+    <h3>✉️ No se pudo abrir tu programa de correo</h3>
+    <p>Tu equipo no tiene un cliente de correo predeterminado configurado. Copia el contenido de abajo y pégalo manualmente en tu correo.</p>
+    <div style="margin-bottom:8px">
+      <label style="font-size:10px;color:#7a6e62;font-weight:700;text-transform:uppercase">Para</label>
+      <input type="text" id="lhFallbackTo" readonly style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #c0b8ae;background:#fff;font-size:12px;color:#1a3a50;margin-top:2px">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:10px;color:#7a6e62;font-weight:700;text-transform:uppercase">Asunto</label>
+      <input type="text" id="lhFallbackSubject" readonly style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #c0b8ae;background:#fff;font-size:12px;color:#1a3a50;margin-top:2px">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:10px;color:#7a6e62;font-weight:700;text-transform:uppercase">Cuerpo</label>
+      <textarea id="lhFallbackBody" readonly style="width:100%;height:220px;padding:6px 8px;border-radius:6px;border:1px solid #c0b8ae;background:#fff;font-size:11px;color:#1a3a50;margin-top:2px;font-family:inherit;resize:vertical"></textarea>
+    </div>
+    <div class="lh-pwd-btns">
+      <button class="lh-pwd-btn cancel" onclick="lhCloseMailFallback()">Cerrar</button>
+      <button class="lh-pwd-btn ok" onclick="lhCopyMailFallback()" id="lhFallbackCopyBtn">Copiar todo</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
