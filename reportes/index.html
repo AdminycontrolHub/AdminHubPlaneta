@@ -1453,6 +1453,13 @@ function updateNoAptoHeaders(){/* columnas siempre visibles */}
 /* ===================== UPDATE CANDIDATO ===================== */
 async function updateCand(idx,field,value){
   if(!lhCandidatos[idx])return;
+  const targetId=lhCandidatos[idx].id;
+  /* Releer el estado más reciente de KV antes de guardar: evita que otra
+     pestaña con datos desactualizados sobrescriba este cambio poco después */
+  const fresh=await kvGet(LH_CANDS_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhCandidatos=fresh;
+  idx=lhCandidatos.findIndex(c=>c.id===targetId);
+  if(idx<0)return;
   lhCandidatos[idx][field]=value;
   /* Si se completa "enPrograma" (Cambio Programa), crear fila nueva editable */
   if(field==='enPrograma'){
@@ -1552,8 +1559,13 @@ async function updateCand(idx,field,value){
   if(field==='estado'){renderLHBrandCards();updateBecasFactExtra();}
 }
 
-function updateEstado(idx,sel){
+async function updateEstado(idx,sel){
   const val=sel.value;
+  const targetId=lhCandidatos[idx]?.id;
+  const fresh=await kvGet(LH_CANDS_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhCandidatos=fresh;
+  idx=lhCandidatos.findIndex(c=>c.id===targetId);
+  if(idx<0)return;
   lhCandidatos[idx].estado=val;
   lhCandidatos[idx].tejado=computeTejado(val,lhCandidatos[idx].notificado,lhCandidatos[idx].leadCreado);
   if(val!=='No apto'){
@@ -1563,7 +1575,7 @@ function updateEstado(idx,sel){
     lhCandidatos[idx].excluido=false;
     lhCandidatos[idx].aceptaPropuesta='';
   }
-  kvSet(LH_CANDS_KEY,lhCandidatos);
+  await kvSet(LH_CANDS_KEY,lhCandidatos);
   renderLHBrandCards();
   renderLHTable();
   updateBecasFactExtra();
@@ -1781,6 +1793,8 @@ async function deleteLHHistoricoEntryConfirmed(hi){
 
 /* ===================== ELIMINAR FILA INDIVIDUAL ===================== */
 async function deleteLHRowConfirmed(cid){
+  const fresh=await kvGet(LH_CANDS_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhCandidatos=fresh;
   // Eliminar también la fila cambio asociada si existe
   lhCandidatos=lhCandidatos.filter(c=>c.id!==cid&&c.cambioDeId!==cid&&c.sustitutoDeId!==cid);
   await kvSet(LH_CANDS_KEY,lhCandidatos);
@@ -1796,7 +1810,9 @@ async function borrarDatosLHConfirmed(){
 }
 
 /* ===================== AÑADIR FILA MANUAL ===================== */
-function addLHRow(){
+async function addLHRow(){
+  const fresh=await kvGet(LH_CANDS_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhCandidatos=fresh;
   const newRow={
     id:'lh_manual_'+Date.now(),
     nombre:'',dni:'',email:'',tel:'',master:'',brand:'OBS',
@@ -1807,7 +1823,7 @@ function addLHRow(){
     added:true
   };
   lhCandidatos.push(newRow);
-  kvSet(LH_CANDS_KEY,lhCandidatos);
+  await kvSet(LH_CANDS_KEY,lhCandidatos);
   renderLHBrandCards();renderLHTable();
   /* Scroll al final y focus en el nombre */
   setTimeout(()=>{
@@ -1953,9 +1969,8 @@ Equipo de Admisiones · ${marca}`;
 function openLHMailto(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
-  if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplate(c);
-  lhTryMailto(c.email,subject,body);
+  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function lhMailtoTemplateNoApto(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
@@ -1997,9 +2012,8 @@ Equipo de Admisiones · ${marca}`;
 function openLHMailtoNoApto(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
-  if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplateNoApto(c);
-  lhTryMailto(c.email,subject,body);
+  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function lhMailtoTemplateDocs(c){
   const marca=LH_BRAND_DISPLAY[c.brand]||c.brand||'';
@@ -2037,9 +2051,8 @@ Equipo de Admisiones · ${marca}`;
 function openLHMailtoDocs(id){
   const c=lhCandidatos.find(x=>x.id===id);
   if(!c){return;}
-  if(!c.email){alert('Este candidato no tiene email registrado. Se abrirá el correo con el destinatario en blanco.');}
   const{subject,body}=lhMailtoTemplateDocs(c);
-  lhTryMailto(c.email,subject,body);
+  window.location.href=`mailto:${c.email||''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 function copyLHEmail(){
   const email=document.getElementById('lh-tt-copy').dataset.email;
