@@ -703,7 +703,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
     <div style="padding:20px 24px 28px;color:#1a3a50">
         <div style="background:#e8f4fd;border-left:3px solid #3aabf0;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:18px;font-size:12px;color:#005080;line-height:1.6">
         Esta herramienta gestiona el proceso de becas l'Hospitalet de forma colaborativa entre <strong>Admisiones</strong>, <strong>Administración Comercial</strong> y <strong>Marketing</strong>, sin necesidad de emails. El documento final también se comparte con Marketing.<br><br>
-        El color del estado indica en qué tejado está el caso: <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #64748b;color:#334155;background:#f1f5f9;font-weight:600">Admisiones</span> · <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #7c3aed;color:#581c87;background:#f5f3ff;font-weight:600">Marketing</span> · <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #16a34a;color:#166534;background:#f0fdf4;font-weight:600">Adm. Comercial</span>
+        Cada estado tiene su propio color: <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #9ca3af;color:#4b5563;background:#f9fafb;font-weight:600">Pendiente contacto</span> <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #d97706;color:#92400e;background:#fffbeb;font-weight:600">Docs solicitados</span> <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #2563eb;color:#1e40af;background:#eff6ff;font-weight:600">Apto – Crear Lead</span> <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #0891b2;color:#155e75;background:#ecfeff;font-weight:600">Gestionar oportunidad</span> <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #7c3aed;color:#581c87;background:#f5f3ff;font-weight:600">HM enviada</span> <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #16a34a;color:#166534;background:#f0fdf4;font-weight:600">Matriculado</span> <span style="display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid #dc2626;color:#991b1b;background:#fef2f2;font-weight:600">No apto</span>
       </div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">1. Adm. Comercial carga el listado</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Pulsa <strong>Cargar listado</strong> y selecciona el Excel de candidatos recibido de l'Hospitalet. El sistema detecta automáticamente año, convocatoria y marca de cada candidato.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">2. Marketing crea leads</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Cuando el estado del candidato es <strong>Apto – Crear Lead</strong>, el caso pasa al tejado de Marketing, que crea el lead en el CRM y completa la columna <strong>Lead</strong> con <em>Sí</em>. Al marcarlo, el estado cambia automáticamente a <strong>Gestionar oportunidad</strong> y el caso vuelve al tejado de Admisiones.</p></div>
@@ -785,13 +785,15 @@ const BECAS_DEFAULTS=[{nombre:"L'H",url:'__LH__',color:'#3aabf0'},{nombre:'Colab
 function normalizeBecas(arr){return arr.map(b=>{if((b.nombre||'').includes("L'H")||b.nombre==="L'H"){b.url='__LH__';}return b;});}
 const BRAND_COLORS={OBS:'#1dcc84',INESDI:'#a878f0',ESDESIGN:'#f0a830',UCMA:'#3aabf0'};
 const BRAND_BG={OBS:'rgba(29,204,132,0.08)',INESDI:'rgba(168,120,240,0.08)',ESDESIGN:'rgba(240,168,48,0.08)',UCMA:'rgba(58,171,240,0.08)'};
-/* Color por TEJADO (no por estado): todos los estados que caen bajo el mismo
-   tejado comparten color de badge, para identificar de un vistazo en manos
-   de quién está el caso. */
-const TEJADO_STYLES={
-  'Admisiones':'border:1px solid #64748b;color:#334155;background:#f1f5f9',
-  'Marketing':'border:1px solid #7c3aed;color:#581c87;background:#f5f3ff',
-  'Adm. Comercial':'border:1px solid #16a34a;color:#166534;background:#f0fdf4'
+/* Color por ESTADO — cada estado tiene su propio color de badge */
+const ESTADO_STYLES={
+  'Pendiente contacto':'border:1px solid #9ca3af;color:#4b5563;background:#f9fafb',
+  'Docs solicitados':'border:1px solid #d97706;color:#92400e;background:#fffbeb',
+  'Apto – Crear Lead':'border:1px solid #2563eb;color:#1e40af;background:#eff6ff',
+  'Gestionar oportunidad':'border:1px solid #0891b2;color:#155e75;background:#ecfeff',
+  'HM enviada':'border:1px solid #7c3aed;color:#581c87;background:#f5f3ff',
+  'Matriculado':'border:1px solid #16a34a;color:#166534;background:#f0fdf4',
+  'No apto':'border:1px solid #dc2626;color:#991b1b;background:#fef2f2'
 };
 /* Compatibilidad hacia atrás: normaliza etiquetas de estado antiguas a las nuevas */
 const ESTADO_LEGACY_MAP={
@@ -1395,7 +1397,7 @@ function renderLHTable(){
   tbody.innerHTML=filtered.map(c=>{
     const idx=lhCandidatos.indexOf(c);
     const col=BRAND_COLORS[c.brand]||'#00E6FF';
-    const stStyle=TEJADO_STYLES[c.tejado]||'';
+    const stStyle=ESTADO_STYLES[c.estado]||'';
     const isNoApto=c.estado==='No apto';
         const sustCell = buildSustCell(anyNoApto, isNoApto, idx, c);
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
@@ -1752,7 +1754,7 @@ function renderHistBody(){
     }).join('');
     const detailRows=rows.map(c=>{
       const col=BRAND_COLORS[c.brand]||'#00E6FF';
-      const stStyle=TEJADO_STYLES[c.tejado]||'';
+      const stStyle=ESTADO_STYLES[c.estado]||'';
       let nota='';
       if(c.cambioDeId){
         const original=rows.find(r=>r.id===c.cambioDeId);
