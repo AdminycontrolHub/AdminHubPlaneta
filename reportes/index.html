@@ -612,8 +612,8 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
           <option value="">Todos los estados</option>
           <option value="Pendiente contacto">Pendiente contacto</option>
           <option value="Docs solicitados">Docs solicitados</option>
-          <option value="Apto – no enviado">Apto – no enviado</option>
-          <option value="Apto – enviado gestión">Apto – enviado gestión</option>
+          <option value="Apto – Crear Lead">Apto – Crear Lead</option>
+          <option value="HM enviada">HM enviada</option>
           <option value="Matriculado">Matriculado</option>
           <option value="No apto">No apto</option>
         </select>
@@ -704,9 +704,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
         Esta herramienta gestiona el proceso de becas l'Hospitalet de forma colaborativa entre <strong>Admisiones</strong>, <strong>Administración Comercial</strong> y <strong>Marketing</strong>, sin necesidad de emails. El documento final también se comparte con Marketing.
       </div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">1. Adm. Comercial carga el listado</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Pulsa <strong>Cargar listado</strong> y selecciona el Excel de candidatos recibido de l'Hospitalet. El sistema detecta automáticamente año, convocatoria y marca de cada candidato.</p></div>
-      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">2. Marketing crea leads</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Marketing revisa cada candidato y completa la columna <strong>Lead</strong> con <em>Sí</em> o <em>No</em> según si el lead ha sido creado en el CRM.</p></div>
-      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">3. Admisiones gestiona candidatos (simultáneo al punto 2)</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Admisiones contacta a cada candidato, solicita documentación y va actualizando el estado: <em>Pendiente contacto → Docs solicitados → Apto no enviado → Apto enviado gestión → Matriculado</em>.</p></div>
-      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">4. Traspaso a Adm. Comercial</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al marcar <strong>Apto – enviado gestión</strong>, el tejado cambia automáticamente a <em>Adm. Comercial</em>, que recibe la HM y finaliza la matrícula.</p></div>
+      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">2. Marketing crea leads</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Cuando el estado del candidato es <strong>Apto – Crear Lead</strong>, el caso pasa al tejado de Marketing, que crea el lead en el CRM y completa la columna <strong>Lead</strong> con <em>Sí</em>. Al marcarlo, el caso vuelve automáticamente al tejado de Admisiones.</p></div>
+      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">3. Admisiones gestiona candidatos (simultáneo al punto 2)</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Admisiones contacta a cada candidato, solicita documentación y va actualizando el estado: <em>Pendiente contacto → Docs solicitados → Apto – Crear Lead → HM enviada → Matriculado</em>.</p></div>
+      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">4. Traspaso a Adm. Comercial</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al marcar <strong>HM enviada</strong>, el tejado cambia automáticamente a <em>Adm. Comercial</em>, que recibe la HM y finaliza la matrícula.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">5. Candidato no apto</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Selecciona <strong>No apto</strong>, marca <em>Candidato notificado</em> y escribe el nombre del sustituto en <strong>Sustituido por</strong>. Se creará automáticamente una fila nueva para el sustituto.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">6. Cambio de programa</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al escribir en <strong>Cambio Programa</strong>, se crea automáticamente una fila editable con el nuevo máster para el mismo candidato.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">7. Añadir candidatos manualmente</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Usa <strong>+ Añadir candidato</strong> para añadir nuevos candidatos de listados extra. Aparecen resaltados en amarillo. Usa la papelera para eliminar filas manuales.</p></div>
@@ -786,16 +786,24 @@ const BRAND_BG={OBS:'rgba(29,204,132,0.08)',INESDI:'rgba(168,120,240,0.08)',ESDE
 const ESTADO_STYLES={
   'Pendiente contacto':'border:1px solid #9ca3af;color:#4b5563;background:#f9fafb',
   'Docs solicitados':'border:1px solid #d97706;color:#92400e;background:#fffbeb',
-  'Apto – no enviado':'border:1px solid #2563eb;color:#1e40af;background:#eff6ff',
-  'Apto – enviado gestión':'border:1px solid #7c3aed;color:#581c87;background:#f5f3ff',
+  'Apto – Crear Lead':'border:1px solid #2563eb;color:#1e40af;background:#eff6ff',
+  'HM enviada':'border:1px solid #7c3aed;color:#581c87;background:#f5f3ff',
   'Matriculado':'border:1px solid #16a34a;color:#166534;background:#f0fdf4',
   'No apto':'border:1px solid #dc2626;color:#991b1b;background:#fef2f2'
 };
-const ADM_COM_ESTADOS=['Apto – enviado gestión','Matriculado'];
-/* Calcula el tejado según el estado, si ya se notificó (No apto) y si Marketing ya creó el lead (Apto – no enviado) */
+/* Compatibilidad hacia atrás: normaliza etiquetas de estado antiguas a las nuevas */
+const ESTADO_LEGACY_MAP={
+  'Apto – no enviado':'Apto – Crear Lead',
+  'Apto – enviado gestión':'HM enviada'
+};
+function normalizeEstado(estado){
+  return ESTADO_LEGACY_MAP[estado]||estado;
+}
+const ADM_COM_ESTADOS=['HM enviada','Matriculado'];
+/* Calcula el tejado según el estado, si ya se notificó (No apto) y si Marketing ya creó el lead (Apto – Crear Lead) */
 function computeTejado(estado,notificado,leadCreado){
   if(estado==='No apto')return'Admisiones';
-  if(estado==='Apto – no enviado')return leadCreado==='Si'?'Admisiones':'Marketing';
+  if(estado==='Apto – Crear Lead')return leadCreado==='Si'?'Admisiones':'Marketing';
   if(ADM_COM_ESTADOS.includes(estado))return'Adm. Comercial';
   return'Admisiones';
 }
@@ -870,6 +878,8 @@ async function load(){
     lhCandidatos=lhC.map(function(c,i){
       if(!c.id)c.id='lh_migrated_'+i+'_'+Date.now();
       if(!c.leadCreado)c.leadCreado='';
+      c.estado=normalizeEstado(c.estado);
+      c.tejado=computeTejado(c.estado,c.notificado,c.leadCreado);
       if(c.facturacion==null||c.importeAlumno==null){
         const p=getPrecioBase(c.brand,(lhM&&lhM.year)||'');
         const pct=c.pct===50?50:100;
@@ -1411,7 +1421,7 @@ function renderLHTable(){
       <td>
         <div class="estado-row" style="display:flex;align-items:center;gap:4px">
           <select class="st-select" style="${stStyle};max-width:145px" onchange="updateEstado(${idx},this)">
-            ${['Pendiente contacto','Docs solicitados','Apto – no enviado','Matriculado','No apto'].map(s=>`<option value="${s}" ${c.estado===s?'selected':''}>${s}</option>`).join('')}
+            ${['Pendiente contacto','Docs solicitados','Apto – Crear Lead','HM enviada','Matriculado','No apto'].map(s=>`<option value="${s}" ${c.estado===s?'selected':''}>${s}</option>`).join('')}
           </select>
           ${isNoApto?`<button class="no-apto-mail-btn" onclick="openLHMailtoNoApto('${c.id}')" title="Enviar email de alternativa" style="background:none;border:none;cursor:pointer;padding:1px 2px;display:inline-flex;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a03030" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`:''}
           ${c.estado==='Docs solicitados'?`<button class="docs-mail-btn" onclick="openLHMailtoDocs('${c.id}')" title="Enviar recordatorio de documentación" style="background:none;border:none;cursor:pointer;padding:1px 2px;display:inline-flex;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>`:''}
