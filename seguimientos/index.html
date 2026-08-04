@@ -1923,6 +1923,16 @@ async function bmDeleteBubble(id){
 }
 
 bmLoadBubbles();
+
+// ── Acceso directo desde el Hub: #organizate-yo abre Organízate en la sub-sección "Yo" ──
+(function(){
+  if(window.location.hash === '#organizate-yo'){
+    window.addEventListener('load', function(){
+      openOrganizate();
+      openOrgSub('yo');
+    });
+  }
+})();
 </script>
 </body>
 </html>
