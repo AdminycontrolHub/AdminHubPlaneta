@@ -280,7 +280,9 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .disc-gift-btn:hover { background: #226770; }
 .disc-wall-list { display: flex; flex-direction: column; gap: 9px; padding-bottom: 10px; max-height: 320px; overflow-y: auto; }
 .disc-wall-empty { text-align: center; padding: 20px 10px; color: #9a8e82; font-size: 12px; }
-.disc-wall-card { background: #fff; border: 1px solid #d0c9be; border-radius: 12px; padding: 11px 13px; display: flex; gap: 10px; align-items: flex-start; }
+.disc-wall-card { background: #fff; border: 1px solid #d0c9be; border-radius: 12px; padding: 11px 13px; display: flex; gap: 10px; align-items: flex-start; position: relative; }
+.disc-wall-edit-btn { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 6px; border: 1px solid #c5bfb5; background: #fff; color: #5a7a9a; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; padding: 0; transition: background 0.12s; }
+.disc-wall-edit-btn:hover { background: #ddd7cd; color: #1a3a5c; }
 .disc-wall-dots { display: flex; flex-shrink: 0; margin-top: 1px; }
 .disc-wall-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
 .disc-wall-dot + .disc-wall-dot { margin-left: -7px; }
@@ -663,7 +665,7 @@ body { background: #0a2540; margin: 0; padding: 0; }
 <div class="disc-gift-editor" id="discGiftEditor">
   <div class="disc-pe-box">
     <div class="disc-pe-head">
-      <h3>Regalar un color</h3>
+      <h3 id="discGiftEditorTitle">Regalar un color</h3>
       <button class="disc-pe-close" id="discGiftClose">✕</button>
     </div>
     <label class="disc-pe-label">Para quién</label>
@@ -676,6 +678,7 @@ body { background: #0a2540; margin: 0; padding: 0; }
     <textarea class="disc-pe-input" id="discGiftMsg" rows="2" maxlength="140" style="resize:none;" placeholder="Por qué se lo regalas…"></textarea>
     <p style="font-size:10px;color:#9a8e82;margin:-10px 0 16px;">No se mostrará tu nombre en el muro — solo la persona lo verá en privado.</p>
     <div class="disc-pe-foot">
+      <button class="disc-pe-cancel" id="discGiftDelete" style="display:none;color:#a32d2d;border-color:rgba(163,45,45,0.3);margin-right:auto;">Eliminar</button>
       <button class="disc-pe-cancel" id="discGiftCancel">Cancelar</button>
       <button class="disc-pe-save" id="discGiftSave">Regalar</button>
     </div>
@@ -1362,20 +1365,23 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
         const dots = (g.colors||[]).map(k => `<div class="disc-wall-dot" style="background:${discColorByKey(k).hex}"></div>`).join('');
         const colorNames = (g.colors||[]).map(k => discColorByKey(k).label.toLowerCase()).join(' + ');
         const isRecipient = discIdentity && g.to === discIdentity;
+        const isSender = discIdentity && g.from === discIdentity;
         const priv = isRecipient ? `
           <div class="disc-wall-private">
             <p class="disc-wall-private-tag">🔒 Solo tú lo ves</p>
             <p class="disc-wall-private-text">Te lo mandó <strong>${g.from}</strong></p>
           </div>` : '';
+        const editBtn = isSender ? `<button class="disc-wall-edit-btn" data-gift-id="${g.id}" title="Editar tu regalo">✏</button>` : '';
         return `
         <div class="disc-wall-card">
           <div class="disc-wall-dots">${dots}</div>
-          <div style="flex:1;">
+          <div style="flex:1;${isSender ? 'padding-right:26px;' : ''}">
             <p class="disc-wall-text">Alguien le regaló <strong>${colorNames}</strong> a <strong>${g.to}</strong></p>
             ${g.message ? `<p class="disc-wall-msg">"${g.message}"</p>` : ''}
             <p class="disc-wall-time">${timeAgo(g.ts)}</p>
             ${priv}
           </div>
+          ${editBtn}
         </div>`;
       }).join('');
     }
@@ -1439,29 +1445,53 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     });
   }
 
-  function openGiftEditor() {
-    if (!discIdentity) { openIdentityModal(openGiftEditor); return; }
-    discGiftColors = [];
+  let discGiftEditId = null; // null = nuevo regalo, si no = id del regalo que se está editando
+
+  function openGiftEditor(editId) {
+    if (!discIdentity) { openIdentityModal(() => openGiftEditor(editId)); return; }
+    discGiftEditId = editId || null;
+    const existing = discGiftEditId ? discGifts.find(g => g.id === discGiftEditId) : null;
+    discGiftColors = existing ? [...existing.colors] : [];
     const sel = document.getElementById('discGiftTo');
-    sel.innerHTML = discData.map(p => `<option value="${p.name.replace(/"/g,'&quot;')}">${p.name}</option>`).join('');
-    document.getElementById('discGiftMsg').value = '';
+    sel.innerHTML = '<option value="">— Selecciona —</option>' + discData.map(p => `<option value="${p.name.replace(/"/g,'&quot;')}">${p.name}</option>`).join('');
+    sel.value = existing ? existing.to : '';
+    document.getElementById('discGiftMsg').value = existing ? (existing.message||'') : '';
+    document.getElementById('discGiftEditorTitle').textContent = existing ? 'Editar tu regalo' : 'Regalar un color';
+    document.getElementById('discGiftSave').textContent = existing ? 'Guardar cambios' : 'Regalar';
+    document.getElementById('discGiftDelete').style.display = existing ? 'flex' : 'none';
     renderGiftPalette(); renderGiftSelectedColors();
     document.getElementById('discGiftEditor').classList.add('open');
   }
-  function closeGiftEditor() { document.getElementById('discGiftEditor').classList.remove('open'); }
-  document.getElementById('discGiftBtn').addEventListener('click', openGiftEditor);
+  function closeGiftEditor() { document.getElementById('discGiftEditor').classList.remove('open'); discGiftEditId = null; }
+  document.getElementById('discGiftBtn').addEventListener('click', () => openGiftEditor());
   document.getElementById('discGiftClose').addEventListener('click', closeGiftEditor);
   document.getElementById('discGiftCancel').addEventListener('click', closeGiftEditor);
   document.getElementById('discGiftEditor').addEventListener('click', function(e) { if (e.target === this) closeGiftEditor(); });
+  document.getElementById('discGiftDelete').addEventListener('click', async () => {
+    if (!discGiftEditId) return;
+    discGifts = discGifts.filter(g => g.id !== discGiftEditId);
+    closeGiftEditor();
+    renderWall();
+    await persistGifts();
+  });
   document.getElementById('discGiftSave').addEventListener('click', async () => {
     const to = document.getElementById('discGiftTo').value;
     if (!to) { alert('Elige a quién se lo regalas.'); return; }
     if (!discGiftColors.length) { alert('Elige al menos un color.'); return; }
     const message = document.getElementById('discGiftMsg').value.trim();
-    discGifts.push({ id: Date.now(), from: discIdentity, to, colors: [...discGiftColors], message, ts: Date.now() });
+    if (discGiftEditId) {
+      const g = discGifts.find(x => x.id === discGiftEditId);
+      if (g) { g.to = to; g.colors = [...discGiftColors]; g.message = message; }
+    } else {
+      discGifts.push({ id: Date.now(), from: discIdentity, to, colors: [...discGiftColors], message, ts: Date.now() });
+    }
     closeGiftEditor();
     renderWall();
     await persistGifts();
+  });
+  document.getElementById('discWallList').addEventListener('click', function(e) {
+    const btn = e.target.closest('.disc-wall-edit-btn');
+    if (btn) openGiftEditor(Number(btn.dataset.giftId));
   });
 
   // ── Modal DISC abre/cierra ──
