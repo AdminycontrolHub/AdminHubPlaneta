@@ -1306,7 +1306,7 @@ function renderLHBrandCards(){
   const container=document.getElementById('lh-brand-cards');
   if(!lhCandidatos.length){container.innerHTML='';return;}
   container.innerHTML=brands.map(b=>{
-    const cands=lhCandidatos.filter(c=>c.brand===b);
+    const cands=lhCandidatos.filter(c=>c.brand===b&&!c.excluido);
     if(!cands.length)return'';
     const matr=cands.filter(c=>c.estado==='Matriculado').length;
     const proc=cands.filter(c=>!['Matriculado','No apto'].includes(c.estado)).length;
@@ -1410,7 +1410,7 @@ function renderLHTable(){
         <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
-      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(c.nombre)}" placeholder="Nombre, Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span>`} <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
+      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(lhFormatNombre(c.nombre))}" placeholder="Nombre Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span>`} <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
       <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
       <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="const _pct=+this.value;const _p=getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year);const _imp=Math.round(_p*(_pct/100));updateCand(${idx},'pct',_pct);updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)"><option value="100" ${c.pct===100?'selected':''}>Beca 100% (factura ${pBase.toLocaleString('es-ES')}€)</option><option value="50" ${c.pct===50?'selected':''}>Beca 50% (alumno paga ${Math.round(pBase/2).toLocaleString('es-ES')}€)</option></select>`;})():`<span style="font-weight:600">${(c.facturacion||c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">Beca ${c.pct}%</span>${c.pct<100?`<br><span style="font-size:10px;color:#e0663a;font-weight:700">⚠ Alumno paga ${(c.importeAlumno||0).toLocaleString('es-ES')} €</span>`:''}`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
@@ -1479,6 +1479,7 @@ async function updateCand(idx,field,value){
   /* Si se completa "enPrograma" (Cambio Programa), crear fila nueva editable */
   if(field==='enPrograma'){
     const cand=lhCandidatos[idx];
+    cand.excluido=!!value.trim();
     const candId=cand.id;
     const existingProgIdx=lhCandidatos.findIndex(c=>c.cambioDeId===candId);
     if(value.trim()){
