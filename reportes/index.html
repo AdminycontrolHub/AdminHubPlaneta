@@ -905,7 +905,7 @@ async function load(){
 }
 
 function updateBecasFactExtra(){
-  const total=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
+  const total=lhCandidatos.filter(c=>c.estado==='Matriculado'&&!c.cambioDeId).reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
   const el=document.getElementById('becas-fact-extra');
   if(el)el.textContent=total>0?total.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'— €';
 }
@@ -1306,7 +1306,7 @@ function renderLHBrandCards(){
   const container=document.getElementById('lh-brand-cards');
   if(!lhCandidatos.length){container.innerHTML='';return;}
   container.innerHTML=brands.map(b=>{
-    const cands=lhCandidatos.filter(c=>c.brand===b&&!c.excluido);
+    const cands=lhCandidatos.filter(c=>c.brand===b&&!c.excluido&&!c.cambioDeId);
     if(!cands.length)return'';
     const matr=cands.filter(c=>c.estado==='Matriculado').length;
     const proc=cands.filter(c=>!['Matriculado','No apto'].includes(c.estado)).length;
@@ -1389,7 +1389,7 @@ function renderLHTable(){
   /* Sort solo para visualización — no modifica lhCandidatos */
   if(!filterBrand) filtered=[...filtered].sort((a,b)=>brandOrder.indexOf(a.brand)-brandOrder.indexOf(b.brand));
 
-  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
+  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado'&&!c.cambioDeId).reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
   document.getElementById('lh-fact-total').textContent=factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 
   const anyNoApto=true; /* columnas siempre visibles */
@@ -1671,8 +1671,8 @@ async function exportLHFinal(){
     if(!seguir)return;
   }
 
-  /* Generar Excel formato entrega */
-  const wsDataFinal=lhCandidatos.filter(c=>c.estado==='Matriculado').map(c=>sanitizeForXLSX({
+  /* Generar Excel formato entrega — se excluyen las filas de cambio de programa (cambioDeId): no son una matrícula nueva, no deben facturarse aparte */
+  const wsDataFinal=lhCandidatos.filter(c=>c.estado==='Matriculado'&&!c.cambioDeId).map(c=>sanitizeForXLSX({
     CAMPUS:c.brand,FechaInscripcion:new Date().toISOString().slice(0,10),
     Curso:c.master,Convocatoria:lhMeta.convocatoria,
     APELLIDOS_NOMBRE:c.nombre,Nacionalidad:'Espana',PaisResidencia:'Espana',
@@ -1692,21 +1692,22 @@ async function exportLHFinal(){
     XLSX.writeFile(wb2,'BecasLH_Final_'+String(lhMeta.year||new Date().getFullYear())+'.xlsx');
   }catch(err){console.error(err);alert('Error al exportar: '+err.message);return;}
 
-  /* Guardar en histórico — sobrescribe el archivo existente de esta convocatoria/año solo si el usuario lo confirmó arriba */
-  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
+  /* Guardar en histórico — sobrescribe el archivo existente de esta convocatoria/año solo si el usuario lo confirmó arriba.
+     Las filas de cambio de programa (cambioDeId) quedan excluidas de matriculados y facturación, igual que en las tarjetas. */
+  const factTotal=lhCandidatos.filter(c=>c.estado==='Matriculado'&&!c.cambioDeId).reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
   const snapshot={
     year:yr,
     convocatoria:lhMeta.convocatoria,
     fechaCierre:new Date().toLocaleDateString('es-ES'),
     fechaActualizacion:'',
-    totalMatriculados:lhCandidatos.filter(c=>c.estado==='Matriculado').length,
+    totalMatriculados:lhCandidatos.filter(c=>c.estado==='Matriculado'&&!c.cambioDeId).length,
     totalNoAptos:lhCandidatos.filter(c=>c.estado==='No apto').length,
     facturacion:factTotal,
     porBrand:{
-      OBS:lhCandidatos.filter(c=>c.brand==='OBS'&&c.estado==='Matriculado').length,
-      INESDI:lhCandidatos.filter(c=>c.brand==='INESDI'&&c.estado==='Matriculado').length,
-      ESDESIGN:lhCandidatos.filter(c=>c.brand==='ESDESIGN'&&c.estado==='Matriculado').length,
-      UCMA:lhCandidatos.filter(c=>c.brand==='UCMA'&&c.estado==='Matriculado').length
+      OBS:lhCandidatos.filter(c=>c.brand==='OBS'&&c.estado==='Matriculado'&&!c.cambioDeId).length,
+      INESDI:lhCandidatos.filter(c=>c.brand==='INESDI'&&c.estado==='Matriculado'&&!c.cambioDeId).length,
+      ESDESIGN:lhCandidatos.filter(c=>c.brand==='ESDESIGN'&&c.estado==='Matriculado'&&!c.cambioDeId).length,
+      UCMA:lhCandidatos.filter(c=>c.brand==='UCMA'&&c.estado==='Matriculado'&&!c.cambioDeId).length
     },
     candidatos:JSON.parse(JSON.stringify(lhCandidatos))
   };
@@ -1740,7 +1741,7 @@ function renderHistBody(){
     const brands=['OBS','INESDI','ESDESIGN','UCMA'];
     const rows=h.candidatos||[];
     const brandBreakdown=brands.map(b=>{
-      const candsB=rows.filter(c=>c.brand===b);
+      const candsB=rows.filter(c=>c.brand===b&&!c.cambioDeId);
       if(!candsB.length)return'';
       const matrB=candsB.filter(c=>c.estado==='Matriculado').length;
       const factB=candsB.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
