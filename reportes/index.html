@@ -896,6 +896,20 @@ async function load(){
       return c;
     });
   }
+  /* Reparación automática: si quedaron ids duplicados entre candidatos ya guardados
+     en KV (por el bug de importación ya corregido), se separan aquí para que cada
+     fila vuelva a ser independiente. Esto es lo que arregla el caso ya existente
+     (ej. ESDesign 50%) sin necesidad de volver a subir el Excel. */
+  let lhDedupChanged=false;
+  const seenLoadIds=new Set();
+  lhCandidatos.forEach(c=>{
+    if(seenLoadIds.has(c.id)){
+      c.id='lh_fix_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
+      lhDedupChanged=true;
+    }
+    seenLoadIds.add(c.id);
+  });
+  if(lhDedupChanged)await kvSet(LH_CANDS_KEY,lhCandidatos);
   if(lhH)lhHistorico=lhH;
   if(lhM)lhMeta=lhM;
   updateBecasFactExtra();
