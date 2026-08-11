@@ -910,6 +910,22 @@ async function load(){
     seenLoadIds.add(c.id);
   });
   if(lhDedupChanged)await kvSet(LH_CANDS_KEY,lhCandidatos);
+  /* Reparación automática 2: "excluido" se pone a true cuando se rellena Master
+     sustituto / Alumno sustituto (Cambio Programa / Sustituido), para no contar
+     la fila original dos veces. Pero si esos campos quedaron vacíos (se limpiaron,
+     o el candidato volvió a Matriculado sin pasar por el reset de Estado), el
+     candidato se queda marcado como excluido para siempre aunque SÍ deba contar
+     en matriculados y facturación. Aquí se corrige: solo sigue excluido si de
+     verdad tiene un sustituto o cambio de programa activo. */
+  let lhExclFixed=false;
+  lhCandidatos.forEach(c=>{
+    const tieneSustActivo=(c.sustituido&&c.sustituido.trim())||(c.enPrograma&&c.enPrograma.trim());
+    if(c.excluido&&!tieneSustActivo){
+      c.excluido=false;
+      lhExclFixed=true;
+    }
+  });
+  if(lhExclFixed)await kvSet(LH_CANDS_KEY,lhCandidatos);
   if(lhH)lhHistorico=lhH;
   if(lhM)lhMeta=lhM;
   updateBecasFactExtra();
