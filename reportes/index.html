@@ -1232,6 +1232,13 @@ function loadLHExcel(evt){
         return{pct,importe,importeAlumno,facturacion:precio};
       }
 
+      /* FIX: matching de candidatos existentes SOLO por DNI real. Antes, si el DNI venía vacío,
+         se caía en "lhCandidatos[i]" (emparejar por posición en el array), lo que podía heredar
+         el id/estado/asignación de un candidato totalmente distinto (p.ej. una fila de OBS
+         "contaminando" una fila de ESDesign). Eso rompía el mailto (usaba el email/marca del
+         candidato equivocado) y hacía que las ediciones de Lead / Asignado a / Observaciones
+         se guardaran sobre la fila incorrecta. Ahora: si no hay DNI, se genera SIEMPRE un id
+         nuevo y único, nunca se hereda de otro candidato al azar. */
       const newCands=rows.map((row,i)=>{
         let nombre, master, brand, dni, email, tel, pct, importe, importeAlumno, facturacion;
         brand=detectBrand(row);
@@ -1259,9 +1266,9 @@ function loadLHExcel(evt){
           importeAlumno=precio-importe;
           facturacion=precio;
         }
-        const existing=lhCandidatos.find(c=>c.dni&&dni&&c.dni===dni)||lhCandidatos[i];
+        const existing=(dni&&dni.trim())?lhCandidatos.find(c=>c.dni&&c.dni===dni):null;
         return {
-          id:existing?.id||`lh_${Date.now()}_${i}`,
+          id:existing?.id||`lh_${Date.now()}_${i}_${Math.random().toString(36).slice(2,7)}`,
           nombre,dni,email,tel,
           master,brand,
           pct,importe,importeAlumno,facturacion,
@@ -1276,6 +1283,13 @@ function loadLHExcel(evt){
           enPrograma:existing?.enPrograma||'',
           observaciones:existing?.observaciones||''
         };
+      });
+
+      /* Red de seguridad: garantiza que no queden dos filas con el mismo id, pase lo que pase */
+      const seenIds=new Set();
+      newCands.forEach(c=>{
+        if(seenIds.has(c.id)){c.id=`lh_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;}
+        seenIds.add(c.id);
       });
 
       /* Ordenar por brand */
