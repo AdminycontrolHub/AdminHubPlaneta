@@ -150,14 +150,14 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .mora-rows { display:flex; flex-direction:column; gap:6px; }
 .mora-row { border-radius:7px; overflow:hidden; }
 .mora-row-top { display:flex; justify-content:space-between; align-items:center; padding:7px 10px; }
-.mora-row.actual { border:1px solid rgba(255,100,180,0.4); }
-.mora-row.actual .mora-row-top { background:rgba(255,100,180,0.06); }
-.mora-row.actual .mora-row-top .lbl { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(255,100,180,0.8); }
-.mora-row.actual .mora-row-top .lbl-sub { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(29,204,132,0.7); margin-top:4px; display:block; }
+.mora-row.actual { border:1.5px solid #00E6FF; }
+.mora-row.actual .mora-row-top { background:rgba(40,60,80,0.55); }
+.mora-row.actual .mora-row-top .lbl { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(225,245,255,0.85); }
+.mora-row.actual .mora-row-top .lbl-sub { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(29,204,132,0.85); margin-top:4px; display:block; }
 .mora-row.actual .mora-row-pct { font-size:28px; font-weight:700; color:#ff64b4; flex-shrink:0; margin-left:6px; line-height:1; }
-.mora-row-fact { border-top:1px solid rgba(255,100,180,0.12); padding:5px 10px; display:flex; justify-content:space-between; align-items:center; background:rgba(255,100,180,0.04); }
-.mora-row-fact-lbl { font-size:11px; color:rgba(255,100,180,0.5); }
-.mora-row-fact-val { font-size:13px; font-weight:600; color:rgba(220,245,255,0.55); }
+.mora-row-fact { border-top:1px solid rgba(0,230,255,0.28); padding:5px 10px; display:flex; justify-content:space-between; align-items:center; background:rgba(40,60,80,0.4); }
+.mora-row-fact-lbl { font-size:11px; color:rgba(225,245,255,0.6); }
+.mora-row-fact-val { font-size:13px; font-weight:600; color:rgba(225,245,255,0.85); }
 @media(max-width:700px){
   .topbar,.page-head,.stats-grid,.conv-selector-wrap { padding-left:16px; padding-right:16px; }
   .nodes-row { gap:24px; }
