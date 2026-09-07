@@ -52,7 +52,8 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .stat-card.info::before{background:linear-gradient(90deg,#1e7fc0,transparent);}
 .stat-card.teal::before{background:linear-gradient(90deg,#00D4F0,transparent);}
 .stat-card.obs::before{background:linear-gradient(90deg,#2a7f8a,transparent);}
-.stat-label{font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:rgba(0,180,210,0.38);}
+.stat-data-box{background:rgba(40,60,80,0.55);border:1.5px solid #00E6FF;border-radius:8px;padding:8px 10px;margin-bottom:6px;}
+.stat-label{font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:rgba(225,245,255,0.75);}
 .stat-value{font-size:38px;font-weight:600;line-height:1.1;}
 .stat-value.ok{color:#1dcc84;}.stat-value.warn{color:#f0a830;}.stat-value.info{color:#3aabf0;}.stat-value.teal{color:#00D4F0;}.stat-value.obs{color:#4fc3cf;}
 .stat-name{font-size:13px;font-weight:500;color:rgba(0,200,230,0.6);margin-top:2px;}
@@ -749,19 +750,19 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 
 <div class="stats-grid">
   <div class="stat-card ok" style="animation-delay:0s" onclick="window.open('https://gplaneta.sharepoint.com/:x:/r/sites/AdministracinComercialyCobros-AdministracinComercial2.0/_layouts/15/Doc.aspx?sourcedoc=%7BDB9CB695-6DCC-423C-8DBB-0ED9CF40DDB9%7D&file=Seguimiento%20CC%2C%20Bajas%20y%20Devoluciones..xlsx&action=default&mobileredirect=true','_blank')">
-    <div class="stat-label">Correos</div><div class="stat-value ok">47</div><div class="stat-name">Correos</div><div class="stat-sub">casos activos</div>
+    <div class="stat-data-box"><div class="stat-label">Correos</div><div class="stat-value ok">47</div></div><div class="stat-name">Correos</div><div class="stat-sub">casos activos</div>
   </div>
   <div class="stat-card warn" style="animation-delay:0.06s" onclick="window.open('https://gplaneta.sharepoint.com/:x:/r/sites/AdministracinComercialyCobros-AdministracinComercial2.0/_layouts/15/Doc.aspx?sourcedoc=%7BDB9CB695-6DCC-423C-8DBB-0ED9CF40DDB9%7D&file=Seguimiento%20CC%2C%20Bajas%20y%20Devoluciones..xlsx&action=default&mobileredirect=true','_blank')">
-    <div class="stat-label">Bajas y Cambios</div><div class="stat-value warn">23</div><div class="stat-name">Bajas y Cambios</div><div class="stat-sub">casos activos</div>
+    <div class="stat-data-box"><div class="stat-label">Bajas y Cambios</div><div class="stat-value warn">23</div></div><div class="stat-name">Bajas y Cambios</div><div class="stat-sub">casos activos</div>
   </div>
   <div class="stat-card info" style="animation-delay:0.12s">
-    <div class="stat-label">Bootcamps</div><div class="stat-value info">31</div><div class="stat-name">Bootcamps</div><div class="stat-sub">casos activos</div>
+    <div class="stat-data-box"><div class="stat-label">Bootcamps</div><div class="stat-value info">31</div></div><div class="stat-name">Bootcamps</div><div class="stat-sub">casos activos</div>
   </div>
   <div class="stat-card teal" style="animation-delay:0.18s">
-    <div class="stat-label">Amp. UCMA</div><div class="stat-value teal">18</div><div class="stat-name">Amp. y Renov. UCMA</div><div class="stat-sub">casos activos</div>
+    <div class="stat-data-box"><div class="stat-label">Amp. UCMA</div><div class="stat-value teal">18</div></div><div class="stat-name">Amp. y Renov. UCMA</div><div class="stat-sub">casos activos</div>
   </div>
   <div class="stat-card obs" style="animation-delay:0.24s" onclick="openObs()">
-    <div class="stat-label">Referidos OBS</div><div class="stat-value obs" id="statObsTotal">—</div><div class="stat-name">Referidos OBS</div><div class="stat-sub">registros activos</div>
+    <div class="stat-data-box"><div class="stat-label">Referidos OBS</div><div class="stat-value obs" id="statObsTotal">—</div></div><div class="stat-name">Referidos OBS</div><div class="stat-sub">registros activos</div>
   </div>
 </div>
 
