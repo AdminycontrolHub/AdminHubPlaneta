@@ -1393,9 +1393,9 @@ function cmRenderTable(){
             ${cmQuickCommentOptionsHtml()}
           </select>
           <input type="text" class="cm-comment-input" value="${cmEscapeHtml(r.comentarios||'')}" placeholder="Comentario..." onblur="cmChangeComentario('${r.id}',this.value)">
-          ${(cmComentariosHistR1[r.idNacs] && cmComentariosHistR1[r.idNacs].length > 0) ? `<button onclick="cmOpenComentariosHist('${cmEscapeHtml(r.idNacs)}','${cmEscapeHtml(r.nombre).replace(/'/g,"\\'")}','r1')" title="Ver historial de comentarios anteriores" style="flex-shrink:0;width:20px;height:20px;border:none;border-radius:50%;background:#fde3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a5300" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          </button>` : ''}
+          <button onclick="cmOpenComentariosHist('${cmEscapeHtml(r.idNacs)}','${cmEscapeHtml(r.nombre).replace(/'/g,"\\'")}','r1')" title="Ver historial de comentarios anteriores" style="flex-shrink:0;width:20px;height:20px;border:none;border-radius:50%;background:${(cmComentariosHistR1[r.idNacs] && cmComentariosHistR1[r.idNacs].length > 0) ? '#fde3b8' : '#e8e2d6'};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${(cmComentariosHistR1[r.idNacs] && cmComentariosHistR1[r.idNacs].length > 0) ? '#8a5300' : '#a89c88'}" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          </button>
         </div>
         <div class="cm-cell-mut">${cmEscapeHtml(r.ultimoUsuario||'—')}</div>
       </div>`;
@@ -1665,11 +1665,17 @@ async function cmAddComentarioHistR2(idNacs, entry){
     });
   }catch(e){ console.error('Error guardando historial de comentarios (R2):', e); }
 }
-function cmOpenComentariosHist(idNacs, nombre, round){
-  const mapa = round === 'r2' ? cmComentariosHistR2 : cmComentariosHistR1;
-  const entradas = mapa[idNacs] || [];
+async function cmOpenComentariosHist(idNacs, nombre, round){
   document.getElementById('cmComentariosHistTitle').textContent = `Historial de comentarios — ${nombre}`;
   const body = document.getElementById('cmComentariosHistBody');
+  body.innerHTML = `<div class="cm-empty-state">Cargando...</div>`;
+  document.getElementById('cmOverlayComentariosHist').classList.add('show');
+  // Recarga el historial directamente desde KV, para no depender de la copia en
+  // memoria (que puede quedar desactualizada si otra persona añadió comentarios
+  // desde otra sesión mientras esta pestaña ya estaba abierta).
+  if(round === 'r2'){ await cmLoadComentariosHistR2(); } else { await cmLoadComentariosHistR1(); }
+  const mapa = round === 'r2' ? cmComentariosHistR2 : cmComentariosHistR1;
+  const entradas = mapa[idNacs] || [];
   if(entradas.length === 0){
     body.innerHTML = `<div class="cm-empty-state">Sin comentarios anteriores registrados.</div>`;
   } else {
@@ -1682,7 +1688,6 @@ function cmOpenComentariosHist(idNacs, nombre, round){
         <div style="font-size:12.5px;color:#3a3128;">${cmEscapeHtml(e.comentario)}</div>
       </div>`).join('');
   }
-  document.getElementById('cmOverlayComentariosHist').classList.add('show');
 }
 function cmCloseComentariosHist(){ document.getElementById('cmOverlayComentariosHist').classList.remove('show'); }
 
@@ -1884,9 +1889,9 @@ function cmRenderTableR2(){
             ${cmQuickCommentOptionsHtml()}
           </select>
           <input type="text" class="cm-comment-input" value="${cmEscapeHtml(r.comentarios||'')}" placeholder="Comentario..." onblur="cmChangeComentarioR2('${r.id}',this.value)">
-          ${(cmComentariosHistR2[r.idNacs] && cmComentariosHistR2[r.idNacs].length > 0) ? `<button onclick="cmOpenComentariosHist('${cmEscapeHtml(r.idNacs)}','${cmEscapeHtml(r.nombre).replace(/'/g,"\\'")}','r2')" title="Ver historial de comentarios anteriores" style="flex-shrink:0;width:20px;height:20px;border:none;border-radius:50%;background:#fde3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8a5300" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-          </button>` : ''}
+          <button onclick="cmOpenComentariosHist('${cmEscapeHtml(r.idNacs)}','${cmEscapeHtml(r.nombre).replace(/'/g,"\\'")}','r2')" title="Ver historial de comentarios anteriores" style="flex-shrink:0;width:20px;height:20px;border:none;border-radius:50%;background:${(cmComentariosHistR2[r.idNacs] && cmComentariosHistR2[r.idNacs].length > 0) ? '#fde3b8' : '#e8e2d6'};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${(cmComentariosHistR2[r.idNacs] && cmComentariosHistR2[r.idNacs].length > 0) ? '#8a5300' : '#a89c88'}" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          </button>
         </div>
         <div class="cm-cell-mut">${cmEscapeHtml(r.ultimoUsuario||'—')}</div>
       </div>`;
