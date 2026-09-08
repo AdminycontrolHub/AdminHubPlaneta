@@ -942,8 +942,19 @@ async function load(){
   checkHashBecasLH();
 }
 
+/* Facturación extra (acumulado del histórico + candidatos matriculados aún no cerrados),
+   siempre acotada al año natural en curso. Al finalizar un proceso (Extracción final)
+   ese importe pasa al Histórico y sigue sumando aquí; el 1 de enero vuelve a cero porque
+   solo se cuentan entradas de lhHistorico cuyo year coincide con el año actual. */
 function updateBecasFactExtra(){
-  const total=lhCandidatos.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
+  const yearNow=String(new Date().getFullYear());
+  const histTotal=lhHistorico
+    .filter(h=>String(h.year||'')===yearNow)
+    .reduce((s,h)=>s+(h.facturacion||0),0);
+  const liveTotal=lhCandidatos
+    .filter(c=>c.estado==='Matriculado')
+    .reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
+  const total=histTotal+liveTotal;
   const el=document.getElementById('becas-fact-extra');
   if(el)el.textContent=total>0?total.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'— €';
 }
@@ -1193,6 +1204,7 @@ function importLHHistoricoFinal(evt){
 
       alert(`✓ Histórico ${year} importado: ${candidatosArchivo.length} matriculados, ${factTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})} de facturación, desglosado por marca.`);
       if(document.getElementById('histOverlay').classList.contains('open'))renderHistBody();
+      updateBecasFactExtra();
       evt.target.value='';
     }catch(err){
       console.error(err);
@@ -1866,6 +1878,7 @@ async function deleteLHHistoricoEntryConfirmed(hi){
   lhHistorico.splice(hi,1);
   await kvSet(LH_HIST_KEY,lhHistorico);
   renderHistBody();
+  updateBecasFactExtra();
 }
 
 /* ===================== ELIMINAR FILA INDIVIDUAL ===================== */
