@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -83,7 +82,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .loading-dots span:nth-child(2){animation-delay:.2s;} .loading-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes ldot { 0%,60%,100%{transform:translateY(0);opacity:.4;} 30%{transform:translateY(-6px);opacity:1;} }
 
-/* ── Modal fechas — estilo crema ── */
 .overlay { position:fixed; inset:0; z-index:200; background:rgba(0,5,15,0.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:1rem; }
 .overlay.open { display:flex; }
 .modal { width:min(560px,96vw); max-height:90vh; overflow-y:auto; background:#EEE8DF; border-radius:18px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,0.35); animation:fadeUp 0.28s ease; border:none; }
@@ -109,7 +107,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .btn-save { background:#d4cfc6; border:1px solid #c0b9af; border-radius:9px; padding:9px 20px; color:#1a3a5c; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .btn-save:hover { background:#c8c2b8; }
 
-/* ── Pop-up AITOR alerta ── */
 .aitor-alert-overlay { position:fixed; inset:0; z-index:400; background:rgba(0,5,15,0.82); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; }
 .aitor-alert-overlay.open { display:flex; }
 .aitor-alert-popup { display:flex; align-items:flex-end; position:relative; animation:fadeUp 0.35s cubic-bezier(0.34,1.2,0.64,1); }
@@ -146,7 +143,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .aitor-dismiss-btn { width:100%; background:#d4cfc6; border:1.5px solid #c0b9af; border-radius:9px; padding:9px; color:#1a3a5c; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
 .aitor-dismiss-btn:hover { background:#c8c2b8; border-color:#b0a99f; }
 
-/* ── Modal cruce de datos — estilo crema ── */
 #cruceOverlay { position:fixed; inset:0; z-index:300; background:rgba(0,5,15,0.75); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
 #cruceOverlay.open { display:flex; }
 .cruce-modal { width:min(680px,96vw); max-height:92vh; overflow-y:auto; background:#EEE8DF; border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
@@ -216,7 +212,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cruce-ready-box p { color:#2a7a4a; font-size:10px; margin:0; }
 .cruce-ready-box strong { color:#00903a; font-weight:600; }
 
-/* ===== GESTOR COMÚN DE BURBUJAS ===== */
 .bm-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,5,15,0.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem;}
 .bm-overlay.open{display:flex;}
 .bm-modal{background:#030E1E;border:1px solid rgba(0,212,240,0.3);border-radius:18px;width:min(640px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 0 60px rgba(0,180,255,0.12);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#E0F7FF;}
@@ -257,7 +252,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .bm-btn-add:hover{background:rgba(0,212,240,0.16);}
 @media(max-width:560px){.bm-layout{grid-template-columns:1fr;}}
 
-/* ===== MODAL CONTRASEÑA ===== */
 .pwd-overlay { position:fixed; inset:0; z-index:600; background:rgba(0,5,15,0.9); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
 .pwd-overlay.open { display:flex; }
 .pwd-modal { background:#030E1E; border:1px solid rgba(0,212,240,0.3); border-radius:18px; width:min(360px,94vw); box-shadow:0 0 60px rgba(0,180,255,0.12); animation:fadeUp 0.28s ease; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:22px; }
@@ -282,6 +276,222 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cruce-modes-grid,.cruce-files-grid,.cruce-cols-grid,.cruce-help-grid { grid-template-columns:1fr; }
 }
 @media(max-width:400px){ .brands-grid { grid-template-columns:1fr; } }
+.page-eyebrow::before { content:''; display:inline-block; width:18px; height:1px; background:rgba(0,230,255,0.3); }
+.period-wrap { position:relative; z-index:10; padding:24px 32px 0; }
+.period-label-row { display:flex; align-items:center; justify-content:center; gap:7px; margin-bottom:10px; }
+.period-label { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(0,194,203,0.3); text-align:center; display:block; }
+.period-edit-btn { width:19px; height:19px; border-radius:6px; border:1px solid rgba(0,230,255,0.22); background:transparent; color:rgba(0,230,255,0.45); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0; }
+.period-edit-btn:hover { border-color:#00E6FF; color:#00E6FF; background:rgba(0,230,255,0.1); transform:scale(1.1); }
+.month-carousel-wrap { display:flex; align-items:center; justify-content:center; gap:16px; }
+.carousel-arrow { width:38px; height:38px; border-radius:50%; border:1.5px solid rgba(0,230,255,0.22); background:rgba(0,20,38,0.4); color:rgba(0,230,255,0.7); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform .2s ease, border-color .2s, background .2s, color .2s; flex-shrink:0; }
+.carousel-arrow:hover { border-color:#00E6FF; color:#00E6FF; background:rgba(0,230,255,0.12); transform:scale(1.12); }
+.carousel-arrow:active { transform:scale(0.92); }
+.carousel-track { display:flex; align-items:center; gap:16px; }
+.carousel-month { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform .4s cubic-bezier(.22,1,.36,.1), opacity .4s ease; }
+.carousel-month.side { opacity:0.32; transform:scale(0.76); }
+.carousel-month.side:hover { opacity:0.85; transform:scale(0.85); }
+.carousel-month.side:hover .cm-card { border-color:rgba(0,230,255,0.5); background:linear-gradient(160deg, rgba(0,230,255,0.14), rgba(168,120,240,0.1)); }
+.carousel-month.side:hover .cm-name { color:#8fe8ff; }
+.carousel-month.ghost { visibility:hidden; }
+.cm-card { position:relative; background:linear-gradient(160deg, rgba(0,230,255,0.07), rgba(168,120,240,0.05)); border:1.5px solid rgba(0,230,255,0.18); border-radius:20px; padding:15px 30px; min-width:180px; text-align:center; overflow:hidden; transition:border-color .3s, box-shadow .3s, background .3s; }
+.carousel-month.center .cm-card { border-color:rgba(0,230,255,0.55); background:linear-gradient(160deg, rgba(0,230,255,0.15), rgba(168,120,240,0.1)); box-shadow:0 0 28px rgba(0,230,255,0.18), inset 0 1px 0 rgba(255,255,255,0.06); }
+.carousel-month.center.all-selected .cm-card { border-color:#00E6FF; box-shadow:0 0 34px rgba(0,230,255,0.34), inset 0 1px 0 rgba(255,255,255,0.08); }
+.cm-year { font-size:9px; letter-spacing:0.18em; color:rgba(0,230,255,0.38); text-transform:uppercase; font-family:'Courier New',monospace; }
+.cm-name { font-size:18px; font-weight:800; letter-spacing:0.01em; color:rgba(0,230,255,0.55); margin-top:2px; }
+.carousel-month.center .cm-name { color:#F5FBFF; }
+.carousel-month.center.all-selected .cm-name { color:#00E6FF; }
+.cm-hint { font-size:9.5px; color:rgba(0,220,255,0.35); font-family:'Courier New',monospace; margin-top:4px; }
+.carousel-progress { width:220px; height:3px; background:rgba(255,255,255,0.07); border-radius:3px; margin:14px auto 0; position:relative; }
+.carousel-progress-fill { position:absolute; top:-2.5px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#00E6FF,#a878f0); box-shadow:0 0 8px rgba(0,230,255,0.5); transition:left .35s cubic-bezier(.22,1,.36,1); }
+.week-chips-row { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+.week-chip { display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(0,20,38,0.5); border:1.5px solid rgba(0,194,203,0.22); border-radius:14px; padding:9px 16px; cursor:pointer; font-family:inherit; transition:transform .15s ease, box-shadow .15s, border-color .15s, background .25s; }
+.week-chip:hover { border-color:rgba(0,194,203,0.65); background:linear-gradient(135deg, rgba(0,194,203,0.14), rgba(168,120,240,0.08)); transform:translateY(-3px) scale(1.06); }
+.week-chip:hover .wk-title { color:#7fe0ee; }
+.week-chip:active { transform:translateY(0) scale(0.96); }
+.week-chip.active { background:linear-gradient(135deg, rgba(0,194,203,0.26), rgba(168,120,240,0.16)); border-color:#00C2CB; box-shadow:0 0 16px rgba(0,194,203,0.26); }
+.week-chip .wk-title { font-size:12.5px; font-weight:800; color:rgba(0,230,255,0.5); }
+.week-chip.active .wk-title { color:#00E6FF; }
+.week-chip .wk-range { font-size:9.5px; color:rgba(0,220,255,0.35); font-family:'Courier New',monospace; }
+.week-chip.active .wk-range { color:rgba(0,220,255,0.6); }
+.period-hint { text-align:center; font-size:10px; color:rgba(0,200,230,0.3); margin-top:10px; }
+.marca-grid { position:relative; z-index:10; padding:22px 32px 0; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.mc { background:rgba(0,14,30,0.9); border:1px solid rgba(168,120,240,0.45); border-radius:14px; padding:16px 17px 15px; display:flex; flex-direction:column; }
+.mc::before { content:''; display:block; height:2px; border-radius:2px; margin-bottom:12px; }
+.mc.obs::before    { background:linear-gradient(90deg,#1dcc84,transparent); }
+.mc.inesdi::before { background:linear-gradient(90deg,#a878f0,transparent); }
+.mc.esdesign::before { background:linear-gradient(90deg,#f0a830,transparent); }
+.mc.ucma::before   { background:linear-gradient(90deg,#3aabf0,transparent); }
+.mc-headrow { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.mc-name { font-size:16px; font-weight:700; letter-spacing:-0.02em; }
+.mc.obs .mc-name    { color:#1dcc84; }
+.mc.inesdi .mc-name { color:#a878f0; }
+.mc.esdesign .mc-name { color:#f0a830; }
+.mc.ucma .mc-name   { color:#3aabf0; }
+.mc-spark { width:48px; height:20px; flex-shrink:0; margin-left:auto; }
+.mc-subtitle { font-size:9px; letter-spacing:0.04em; text-transform:uppercase; color:rgba(200,180,240,0.55); margin-bottom:10px; line-height:1.5; }
+.mc-divider { height:1px; background:rgba(0,212,240,0.07); margin-bottom:11px; }
+.mc-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:0; }
+.mc-stat { background:rgba(40,60,80,0.55); border-radius:8px; padding:8px 9px; border:1.5px solid #00E6FF; cursor:pointer; transition:background .15s, transform .1s; text-align:left; }
+.mc-stat:hover { background:rgba(40,70,95,0.75); }
+.mc-stat:active { transform:scale(0.97); }
+.mc-stat.selected { background:rgba(0,230,255,0.18); box-shadow:0 0 0 1px #00E6FF inset; }
+.mc-stat-lbl { font-size:9px; letter-spacing:0.03em; text-transform:uppercase; color:rgba(225,245,255,0.85); margin-bottom:4px; line-height:1.2; }
+.mc-stat-val { font-size:19px; font-weight:700; line-height:1; font-family:'Courier New',monospace; }
+.mc.obs .mc-stat-val.altas       { color:#1dcc84; }
+.mc.inesdi .mc-stat-val.altas    { color:#a878f0; }
+.mc.esdesign .mc-stat-val.altas  { color:#f0a830; }
+.mc.ucma .mc-stat-val.altas      { color:#3aabf0; }
+.mc-stat-val.bajas { color:#ff8080; }
+.mc-stat-val.ccce { color:#ffd166; }
+.mc-stat-hint { font-size:8px; color:rgba(225,245,255,0.35); margin-top:3px; }
+.mc-updated { font-size:9px; color:rgba(0,180,210,0.25); text-align:right; font-family:'Courier New',monospace; margin-top:12px; }
+.detail-panel { position:relative; z-index:10; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.35); overflow:hidden; display:none; margin-top:16px; }
+.detail-panel.open { display:block; animation:fadeUp .25s ease; }
+.detail-panel.fiel { margin-left:32px; margin-right:32px; background:#EAF4FB; }
+.detail-panel.excepciones { margin-left:12px; margin-right:12px; background:#F1E9FB; }
+.detail-merge-bar { display:flex; align-items:center; justify-content:center; margin:12px 32px 0; padding:10px 16px; background:#EAF3EC; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+}
+.detail-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid rgba(0,100,140,0.12); flex-wrap:wrap; gap:10px; }
+.detail-head-left { display:flex; align-items:center; gap:10px; }
+.detail-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.detail-title { font-size:13px; font-weight:700; color:#1a3a50; letter-spacing:0.02em; }
+.detail-badge { font-size:9.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:3px 8px; border-radius:5px; margin-left:2px; }
+.detail-badge.fiel { background:#cfe6f7; color:#0077aa; }
+.detail-badge.exc { background:#ddc7f2; color:#5a2d8a; }
+.detail-sub { font-size:10.5px; color:#6a8a9a; margin-top:2px; }
+.th-head-row { display:flex; align-items:center; gap:4px; position:relative; }
+.th-filter-icon { background:none; border:none; padding:1px; cursor:pointer; color:#8a97a0; opacity:0.75; display:flex; align-items:center; transition:color .15s, opacity .15s; flex-shrink:0; }
+.th-filter-icon:hover { opacity:1; color:#3a6a80; }
+.th-filter-icon.active-filter { opacity:1; color:#005080; }
+.th-popover { position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid rgba(0,100,140,0.2); border-radius:9px; padding:7px; box-shadow:0 8px 22px rgba(0,0,0,0.18); z-index:30; display:none; min-width:130px; }
+.th-popover.open { display:block; }
+.th-select, .th-input { text-transform:none; font-weight:500; font-size:11px; padding:4px 6px; border-radius:5px; border:1px solid rgba(0,100,140,0.22); background:#fff; color:#1a3a50; font-family:inherit; width:100%; min-width:110px; outline:none; }
+.th-select:focus, .th-input:focus { border-color:rgba(0,100,160,0.55); }
+.th-input::placeholder { color:#9aa5ab; }
+.detail-search-wrap { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.55); border:1px solid rgba(0,100,140,0.2); border-radius:9px; padding:6px 10px; margin-left:4px; }
+.detail-search { border:none; background:transparent; outline:none; font-size:12px; color:#1a3a50; font-family:inherit; width:140px; }
+.detail-search::placeholder { color:#8a97a0; }
+.detail-actions { display:flex; gap:8px; }
+.detail-btn { display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:9px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; border:1px solid rgba(0,100,140,0.25); background:transparent; color:#3a6a80; white-space:nowrap; }
+.detail-btn.primary { background:rgba(0,120,60,0.1); border-color:rgba(0,140,70,0.4); color:#005a30; }
+.detail-btn.merge { background:rgba(0,120,60,0.1); border-color:rgba(0,140,70,0.4); color:#005a30; font-weight:700; }
+.detail-btn.merge:hover { background:rgba(0,140,70,0.18); }
+.detail-btn.add { background:rgba(0,100,160,0.08); border-color:rgba(0,100,160,0.3); color:#005080; }
+.detail-btn:hover { background:rgba(0,100,140,0.08); }
+.detail-btn.primary:hover { background:rgba(0,140,70,0.18); }
+.detail-close { width:26px; height:26px; border-radius:7px; border:1px solid rgba(0,100,140,0.2); background:transparent; color:#6a8a9a; font-size:13px; cursor:pointer; flex-shrink:0; }
+.detail-close:hover { background:rgba(0,100,160,0.08); }
+.detail-table-wrap { overflow-x:auto; max-height:320px; overflow-y:auto; }
+.detail-table { width:100%; border-collapse:collapse; font-size:12px; }
+.detail-panel.fiel .detail-table thead th { background:#D9EAF7; }
+.detail-panel.excepciones .detail-table thead th { background:#E4D4F5; }
+.detail-table thead th { position:sticky; top:0; text-align:left; padding:8px 13px; font-weight:600; color:#3a5a70; font-size:10px; letter-spacing:0.03em; text-transform:uppercase; border-bottom:1px solid rgba(0,100,140,0.12); white-space:nowrap; }
+.detail-table tbody td { padding:7px 13px; color:#1a3a50; border-bottom:1px solid rgba(0,100,140,0.08); white-space:nowrap; }
+.detail-table tbody tr:hover td { background:rgba(0,100,160,0.05); }
+.detail-table tbody tr:last-child td { border-bottom:none; }
+.detail-table tbody tr.exc-row td:first-child { border-left:3px solid #8a5cc8; }
+.comment-cell { white-space:normal; max-width:220px; color:#5a4a6a; font-size:11.5px; }
+.pi-pct { font-family:'Courier New',monospace; font-weight:600; }
+.fact-cell { font-family:'Courier New',monospace; font-weight:600; color:#005a30; }
+.conv-tag { font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:4px; letter-spacing:0.02em; }
+.conv-tag.abril { background:#eef2ff; color:#3730a3; }
+.conv-tag.octubre { background:#fff1e6; color:#9a4a00; }
+.id-muted { color:#6a7a85; font-family:'Courier New',monospace; font-size:11px; }
+.je-pill { font-size:10.5px; font-weight:700; background:rgba(255,255,255,0.55); color:#0077aa; padding:2px 7px; border-radius:5px; }
+.detail-add-row { padding:9px 13px; }
+.detail-add-btn { width:100%; padding:8px; border:1.5px dashed rgba(0,100,140,0.3); border-radius:8px; background:transparent; color:#3a6a80; font-size:12.5px; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px; }
+.detail-add-btn:hover { background:rgba(255,255,255,0.35); }
+.detail-empty { text-align:center; padding:20px; color:#8a8478; font-size:12px; }
+.summary-strip { position:relative; z-index:10; padding:26px 32px 0; }
+.summary-label { font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(0,194,203,0.3); text-align:center; display:block; margin-bottom:10px; }
+.summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.sum-card { background:rgba(0,14,30,0.9); border:1px solid rgba(0,230,255,0.1); border-radius:12px; padding:13px 14px; display:flex; align-items:center; gap:13px; }
+.sum-ring-col { display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; }
+.sum-ring-wrap { position:relative; width:64px; height:64px; }
+.sum-pct-below { display:flex; align-items:baseline; gap:1px; font-family:'Courier New',monospace; font-weight:700; color:rgba(225,245,255,0.8); }
+.sum-pct-below .pct-num { font-size:13px; }
+.sum-pct-below .pct-symbol { font-size:11px; opacity:0.65; }
+.sum-right { flex:1; min-width:0; display:flex; flex-direction:column; gap:7px; }
+.sum-name { font-size:12.5px; font-weight:700; letter-spacing:0.02em; }
+.sum-conv-squares { display:flex; gap:6px; margin:6px 0 8px; }
+.conv-square { display:flex; flex-direction:column; align-items:center; justify-content:center; width:42px; height:40px; border-radius:9px; font-family:'Courier New',monospace; flex-shrink:0; }
+.conv-square .csq-num { font-size:13px; font-weight:800; line-height:1.1; }
+.conv-square .csq-lbl { font-size:11px; font-weight:800; letter-spacing:0.03em; text-transform:uppercase; opacity:0.95; margin-top:1px; }
+.conv-square.octubre { background:#fff1e6; color:#9a4a00; }
+.conv-square.abril { background:#eef2ff; color:#3730a3; }
+.sum-name.obs { color:#1dcc84; }
+.sum-name.inesdi { color:#a878f0; }
+.sum-name.esdesign { color:#f0a830; }
+.sum-name.ucma { color:#3aabf0; }
+.sum-nums { display:flex; flex-direction:column; gap:6px; }
+.sum-num-box { background:rgba(40,60,80,0.55); border-radius:7px; padding:6px 9px; border:1.5px solid #00E6FF; display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
+.sum-num-lbl { font-size:8.5px; letter-spacing:0.04em; text-transform:uppercase; color:rgba(225,245,255,0.8); }
+.sum-num-val { font-size:15px; font-weight:700; font-family:'Courier New',monospace; color:rgba(225,245,255,0.92); }
+.sum-num-val .plus { color:rgba(255,209,102,0.95); }
+.sum-num-val .minus { color:#ff8080; }
+.sum-num-total { font-size:9px; color:rgba(225,245,255,0.4); margin-left:4px; }
+.sum-num-box.netas { flex-direction:column; align-items:stretch; gap:3px; }
+.sum-num-box-top { display:flex; align-items:baseline; justify-content:space-between; width:100%; }
+.pwd-modal h3 { color:#1a3a50; font-size:15px; font-weight:700; margin-bottom:6px; }
+.pwd-modal p { color:#6a7a85; font-size:12px; margin-bottom:12px; }
+.pwd-modal input[type=password] { width:100%; padding:9px 11px; border-radius:8px; border:1px solid #c8c0b4; background:#fff; font-size:13px; color:#1a3a50; outline:none; margin-bottom:7px; font-family:inherit; box-sizing:border-box; }
+.pwd-btn.ok:hover { background:#003a5c; }
+.editor-overlay { position:fixed; inset:0; z-index:600; background:rgba(0,5,15,0.82); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding:1rem; }
+.editor-overlay.open { display:flex; }
+.editor-modal { background:#F5F0E8; border-radius:16px; width:min(620px,95vw); max-height:94vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.4); }
+.editor-head { display:flex; align-items:center; justify-content:space-between; padding:11px 18px; border-bottom:1px solid rgba(0,100,140,0.1); position:sticky; top:0; background:#F5F0E8; border-radius:16px 16px 0 0; }
+.editor-head h3 { font-size:13.5px; font-weight:700; color:#1a3a50; }
+.editor-head p { font-size:10.5px; color:#6a8a9a; margin-top:2px; font-family:'Courier New',monospace; }
+.editor-close { width:24px; height:24px; border-radius:7px; border:1px solid rgba(0,100,140,0.2); background:transparent; color:#6a8a9a; font-size:13px; cursor:pointer; }
+.editor-close:hover { background:rgba(0,100,160,0.08); }
+.editor-body { padding:10px 18px 14px; }
+.editor-year-toggle { display:flex; gap:6px; margin-bottom:8px; }
+.editor-year-btn { padding:4px 12px; border-radius:7px; border:1.5px solid rgba(0,100,140,0.2); background:transparent; color:#3a6a80; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+.editor-year-btn.active { background:#1a3a50; border-color:#1a3a50; color:#fff; }
+.editor-month-tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:9px; padding-bottom:9px; border-bottom:1px solid rgba(0,100,140,0.1); }
+.editor-month-tab { padding:4px 9px; border-radius:7px; border:1.5px solid rgba(0,100,140,0.18); background:rgba(0,0,0,0.02); color:#5a6e80; font-size:10.5px; font-weight:600; cursor:pointer; font-family:inherit; position:relative; }
+.editor-month-tab.active { background:#005080; border-color:#005080; color:#fff; }
+.editor-month-tab .edited-dot { position:absolute; top:-3px; right:-3px; width:7px; height:7px; border-radius:50%; background:#d97706; display:none; }
+.editor-month-tab.edited .edited-dot { display:block; }
+.editor-week-palette { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:9px; }
+.editor-week-swatch { display:flex; align-items:center; gap:5px; padding:4px 10px; border-radius:8px; border:1.5px solid transparent; background:rgba(0,0,0,0.04); cursor:pointer; font-size:11px; font-weight:600; color:#3a5a70; font-family:inherit; transition:all .15s; }
+.editor-week-swatch .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.editor-week-swatch.active { border-color:#1a3a50; background:rgba(0,0,0,0.08); }
+.editor-dow-row { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-bottom:4px; }
+.editor-dow-row span { text-align:center; font-size:9px; font-weight:700; color:#8a97a0; text-transform:uppercase; }
+.editor-calendar { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+.editor-day { height:32px; display:flex; align-items:center; justify-content:center; border-radius:7px; font-size:11.5px; font-weight:600; color:#1a3a50; cursor:pointer; background:rgba(0,0,0,0.04); transition:transform .1s; }
+.editor-day:hover { transform:scale(1.06); }
+.editor-day.empty { visibility:hidden; cursor:default; }
+.editor-day.leading-gray { border:1.5px dashed rgba(0,0,0,0.22); color:#8a97a0; }
+.editor-day.borrowed { cursor:default; border:1.5px dashed rgba(255,255,255,0.55); }
+.editor-day.borrowed:hover { transform:none; }
+.editor-hint { font-size:9.5px; color:#6a7a85; line-height:1.4; margin-top:9px; }
+.editor-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:10px; padding-top:9px; border-top:1px solid rgba(0,100,140,0.1); }
+@media(max-width:700px){
+  .marca-grid{grid-template-columns:repeat(2,1fr);}
+  .summary-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:460px){
+  .marca-grid{grid-template-columns:1fr;}
+  .summary-grid{grid-template-columns:1fr;}
+  .topbar,.page-head,.period-wrap,.marca-grid,.summary-strip{padding-left:16px;padding-right:16px;}
+  .detail-panel.fiel,.detail-panel.excepciones{margin-left:16px;margin-right:16px;}
+}
+/* ===== Overlay contenedor del módulo "Seguimiento de Matrículas" ===== */
+.mt-overlay { position:fixed; inset:0; z-index:100; background:#041C2E; display:none; }
+.mt-overlay.open { display:block; }
+.mt-scroll { height:calc(100vh - 58px); overflow-y:auto; }
+.mt-topbar { position:sticky; top:0; z-index:50; background:rgba(4,28,46,0.96); backdrop-filter:blur(8px); padding:14px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(0,230,255,0.12); }
+.mt-topbar-title { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; color:#E0F7FF; letter-spacing:-0.01em; }
+.mt-close { width:32px; height:32px; border-radius:9px; border:1px solid rgba(0,230,255,0.25); background:transparent; color:rgba(0,230,255,0.7); cursor:pointer; font-size:15px; font-family:inherit; transition:all .15s; }
+.mt-close:hover { background:rgba(0,230,255,0.1); border-color:#00E6FF; color:#00E6FF; }
+
+/* ===== Estrella secreta — revela la contraseña del Hub, igual que en otros módulos ===== */
+#mtSecretStar { position:fixed; bottom:12px; right:12px; z-index:99999; background:none; border:none; cursor:pointer; font-size:17px; line-height:1; padding:6px; opacity:0.3; transition:opacity .2s; }
+#mtSecretStar:hover { opacity:0.8; }
+#mtSecretHintTooltip { position:fixed; bottom:42px; right:12px; z-index:99999; background:#1a0a30; color:#fff; padding:7px 12px; border-radius:9px; font-size:12.5px; font-weight:700; letter-spacing:0.02em; display:none; box-shadow:0 6px 18px rgba(0,0,0,0.35); }
+
 </style>
 
 </head>
@@ -359,7 +569,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- Pop-up alerta AITOR — sin cambios, mantiene estilo dark propio -->
 <div class="aitor-alert-overlay" id="aitorAlertOverlay">
   <div class="aitor-alert-popup">
     <div class="aitor-av-panel">
@@ -400,7 +609,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- Modal fechas -->
 <div class="overlay" id="editOverlay">
   <div class="modal">
     <div class="modal-head">
@@ -418,7 +626,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- Modal cruce de datos -->
 <div id="cruceOverlay" onclick="cruceOverlayClick(event)">
   <div class="cruce-modal">
     <div class="cruce-header">
@@ -580,7 +787,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- ===== MODAL COMÚN: GESTIONAR BURBUJAS ===== -->
 <div class="bm-overlay" id="bmOverlay" onclick="bmOverlayClick(event)">
   <div class="bm-modal">
     <div class="bm-header">
@@ -605,7 +811,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- ===== MODAL CONTRASEÑA ===== -->
 <div class="pwd-overlay" id="bmPwdOverlay" onclick="if(event.target===this)bmCancelPassword()">
   <div class="pwd-modal">
     <h3>🔒 Acceso restringido</h3>
@@ -900,10 +1105,6 @@ document.getElementById('editOverlay').addEventListener('click',e=>{if(e.target=
 
 load();
 
-/* ================================================================
-   GESTOR COMÚN DE BURBUJAS — nombre, color, icono, acción, borrar, añadir
-   Persistido en KV, compartido para todo el equipo.
-   ================================================================ */
 const BM_KV_KEY = 'adminhub_convo27_bubbles_v1';
 
 const BM_ICONS = {
@@ -917,8 +1118,8 @@ const BM_ICONS = {
 const BM_COLORS = ['#A78BFA','#22D3EE','#34D399','#F5A623','#FF2E9F','#00FFB2','#FFD966','#FF6B6B'];
 
 const BM_DEFAULT_BUBBLES = [
+  { id:'nuevo',        name:'Nuevo Convo', color:'#22D3EE', icon:'docplus', action:{type:'builtin', value:'matriculas'} },
   { id:'cruce',        name:'Cruce de datos', color:'#A78BFA', icon:'sparkle', action:{type:'builtin', value:'cruce'} },
-  { id:'nuevo',        name:'Nuevo Convo', color:'#22D3EE', icon:'docplus', action:{type:'none'} },
   { id:'seguimientos', name:'Seguimientos Campaña', color:'#34D399', icon:'barchart', action:{type:'none'} }
 ];
 
@@ -932,7 +1133,7 @@ function bmGlow(hex){
   const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},0.28)`;
 }
-function bmBuiltinLabel(v){ return {cruce:'Cruce de datos'}[v] || v; }
+function bmBuiltinLabel(v){ return {cruce:'Cruce de datos', matriculas:'Seguimiento de Matrículas'}[v] || v; }
 
 async function bmLoadBubbles(){
   try{
@@ -990,6 +1191,7 @@ function bmBubbleClick(id, nodeEl){
   if(!b) return;
   if(b.action && b.action.type==='builtin'){
     if(b.action.value==='cruce') openCruceModal();
+    if(b.action.value==='matriculas') openMatriculasOverlay();
   } else if(b.action && b.action.type==='url' && b.action.value){
     window.open(b.action.value, '_blank');
   } else {
@@ -1118,7 +1320,6 @@ async function bmDeleteBubble(id){
 
 bmLoadBubbles();
 
-/* ===== CONTRASEÑA — protege acciones administrativas (eliminar burbuja) ===== */
 const BM_PASSWORD = 'AdminHub';
 let bmPasswordCallback = null;
 function bmRequestPassword(callback, mensaje){
@@ -1145,7 +1346,1096 @@ function bmConfirmPassword(){
     document.getElementById('bmPwdErr').style.display = 'block';
   }
 }
+
+
+/* ===== Estrella secreta — revela la contraseña del Hub (AdminHub) al pasar el ratón ===== */
+let mtSecretHintTimeout = null;
+function mtShowSecretHint(){
+  const tip = document.getElementById('mtSecretHintTooltip');
+  tip.style.display = 'block';
+  clearTimeout(mtSecretHintTimeout);
+  mtSecretHintTimeout = setTimeout(()=>{ tip.style.display = 'none'; }, 2500);
+}
+
+/* ============================================================
+   MÓDULO: SEGUIMIENTO DE MATRÍCULAS (integrado desde el mockup)
+   ============================================================ */
+
+/* ===================== DATOS DE EJEMPLO ===================== */
+const MT_BRANDS=[
+  {key:'obs',name:'OBS',color:'#1dcc84',objetivoSemana:22},
+  {key:'inesdi',name:'INESDI',color:'#a878f0',objetivoSemana:15},
+  {key:'esdesign',name:'ESDesign',color:'#f0a830',objetivoSemana:10},
+  {key:'ucma',name:'UCMA',color:'#3aabf0',objetivoSemana:18}
+];
+
+/* Genera todos los meses del año en curso y el próximo, con sus semanas comerciales (4–5 según el mes)
+   y la convocatoria que "cuenta" en cada uno (la más próxima a iniciar: Abril ene–abr, Octubre may–oct,
+   Abril del año siguiente nov–dic). */
+const MONTH_NAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CURRENT_YEAR=new Date().getFullYear();
+function activeConvFor(monthIdx){
+  if(monthIdx<=3)return'Abril';
+  if(monthIdx<=9)return'Octubre';
+  return'Abril';
+}
+/* Semanas comerciales de martes a martes: cada semana empieza en martes y acaba el lunes siguiente.
+   Una semana "pertenece" al mes donde caen 4 o más de sus 7 días (mayoría) — así la mayoría de meses
+   tienen 4 semanas propias, y los días sobrantes de una semana a caballo entre dos meses se adjudican
+   al mes con mayoría, no al mes donde empieza el martes. Los días que se quedan fuera de toda semana
+   propia del mes (leading/trailing) pertenecen al mes vecino que corresponda. */
+function computeMonthWeeks(year,monthIdx){
+  const daysInMonth=new Date(year,monthIdx+1,0).getDate();
+  const firstDate=new Date(year,monthIdx,1);
+  const lastDate=new Date(year,monthIdx,daysInMonth);
+  function tuesdayOnOrBefore(date){
+    const d=new Date(date);
+    d.setDate(d.getDate()-((d.getDay()-2+7)%7));
+    return d;
+  }
+  let weekStart=tuesdayOnOrBefore(firstDate);
+  const weeks=[],leadingGray=[],trailingGray=[];
+  let prevBorrow=0,nextBorrow=0;
+  while(weekStart<=lastDate){
+    const weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+6);
+    let daysHere=[];
+    for(let dt=new Date(weekStart);dt<=weekEnd;dt.setDate(dt.getDate()+1)){
+      if(dt.getFullYear()===year&&dt.getMonth()===monthIdx)daysHere.push(dt.getDate());
+    }
+    if(daysHere.length>=4){
+      weeks.push({days:daysHere,start:new Date(weekStart)});
+      if(weeks.length===1&&daysHere.length<7)prevBorrow=7-daysHere.length;
+    }else if(weeks.length===0){
+      leadingGray.push(...daysHere);
+    }else{
+      trailingGray.push(...daysHere);
+    }
+    weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+7);
+  }
+  if(weeks.length){
+    const lastCount=weeks[weeks.length-1].days.length;
+    if(lastCount<7)nextBorrow=7-lastCount;
+  }
+  return {weeks,leadingGray,trailingGray,prevBorrow,nextBorrow};
+}
+function nextMonthRef(year,monthIdx){return monthIdx===11?{year:year+1,monthIdx:0}:{year,monthIdx:monthIdx+1};}
+function prevMonthRef(year,monthIdx){return monthIdx===0?{year:year-1,monthIdx:11}:{year,monthIdx:monthIdx-1};}
+function buildMonth(year,monthIdx){
+  const{weeks:groups}=computeMonthWeeks(year,monthIdx);
+  const weeks=groups.map((g,i)=>({id:`${year}-${monthIdx+1}-w${i+1}`,label:`Sem ${i+1}`,range:`${g.days[0]}–${g.days[g.days.length-1]}`}));
+  const week1Start=groups.length?new Date(groups[0].start):new Date(year,monthIdx,1);
+  return {name:MONTH_NAMES[monthIdx],year,activeConv:activeConvFor(monthIdx),weeks,week1Start};
+}
+const MONTHS=[];
+[CURRENT_YEAR,CURRENT_YEAR+1].forEach(year=>{
+  for(let m=0;m<12;m++)MONTHS.push(buildMonth(year,m));
+});
+function allWeekIds(){return MONTHS.flatMap(m=>m.weeks.map(w=>w.id));}
+function monthOfWeek(weekId){return MONTHS.find(m=>m.weeks.some(w=>w.id===weekId));}
+
+/* Semana que contiene la fecha de hoy, como selección inicial */
+function findTodayWeekId(){
+  const now=new Date();
+  const m=MONTHS.find(mo=>mo.year===now.getFullYear()&&mo.name===MONTH_NAMES[now.getMonth()]);
+  if(!m)return allWeekIds()[0];
+  const day=now.getDate();
+  const w=m.weeks.find(w=>{
+    const[start,end]=w.range.split('–').map(n=>parseInt(n,10));
+    return day>=start&&day<=end;
+  });
+  return w?w.id:m.weeks[0].id;
+}
+let selectedWeeks=new Set([findTodayWeekId()]);
+let openDetail=null; /* {brandKey, stat} */
+
+const NOMBRES=['Laura Fernández Ríos','Kwame Osei','Marta Solé Puig','Diego Ibarra Costa','Yolanda Prats Miró','Farid Haddad','Chen Wei','Nuria Alba Campos','Pol Vidal Serra','Elena Marquez Roig','Inés Torralba','Sara Martínez Puig','Tomás Reyes León','Amina Kaddouri','Bruno Castellví'];
+const PROGRAMAS={obs:'MBA Internacional',inesdi:'Máster Digital Business',esdesign:'Diseño de Producto',ucma:'Executive MBA'};
+const JE_INIT=['EZ','NO','SI','AN','CR']; /* iniciales del equipo, dato de ejemplo */
+const COMENTARIOS=['Confirmado por email con Admisiones','Ajuste manual tras revisión de Financiero','Trasladado desde convocatoria anterior','Pago verificado fuera de Atenea','Corrección de duplicado detectado en Atenea','Pendiente de validar con Cobros'];
+
+function seedRandom(seed){let x=Math.sin(seed)*10000;return x-Math.floor(x);}
+function weekData(brandKey,weekId){
+  const seed=brandKey.charCodeAt(0)*13+weekId.charCodeAt(0)*7+weekId.charCodeAt(1)*3;
+  const altas=Math.floor(seedRandom(seed)*6)+1;
+  const bajas=Math.floor(seedRandom(seed+1)*3);
+  const ccce=Math.floor(seedRandom(seed+2)*3);
+  return {altas,bajas,ccce};
+}
+function weekDetail(brandKey,weekId,statKey){
+  const n=weekData(brandKey,weekId)[statKey];
+  const rows=[];
+  for(let i=0;i<n;i++){
+    const seed=brandKey.charCodeAt(0)*17+weekId.charCodeAt(0)*5+i*11+(statKey==='bajas'?100:statKey==='ccce'?200:0);
+    const nombre=NOMBRES[Math.floor(seedRandom(seed)*NOMBRES.length)];
+    const idNacs='NACS-'+(40000+Math.floor(seedRandom(seed+1)*9999));
+    const idOportunidad='OPP-'+(1000+Math.floor(seedRandom(seed+2)*8999));
+    const conv=seedRandom(seed+3)>0.5?'Octubre':'Abril';
+    const pi=Math.round(70+seedRandom(seed+4)*30);
+    const je=JE_INIT[Math.floor(seedRandom(seed+5)*JE_INIT.length)];
+    const facturacion=Math.round((3200+seedRandom(seed+6)*3200)/10)*10;
+    rows.push({nombre,idNacs,idOportunidad,convocatoria:conv,programa:PROGRAMAS[brandKey],pi,je,facturacion});
+  }
+  return rows;
+}
+/* Excepciones manuales — lista pequeña y fija de ejemplo, independiente de la semana */
+function exceptionRows(brandKey,statKey){
+  const base=(brandKey.charCodeAt(0)+statKey.length)%3;
+  if(base===0)return[];
+  const rows=[];
+  for(let i=0;i<base;i++){
+    const seed=brandKey.charCodeAt(1)*23+i*13+statKey.length*7;
+    rows.push({
+      nombre:NOMBRES[Math.floor(seedRandom(seed)*NOMBRES.length)],
+      idNacs:'NACS-'+(50000+Math.floor(seedRandom(seed+1)*999)),
+      idOportunidad:'OPP-'+(9000+Math.floor(seedRandom(seed+2)*999)),
+      convocatoria:seedRandom(seed+3)>0.5?'Octubre':'Abril',
+      programa:PROGRAMAS[brandKey],
+      pi:Math.round(70+seedRandom(seed+4)*30),
+      je:JE_INIT[Math.floor(seedRandom(seed+5)*JE_INIT.length)],
+      facturacion:Math.round((2800+seedRandom(seed+6)*3600)/10)*10,
+      comentario:COMENTARIOS[Math.floor(seedRandom(seed+7)*COMENTARIOS.length)]
+    });
+  }
+  return rows;
+}
+
+function euro(n){return n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
+
+function aggregate(brandKey,weekIds){
+  return weekIds.reduce((acc,id)=>{
+    const w=weekData(brandKey,id);
+    acc.altas+=w.altas;acc.bajas+=w.bajas;acc.ccce+=w.ccce;
+    return acc;
+  },{altas:0,bajas:0,ccce:0});
+}
+function aggregateDetail(brandKey,weekIds,statKey){
+  return weekIds.flatMap(id=>weekDetail(brandKey,id,statKey));
+}
+
+function sparkline(brandKey,color){
+  const vals=allWeekIds().map(id=>weekData(brandKey,id).altas);
+  const max=Math.max(...vals,1);
+  const w=48,h=20,step=w/(vals.length-1);
+  const pts=vals.map((v,i)=>`${i*step},${h-(v/max)*(h-4)-2}`).join(' ');
+  return `<svg class="mc-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  </svg>`;
+}
+
+/* ===================== SELECTOR DE PERIODO (carrusel de meses, año en curso + próximo) ===================== */
+let currentMonthIdx=0;
+(function initMonthIdx(){
+  const idx=MONTHS.findIndex(m=>m.weeks.some(w=>selectedWeeks.has(w.id)));
+  if(idx>=0)currentMonthIdx=idx;
+})();
+
+function monthCardHtml(m,cls){
+  if(!m)return `<div class="carousel-month side ghost"><div class="cm-card"><div class="cm-name">—</div></div></div>`;
+  return `<div class="cm-card"><div class="cm-year">${m.year}</div><div class="cm-name">${m.name}</div>${cls==='center'?`<div class="cm-hint">${m.weeks.length} sem. comerciales</div>`:''}</div>`;
+}
+function renderMonthGroups(){
+  const cur=MONTHS[currentMonthIdx];
+  const prev=MONTHS[currentMonthIdx-1];
+  const next=MONTHS[currentMonthIdx+1];
+  const allSelected=cur.weeks.every(w=>selectedWeeks.has(w.id));
+  const track=document.getElementById('monthCarouselTrack');
+  track.innerHTML=`
+    <div class="carousel-month side" ${prev?`onclick="changeMonth(-1)"`:''}>${monthCardHtml(prev)}</div>
+    <div class="carousel-month center ${allSelected?'all-selected':''}" onclick="toggleCurrentMonth()">${monthCardHtml(cur,'center')}</div>
+    <div class="carousel-month side" ${next?`onclick="changeMonth(1)"`:''}>${monthCardHtml(next)}</div>
+  `;
+  document.getElementById('weekChipsRow').innerHTML=cur.weeks.map(w=>`<button class="week-chip ${selectedWeeks.has(w.id)?'active':''}" onclick="toggleWeek('${w.id}')">
+    <span class="wk-title">${w.label}</span>
+    <span class="wk-range">${w.range}</span>
+  </button>`).join('');
+  const fill=document.getElementById('carouselProgressFill');
+  const pos=MONTHS.length>1?(currentMonthIdx/(MONTHS.length-1))*100:0;
+  fill.style.left=`calc(${pos}% - 4px)`;
+}
+function changeMonth(dir){
+  const next=currentMonthIdx+dir;
+  if(next<0||next>=MONTHS.length)return;
+  currentMonthIdx=next;
+  renderMonthGroups();
+}
+function toggleWeek(id){
+  if(selectedWeeks.has(id)){
+    if(selectedWeeks.size>1)selectedWeeks.delete(id);
+  }else{
+    selectedWeeks.add(id);
+  }
+  refreshAll();
+}
+function toggleCurrentMonth(){
+  const month=MONTHS[currentMonthIdx];
+  const allSelected=month.weeks.every(w=>selectedWeeks.has(w.id));
+  if(allSelected){
+    month.weeks.forEach(w=>{if(selectedWeeks.size>1)selectedWeeks.delete(w.id);});
+  }else{
+    month.weeks.forEach(w=>selectedWeeks.add(w.id));
+  }
+  refreshAll();
+}
+function refreshAll(){
+  renderMonthGroups();
+  mtRenderGrid();
+  renderPanels();
+  renderSummary();
+}
+
+/* ===================== TARJETAS POR MARCA ===================== */
+function periodLabel(){
+  const ids=[...selectedWeeks];
+  if(ids.length===allWeekIds().length)return'todo el periodo';
+  const labels=MONTHS.flatMap(m=>m.weeks.filter(w=>ids.includes(w.id)).map(w=>`${m.name.slice(0,3)} ${w.label}`));
+  return labels.length<=3?labels.join(', '):`${labels.length} semanas seleccionadas`;
+}
+function mtRenderGrid(){
+  const grid=document.getElementById('grid');
+  const weekIds=[...selectedWeeks];
+  grid.innerHTML=MT_BRANDS.map(b=>{
+    const agg=aggregate(b.key,weekIds);
+    return `<div class="mc ${b.key}">
+      <div class="mc-headrow">
+        <div class="mc-name">${b.name}</div>
+        ${sparkline(b.key,b.color)}
+      </div>
+      <div class="mc-subtitle">${periodLabel()}</div>
+      <div class="mc-divider"></div>
+
+      <div class="mc-stats">
+        <div class="mc-stat ${openDetail&&openDetail.brandKey===b.key&&openDetail.stat==='altas'?'selected':''}" onclick="toggleDetail('${b.key}','altas')">
+          <div class="mc-stat-lbl">Altas</div>
+          <div class="mc-stat-val altas">${agg.altas}</div>
+          <div class="mc-stat-hint">ver detalle</div>
+        </div>
+        <div class="mc-stat ${openDetail&&openDetail.brandKey===b.key&&openDetail.stat==='bajas'?'selected':''}" onclick="toggleDetail('${b.key}','bajas')">
+          <div class="mc-stat-lbl">Bajas</div>
+          <div class="mc-stat-val bajas">${agg.bajas}</div>
+          <div class="mc-stat-hint">ver detalle</div>
+        </div>
+        <div class="mc-stat ${openDetail&&openDetail.brandKey===b.key&&openDetail.stat==='ccce'?'selected':''}" onclick="toggleDetail('${b.key}','ccce')">
+          <div class="mc-stat-lbl">CC / CE</div>
+          <div class="mc-stat-val ccce">${agg.ccce}</div>
+          <div class="mc-stat-hint">ver detalle</div>
+        </div>
+      </div>
+
+      <div class="mc-updated">datos de ejemplo</div>
+    </div>`;
+  }).join('');
+}
+
+/* ===================== DETALLE (2 paneles) ===================== */
+const STAT_LABEL={altas:'Altas',bajas:'Bajas',ccce:'CC / CE'};
+function toggleDetail(brandKey,stat){
+  if(openDetail&&openDetail.brandKey===brandKey&&openDetail.stat===stat){
+    closeDetail();return;
+  }
+  openDetail={brandKey,stat};
+  ['fielConvFilter','fielJEFilter','fielProgFilter','fielPIFilter','excConvFilter','excJEFilter','excProgFilter','excPIFilter'].forEach(id=>{document.getElementById(id).value='';});
+  ['fielOppFilter','excOppFilter','fielSearch','excSearch'].forEach(id=>{document.getElementById(id).value='';});
+  mtRenderGrid();
+  renderPanels();
+}
+function closeDetail(){
+  openDetail=null;
+  document.getElementById('panelFiel').classList.remove('open');
+  document.getElementById('panelExc').classList.remove('open');
+  document.getElementById('mergeBar').style.display='none';
+  mtRenderGrid();
+}
+function convTagHtml(conv){
+  return `<span class="conv-tag ${conv==='Abril'?'abril':'octubre'}">${conv}</span>`;
+}
+function rowHtmlFiel(r){
+  return `<tr>
+    <td>${r.nombre}</td>
+    <td class="id-muted">${r.idNacs}</td>
+    <td class="id-muted">${r.idOportunidad}</td>
+    <td>${convTagHtml(r.convocatoria)}</td>
+    <td>${r.programa}</td>
+    <td class="pi-pct">${r.pi}%</td>
+    <td><span class="je-pill">${r.je}</span></td>
+    <td class="fact-cell">${euro(r.facturacion)}</td>
+  </tr>`;
+}
+function rowHtmlExc(r){
+  return `<tr class="exc-row">
+    <td>${r.nombre}</td>
+    <td class="id-muted">${r.idNacs}</td>
+    <td class="id-muted">${r.idOportunidad}</td>
+    <td>${convTagHtml(r.convocatoria)}</td>
+    <td>${r.programa}</td>
+    <td class="pi-pct">${r.pi}%</td>
+    <td><span class="je-pill">${r.je}</span></td>
+    <td class="fact-cell">${euro(r.facturacion)}</td>
+    <td class="comment-cell">${r.comentario||''}</td>
+  </tr>`;
+}
+function toggleColPopover(evt,id){
+  evt.stopPropagation();
+  const pop=document.getElementById(id);
+  const wasOpen=pop.classList.contains('open');
+  document.querySelectorAll('.th-popover.open').forEach(p=>p.classList.remove('open'));
+  if(!wasOpen)pop.classList.add('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.th-popover')&&!e.target.closest('.th-filter-icon')){
+    document.querySelectorAll('.th-popover.open').forEach(p=>p.classList.remove('open'));
+  }
+});
+function updateFilterIconState(controlId){
+  const control=document.getElementById(controlId);
+  const icon=control.closest('.th-popover').previousElementSibling.querySelector('.th-filter-icon');
+  if(icon)icon.classList.toggle('active-filter',!!control.value);
+}
+function fillSelectOptions(selectEl,values,placeholder,formatter){
+  const current=selectEl.value;
+  const opts=[...new Set(values)].sort((a,b)=>a-b||String(a).localeCompare(String(b)));
+  selectEl.innerHTML=`<option value="">${placeholder}</option>`+opts.map(v=>`<option value="${v}">${formatter?formatter(v):v}</option>`).join('');
+  if(opts.includes(current))selectEl.value=current;
+}
+function applyRowFilters(rows,prefix){
+  const conv=document.getElementById(prefix+'ConvFilter').value;
+  const je=document.getElementById(prefix+'JEFilter').value;
+  const prog=document.getElementById(prefix+'ProgFilter').value;
+  const pi=document.getElementById(prefix+'PIFilter').value;
+  const opp=document.getElementById(prefix+'OppFilter').value.trim().toLowerCase();
+  const search=document.getElementById(prefix+'Search').value.trim().toLowerCase();
+  return rows.filter(r=>{
+    if(conv&&r.convocatoria!==conv)return false;
+    if(je&&r.je!==je)return false;
+    if(prog&&r.programa!==prog)return false;
+    if(pi&&String(r.pi)!==pi)return false;
+    if(opp&&!r.idOportunidad.toLowerCase().includes(opp))return false;
+    if(search&&!(r.nombre.toLowerCase().includes(search)||r.idNacs.toLowerCase().includes(search)||r.idOportunidad.toLowerCase().includes(search)))return false;
+    return true;
+  });
+}
+function renderPanels(){
+  const panelFiel=document.getElementById('panelFiel');
+  const panelExc=document.getElementById('panelExc');
+  const mergeBar=document.getElementById('mergeBar');
+  if(!openDetail){
+    panelFiel.classList.remove('open');
+    panelExc.classList.remove('open');
+    mergeBar.style.display='none';
+    return;
+  }
+  const b=MT_BRANDS.find(x=>x.key===openDetail.brandKey);
+  const weekIds=[...selectedWeeks];
+
+  const fielRaw=aggregateDetail(b.key,weekIds,openDetail.stat);
+  const excRaw=exceptionRows(b.key,openDetail.stat);
+
+  fillSelectOptions(document.getElementById('fielJEFilter'),fielRaw.map(r=>r.je),'Todos');
+  fillSelectOptions(document.getElementById('fielProgFilter'),fielRaw.map(r=>r.programa),'Todos');
+  fillSelectOptions(document.getElementById('fielPIFilter'),fielRaw.map(r=>r.pi),'Todos',v=>v+'%');
+  fillSelectOptions(document.getElementById('excJEFilter'),excRaw.map(r=>r.je),'Todos');
+  fillSelectOptions(document.getElementById('excProgFilter'),excRaw.map(r=>r.programa),'Todos');
+  fillSelectOptions(document.getElementById('excPIFilter'),excRaw.map(r=>r.pi),'Todos',v=>v+'%');
+
+  ['fielConvFilter','fielProgFilter','fielPIFilter','fielJEFilter','fielOppFilter','excConvFilter','excProgFilter','excPIFilter','excJEFilter','excOppFilter'].forEach(updateFilterIconState);
+
+  const fielRows=applyRowFilters(fielRaw,'fiel');
+  const excRows=applyRowFilters(excRaw,'exc');
+
+  document.getElementById('fielDot').style.background=b.color;
+  document.getElementById('excDot').style.background=b.color;
+  document.getElementById('fielSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · ${periodLabel()} · ${fielRows.length} registro${fielRows.length!==1?'s':''}`;
+  document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
+
+  document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="8" class="detail-empty">Sin registros con estos filtros</td></tr>`;
+  document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="9" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
+
+  panelFiel.classList.add('open');
+  panelExc.classList.add('open');
+  mergeBar.style.display='flex';
+  panelFiel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function exportPanel(which){
+  if(!openDetail)return;
+  const b=MT_BRANDS.find(x=>x.key===openDetail.brandKey);
+  const weekIds=[...selectedWeeks];
+  const fielRows=aggregateDetail(b.key,weekIds,openDetail.stat);
+  const excRows=exceptionRows(b.key,openDetail.stat);
+  let label,count;
+  if(which==='fiel'){label='FIEL A ATENEA';count=fielRows.length;}
+  else if(which==='exc'){label='PF Y OTRAS EXCEPCIONES A CONTAR';count=excRows.length;}
+  else{label='FIEL A ATENEA + PF Y OTRAS EXCEPCIONES (listado unido)';count=fielRows.length+excRows.length;}
+  alert(`Se exportaría un Excel de "${label}" · ${b.name} · ${STAT_LABEL[openDetail.stat]} · ${weekIds.length} semana${weekIds.length!==1?'s':''} seleccionada${weekIds.length!==1?'s':''} · ${count} filas. Acción de ejemplo — pendiente de conectar a datos reales.`);
+}
+function addExceptionMock(){
+  alert('Aquí se abriría el formulario para añadir manualmente un caso a "PF y otras excepciones a contar" (nombre, ID NACS, ID Oportunidad, convocatoria, programa, PI%, JE y facturación). Acción de ejemplo.');
+}
+
+/* ===================== CONTADOR INFERIOR POR MARCA ===================== */
+/* Cuenta las excepciones PF de las 3 stats (altas/bajas/ccce) para una marca, independiente de la semana */
+function pfCountTotal(brandKey){
+  return ['altas','bajas','ccce'].reduce((s,stat)=>s+exceptionRows(brandKey,stat).length,0);
+}
+function ringSvg(pct,color,centerLabel,tipLabel){
+  const r=26,c=2*Math.PI*r;
+  const clamped=Math.min(Math.max(pct,0),100);
+  const offset=c*(1-clamped/100);
+  const angleRad=(clamped/100*360-90)*Math.PI/180;
+  const mx=(32+r*Math.cos(angleRad)).toFixed(1);
+  const my=(32+r*Math.sin(angleRad)).toFixed(1);
+  return `<svg width="64" height="64" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="7"/>
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="37" text-anchor="middle" font-size="18" font-family="Courier New, monospace" font-weight="800" fill="#fff">${centerLabel}</text>
+    <circle cx="${mx}" cy="${my}" r="9.5" fill="${color}" stroke="#041C2E" stroke-width="2"/>
+    <text x="${mx}" y="${(parseFloat(my)+3).toFixed(1)}" text-anchor="middle" font-size="9" font-family="Courier New, monospace" font-weight="700" fill="#041C2E">${tipLabel}</text>
+  </svg>`;
+}
+/* Reparto aproximado por convocatoria (Abril/Octubre) de altas, bajas y CE — dato de ejemplo,
+   determinista por semana, para poder calcular Netas con la fórmula distinta de cada convocatoria */
+function weekConvSplit(brandKey,weekId){
+  const base=weekData(brandKey,weekId);
+  const seed=brandKey.charCodeAt(0)*19+weekId.charCodeAt(0)*11+weekId.charCodeAt(1)*5;
+  const abrilShare=0.3+seedRandom(seed)*0.4;
+  const ceShare=0.3+seedRandom(seed+1)*0.4; /* qué parte de CC/CE es CE (el resto es CC) */
+  const altasAbril=Math.round(base.altas*abrilShare);
+  const bajasAbril=Math.round(base.bajas*abrilShare);
+  const ceTotal=Math.round(base.ccce*ceShare);
+  const ceAbril=Math.round(ceTotal*abrilShare);
+  const ccceAbril=Math.round(base.ccce*abrilShare);
+  return {
+    altasAbril,altasOctubre:base.altas-altasAbril,
+    bajasAbril,bajasOctubre:base.bajas-bajasAbril,
+    ceAbril,ceOctubre:ceTotal-ceAbril,
+    ccceAbril,ccceOctubre:base.ccce-ccceAbril
+  };
+}
+function aggregateConvSplit(brandKey,weekIds){
+  return weekIds.reduce((acc,id)=>{
+    const s=weekConvSplit(brandKey,id);
+    acc.altasAbril+=s.altasAbril;acc.altasOctubre+=s.altasOctubre;
+    acc.bajasAbril+=s.bajasAbril;acc.bajasOctubre+=s.bajasOctubre;
+    acc.ceAbril+=s.ceAbril;acc.ceOctubre+=s.ceOctubre;
+    return acc;
+  },{altasAbril:0,altasOctubre:0,bajasAbril:0,bajasOctubre:0,ceAbril:0,ceOctubre:0});
+}
+/* De las matrículas Brutas (altas+CC/CE) de Abril y Octubre que conviven en un mismo mes de
+   transición, solo cuentan las de la convocatoria más próxima a iniciar (activeConv de ese mes).
+   Esto es solo para el desglose visual — no toca el cálculo de Brutas+PF ni Netas. */
+function countingBrutasByConv(brandKey,weekIds){
+  let octubre=0,abril=0;
+  weekIds.forEach(id=>{
+    const month=monthOfWeek(id);
+    const s=weekConvSplit(brandKey,id);
+    if(month.activeConv==='Octubre')octubre+=s.altasOctubre+s.ccceOctubre;
+    else abril+=s.altasAbril+s.ccceAbril;
+  });
+  return {octubre,abril};
+}
+function renderSummary(){
+  const weekIds=[...selectedWeeks];
+  const nearestConv=MONTHS[currentMonthIdx].activeConv; /* 'Octubre' o 'Abril' — la más próxima a iniciar según el mes centrado */
+  const grid=document.getElementById('summaryGrid');
+  grid.innerHTML=MT_BRANDS.map(b=>{
+    const agg=aggregate(b.key,weekIds);
+    const brutas=agg.altas+agg.ccce;
+    const pf=pfCountTotal(b.key);
+    const split=aggregateConvSplit(b.key,weekIds);
+    const netasOctubre=split.altasOctubre-(split.bajasOctubre+split.ceOctubre);
+    const netasAbril=split.altasAbril-split.bajasAbril;
+    const netas=netasOctubre+netasAbril;
+    const objetivoTotal=b.objetivoSemana*Math.max(weekIds.length,1);
+    const pct=Math.min(100,Math.round((netas/objetivoTotal)*100));
+    const counting=countingBrutasByConv(b.key,weekIds);
+    return `<div class="sum-card ${b.key}">
+      <div class="sum-ring-col">
+        <div class="sum-ring-wrap">
+          ${ringSvg(pct,b.color,objetivoTotal,netas)}
+        </div>
+        <div class="sum-pct-below"><span class="pct-num">${pct}</span><span class="pct-symbol">%</span></div>
+      </div>
+      <div class="sum-right">
+        <div class="sum-name ${b.key}">${b.name}</div>
+        <div class="sum-conv-squares">
+          ${nearestConv==='Abril'?`
+          <div class="conv-square abril"><span class="csq-num">${counting.abril}</span><span class="csq-lbl">Abr</span></div>
+          <div class="conv-square octubre"><span class="csq-num">${counting.octubre}</span><span class="csq-lbl">Oct</span></div>`:`
+          <div class="conv-square octubre"><span class="csq-num">${counting.octubre}</span><span class="csq-lbl">Oct</span></div>
+          <div class="conv-square abril"><span class="csq-num">${counting.abril}</span><span class="csq-lbl">Abr</span></div>`}
+        </div>
+        <div class="sum-nums">
+          <div class="sum-num-box">
+            <span class="sum-num-lbl">Brutas + PF</span>
+            <span class="sum-num-val">${brutas}<span class="plus">+${pf}</span></span>
+          </div>
+          <div class="sum-num-box netas">
+            <div class="sum-num-box-top">
+              <span class="sum-num-lbl">Netas</span>
+              <span class="sum-num-val">${netas}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===================== EDITOR DE SEMANAS COMERCIALES (lápiz + contraseña del Hub) ===================== */
+const EDITOR_COLORS=['#00C2CB','#a878f0','#f0a830','#1dcc84','#ff8080','#3aabf0','#ffd166'];
+let editorYear=null,editorMonthIdx=null,editorBrush=1;
+let editorDraft={}; /* { [monthIdx]: {assignment:{day:week}, weekCount} } — todo el año se edita a la vez y se guarda junto */
+/* La contraseña la pide el propio sistema del Hub (bmRequestPassword / BM_PASSWORD='AdminHub') */
+
+function daysToRangeLabel(days){
+  const sorted=[...days].sort((a,b)=>a-b);
+  const parts=[];let start=sorted[0],prev=sorted[0];
+  for(let i=1;i<=sorted.length;i++){
+    const d=sorted[i];
+    if(d===prev+1){prev=d;continue;}
+    parts.push(start===prev?`${start}`:`${start}–${prev}`);
+    start=d;prev=d;
+  }
+  return parts.join(', ');
+}
+function loadYearDraft(year){
+  editorDraft={};
+  for(let mi=0;mi<12;mi++){
+    const m=MONTHS.find(mo=>mo.year===year&&mo.name===MONTH_NAMES[mi]);
+    editorDraft[mi]={
+      assignment:{}, /* solo guarda las excepciones manuales a la numeración por defecto */
+      weekCount:m?m.weeks.length:0,
+      week1Start:m?new Date(m.week1Start):new Date(year,mi,1),
+      touched:false
+    };
+  }
+  /* Borrador 12 = Enero del año siguiente. No es una pestaña visible, solo permite que una
+     semana añadida en diciembre pueda "robar" y reconciliar hacia enero del año que viene. */
+  const janNext=MONTHS.find(mo=>mo.year===year+1&&mo.name===MONTH_NAMES[0]);
+  editorDraft[12]={
+    assignment:{},
+    weekCount:janNext?janNext.weeks.length:0,
+    week1Start:janNext?new Date(janNext.week1Start):new Date(year+1,0,1),
+    touched:false
+  };
+}
+
+function openWeekEditor(){
+  editorYear=MONTHS[currentMonthIdx].year;
+  editorMonthIdx=MONTH_NAMES.indexOf(MONTHS[currentMonthIdx].name);
+  loadYearDraft(editorYear);
+  editorBrush=1;
+  renderEditorYearToggle();
+  renderEditorMonthTabs();
+  renderEditorPalette();
+  renderEditorCalendar();
+  document.getElementById('weekEditorOverlay').classList.add('open');
+}
+function closeWeekEditor(){document.getElementById('weekEditorOverlay').classList.remove('open');}
+
+function renderEditorYearToggle(){
+  const years=[CURRENT_YEAR,CURRENT_YEAR+1];
+  document.getElementById('editorYearToggle').innerHTML=years.map(y=>`<button class="editor-year-btn ${y===editorYear?'active':''}" onclick="switchEditorYear(${y})">${y}</button>`).join('');
+}
+function switchEditorYear(year){
+  if(year===editorYear)return;
+  editorYear=year;
+  editorMonthIdx=0;
+  loadYearDraft(editorYear);
+  renderEditorYearToggle();
+  renderEditorMonthTabs();
+  renderEditorPalette();
+  renderEditorCalendar();
+}
+function renderEditorMonthTabs(){
+  document.getElementById('editorMonthTabs').innerHTML=MONTH_NAMES.map((name,i)=>`<button class="editor-month-tab ${i===editorMonthIdx?'active':''} ${editorDraft[i].touched?'edited':''}" onclick="switchEditorMonth(${i})">${name.slice(0,3)}<span class="edited-dot"></span></button>`).join('');
+  document.getElementById('editorMonthLabel').textContent=`${MONTH_NAMES[editorMonthIdx]} ${editorYear} · de martes a martes por defecto`;
+}
+function switchEditorMonth(i){
+  editorMonthIdx=i;
+  editorBrush=1;
+  renderEditorMonthTabs();
+  renderEditorPalette();
+  renderEditorCalendar();
+}
+
+function renderEditorPalette(){
+  const draft=editorDraft[editorMonthIdx];
+  const pal=document.getElementById('editorPalette');
+  let html='';
+  for(let i=1;i<=draft.weekCount;i++){
+    const color=EDITOR_COLORS[(i-1)%EDITOR_COLORS.length];
+    html+=`<button class="editor-week-swatch ${editorBrush===i?'active':''}" style="${editorBrush===i?`border-color:${color};background:${color}22;`:''}" onclick="setEditorBrush(${i})"><span class="dot" style="background:${color}"></span>Semana ${i}</button>`;
+  }
+  pal.innerHTML=html;
+}
+function setEditorBrush(i){editorBrush=i;renderEditorPalette();}
+
+/* Cuando un mes "alcanza" (con su última semana) el inicio de la semana 1 del mes siguiente,
+   esa semana ya no puede seguir siendo la semana 1 del mes siguiente — se la queda el mes anterior.
+   El mes siguiente empieza entonces en lo que era su semana 2, que pasa a numerarse semana 1. */
+function reconcileForward(fromIdx){
+  for(let m=fromIdx;m<12;m++){
+    const cur=editorDraft[m],next=editorDraft[m+1];
+    if(!next||!cur.weekCount)break;
+    const lastStart=new Date(cur.week1Start);lastStart.setDate(cur.week1Start.getDate()+(cur.weekCount-1)*7);
+    const lastEnd=new Date(lastStart);lastEnd.setDate(lastStart.getDate()+6);
+    let changed=false;
+    while(next.weekCount>1&&next.week1Start<=lastEnd){
+      next.week1Start=new Date(next.week1Start);next.week1Start.setDate(next.week1Start.getDate()+7);
+      next.weekCount--;
+      const shifted={};
+      Object.keys(next.assignment).forEach(k=>{
+        const v=next.assignment[k]-1;
+        if(v>=1)shifted[k]=v;
+      });
+      next.assignment=shifted;
+      next.touched=true;
+      changed=true;
+    }
+    if(!changed)break;
+  }
+}
+function addEditorWeek(){
+  const draft=editorDraft[editorMonthIdx];
+  if(draft.weekCount>=EDITOR_COLORS.length)return;
+  draft.weekCount++;
+  draft.touched=true;
+  editorBrush=draft.weekCount;
+  reconcileForward(editorMonthIdx);
+  renderEditorMonthTabs();
+  renderEditorPalette();
+  renderEditorCalendar();
+}
+function paintEditorDay(day){
+  const draft=editorDraft[editorMonthIdx];
+  draft.assignment[day]=editorBrush;
+  draft.touched=true;
+  renderEditorMonthTabs();
+  renderEditorCalendar();
+}
+function isWeekday(y,m,d){return ((new Date(y,m,d).getDay()+6)%7)<=4;}
+function weekdaysOnly(days,y,m){return days.filter(d=>isWeekday(y,m,d));}
+
+/* Fila de calendario real (semanas ISO lunes→domingo) para una fecha, usando un lunes de referencia fijo.
+   Así cada día siempre cae en su columna correcta (L-M-X-J-V), sea cual sea el día en que arranque el mes
+   o una semana comercial. */
+const CAL_EPOCH_MONDAY=new Date(2000,0,3);
+function calendarRow(date){
+  const diffDays=Math.round((date-CAL_EPOCH_MONDAY)/86400000);
+  return Math.floor(diffDays/7);
+}
+function renderEditorCalendar(){
+  const draft=editorDraft[editorMonthIdx];
+  const daysInMonth=new Date(editorYear,editorMonthIdx+1,0).getDate();
+  const prevRef=prevMonthRef(editorYear,editorMonthIdx);
+  const nextRef=nextMonthRef(editorYear,editorMonthIdx);
+  const prevMonthName=MONTH_NAMES[prevRef.monthIdx];
+  const nextMonthName=MONTH_NAMES[nextRef.monthIdx];
+
+  document.getElementById('editorDowRow').innerHTML=['L','M','X','J','V'].map(d=>`<span>${d}</span>`).join('');
+
+  const cells={}; /* "row,col" -> html de la celda */
+  let minRow=Infinity,maxRow=-Infinity;
+  function place(date,cellHtml){
+    const dow=(date.getDay()+6)%7; /* 0=lunes … 6=domingo */
+    if(dow>4)return; /* sábado/domingo: no se muestran ni ocupan columna */
+    const row=calendarRow(date);
+    cells[`${row},${dow}`]=cellHtml;
+    if(row<minRow)minRow=row;
+    if(row>maxRow)maxRow=row;
+  }
+
+  /* Semanas propias del mes (incluye los días prestados del mes anterior/siguiente que
+     comercialmente pertenecen a estas semanas: se colorean igual, no en gris) */
+  const covered={};
+  for(let w=0;w<draft.weekCount;w++){
+    const weekStart=new Date(draft.week1Start);weekStart.setDate(draft.week1Start.getDate()+w*7);
+    for(let k=0;k<7;k++){
+      const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+k);
+      const dow=(dt.getDay()+6)%7;
+      if(dow>4)continue;
+      const dayNum=dt.getDate();
+      const inMonth=dt.getFullYear()===editorYear&&dt.getMonth()===editorMonthIdx;
+      if(inMonth)covered[dayNum]=true;
+      const assignedWk=inMonth?(draft.assignment[dayNum]||(w+1)):(w+1);
+      const color=EDITOR_COLORS[(assignedWk-1)%EDITOR_COLORS.length];
+      if(inMonth){
+        place(dt,`<div class="editor-day" style="background:${color};color:#fff;" onclick="paintEditorDay(${dayNum})">${dayNum}</div>`);
+      }else{
+        const mn=MONTH_NAMES[dt.getMonth()];
+        place(dt,`<div class="editor-day borrowed" style="background:${color};color:#fff;" title="${dayNum} de ${mn} — Semana ${w+1} de este mes">${dayNum}</div>`);
+      }
+    }
+  }
+
+  /* Días propios de este mes que quedan fuera de toda semana propia (antes de la semana 1 o
+     después de la última): en gris, con su columna real */
+  for(let d=1;d<=daysInMonth;d++){
+    if(covered[d])continue;
+    const dt=new Date(editorYear,editorMonthIdx,d);
+    const dow=(dt.getDay()+6)%7;
+    if(dow>4)continue;
+    const lastStart=new Date(draft.week1Start);lastStart.setDate(draft.week1Start.getDate()+Math.max(0,draft.weekCount-1)*7);
+    const lastEnd=new Date(lastStart);lastEnd.setDate(lastStart.getDate()+6);
+    if(dt<draft.week1Start){
+      place(dt,`<div class="editor-day leading-gray" title="Pertenece a la última semana comercial de ${prevMonthName}" onclick="paintEditorDay(${d})">${d}</div>`);
+    }else if(dt>lastEnd){
+      place(dt,`<div class="editor-day leading-gray" title="Pertenece a la primera semana comercial de ${nextMonthName}" onclick="paintEditorDay(${d})">${d}</div>`);
+    }
+  }
+
+  let html='';
+  if(minRow===Infinity){minRow=0;maxRow=-1;}
+  for(let r=minRow;r<=maxRow;r++){
+    for(let c=0;c<5;c++)html+=cells[`${r},${c}`]||'<div class="editor-day empty"></div>';
+  }
+  document.getElementById('editorCalendar').innerHTML=html;
+}
+function resetWeekEditorDefault(){
+  const info=computeMonthWeeks(editorYear,editorMonthIdx);
+  editorDraft[editorMonthIdx]={
+    assignment:{},
+    weekCount:info.weeks.length,
+    week1Start:info.weeks.length?new Date(info.weeks[0].start):new Date(editorYear,editorMonthIdx,1),
+    touched:true
+  };
+  editorBrush=1;
+  renderEditorMonthTabs();
+  renderEditorPalette();
+  renderEditorCalendar();
+}
+function saveWeekEditor(){
+  for(let mi=0;mi<=12;mi++){
+    const draft=editorDraft[mi];
+    if(!draft||!draft.weekCount)continue;
+    const targetYear=mi===12?editorYear+1:editorYear;
+    const targetMonthIdx=mi===12?0:mi;
+    const byWeek={};
+    for(let w=0;w<draft.weekCount;w++){
+      const weekStart=new Date(draft.week1Start);weekStart.setDate(draft.week1Start.getDate()+w*7);
+      for(let k=0;k<7;k++){
+        const dt=new Date(weekStart);dt.setDate(weekStart.getDate()+k);
+        if(dt.getFullYear()===targetYear&&dt.getMonth()===targetMonthIdx){
+          const wk=draft.assignment[dt.getDate()]||(w+1);
+          (byWeek[wk]=byWeek[wk]||[]).push(dt.getDate());
+        }
+      }
+    }
+    const weekNums=Object.keys(byWeek).map(Number).sort((a,b)=>a-b);
+    if(!weekNums.length)continue;
+    const newWeeks=weekNums.map((wk,i)=>({
+      id:`${targetYear}-${targetMonthIdx+1}-w${i+1}`,
+      label:`Sem ${i+1}`,
+      range:daysToRangeLabel(byWeek[wk])
+    }));
+    const existingIdx=MONTHS.findIndex(mo=>mo.year===targetYear&&mo.name===MONTH_NAMES[targetMonthIdx]);
+    if(existingIdx>=0){
+      MONTHS[existingIdx].weeks=newWeeks;
+      MONTHS[existingIdx].week1Start=new Date(draft.week1Start);
+    }
+  }
+  /* Los ids de semana pueden haber cambiado en varios meses — se limpian de la selección activa
+     y, si no queda ninguna semana seleccionada, se marca la semana actual del mes en pantalla */
+  const validIds=new Set(allWeekIds());
+  [...selectedWeeks].forEach(id=>{if(!validIds.has(id))selectedWeeks.delete(id);});
+  if(!selectedWeeks.size)selectedWeeks.add(findTodayWeekId());
+  currentMonthIdx=MONTHS.findIndex(m=>m.weeks.some(w=>selectedWeeks.has(w.id)));
+  if(currentMonthIdx<0)currentMonthIdx=0;
+  closeWeekEditor();
+  refreshAll();
+}
+
+/* ===================== CARGAR CALENDARIO CONTABLE (Excel/CSV) ===================== */
+/* Columnas esperadas: Año, Mes, Semana, Fecha inicio (la fecha de inicio del martes de esa
+   semana comercial). El fin de semana se calcula siempre como inicio+6 días. La herramienta
+   queda exactamente fiel a lo que diga el archivo para los meses que aparezcan en él. */
+function parseMonthCell(val){
+  if(typeof val==='number'&&val>=1&&val<=12)return val-1;
+  const s=String(val).trim().toLowerCase();
+  let idx=MONTH_NAMES.findIndex(m=>m.toLowerCase()===s);
+  if(idx>=0)return idx;
+  idx=MONTH_NAMES.findIndex(m=>m.toLowerCase().slice(0,3)===s.slice(0,3));
+  if(idx>=0)return idx;
+  const n=parseInt(s,10);
+  return(!isNaN(n)&&n>=1&&n<=12)?n-1:-1;
+}
+function parseDateCell(v){
+  if(v instanceof Date)return v;
+  if(typeof v==='number')return new Date(Math.round((v-25569)*86400*1000));
+  const d=new Date(v);
+  return isNaN(d)?null:d;
+}
+function findColKey(row,candidates){
+  const keys=Object.keys(row);
+  for(const c of candidates){
+    const k=keys.find(k=>k.toLowerCase().trim()===c);
+    if(k)return k;
+  }
+  return null;
+}
+function loadCalendarFile(evt){
+  const file=evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let headerRowIdx=rawRows.findIndex(r=>r.some(c=>String(c).trim()!==''));
+      if(headerRowIdx<0)headerRowIdx=0;
+      const headers=rawRows[headerRowIdx].map(h=>String(h).trim());
+      const dataRows=rawRows.slice(headerRowIdx+1).filter(r=>r.some(c=>String(c).trim()!==''));
+      const rows=dataRows.map(r=>{const o={};headers.forEach((h,i)=>{if(h)o[h]=r[i];});return o;});
+
+      const groups={};
+      let errors=0;
+      rows.forEach(row=>{
+        const yearKey=findColKey(row,['año','ano','year']);
+        const monthKey=findColKey(row,['mes','month']);
+        const weekKey=findColKey(row,['semana','week','sem']);
+        const startKey=findColKey(row,['fecha inicio','inicio','desde','start','fecha_inicio']);
+        if(!yearKey||!monthKey||!weekKey||!startKey){errors++;return;}
+        const year=parseInt(row[yearKey],10);
+        const monthIdx=parseMonthCell(row[monthKey]);
+        const semana=parseInt(row[weekKey],10);
+        const start=parseDateCell(row[startKey]);
+        if(!year||monthIdx<0||!semana||!start){errors++;return;}
+        const key=`${year}-${monthIdx}`;
+        (groups[key]=groups[key]||[]).push({semana,start});
+      });
+
+      if(!Object.keys(groups).length){
+        alert('No se han reconocido columnas válidas. Se esperan: Año, Mes, Semana, Fecha inicio.');
+        evt.target.value='';
+        return;
+      }
+
+      let monthsUpdated=0;
+      Object.keys(groups).forEach(key=>{
+        const[yearStr,monthIdxStr]=key.split('-');
+        const year=parseInt(yearStr,10),monthIdx=parseInt(monthIdxStr,10);
+        const rowsForMonth=groups[key].sort((a,b)=>a.semana-b.semana);
+        const week1Start=rowsForMonth[0].start;
+        const weeks=rowsForMonth.map((r,i)=>{
+          const days=[];
+          for(let k=0;k<7;k++){
+            const dt=new Date(r.start);dt.setDate(r.start.getDate()+k);
+            if(dt.getFullYear()===year&&dt.getMonth()===monthIdx)days.push(dt.getDate());
+          }
+          return{id:`${year}-${monthIdx+1}-w${i+1}`,label:`Sem ${i+1}`,range:days.length?daysToRangeLabel(days):'—'};
+        });
+        const idx=MONTHS.findIndex(m=>m.year===year&&m.name===MONTH_NAMES[monthIdx]);
+        if(idx>=0){
+          MONTHS[idx].weeks=weeks;
+          MONTHS[idx].week1Start=new Date(week1Start);
+          monthsUpdated++;
+        }
+      });
+
+      alert(`✓ Calendario cargado: ${monthsUpdated} mes${monthsUpdated!==1?'es':''} actualizado${monthsUpdated!==1?'s':''} tal cual el archivo${errors?` · ${errors} fila${errors!==1?'s':''} no reconocida${errors!==1?'s':''}`:''}.`);
+      evt.target.value='';
+
+      const validIds=new Set(allWeekIds());
+      [...selectedWeeks].forEach(id=>{if(!validIds.has(id))selectedWeeks.delete(id);});
+      if(!selectedWeeks.size)selectedWeeks.add(findTodayWeekId());
+      currentMonthIdx=MONTHS.findIndex(m=>m.weeks.some(w=>selectedWeeks.has(w.id)));
+      if(currentMonthIdx<0)currentMonthIdx=0;
+      closeWeekEditor();
+      refreshAll();
+    }catch(err){
+      console.error(err);
+      alert('Error al leer el archivo. Asegúrate de que es un Excel o CSV válido.');
+      evt.target.value='';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ===== Abrir/cerrar el overlay de Seguimiento de Matrículas desde la burbuja del Hub ===== */
+let mtInitialized=false;
+function openMatriculasOverlay(){
+  document.getElementById('matriculasOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  if(!mtInitialized){ mtInitialized=true; refreshAll(); }
+}
+function closeMatriculasOverlay(){
+  document.getElementById('matriculasOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
 </script>
+
+
+<button id="mtSecretStar" onclick="mtShowSecretHint()" title="">🌠✨</button>
+<div id="mtSecretHintTooltip">AdminHub</div>
+
+<div class="mt-overlay" id="matriculasOverlay">
+  <div class="mt-topbar">
+    <div class="mt-topbar-title">
+      <svg width="18" height="18" viewBox="0 0 30 30" fill="none"><path d="M3 26l7-10 6 5 6-11 6 7" stroke="#00E6FF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Seguimiento de Matrículas
+    </div>
+    <button class="mt-close" onclick="closeMatriculasOverlay()">✕</button>
+  </div>
+  <div class="mt-scroll">
+<div class="period-wrap">
+  <div class="period-label-row">
+    <span class="period-label">— Seleccionar periodo —</span>
+    <button class="period-edit-btn" onclick="bmRequestPassword(openWeekEditor, 'Introduce la contraseña para editar las semanas comerciales.')" title="Editar semanas comerciales de este mes">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+    </button>
+  </div>
+  <div class="month-carousel-wrap">
+    <button class="carousel-arrow" onclick="changeMonth(-1)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="carousel-track" id="monthCarouselTrack"></div>
+    <button class="carousel-arrow" onclick="changeMonth(1)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+  <div class="carousel-progress"><div class="carousel-progress-fill" id="carouselProgressFill"></div></div>
+  <div class="week-chips-row" id="weekChipsRow"></div>
+  <div class="period-hint">Flechas para recorrer los meses · clic en el mes central marca todas sus semanas · clic en una semana la marca individualmente · se puede combinar semanas de varios meses</div>
+</div>
+
+<div class="marca-grid" id="grid"></div>
+
+<div class="detail-panel fiel" id="panelFiel">
+  <div class="detail-head">
+    <div class="detail-head-left">
+      <span class="detail-dot" id="fielDot"></span>
+      <div>
+        <div class="detail-title">FIEL A ATENEA <span class="detail-badge fiel">Automático</span></div>
+        <div class="detail-sub" id="fielSub">—</div>
+      </div>
+      <div class="detail-search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6a8a9a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="detail-search" id="fielSearch" placeholder="Buscar nombre o ID…" oninput="renderPanels()">
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="detail-btn primary" onclick="exportPanel('fiel')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Extraer
+      </button>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+  </div>
+  <div class="detail-table-wrap">
+    <table class="detail-table">
+      <thead><tr>
+        <th>Nombre</th>
+        <th>ID NACS</th>
+        <th><div class="th-head-row"><span>ID Oportunidad</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielOppPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielOppPop"><input type="text" class="th-input" id="fielOppFilter" placeholder="Buscar…" oninput="renderPanels()"></div></th>
+        <th><div class="th-head-row"><span>Convocatoria</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielConvPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielConvPop"><select class="th-select" id="fielConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select></div></th>
+        <th><div class="th-head-row"><span>Programa</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielProgPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielProgPop"><select class="th-select" id="fielProgFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th><div class="th-head-row"><span>PI %</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielPIPop"><select class="th-select" id="fielPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th><div class="th-head-row"><span>JE</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielJEPop"><select class="th-select" id="fielJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th>Facturación</th>
+      </tr></thead>
+      <tbody id="fielBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="detail-merge-bar" id="mergeBar" style="display:none">
+  <button class="detail-btn merge" onclick="exportPanel('ambos')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Extraer conjunto (Fiel + PF)
+  </button>
+</div>
+
+<div class="detail-panel excepciones" id="panelExc">
+  <div class="detail-head">
+    <div class="detail-head-left">
+      <span class="detail-dot" id="excDot"></span>
+      <div>
+        <div class="detail-title">PF Y OTRAS EXCEPCIONES A CONTAR <span class="detail-badge exc">Manual</span></div>
+        <div class="detail-sub" id="excSub">—</div>
+      </div>
+      <div class="detail-search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6a8a9a" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="detail-search" id="excSearch" placeholder="Buscar nombre o ID…" oninput="renderPanels()">
+      </div>
+    </div>
+    <div class="detail-actions">
+      <button class="detail-btn primary" onclick="exportPanel('exc')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Extraer
+      </button>
+      <button class="detail-close" onclick="closeDetail()">✕</button>
+    </div>
+  </div>
+  <div class="detail-table-wrap">
+    <table class="detail-table">
+      <thead><tr>
+        <th>Nombre</th>
+        <th>ID NACS</th>
+        <th><div class="th-head-row"><span>ID Oportunidad</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excOppPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excOppPop"><input type="text" class="th-input" id="excOppFilter" placeholder="Buscar…" oninput="renderPanels()"></div></th>
+        <th><div class="th-head-row"><span>Convocatoria</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excConvPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excConvPop"><select class="th-select" id="excConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select></div></th>
+        <th><div class="th-head-row"><span>Programa</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excProgPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excProgPop"><select class="th-select" id="excProgFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th><div class="th-head-row"><span>PI %</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excPIPop"><select class="th-select" id="excPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th><div class="th-head-row"><span>JE</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excJEPop"><select class="th-select" id="excJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th>Facturación</th>
+        <th>Comentarios</th>
+      </tr></thead>
+      <tbody id="excBody"></tbody>
+    </table>
+  </div>
+  <div class="detail-add-row">
+    <button class="detail-add-btn" onclick="addExceptionMock()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Añadir excepción manual
+    </button>
+  </div>
+</div>
+
+<div class="summary-strip">
+  <span class="summary-label">— Consecución del objetivo · Netas frente a objetivo del periodo —</span>
+  <div class="summary-grid" id="summaryGrid"></div>
+</div>
+
+
+  </div>
+</div>
+
+<div class="editor-overlay" id="weekEditorOverlay" onclick="if(event.target===this)closeWeekEditor()">
+  <div class="editor-modal">
+    <div class="editor-head">
+      <div>
+        <h3>Editar semanas comerciales — año completo</h3>
+        <p id="editorMonthLabel">—</p>
+      </div>
+      <button class="editor-close" onclick="closeWeekEditor()">✕</button>
+    </div>
+    <div class="editor-body">
+      <div class="editor-year-toggle" id="editorYearToggle"></div>
+      <div class="editor-month-tabs" id="editorMonthTabs"></div>
+      <div class="editor-week-palette" id="editorPalette"></div>
+      <div class="editor-calendar-wrap">
+        <div class="editor-dow-row" id="editorDowRow"></div>
+        <div class="editor-calendar" id="editorCalendar"></div>
+      </div>
+      <div class="editor-hint">Recorre los 12 meses del año con las pestañas de arriba — los cambios de todos los meses se acumulan y se guardan juntos al final. Elige una semana de la paleta y haz clic en los días para asignarlos. Por defecto, cada semana comercial va de martes a martes. También puedes cargar directamente el calendario contable en Excel/CSV (columnas: Año, Mes, Semana, Fecha inicio) y la herramienta quedará exactamente fiel al archivo.</div>
+      <div class="editor-actions">
+        <input type="file" accept=".xlsx,.xls,.csv" style="display:none" id="calendarFileInput" onchange="loadCalendarFile(event)">
+        <button class="detail-btn add" onclick="document.getElementById('calendarFileInput').click()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Cargar archivo
+        </button>
+        <button class="detail-btn" onclick="resetWeekEditorDefault()">Restablecer mes (martes a martes)</button>
+        <button class="detail-btn add" onclick="addEditorWeek()">+ Añadir semana</button>
+        <div style="flex:1"></div>
+        <button class="detail-btn" onclick="closeWeekEditor()">Cancelar</button>
+        <button class="detail-btn primary" onclick="saveWeekEditor()">Guardar año completo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 </body>
 </html>
