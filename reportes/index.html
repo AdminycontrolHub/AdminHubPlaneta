@@ -950,7 +950,7 @@ function updateBecasFactExtra(){
   const yearNow=String(new Date().getFullYear());
   const histTotal=lhHistorico
     .filter(h=>String(h.year||'')===yearNow)
-    .reduce((s,h)=>s+(h.facturacion||0),0);
+    .reduce((s,h)=>s+(h.facturacion||0)+histAjustesTotal(h),0);
   const liveTotal=lhCandidatos
     .filter(c=>c.estado==='Matriculado')
     .reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
@@ -1085,6 +1085,10 @@ function lhCheckPwd(){
       deleteLHRowConfirmed(lhPwdPendingData);
     }else if(lhPwdPendingAction==='borrarDatosLH'){
       borrarDatosLHConfirmed();
+    }else if(lhPwdPendingAction==='añadirAjuste'){
+      addHistAjusteConfirmed(lhPwdPendingData);
+    }else if(lhPwdPendingAction==='borrarAjuste'){
+      deleteHistAjusteConfirmed(lhPwdPendingData.hi,lhPwdPendingData.ai);
     }else{
       document.getElementById('lhFileInput').click();
     }
@@ -1773,7 +1777,8 @@ async function exportLHFinal(){
       ESDESIGN:lhCandidatos.filter(c=>c.brand==='ESDESIGN'&&c.estado==='Matriculado').length,
       UCMA:lhCandidatos.filter(c=>c.brand==='UCMA'&&c.estado==='Matriculado').length
     },
-    candidatos:JSON.parse(JSON.stringify(lhCandidatos))
+    candidatos:JSON.parse(JSON.stringify(lhCandidatos)),
+    ajustes:existing&&existing.ajustes?existing.ajustes:[]
   };
   if(existingIdx>=0){lhHistorico[existingIdx]=snapshot;}else{lhHistorico.unshift(snapshot);}
   await kvSet(LH_HIST_KEY,lhHistorico);
@@ -1795,6 +1800,76 @@ function openLHHistorico(){
   document.getElementById('histOverlay').classList.add('open');
 }
 function closeHistOverlay(){document.getElementById('histOverlay').classList.remove('open');}
+/* ===================== AJUSTES MANUALES DE FACTURACIÓN (histórico) ===================== */
+let histDetailOpen=new Set();
+function histAjustesTotal(h){
+  return (h.ajustes||[]).reduce((s,a)=>s+(Number(a.importe)||0),0);
+}
+async function addHistAjusteConfirmed(hi){
+  const fresh=await kvGet(LH_HIST_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhHistorico=fresh;
+  const h=lhHistorico[hi];
+  if(!h)return;
+  if(!h.ajustes)h.ajustes=[];
+  h.ajustes.push({id:'ajuste_'+Date.now(),brand:'OBS',importe:0,comentario:''});
+  await kvSet(LH_HIST_KEY,lhHistorico);
+  renderHistBody();
+}
+async function updateHistAjuste(hi,ai,field,value){
+  const fresh=await kvGet(LH_HIST_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhHistorico=fresh;
+  const h=lhHistorico[hi];
+  if(!h||!h.ajustes||!h.ajustes[ai])return;
+  h.ajustes[ai][field]=field==='importe'?(Number(value)||0):value;
+  await kvSet(LH_HIST_KEY,lhHistorico);
+  renderHistBody();
+}
+async function deleteHistAjusteConfirmed(hi,ai){
+  const fresh=await kvGet(LH_HIST_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhHistorico=fresh;
+  const h=lhHistorico[hi];
+  if(!h||!h.ajustes)return;
+  h.ajustes.splice(ai,1);
+  await kvSet(LH_HIST_KEY,lhHistorico);
+  renderHistBody();
+}
+function exportLHHistoricoConAjustes(hi){
+  const h=lhHistorico[hi];
+  if(!h)return;
+  const rows=(h.candidatos||[]).filter(c=>c.estado==='Matriculado');
+  const wsData=rows.map(c=>sanitizeForXLSX({
+    CAMPUS:c.brand,FechaInscripcion:h.fechaCierre||'',
+    Curso:c.master,Convocatoria:h.convocatoria||'',
+    APELLIDOS_NOMBRE:c.nombre,Nacionalidad:'Espana',PaisResidencia:'Espana',
+    PROVINCIA:'Barcelona',PRECIO_CURSO:getPrecioBase(c.brand,h.year),
+    FACTURACION_NETA:Number(c.facturacion||c.importe)||0,
+    BECA_PCT:String(c.pct||0)+'%',IMPORTE_A_CARGO_ALUMNO:Number(c.importeAlumno)||0,
+    TIPOLOGIA_MATRICULA:'BECA',TIPOLOGIA_ALUMNO:'NUEVA MATRICULA',
+    Observaciones:'Beca Hospitalet '+String(h.year||'')
+  }));
+  (h.ajustes||[]).forEach(a=>{
+    wsData.push(sanitizeForXLSX({
+      CAMPUS:a.brand,FechaInscripcion:new Date().toLocaleDateString('es-ES'),
+      Curso:'',Convocatoria:h.convocatoria||'',
+      APELLIDOS_NOMBRE:'AJUSTE MANUAL',Nacionalidad:'',PaisResidencia:'',
+      PROVINCIA:'',PRECIO_CURSO:'',
+      FACTURACION_NETA:Number(a.importe)||0,
+      BECA_PCT:'',IMPORTE_A_CARGO_ALUMNO:0,
+      TIPOLOGIA_MATRICULA:'AJUSTE',TIPOLOGIA_ALUMNO:'AJUSTE',
+      Observaciones:a.comentario||''
+    }));
+  });
+  if(!wsData.length){alert('No hay filas que exportar para esta convocatoria.');return;}
+  try{
+    const keys=Object.keys(wsData[0]);
+    const aoa=[keys,...wsData.map(r=>keys.map(k=>r[k]))];
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    const wb=XLSX.utils.book_new();
+    wb.SheetNames.push('Becas');
+    wb.Sheets['Becas']=ws;
+    XLSX.writeFile(wb,'BecasLH_Final_'+String(h.year||'')+'_conAjustes_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  }catch(err){console.error(err);alert('Error al exportar: '+err.message);}
+}
 function renderHistBody(){
   const body=document.getElementById('hist-body');
   if(!lhHistorico.length){
@@ -1804,17 +1879,21 @@ function renderHistBody(){
   body.innerHTML=lhHistorico.map((h,hi)=>{
     const brands=['OBS','INESDI','ESDESIGN','UCMA'];
     const rows=h.candidatos||[];
+    const ajustes=h.ajustes||[];
+    const ajustesTotal=histAjustesTotal(h);
+    const factTotalConAjustes=(h.facturacion||0)+ajustesTotal;
     const brandBreakdown=brands.map(b=>{
       const candsB=rows.filter(c=>c.brand===b);
-      if(!candsB.length)return'';
+      const ajustesB=ajustes.filter(a=>a.brand===b).reduce((s,a)=>s+(Number(a.importe)||0),0);
+      if(!candsB.length&&!ajustesB)return'';
       const matrB=candsB.filter(c=>c.estado==='Matriculado').length;
-      const factB=candsB.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0);
+      const factB=candsB.filter(c=>c.estado==='Matriculado').reduce((s,c)=>s+(c.facturacion||c.importe||0),0)+ajustesB;
       const col=BRAND_COLORS[b]||'#00E6FF';
       const bg=BRAND_BG[b]||'rgba(0,100,160,0.06)';
-      return `<div class="lh-bc" style="background:${bg};border-color:${col}33;border-top:3px solid ${col};padding:9px 11px">
+      return `<div class="lh-bc" style="background:${bg};border-color:${col}33;border-top:3px solid ${col}">
         <div class="lh-bc-name" style="color:${col};font-size:10px;margin-bottom:4px">${b}</div>
         <div class="lh-bc-plazas" style="font-size:16px;margin-bottom:2px">${matrB}<span style="font-size:10px">/${candsB.length}</span></div>
-        <div class="lh-bc-fact-lbl" style="font-size:9px">Facturación</div>
+        <div class="lh-bc-fact-lbl" style="font-size:9px">Facturación${ajustesB?' (con ajuste)':''}</div>
         <div class="lh-bc-fact" style="color:${col};font-size:12px">${factB.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</div>
       </div>`;
     }).join('');
@@ -1840,6 +1919,26 @@ function renderHistBody(){
         <td style="color:#6a8a9a;font-size:10px">${esc(c.observaciones||'')}</td>
       </tr>`;
     }).join('');
+    const isOpen=histDetailOpen.has(hi);
+    const ajustesSection=`<div class="hist-ajustes" style="margin-top:12px;padding-top:12px;border-top:1px dashed rgba(0,100,140,0.15)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6a8a9a;font-weight:700">Ajustes manuales de facturación</span>
+        ${ajustesTotal?`<span style="font-size:11px;color:#7a5200;font-weight:600">+${ajustesTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</span>`:''}
+      </div>
+      ${ajustes.length?`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${ajustes.map((a,ai)=>`
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(180,120,0,0.06);border:1px solid rgba(180,120,0,0.18);border-radius:8px;padding:6px 8px;flex-wrap:wrap">
+          <select class="st-select" style="max-width:90px" onchange="updateHistAjuste(${hi},${ai},'brand',this.value)">
+            ${brands.map(b=>`<option value="${b}" ${a.brand===b?'selected':''}>${b}</option>`).join('')}
+          </select>
+          <input class="inline-input" type="number" style="width:100px" value="${a.importe||0}" placeholder="Importe €" onchange="updateHistAjuste(${hi},${ai},'importe',this.value)">
+          <input class="inline-input" style="flex:1;min-width:140px" value="${esc(a.comentario||'')}" placeholder="Comentario…" onchange="updateHistAjuste(${hi},${ai},'comentario',this.value)">
+          <button class="lh-btn-del" onclick="openLHPasswordGate('borrarAjuste',{hi:${hi},ai:${ai}})" title="Eliminar ajuste"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>`).join('')}</div>`:''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="hist-toggle-btn" style="width:auto;padding:6px 12px;margin-top:0" onclick="openLHPasswordGate('añadirAjuste',${hi})">+ Añadir ajuste</button>
+        <button class="hist-toggle-btn" style="width:auto;padding:6px 12px;margin-top:0;color:#005a30;border-color:rgba(0,140,70,0.3)" onclick="exportLHHistoricoConAjustes(${hi})">⭳ Exportar con ajustes</button>
+      </div>
+    </div>`;
     return `<div class="hist-year-card">
       <div class="hist-year-summary">
         <div>
@@ -1848,13 +1947,14 @@ function renderHistBody(){
         <div class="hist-year-stats">
           <div class="hist-stat">Matriculados: <strong>${h.totalMatriculados||0}</strong></div>
           <div class="hist-stat">No aptos: <strong>${h.totalNoAptos||0}</strong></div>
-          <div class="hist-stat">Facturación total: <strong>${(h.facturacion||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</strong></div>
+          <div class="hist-stat">Facturación total: <strong>${factTotalConAjustes.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</strong>${ajustesTotal?` <span style="color:#7a5200;font-weight:400">(incl. ajuste)</span>`:''}</div>
           <button onclick="openLHPasswordGate('borrarHist',${hi})" title="Eliminar esta convocatoria del histórico" style="background:none;border:1px solid rgba(180,60,60,0.3);border-radius:6px;color:#a03030;cursor:pointer;padding:4px 6px;display:${lhExternalMode?'none':'flex'};align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
         </div>
       </div>
       <div class="lh-brand-cards" style="margin-top:10px;margin-bottom:0">${brandBreakdown}</div>
-      <button class="hist-toggle-btn" onclick="toggleHistDetail(${hi},this)">Ver detalle ▾</button>
-      <div class="hist-detail" id="hist-detail-${hi}">
+      ${ajustesSection}
+      <button class="hist-toggle-btn" onclick="toggleHistDetail(${hi},this)">${isOpen?'Ocultar detalle ▴':'Ver detalle ▾'}</button>
+      <div class="hist-detail${isOpen?' open':''}" id="hist-detail-${hi}">
         <div style="overflow-x:auto">
         <table class="hist-table">
           <thead><tr><th>Marca</th><th>Candidato</th><th>Máster</th><th>Beca</th><th>Estado final</th><th>Observaciones</th></tr></thead>
@@ -1870,6 +1970,7 @@ function toggleHistDetail(i,btn){
   if(!el)return;
   const open=el.classList.toggle('open');
   btn.textContent=open?'Ocultar detalle ▴':'Ver detalle ▾';
+  if(open)histDetailOpen.add(i);else histDetailOpen.delete(i);
 }
 
 async function deleteLHHistoricoEntryConfirmed(hi){
