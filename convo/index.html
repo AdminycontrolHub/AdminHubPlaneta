@@ -1175,13 +1175,20 @@ async function bmSaveBubbles(){
    o la creamos si hiciera falta — así funciona sin que nadie tenga que tocar nada a mano.
    Es síncrona: solo modifica bmBubbles en memoria, el guardado real lo hace bmLoadBubbles aparte. */
 function bmEnsureMatriculasBubbleLocal(){
-  const yaExiste = bmBubbles.some(b => b.action && b.action.type==='builtin' && b.action.value==='matriculas');
-  if(yaExiste) return;
-  const nuevo = bmBubbles.find(b => b.id==='nuevo');
-  if(nuevo){
-    nuevo.action = { type:'builtin', value:'matriculas' };
-  } else {
-    bmBubbles.unshift({ id:'matriculas', name:'Nuevo Convo', color:'#22D3EE', icon:'docplus', action:{type:'builtin', value:'matriculas'} });
+  let idx = bmBubbles.findIndex(b => b.action && b.action.type==='builtin' && b.action.value==='matriculas');
+  if(idx===-1){
+    const nuevoIdx = bmBubbles.findIndex(b => b.id==='nuevo');
+    if(nuevoIdx>=0){
+      bmBubbles[nuevoIdx].action = { type:'builtin', value:'matriculas' };
+      idx = nuevoIdx;
+    } else {
+      bmBubbles.unshift({ id:'matriculas', name:'Nuevo Convo', color:'#22D3EE', icon:'docplus', action:{type:'builtin', value:'matriculas'} });
+      idx = 0;
+    }
+  }
+  if(idx>0){
+    const [bubble] = bmBubbles.splice(idx,1);
+    bmBubbles.unshift(bubble);
   }
 }
 
