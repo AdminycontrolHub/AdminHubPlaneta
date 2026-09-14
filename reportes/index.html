@@ -649,7 +649,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
               <th class="lh-th-noApto">Alumno sustituto</th>
               <th class="lh-th-noApto" style="width:90px">¿Acepta propuesta?</th>
               <th>Observaciones</th>
-              <th style="width:28px"></th>
+              <th style="width:44px"></th>
               <th style="width:90px">Alumno excluido</th>
             </tr>
           </thead>
@@ -711,7 +711,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">4. Traspaso a Adm. Comercial</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al marcar <strong>HM enviada</strong>, el tejado cambia automáticamente a <em>Adm. Comercial</em>, que recibe la HM y finaliza la matrícula.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">5. Candidato no apto</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Selecciona <strong>No apto</strong>, marca <em>Candidato notificado</em> y escribe el nombre del sustituto en <strong>Sustituido por</strong>. Se creará automáticamente una fila nueva para el sustituto.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">6. Cambio de programa</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Al escribir en <strong>Cambio Programa</strong>, se crea automáticamente una fila editable con el nuevo máster para el mismo candidato.</p></div>
-      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">7. Añadir candidatos manualmente</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Usa <strong>+ Añadir candidato</strong> para añadir nuevos candidatos de listados extra. Aparecen resaltados en amarillo. Usa la papelera para eliminar filas manuales.</p></div>
+      <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">7. Añadir candidatos manualmente</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Usa <strong>+ Añadir candidato</strong> para añadir nuevos candidatos de listados extra. Aparecen resaltados en amarillo. Pulsa el icono ✔ (o Enter) para guardar y bloquear la fila — a partir de ese momento solo se puede volver a editar con contraseña. Usa la papelera para eliminar filas manuales.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">8. Exportar</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">• <strong>Exportar selección</strong>: descarga las filas marcadas en formato de trabajo.<br>• <strong>Extracción final</strong>: genera el Excel para Financiero y archiva la convocatoria en el Histórico.</p></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#e8f4fd;border-radius:8px;border:1px solid rgba(58,171,240,0.3)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:6px">9. Acceso externo (Admisiones y Marketing)</p><p style="font-size:12px;color:#3a5a70;line-height:1.6;margin-bottom:8px">Admisiones y Marketing pueden acceder directamente sin ver el resto del Admin Hub. Los datos se sincronizan en tiempo real para todos.</p><div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,100,140,0.18);border-radius:7px;padding:8px 10px"><code id="lh-link-code" style="font-size:11px;color:#005080;font-family:'Courier New',monospace;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;display:inline-block;vertical-align:middle">https://adminycontrolhub.github.io/AdminHubPlaneta/reportes/index.html#becas-lh</code><button onclick="navigator.clipboard.writeText(document.getElementById('lh-link-code').textContent).then(function(){var b=event.target.closest('button');b.textContent='✓ Copiado';setTimeout(function(){b.textContent='Copiar';},2000)})" style="background:rgba(0,100,160,0.1);border:1px solid rgba(0,100,160,0.25);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;color:#005080;font-family:inherit;white-space:nowrap">Copiar</button></div></div>
       <div style="margin-bottom:12px;padding:10px 12px;background:#f8f5ef;border-radius:8px;border:1px solid rgba(0,100,140,0.1)"><p style="font-size:12px;font-weight:700;color:#005080;margin-bottom:3px">10. Histórico</p><p style="font-size:12px;color:#3a5a70;line-height:1.6">Cada Extracción final queda guardada en <strong>Histórico</strong> con el resumen y detalle completo de la convocatoria cerrada.</p></div>
@@ -1089,6 +1089,10 @@ function lhCheckPwd(){
       addHistAjusteConfirmed(lhPwdPendingData);
     }else if(lhPwdPendingAction==='borrarAjuste'){
       deleteHistAjusteConfirmed(lhPwdPendingData.hi,lhPwdPendingData.ai);
+    }else if(lhPwdPendingAction==='desbloquearFilaLH'){
+      unlockLHRow(lhPwdPendingData);
+    }else if(lhPwdPendingAction==='desbloquearAjuste'){
+      unlockHistAjuste(lhPwdPendingData.hi,lhPwdPendingData.ai);
     }else{
       document.getElementById('lhFileInput').click();
     }
@@ -1421,6 +1425,68 @@ function updateCandById(input){
   updateCand(idx,field,value);
 }
 
+/* ===================== BLOQUEO DE FILAS AÑADIDAS MANUALMENTE ===================== */
+function lhEnterLockRow(ev,idx){
+  if(ev.key!=='Enter')return;
+  ev.preventDefault();
+  ev.target.blur();
+  lockLHRow(idx);
+}
+async function lockLHRow(idx){
+  if(!lhCandidatos[idx])return;
+  if(!lhCandidatos[idx].nombre||!lhCandidatos[idx].nombre.trim()){
+    alert('Introduce al menos el nombre antes de guardar la fila.');
+    return;
+  }
+  const cid=lhCandidatos[idx].id;
+  const fresh=await kvGet(LH_CANDS_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhCandidatos=fresh;
+  const i=lhCandidatos.findIndex(c=>c.id===cid);
+  if(i<0)return;
+  lhCandidatos[i].bloqueado=true;
+  await kvSet(LH_CANDS_KEY,lhCandidatos);
+  renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+}
+async function unlockLHRow(cid){
+  const fresh=await kvGet(LH_CANDS_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhCandidatos=fresh;
+  const i=lhCandidatos.findIndex(c=>c.id===cid);
+  if(i<0)return;
+  lhCandidatos[i].bloqueado=false;
+  await kvSet(LH_CANDS_KEY,lhCandidatos);
+  renderLHBrandCards();renderLHTable();updateBecasFactExtra();
+}
+
+/* ===================== BLOQUEO DE AJUSTES MANUALES (Histórico) ===================== */
+function lhEnterLockAjuste(ev,hi,ai){
+  if(ev.key!=='Enter')return;
+  ev.preventDefault();
+  ev.target.blur();
+  lockHistAjuste(hi,ai);
+}
+async function lockHistAjuste(hi,ai){
+  const fresh=await kvGet(LH_HIST_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhHistorico=fresh;
+  const h=lhHistorico[hi];
+  if(!h||!h.ajustes||!h.ajustes[ai])return;
+  if(!Number(h.ajustes[ai].importe)){
+    alert('Introduce un importe antes de guardar el ajuste.');
+    return;
+  }
+  h.ajustes[ai].bloqueado=true;
+  await kvSet(LH_HIST_KEY,lhHistorico);
+  renderHistBody();
+}
+async function unlockHistAjuste(hi,ai){
+  const fresh=await kvGet(LH_HIST_KEY);
+  if(fresh&&Array.isArray(fresh)&&fresh.length)lhHistorico=fresh;
+  const h=lhHistorico[hi];
+  if(!h||!h.ajustes||!h.ajustes[ai])return;
+  h.ajustes[ai].bloqueado=false;
+  await kvSet(LH_HIST_KEY,lhHistorico);
+  renderHistBody();
+}
+
 /* ===================== RENDER TABLA ===================== */
 function renderLHTable(){
   const tbody=document.getElementById('lh-tbody');
@@ -1467,10 +1533,11 @@ function renderLHTable(){
     const col=BRAND_COLORS[c.brand]||'#00E6FF';
     const stStyle=ESTADO_STYLES[c.estado]||'';
     const isNoApto=c.estado==='No apto';
+    const editable=c.added&&!c.bloqueado;
         const sustCell = buildSustCell(anyNoApto, isNoApto, idx, c);
     return `<tr data-idx="${idx}" class="${c.added?'lh-row-added':''}">
       <td><input type="checkbox" class="lh-row-check" data-idx="${idx}" onchange="updateSelCount()"></td>
-      <td>${c.added?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);const _p=getPrecioBase(this.value,lhMeta.year);const _imp=Math.round(_p*(lhCandidatos[${idx}].pct/100));updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)">
+      <td>${editable?`<select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'brand',this.value);const _p=getPrecioBase(this.value,lhMeta.year);const _imp=Math.round(_p*(lhCandidatos[${idx}].pct/100));updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)">
         ${['OBS','INESDI','ESDESIGN','UCMA'].map(b=>`<option value="${b}" ${c.brand===b?'selected':''}>${b}</option>`).join('')}
       </select>`:`<span class="lh-badge" style="background:${col}18;color:${col};border:1px solid ${col}44">${esc(c.brand)}</span>`}</td>
       <td><select class="st-select" style="max-width:52px" onchange="updateCand(${idx},'leadCreado',this.value)">
@@ -1478,9 +1545,9 @@ function renderLHTable(){
         <option value="Si" ${c.leadCreado==='Si'?'selected':''}>Sí</option>
         <option value="No" ${c.leadCreado==='No'?'selected':''}>No</option>
       </select></td>
-      <td style="font-weight:500;white-space:nowrap">${c.added?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(lhFormatNombre(c.nombre))}" placeholder="Nombre Apellidos…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span>`} <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>${c.sustituido&&!c.added?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
-      <td class="master-cell" title="${esc(c.master)}">${c.added?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
-      <td style="white-space:nowrap">${c.added?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="const _pct=+this.value;const _p=getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year);const _imp=Math.round(_p*(_pct/100));updateCand(${idx},'pct',_pct);updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)"><option value="100" ${c.pct===100?'selected':''}>Beca 100% (factura ${pBase.toLocaleString('es-ES')}€)</option><option value="50" ${c.pct===50?'selected':''}>Beca 50% (alumno paga ${Math.round(pBase/2).toLocaleString('es-ES')}€)</option></select>`;})():`<span style="font-weight:600">${(c.facturacion||c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">Beca ${c.pct}%</span>${c.pct<100?`<br><span style="font-size:10px;color:#e0663a;font-weight:700">⚠ Alumno paga ${(c.importeAlumno||0).toLocaleString('es-ES')} €</span>`:''}`}</td>
+      <td style="font-weight:500;white-space:nowrap">${editable?`<input class="inline-input" style="width:110px;font-weight:500" value="${esc(lhFormatNombre(c.nombre))}" placeholder="Nombre Apellidos…" onkeydown="lhEnterLockRow(event,${idx})" onchange="updateCand(${idx},'nombre',this.value)">`:`<span class="lh-nombre-cell" data-tipidx="${idx}" onclick="pinLHTooltip(event,${idx})">${esc(lhFormatNombre(c.nombre))}</span>`} <button onclick="event.stopPropagation();openLHMailto('${c.id}')" title="Enviar email de bienvenida" style="background:none;border:none;cursor:pointer;padding:1px 2px;vertical-align:middle;display:inline-flex"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#005080" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg></button>${c.sustituido&&!editable?`<div style="font-size:10px;color:#6a8a9a;font-style:italic">↳ sust. ${esc(c.sustituido)}</div>`:''}</td>
+      <td class="master-cell" title="${esc(c.master)}">${editable?`<input class="inline-input" style="width:320px" value="${esc(c.master)}" placeholder="Nombre del máster…" onkeydown="lhEnterLockRow(event,${idx})" onchange="updateCand(${idx},'master',this.value)">`:`${esc(c.master)}`}</td>
+      <td style="white-space:nowrap">${editable?(()=>{const pBase=getPrecioBase(c.brand,lhMeta.year);return `<select class="st-select" style="max-width:110px" onchange="const _pct=+this.value;const _p=getPrecioBase(lhCandidatos[${idx}].brand,lhMeta.year);const _imp=Math.round(_p*(_pct/100));updateCand(${idx},'pct',_pct);updateCand(${idx},'importe',_imp);updateCand(${idx},'importeAlumno',_p-_imp);updateCand(${idx},'facturacion',_p)"><option value="100" ${c.pct===100?'selected':''}>Beca 100% (factura ${pBase.toLocaleString('es-ES')}€)</option><option value="50" ${c.pct===50?'selected':''}>Beca 50% (alumno paga ${Math.round(pBase/2).toLocaleString('es-ES')}€)</option></select>`;})():`<span style="font-weight:600">${(c.facturacion||c.importe||0).toLocaleString('es-ES')} €</span><br><span style="font-size:10px;color:#6a8a9a">Beca ${c.pct}%</span>${c.pct<100?`<br><span style="font-size:10px;color:#e0663a;font-weight:700">⚠ Alumno paga ${(c.importeAlumno||0).toLocaleString('es-ES')} €</span>`:''}`}</td>
       <td><select class="st-select" style="max-width:62px" onchange="updateCand(${idx},'dv',this.value)">
         <option value="" ${!c.dv?'selected':''}>—</option>
         <option value="Xènia" ${c.dv==='Xènia'?'selected':''}>Xènia</option>
@@ -1509,7 +1576,7 @@ function renderLHTable(){
         <option value="No" ${c.aceptaPropuesta==='No'?'selected':''}>No</option>
       </select></td>
       <td><input class="inline-input" style="width:95px" value="${esc(c.observaciones||'')}" placeholder="Añadir nota…" onkeydown="lhEnterBlur(event,this)" onchange="updateCand(${idx},'observaciones',this.value)"></td>
-      ${(c.added||c.cambioDeId)?`<td style="padding:4px"><button class="lh-btn-del" onclick="openLHPasswordGate('eliminarFilaLH','${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>`:'<td></td>'}
+      <td style="padding:4px;white-space:nowrap">${c.added?(editable?`<button class="lh-btn-del" style="color:#16a34a" onclick="lockLHRow(${idx})" title="Guardar y bloquear fila (Enter)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`:`<button class="lh-btn-del" style="color:#6a8a9a" onclick="openLHPasswordGate('desbloquearFilaLH','${c.id}')" title="Fila bloqueada — clic para editar (requiere contraseña)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>`):''}${(c.added||c.cambioDeId)?`<button class="lh-btn-del" onclick="openLHPasswordGate('eliminarFilaLH','${c.id}')" title="Eliminar fila"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>`:''}</td>
       <td style="text-align:center"><span style="display:inline-block;width:15px;height:15px;border-radius:4px;${c.excluido?'background:#dc2626;border:1px solid #b91c1c':'background:#e5e7eb;border:1px solid #d1d5db'}" title="${c.excluido?'Alumno excluido':'No excluido'}"></span></td>
     </tr>`;
   }).join('');
@@ -1811,7 +1878,7 @@ async function addHistAjusteConfirmed(hi){
   const h=lhHistorico[hi];
   if(!h)return;
   if(!h.ajustes)h.ajustes=[];
-  h.ajustes.push({id:'ajuste_'+Date.now(),brand:'OBS',importe:0,comentario:''});
+  h.ajustes.push({id:'ajuste_'+Date.now(),brand:'OBS',importe:0,comentario:'',bloqueado:false});
   await kvSet(LH_HIST_KEY,lhHistorico);
   renderHistBody();
 }
@@ -1925,15 +1992,27 @@ function renderHistBody(){
         <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#6a8a9a;font-weight:700">Ajustes manuales de facturación</span>
         ${ajustesTotal?`<span style="font-size:11px;color:#7a5200;font-weight:600">+${ajustesTotal.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0})}</span>`:''}
       </div>
-      ${ajustes.length?`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${ajustes.map((a,ai)=>`
-        <div style="display:flex;align-items:center;gap:6px;background:rgba(180,120,0,0.06);border:1px solid rgba(180,120,0,0.18);border-radius:8px;padding:6px 8px;flex-wrap:wrap">
+      ${ajustes.length?`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${ajustes.map((a,ai)=>{
+        const acol=BRAND_COLORS[a.brand]||'#00E6FF';
+        if(a.bloqueado){
+          return `<div style="display:flex;align-items:center;gap:8px;background:rgba(180,120,0,0.06);border:1px solid rgba(180,120,0,0.18);border-radius:8px;padding:6px 8px;flex-wrap:wrap">
+          <span class="lh-badge" style="background:${acol}18;color:${acol};border:1px solid ${acol}44">${esc(a.brand)}</span>
+          <span style="font-weight:600;min-width:80px">${(Number(a.importe)||0).toLocaleString('es-ES')} €</span>
+          <span style="flex:1;min-width:140px;color:#3a5a70;font-size:12px">${esc(a.comentario||'')}</span>
+          <button class="lh-btn-del" style="color:#6a8a9a" onclick="openLHPasswordGate('desbloquearAjuste',{hi:${hi},ai:${ai}})" title="Ajuste bloqueado — clic para editar (requiere contraseña)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+          <button class="lh-btn-del" onclick="openLHPasswordGate('borrarAjuste',{hi:${hi},ai:${ai}})" title="Eliminar ajuste"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+        </div>`;
+        }
+        return `<div style="display:flex;align-items:center;gap:6px;background:rgba(180,120,0,0.06);border:1px solid rgba(180,120,0,0.18);border-radius:8px;padding:6px 8px;flex-wrap:wrap">
           <select class="st-select" style="max-width:90px" onchange="updateHistAjuste(${hi},${ai},'brand',this.value)">
             ${brands.map(b=>`<option value="${b}" ${a.brand===b?'selected':''}>${b}</option>`).join('')}
           </select>
-          <input class="inline-input" type="number" style="width:100px" value="${a.importe||0}" placeholder="Importe €" onchange="updateHistAjuste(${hi},${ai},'importe',this.value)">
-          <input class="inline-input" style="flex:1;min-width:140px" value="${esc(a.comentario||'')}" placeholder="Comentario…" onchange="updateHistAjuste(${hi},${ai},'comentario',this.value)">
+          <input class="inline-input" type="number" style="width:100px" value="${a.importe||0}" placeholder="Importe €" onkeydown="lhEnterLockAjuste(event,${hi},${ai})" onchange="updateHistAjuste(${hi},${ai},'importe',this.value)">
+          <input class="inline-input" style="flex:1;min-width:140px" value="${esc(a.comentario||'')}" placeholder="Comentario…" onkeydown="lhEnterLockAjuste(event,${hi},${ai})" onchange="updateHistAjuste(${hi},${ai},'comentario',this.value)">
+          <button class="lh-btn-del" style="color:#16a34a" onclick="lockHistAjuste(${hi},${ai})" title="Guardar y bloquear ajuste (Enter)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
           <button class="lh-btn-del" onclick="openLHPasswordGate('borrarAjuste',{hi:${hi},ai:${ai}})" title="Eliminar ajuste"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-        </div>`).join('')}</div>`:''}
+        </div>`;
+      }).join('')}</div>`:''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="hist-toggle-btn" style="width:auto;padding:6px 12px;margin-top:0" onclick="openLHPasswordGate('añadirAjuste',${hi})">+ Añadir ajuste</button>
         <button class="hist-toggle-btn" style="width:auto;padding:6px 12px;margin-top:0;color:#005a30;border-color:rgba(0,140,70,0.3)" onclick="exportLHHistoricoConAjustes(${hi})">⭳ Exportar con ajustes</button>
@@ -2011,7 +2090,7 @@ async function addLHRow(){
     estado:'Pendiente contacto',dv:'',asignadoA:'',
     tejado:'Admisiones',notificado:false,
     sustituido:'',enPrograma:'',observaciones:'',
-    added:true
+    added:true,bloqueado:false
   };
   lhCandidatos.push(newRow);
   await kvSet(LH_CANDS_KEY,lhCandidatos);
