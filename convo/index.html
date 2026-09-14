@@ -350,7 +350,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-panel.fiel { margin-left:32px; margin-right:32px; background:#EAF4FB; }
 .detail-panel.excepciones { margin-left:12px; margin-right:12px; background:#F1E9FB; }
 .detail-merge-bar { display:flex; align-items:center; justify-content:center; margin:12px 32px 0; padding:10px 16px; background:#EAF3EC; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.2); }
-}
 .detail-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid rgba(0,100,140,0.12); flex-wrap:wrap; gap:10px; }
 .detail-head-left { display:flex; align-items:center; gap:10px; }
 .detail-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
@@ -1135,35 +1134,55 @@ function bmGlow(hex){
 }
 function bmBuiltinLabel(v){ return {cruce:'Cruce de datos', matriculas:'Seguimiento de Matrículas'}[v] || v; }
 
+function bmWithTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),ms))
+  ]);
+}
 async function bmLoadBubbles(){
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${BM_KV_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
+    const res = await bmWithTimeout(fetch(`${WORKER_URL}/kv?key=${BM_KV_KEY}&_ts=${Date.now()}`, { cache:'no-store' }), 4000);
     const data2 = await res.json();
     if(data2.value){
       const parsed = typeof data2.value==='string' ? JSON.parse(data2.value) : data2.value;
-      if(Array.isArray(parsed) && parsed.length){
-        bmBubbles = parsed;
-      } else {
-        bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
-        await bmSaveBubbles();
-      }
+      bmBubbles = (Array.isArray(parsed) && parsed.length) ? parsed : JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
     } else {
       bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
-      await bmSaveBubbles();
     }
   }catch(e){
-    console.error('Error cargando burbujas de Convo 27:', e);
+    console.error('Error cargando burbujas de Convo 27 (se usan las de por defecto):', e);
     bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
   }
+  bmEnsureMatriculasBubbleLocal();
   bmRenderNodesRow();
+  /* El guardado en el almacenamiento va en segundo plano — si la red va lenta o falla,
+     la barra de burbujas ya se ha pintado igualmente y no se queda esperando. */
+  bmSaveBubbles().catch(()=>{});
 }
 async function bmSaveBubbles(){
   try{
-    await fetch(`${WORKER_URL}/kv`, {
+    await bmWithTimeout(fetch(`${WORKER_URL}/kv`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ key: BM_KV_KEY, value: bmBubbles })
-    });
+    }), 4000);
   }catch(e){ console.error('Error guardando burbujas de Convo 27:', e); }
+}
+
+/* Migración: si esta página ya tenía burbujas guardadas de antes de que existiera el módulo de
+   Matrículas, ninguna de ellas apunta a esa acción. La primera vez que carga el código nuevo,
+   se la añadimos a la burbuja "Nuevo Convo" si existe (sin tocar su nombre/color/icono actuales),
+   o la creamos si hiciera falta — así funciona sin que nadie tenga que tocar nada a mano.
+   Es síncrona: solo modifica bmBubbles en memoria, el guardado real lo hace bmLoadBubbles aparte. */
+function bmEnsureMatriculasBubbleLocal(){
+  const yaExiste = bmBubbles.some(b => b.action && b.action.type==='builtin' && b.action.value==='matriculas');
+  if(yaExiste) return;
+  const nuevo = bmBubbles.find(b => b.id==='nuevo');
+  if(nuevo){
+    nuevo.action = { type:'builtin', value:'matriculas' };
+  } else {
+    bmBubbles.unshift({ id:'matriculas', name:'Nuevo Convo', color:'#22D3EE', icon:'docplus', action:{type:'builtin', value:'matriculas'} });
+  }
 }
 
 function bmRenderNodesRow(){
