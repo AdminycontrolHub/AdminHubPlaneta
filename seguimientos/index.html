@@ -342,12 +342,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-warning-banner.show{display:flex;}
 
 .mj-live-frame{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 4px;flex:1;min-height:0;overflow:hidden;width:100%;}
-.mj-orbit-wrap{position:relative;width:min(620px,58vh);aspect-ratio:1/1;margin:2px auto;flex:1 1 auto;min-height:0;max-height:100%;}
+.mj-orbit-wrap{position:relative;aspect-ratio:1/1;margin:2px auto;flex:1 1 auto;min-height:0;max-width:620px;}
 .mj-orbit-ring{position:absolute;inset:6%;border:1px dashed rgba(124,147,168,.25);border-radius:50%;animation:mjSpin 130s linear infinite;}
 .mj-orbit-ring.r2{inset:22%;animation-duration:95s;animation-direction:reverse;border-color:rgba(0,230,255,.14);}
 @keyframes mjSpin{to{transform:rotate(360deg);}}
-.mj-aitor-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:5;width:63%;}
-.mj-aitor-center span{font-family:'Courier New',monospace;font-size:11.5px;color:var(--mj-text-dim);letter-spacing:.03em;}
+.mj-aitor-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;width:63%;}
+.mj-aitor-center span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--mj-text-dim);letter-spacing:.03em;white-space:nowrap;}
 .mj-aitor-big-wrap{position:relative;width:100%;aspect-ratio:1/1;}
 .mj-aitor-big-ring{position:absolute;inset:-8%;border-radius:50%;border:2px solid var(--mj-cyan);opacity:.6;animation:mjRingPulse 1.7s ease-in-out infinite;pointer-events:none;}
 .mj-aitor-big-photo{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;box-shadow:0 0 28px rgba(0,230,255,.5);}
@@ -436,7 +436,6 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-status-chip.st-pend{background:var(--mj-slate-dim);color:var(--mj-slate);}
 .mj-status-chip.st-live{background:var(--mj-amber-dim);color:var(--mj-amber);}
 .mj-status-chip.st-closed{background:rgba(0,255,180,.12);color:var(--mj-mint);}
-.mj-footnote{max-width:1080px;margin:0 auto;padding:8px 24px 10px;border-top:1px solid var(--mj-line);font-size:10.5px;color:var(--mj-text-dim);line-height:1.4;flex:0 0 auto;}
 
 /* modal contraseña (reutiliza look lh-pwd-modal) */
 .mj-pwd-modal{background:#F5F0E8;border-radius:12px;border:1px solid #d8d0c4;padding:20px;width:340px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.3);color:#1a3a50;}
@@ -1082,8 +1081,6 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="mj-timeline" id="mjTimeline"></div>
       </section>
     </div>
-
-    <div class="mj-footnote">Las notas privadas y el estado de los temas se guardan solo en este navegador para la demo. En la versión final quedará todo sincronizado vía Cloudflare KV, igual que el resto de Admin Hub.</div>
   </div>
 </div>
 
