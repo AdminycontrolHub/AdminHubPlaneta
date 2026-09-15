@@ -337,7 +337,6 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-timer-panel.warning{border-color:var(--mj-red);background:linear-gradient(90deg, rgba(255,92,102,.08), var(--mj-surface));}
 .mj-timer-display{font-family:'Courier New',monospace;font-size:24px;font-weight:600;letter-spacing:1px;}
 .mj-timer-panel.warning .mj-timer-display{color:var(--mj-red);}
-.mj-timer-sub{font-family:'Courier New',monospace;font-size:10.5px;color:var(--mj-text-dim);}
 .mj-warning-banner{display:none;align-items:center;gap:10px;background:var(--mj-red-dim);border:1px solid var(--mj-red);color:var(--mj-red);font-size:12.5px;padding:8px 14px;border-radius:var(--mj-radius-sm);margin-bottom:8px;flex:0 0 auto;}
 .mj-warning-banner.show{display:flex;}
 
@@ -350,7 +349,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-aitor-center span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--mj-text-dim);letter-spacing:.03em;white-space:nowrap;}
 .mj-aitor-big-wrap{position:relative;width:100%;aspect-ratio:1/1;}
 .mj-aitor-big-ring{position:absolute;inset:-8%;border-radius:50%;border:2px solid var(--mj-cyan);opacity:.6;animation:mjRingPulse 1.7s ease-in-out infinite;pointer-events:none;}
-.mj-aitor-big-photo{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;box-shadow:0 0 28px rgba(0,230,255,.5);}
+.mj-aitor-big-photo{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:center 12%;display:block;box-shadow:0 0 28px rgba(0,230,255,.5);}
 .mj-aitor-big-fallback{display:none;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 32% 30%, #7FF5FF, var(--mj-cyan) 55%, #0093A8 100%);box-shadow:0 0 28px rgba(0,230,255,.5);align-items:center;justify-content:center;}
 .mj-aitor-big-fallback .mj-af{display:flex;gap:9px;}
 .mj-aitor-big-fallback .mj-eye{width:9px;height:13px;border-radius:5px;background:#022733;}
@@ -362,7 +361,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-node.has-move .mj-node-bubble{border-style:dashed;opacity:.75;}
 @keyframes mjPulseLive{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 .mj-node:hover .mj-node-bubble{transform:scale(1.08);}
-.mj-node-label{font-size:10px;text-align:center;max-width:88px;line-height:1.2;color:var(--mj-text-dim);}
+.mj-node-label{font-size:10.5px;text-align:center;max-width:88px;line-height:1.25;color:var(--mj-text-dim);}
 .mj-node:hover .mj-node-label{color:var(--mj-text);}
 .mj-live-fallback{display:none;flex-direction:column;gap:9px;}
 @media (max-width: 720px){ .mj-orbit-wrap{display:none;} .mj-live-fallback{display:flex;} }
@@ -453,8 +452,8 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-team-circle{position:relative;width:74px;height:74px;border-radius:50%;background:var(--pc,#2a7f8a);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:inset 0 -6px 14px rgba(0,0,0,.15),0 3px 10px rgba(0,0,0,.12);border:2px solid rgba(255,255,255,.35);transition:transform .18s;}
 .mj-team-bubble:hover .mj-team-circle{transform:scale(1.07);}
 .mj-team-name{font-size:11.5px;font-weight:700;color:#1a3a50;text-align:center;max-width:88px;}
-.mj-team-badge{position:absolute;bottom:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:50%;background:#fff;border:2px solid var(--pc,#2a7f8a);color:#1a3a50;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-.mj-team-edit{position:absolute;top:-4px;right:-4px;width:19px;height:19px;border-radius:50%;border:1px solid #c0b8ae;background:#fff;color:#7a6e62;font-size:8.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.mj-team-badge{position:absolute;bottom:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:50%;background:#fff;border:2px solid var(--pc,#2a7f8a);color:#1a3a50;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.mj-team-edit{position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;border:1px solid #c0b8ae;background:#fff;color:#7a6e62;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
 .mj-team-edit:hover{border-color:#2a7f8a;color:#2a7f8a;}
 .mj-team-add .mj-team-circle{background:#f8f5ef;border:2px dashed #c0b8ae;color:#7a6e62;box-shadow:none;}
 .mj-team-add .mj-team-name{color:#7a6e62;}
@@ -1049,7 +1048,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
             <div class="mj-aitor-bubble" id="mjAitorVivoBubble"><span class="mj-aitor-label">AITOR · en directo</span>Toca cualquier tema para abrirlo. Los puntos se van coloreando según los tratáis: <b>ámbar</b> mientras están abiertos, <b>verde</b> al cerrarlos.</div>
           </div>
           <div class="mj-timer-panel" id="mjTimerPanel">
-            <div style="text-align:center;"><div class="mj-timer-display" id="mjTimerDisplay">60:00</div><div class="mj-timer-sub">arranca al entrar en «En vivo»</div></div>
+            <div style="text-align:center;"><div class="mj-timer-display" id="mjTimerDisplay">60:00</div></div>
           </div>
           <div class="mj-warning-banner" id="mjWarningBanner">⏱ Quedan 15 minutos — puede que toque repasar lo pendiente y cerrar temas abiertos.</div>
           <div class="mj-orbit-wrap" id="mjOrbitWrap">
@@ -1087,7 +1086,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 <div class="mj-detail-overlay" id="mjDetailOverlay"><div class="mj-detail-card" id="mjDetailCard"></div></div>
 
 <!-- MODAL CONTRASEÑA — eliminar tema Mesa del Jueves -->
-<div class="overlay" id="mjPwdOverlay">
+<div class="imodal-bg" id="mjPwdOverlay">
   <div class="mj-pwd-modal">
     <h3>🔒 Acceso restringido</h3>
     <p>Introduce la contraseña para eliminar este tema.</p>
@@ -2371,8 +2370,8 @@ function openOrgPersona(name){
           <div style="background:#f8f5ef;border:1px solid #d8d0c4;border-radius:8px;padding:10px 12px;">
             <div style="font-size:13px;color:#1a3a50;font-weight:600;margin-bottom:7px;">${bmEscapeHtml(t.title)}</div>
             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-              <span style="font-size:10px;color:#7a6e62;margin-right:2px;">Reasignar:</span>
-              ${mjTeamMembers.map(m=>`<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11px;padding:3px 9px;border-radius:20px;border:1.5px solid ${m.name===t.assignee?m.color:'#c0b8ae'};background:${m.name===t.assignee?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`).join('')}
+              <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Reasignar:</span>
+              ${mjTeamMembers.map(m=>`<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${m.name===t.assignee?m.color:'#c0b8ae'};background:${m.name===t.assignee?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`).join('')}
             </div>
           </div>`).join('')}
       </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
@@ -2516,10 +2515,10 @@ function mjOpenPwdGate(id){
   mjPwdPendingId = id;
   document.getElementById('mjPwdInput').value = '';
   document.getElementById('mjPwdErr').classList.remove('show');
-  document.getElementById('mjPwdOverlay').classList.add('open');
+  document.getElementById('mjPwdOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('mjPwdInput').focus(), 100);
 }
-function mjClosePwdGate(){ document.getElementById('mjPwdOverlay').classList.remove('open'); mjPwdPendingId=null; }
+function mjClosePwdGate(){ document.getElementById('mjPwdOverlay').classList.remove('show'); mjPwdPendingId=null; }
 function mjCheckPwd(){
   const v = document.getElementById('mjPwdInput').value;
   if(v===MJ_AGENDA_PWD && mjPwdPendingId){
