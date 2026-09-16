@@ -339,6 +339,19 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-timer-panel.warning .mj-timer-display{color:var(--mj-red-text);}
 .mj-warning-banner{display:none;align-items:center;gap:10px;background:var(--mj-red-dim);border:1px solid var(--mj-red);color:var(--mj-red-text);font-size:12.5px;padding:8px 14px;border-radius:var(--mj-radius-sm);margin-bottom:8px;flex:0 0 auto;}
 .mj-warning-banner.show{display:flex;}
+.mj-vote-launcher{flex:0 0 auto;display:flex;justify-content:center;margin-bottom:6px;}
+.mj-vote-panel{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--mj-surface);border:1.5px solid var(--mj-cyan);border-radius:var(--mj-radius-md);padding:14px 20px;margin-bottom:10px;max-width:460px;margin-left:auto;margin-right:auto;width:100%;box-sizing:border-box;}
+.mj-vote-q{font-size:14px;font-weight:700;color:var(--mj-text);text-align:center;}
+.mj-vote-timer{font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:var(--mj-cyan-text);}
+.mj-vote-btns{display:flex;gap:14px;}
+.mj-vote-btn{border:2px solid var(--mj-line);background:var(--mj-surface-2);border-radius:100px;padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--mj-text);}
+.mj-vote-btn.si{border-color:var(--mj-mint);}
+.mj-vote-btn.si.chosen{background:var(--mj-mint);color:#04231a;}
+.mj-vote-btn.no{border-color:var(--mj-red);}
+.mj-vote-btn.no.chosen{background:var(--mj-red);color:#fff;}
+.mj-vote-btn:disabled{cursor:default;opacity:.7;}
+.mj-vote-tally{font-family:'Courier New',monospace;font-size:12.5px;color:var(--mj-text-dim);}
+.mj-vote-result{font-size:16px;font-weight:800;color:var(--mj-cyan-text);}
 
 .mj-live-frame{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 4px;flex:1;min-height:0;overflow:hidden;width:100%;}
 .mj-orbit-wrap{position:relative;aspect-ratio:1/1;margin:2px auto;flex:1 1 auto;min-height:0;max-width:620px;}
@@ -1051,6 +1064,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
             <div style="text-align:center;"><div class="mj-timer-display" id="mjTimerDisplay">60:00</div></div>
           </div>
           <div class="mj-warning-banner" id="mjWarningBanner">⏱ Quedan 15 minutos — puede que toque repasar lo pendiente y cerrar temas abiertos.</div>
+          <div class="mj-vote-launcher" id="mjVoteLauncher">
+            <button class="mj-add-btn" onclick="mjOpenVotePrompt()">🗳️ Nueva votación</button>
+          </div>
+          <div class="mj-vote-panel" id="mjVotePanel" style="display:none;"></div>
           <div class="mj-orbit-wrap" id="mjOrbitWrap">
             <div class="mj-orbit-ring"></div>
             <div class="mj-orbit-ring r2"></div>
@@ -2445,6 +2462,7 @@ function mjOpenTool(view){
 }
 document.getElementById('mjCloseBtn').addEventListener('click', ()=>{
   document.getElementById('mjOverlay').classList.remove('open');
+  clearInterval(mjVotePollInterval);
 });
 
 /* ---------------- TABS ---------------- */
@@ -2454,7 +2472,8 @@ document.querySelectorAll('.mj-tab-btn').forEach(btn=>{
     document.querySelectorAll('.mj-view').forEach(v=>v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('mj-view-'+btn.dataset.mjview).classList.add('active');
-    if(btn.dataset.mjview === 'vivo') mjStartTimer();
+    if(btn.dataset.mjview === 'vivo'){ mjStartTimer(); mjWatchVote(); }
+    else { clearInterval(mjVotePollInterval); }
   });
 });
 
@@ -2777,6 +2796,94 @@ function mjShowWarning(){
 }
 mjUpdateTimerUI();
 
+/* ---------------- VOTACIÓN EN VIVO (compartida vía KV, anónima, 5s) ---------------- */
+const MJ_VOTE_KEY = 'adminhub_mesajueves_votacion_v1';
+const MJ_VOTE_DURATION = 5000;
+let mjVoterId = localStorage.getItem('mj_voter_id');
+if(!mjVoterId){ mjVoterId = 'v_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); localStorage.setItem('mj_voter_id', mjVoterId); }
+let mjVotePollInterval = null;
+let mjCurrentVote = null;
+
+function mjOpenVotePrompt(){
+  const defaultQ = (mjTopics.find(t=>!t.locked)||{}).title || '¿Aprobáis el tema?';
+  const q = prompt('¿Sobre qué se vota?', defaultQ);
+  if(!q || !q.trim()) return;
+  mjStartVote(q.trim());
+}
+async function mjStartVote(question){
+  const vote = { id:'v_'+Date.now(), question, startedAt: Date.now(), duration: MJ_VOTE_DURATION, votes: {}, closed:false };
+  await kvSet(MJ_VOTE_KEY, vote);
+  mjCurrentVote = vote;
+  mjRenderVotePanel();
+  mjWatchVote();
+}
+async function mjCastVote(choice){
+  if(!mjCurrentVote || mjCurrentVote.closed) return;
+  const fresh = await kvGet(MJ_VOTE_KEY);
+  if(!fresh || fresh.id !== mjCurrentVote.id || fresh.closed) return;
+  fresh.votes[mjVoterId] = choice;
+  await kvSet(MJ_VOTE_KEY, fresh);
+  mjCurrentVote = fresh;
+  mjRenderVotePanel();
+}
+function mjWatchVote(){
+  clearInterval(mjVotePollInterval);
+  mjVotePollInterval = setInterval(mjPollVote, 600);
+  mjPollVote();
+}
+async function mjPollVote(){
+  const fresh = await kvGet(MJ_VOTE_KEY);
+  if(!fresh){ mjCurrentVote=null; clearInterval(mjVotePollInterval); mjRenderVotePanel(); return; }
+  const elapsed = Date.now() - fresh.startedAt;
+  if(elapsed >= fresh.duration && !fresh.closed){
+    fresh.closed = true;
+    await kvSet(MJ_VOTE_KEY, fresh);
+  }
+  mjCurrentVote = fresh;
+  mjRenderVotePanel();
+  if(fresh.closed) clearInterval(mjVotePollInterval);
+}
+function mjRenderVotePanel(){
+  const wrap = document.getElementById('mjVotePanel');
+  const launcher = document.getElementById('mjVoteLauncher');
+  if(!wrap || !launcher) return;
+  const v = mjCurrentVote;
+  if(!v){
+    wrap.style.display='none'; wrap.innerHTML='';
+    launcher.style.display='flex';
+    return;
+  }
+  launcher.style.display = v.closed ? 'flex' : 'none';
+  wrap.style.display='flex';
+  const si = Object.values(v.votes).filter(x=>x==='si').length;
+  const no = Object.values(v.votes).filter(x=>x==='no').length;
+  const total = si+no;
+  const remaining = Math.max(0, Math.ceil((v.duration - (Date.now()-v.startedAt))/1000));
+  const myVote = v.votes[mjVoterId];
+  if(!v.closed){
+    wrap.innerHTML = `
+      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.question)}</div>
+      <div class="mj-vote-timer">${remaining}s</div>
+      <div class="mj-vote-btns">
+        <button class="mj-vote-btn si ${myVote==='si'?'chosen':''}" ${myVote?'disabled':''} onclick="mjCastVote('si')">✅ Sí</button>
+        <button class="mj-vote-btn no ${myVote==='no'?'chosen':''}" ${myVote?'disabled':''} onclick="mjCastVote('no')">❌ No</button>
+      </div>
+      <div class="mj-vote-tally">${total} voto${total!==1?'s':''} registrado${total!==1?'s':''} de momento</div>`;
+  } else {
+    const winner = si===no ? 'Empate' : (si>no ? '✅ Gana el SÍ' : '❌ Gana el NO');
+    wrap.innerHTML = `
+      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.question)}</div>
+      <div class="mj-vote-result">${winner}</div>
+      <div class="mj-vote-tally">${total} voto${total!==1?'s':''} totales · Sí ${si} — No ${no}</div>
+      <button class="mj-ghost-btn" onclick="mjClearVote()">Cerrar</button>`;
+  }
+}
+async function mjClearVote(){
+  mjCurrentVote = null;
+  clearInterval(mjVotePollInterval);
+  await kvSet(MJ_VOTE_KEY, null);
+  mjRenderVotePanel();
+}
 /* ---------------- HISTÓRICO ---------------- */
 let mjHistFilter = 'todos';
 let mjHistQuery = '';
