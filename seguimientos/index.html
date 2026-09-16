@@ -339,8 +339,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-timer-panel.warning .mj-timer-display{color:var(--mj-red-text);}
 .mj-warning-banner{display:none;align-items:center;gap:10px;background:var(--mj-red-dim);border:1px solid var(--mj-red);color:var(--mj-red-text);font-size:12.5px;padding:8px 14px;border-radius:var(--mj-radius-sm);margin-bottom:8px;flex:0 0 auto;}
 .mj-warning-banner.show{display:flex;}
-.mj-vote-launcher{flex:0 0 auto;display:flex;justify-content:center;margin-bottom:6px;}
-.mj-vote-panel{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--mj-surface);border:1.5px solid var(--mj-cyan);border-radius:var(--mj-radius-md);padding:14px 20px;margin-bottom:10px;max-width:460px;margin-left:auto;margin-right:auto;width:100%;box-sizing:border-box;}
+.mj-vote-launcher{position:absolute;top:2px;right:2px;z-index:20;display:flex;justify-content:center;}
+.mj-vote-launch-btn{background:var(--mj-cyan);color:#022;border:none;border-radius:100px;font-weight:700;font-size:12.5px;padding:9px 16px;cursor:pointer;white-space:nowrap;font-family:inherit;box-shadow:0 4px 14px rgba(0,194,222,.35);transition:transform .15s;}
+.mj-vote-launch-btn:hover{transform:scale(1.05);}
+.mj-vote-panel{position:absolute;top:2px;right:2px;z-index:20;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--mj-surface);border:1.5px solid var(--mj-cyan);border-radius:var(--mj-radius-md);padding:14px 18px;max-width:260px;box-sizing:border-box;box-shadow:0 6px 20px rgba(0,0,0,.15);}
 .mj-vote-q{font-size:14px;font-weight:700;color:var(--mj-text);text-align:center;}
 .mj-vote-timer{font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:var(--mj-cyan-text);}
 .mj-vote-btns{display:flex;gap:14px;}
@@ -1067,7 +1069,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
           </div>
           <div class="mj-warning-banner" id="mjWarningBanner">⏱ Quedan 15 minutos — puede que toque repasar lo pendiente y cerrar temas abiertos.</div>
           <div class="mj-vote-launcher" id="mjVoteLauncher">
-            <button class="mj-add-btn" onclick="mjOpenVotePrompt()">🗳️ Nueva votación</button>
+            <button class="mj-vote-launch-btn" onclick="mjOpenVotePrompt()">🙋 ¡A votar!</button>
           </div>
           <div class="mj-vote-panel" id="mjVotePanel" style="display:none;"></div>
           <div class="mj-orbit-wrap" id="mjOrbitWrap">
