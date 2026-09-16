@@ -371,6 +371,8 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-node.locked .mj-node-bubble{border-color:rgba(0,255,180,.5);color:var(--mj-mint-text);border-style:dashed;}
 .mj-node.st-live .mj-node-bubble{border-color:var(--mj-amber);box-shadow:0 0 16px rgba(240,149,75,.4);animation:mjPulseLive 1.6s ease-in-out infinite;color:var(--mj-amber-text);}
 .mj-node.st-closed .mj-node-bubble{border-color:var(--mj-mint);color:var(--mj-mint-text);}
+.mj-node.st-vote-favor .mj-node-bubble{border-color:var(--mj-mint);color:var(--mj-mint-text);box-shadow:0 0 14px rgba(0,200,150,.35);}
+.mj-node.st-vote-contra .mj-node-bubble{border-color:var(--mj-red);color:var(--mj-red-text);box-shadow:0 0 14px rgba(224,82,92,.35);}
 .mj-node.has-move .mj-node-bubble{border-style:dashed;opacity:.75;}
 @keyframes mjPulseLive{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 .mj-node:hover .mj-node-bubble{transform:scale(1.08);}
@@ -1095,6 +1097,8 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
           <button class="mj-filter-chip" data-mjf="cerrado">Cerrados</button>
         </div>
         <div class="mj-timeline" id="mjTimeline"></div>
+        <div class="mj-section-head" style="margin-top:18px;"><h2>Resultados de votaciones</h2><span class="mj-count" id="mj-vote-hist-count">0 registros</span></div>
+        <div id="mjVoteHistList" style="display:flex;flex-direction:column;gap:8px;"></div>
       </section>
     </div>
   </div>
@@ -1106,12 +1110,25 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 <div class="imodal-bg" id="mjPwdOverlay">
   <div class="mj-pwd-modal">
     <h3>🔒 Acceso restringido</h3>
-    <p>Introduce la contraseña para eliminar este tema.</p>
+    <p id="mjPwdMsg">Introduce la contraseña para eliminar este tema.</p>
     <input type="password" id="mjPwdInput" placeholder="Contraseña…" onkeydown="if(event.key==='Enter')mjCheckPwd()">
     <div class="mj-pwd-err" id="mjPwdErr">Contraseña incorrecta</div>
     <div class="mj-pwd-btns">
       <button class="mj-pwd-btn cancel" id="mjPwdCancel">Cancelar</button>
-      <button class="mj-pwd-btn ok" onclick="mjCheckPwd()">Eliminar</button>
+      <button class="mj-pwd-btn ok" onclick="mjCheckPwd()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nueva votación — selección de tema por número -->
+<div class="imodal-bg" id="mVoteStart">
+  <div class="imodal sm">
+    <h3>🗳️ Nueva votación</h3>
+    <p>Selecciona sobre qué tema se vota.</p>
+    <select id="voteStartTopicSelect"></select>
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('mVoteStart').classList.remove('show')">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="mjConfirmStartVote()">Iniciar votación</button>
     </div>
   </div>
 </div>
@@ -2472,8 +2489,15 @@ document.querySelectorAll('.mj-tab-btn').forEach(btn=>{
     document.querySelectorAll('.mj-view').forEach(v=>v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('mj-view-'+btn.dataset.mjview).classList.add('active');
-    if(btn.dataset.mjview === 'vivo'){ mjStartTimer(); mjWatchVote(); }
-    else { clearInterval(mjVotePollInterval); }
+    if(btn.dataset.mjview === 'vivo'){
+      mjStartTimer(); mjWatchVote();
+      mjLoadVoteHistory().then(()=>{ mjRenderOrbit(); mjRenderFallback(); });
+    } else {
+      clearInterval(mjVotePollInterval);
+      if(btn.dataset.mjview === 'historico'){
+        mjLoadVoteHistory().then(mjRenderHistorico);
+      }
+    }
   });
 });
 
@@ -2511,7 +2535,10 @@ function mjRenderAgenda(){
     b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, 1));
   });
   wrap.querySelectorAll('[data-mjact="del"]').forEach(b=>{
-    b.addEventListener('click', ()=> mjOpenPwdGate(b.dataset.id));
+    b.addEventListener('click', ()=> mjOpenPwdGate(()=>{
+      mjTopics = mjTopics.filter(t=>t.id!==b.dataset.id);
+      mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+    }, 'Introduce la contraseña para eliminar este tema.'));
   });
   wrap.querySelectorAll('[data-mjact="edit"]').forEach(b=>{
     b.addEventListener('click', ()=>{
@@ -2545,23 +2572,24 @@ function mjAddTopicFromInput(){
   mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
 }
 
-/* ---------------- CONTRASEÑA PARA ELIMINAR TEMAS ---------------- */
+/* ---------------- CONTRASEÑA (temas, votaciones del histórico) ---------------- */
 const MJ_AGENDA_PWD = 'AdminHub';
-let mjPwdPendingId = null;
-function mjOpenPwdGate(id){
-  mjPwdPendingId = id;
+let mjPwdCallback = null;
+function mjOpenPwdGate(callback, mensaje){
+  mjPwdCallback = callback;
+  document.getElementById('mjPwdMsg').textContent = mensaje || 'Introduce la contraseña para continuar.';
   document.getElementById('mjPwdInput').value = '';
   document.getElementById('mjPwdErr').classList.remove('show');
   document.getElementById('mjPwdOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('mjPwdInput').focus(), 100);
 }
-function mjClosePwdGate(){ document.getElementById('mjPwdOverlay').classList.remove('show'); mjPwdPendingId=null; }
+function mjClosePwdGate(){ document.getElementById('mjPwdOverlay').classList.remove('show'); mjPwdCallback=null; }
 function mjCheckPwd(){
   const v = document.getElementById('mjPwdInput').value;
-  if(v===MJ_AGENDA_PWD && mjPwdPendingId){
-    mjTopics = mjTopics.filter(t=>t.id!==mjPwdPendingId);
-    mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+  if(v===MJ_AGENDA_PWD){
+    const cb = mjPwdCallback;
     mjClosePwdGate();
+    if(cb) cb();
   } else {
     document.getElementById('mjPwdErr').classList.add('show');
   }
@@ -2574,12 +2602,13 @@ function mjRenderOrbit(){
   const wrap = document.getElementById('mjOrbitWrap');
   wrap.querySelectorAll('.mj-node').forEach(n=>n.remove());
   const cx=50, cy=50, radius=46;
-  function placeNode(t, angleDeg, orderNum){
+  function placeNode(t, angleDeg, orderNum, voteOverrideCls){
     const angle = angleDeg * Math.PI/180;
     const x = cx + radius*Math.cos(angle), y = cy + radius*Math.sin(angle);
     const node = document.createElement('div');
     const hasMove = t.status==='pendiente' && t.moveTo;
-    const stCls = MJ_STATUS_META[t.status].cls + (hasMove ? ' has-move' : '');
+    let stCls = MJ_STATUS_META[t.status].cls + (hasMove ? ' has-move' : '');
+    if(voteOverrideCls) stCls = voteOverrideCls;
     node.className = 'mj-node ' + stCls;
     node.style.left = x+'%'; node.style.top = y+'%';
     const icon = t.locked ? '📌' : orderNum;
@@ -2587,13 +2616,21 @@ function mjRenderOrbit(){
     node.addEventListener('click', ()=>mjOpenDetail(t.id));
     wrap.appendChild(node);
   }
-  /* "Seguimiento de casos" siempre fijo a las 10 en punto de la circunferencia */
+  function voteCls(num){
+    const vr = mjVoteHistory[String(num)];
+    if(!vr) return null;
+    if(vr.resultado==='favorable') return 'st-vote-favor';
+    if(vr.resultado==='contra') return 'st-vote-contra';
+    return null;
+  }
+  /* "Seguimiento de casos" siempre anclado arriba del todo de la circunferencia */
   const lockedTopics = mjTopics.filter(t=>t.locked);
   const openTopics = mjTopics.filter(t=>!t.locked);
-  lockedTopics.forEach(t=>placeNode(t, -150)); // -150° = 10 en punto
-  const n = openTopics.length;
+  const total = lockedTopics.length + openTopics.length;
+  lockedTopics.forEach(t=>placeNode(t, -90, null, voteCls(0))); // -90° = arriba del todo
   openTopics.forEach((t,i)=>{
-    placeNode(t, -90 + (i/n)*360, i+1);
+    const num = i+1;
+    placeNode(t, -90 + ((num)/total)*360, num, voteCls(num));
   });
 }
 function mjShortTitle(str){ return str.length > 32 ? str.slice(0,30)+'…' : str; }
@@ -2798,20 +2835,40 @@ mjUpdateTimerUI();
 
 /* ---------------- VOTACIÓN EN VIVO (compartida vía KV, anónima, 5s) ---------------- */
 const MJ_VOTE_KEY = 'adminhub_mesajueves_votacion_v1';
+const MJ_VOTE_HIST_KEY = 'adminhub_mesajueves_votos_historico_v1';
 const MJ_VOTE_DURATION = 5000;
 let mjVoterId = localStorage.getItem('mj_voter_id');
 if(!mjVoterId){ mjVoterId = 'v_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); localStorage.setItem('mj_voter_id', mjVoterId); }
 let mjVotePollInterval = null;
 let mjCurrentVote = null;
+let mjVoteHistory = {};
+
+async function mjLoadVoteHistory(){
+  try{ const d = await kvGet(MJ_VOTE_HIST_KEY); mjVoteHistory = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; }
+  catch(e){ mjVoteHistory = {}; }
+}
+async function mjSaveVoteHistory(){ try{ await kvSet(MJ_VOTE_HIST_KEY, mjVoteHistory); }catch(e){} }
+mjLoadVoteHistory().then(()=>{ mjRenderOrbit(); mjRenderFallback(); });
 
 function mjOpenVotePrompt(){
-  const defaultQ = (mjTopics.find(t=>!t.locked)||{}).title || '¿Aprobáis el tema?';
-  const q = prompt('¿Sobre qué se vota?', defaultQ);
-  if(!q || !q.trim()) return;
-  mjStartVote(q.trim());
+  const openTopics = mjTopics.filter(t=>!t.locked);
+  const select = document.getElementById('voteStartTopicSelect');
+  const nums = ['0', ...openTopics.map((t,i)=>String(i+1))];
+  select.innerHTML = nums.map(n=>{
+    const label = n==='0' ? '0 — Seguimiento de casos' : `${n} — ${mjShortTitle(openTopics[parseInt(n,10)-1].title)}`;
+    return `<option value="${n}">${label}</option>`;
+  }).join('');
+  document.getElementById('mVoteStart').classList.add('show');
 }
-async function mjStartVote(question){
-  const vote = { id:'v_'+Date.now(), question, startedAt: Date.now(), duration: MJ_VOTE_DURATION, votes: {}, closed:false };
+function mjConfirmStartVote(){
+  const num = document.getElementById('voteStartTopicSelect').value;
+  document.getElementById('mVoteStart').classList.remove('show');
+  mjStartVote(num);
+}
+async function mjStartVote(topicNum){
+  const openTopics = mjTopics.filter(t=>!t.locked);
+  const label = topicNum==='0' ? 'Tema 0 — Seguimiento de casos' : `Tema ${topicNum} — ${(openTopics[parseInt(topicNum,10)-1]||{}).title||''}`;
+  const vote = { id:'v_'+Date.now(), question: topicNum, label, startedAt: Date.now(), duration: MJ_VOTE_DURATION, votes: {}, closed:false };
   await kvSet(MJ_VOTE_KEY, vote);
   mjCurrentVote = vote;
   mjRenderVotePanel();
@@ -2821,6 +2878,7 @@ async function mjCastVote(choice){
   if(!mjCurrentVote || mjCurrentVote.closed) return;
   const fresh = await kvGet(MJ_VOTE_KEY);
   if(!fresh || fresh.id !== mjCurrentVote.id || fresh.closed) return;
+  if(fresh.votes[mjVoterId]) return; // ya emitió su voto — no se acepta más de uno por usuario
   fresh.votes[mjVoterId] = choice;
   await kvSet(MJ_VOTE_KEY, fresh);
   mjCurrentVote = fresh;
@@ -2838,10 +2896,32 @@ async function mjPollVote(){
   if(elapsed >= fresh.duration && !fresh.closed){
     fresh.closed = true;
     await kvSet(MJ_VOTE_KEY, fresh);
+    await mjRecordVoteResult(fresh);
   }
   mjCurrentVote = fresh;
   mjRenderVotePanel();
-  if(fresh.closed) clearInterval(mjVotePollInterval);
+  if(fresh.closed){
+    clearInterval(mjVotePollInterval);
+    mjRenderOrbit(); mjRenderFallback();
+    if(document.getElementById('mj-view-historico').classList.contains('active')) mjRenderHistorico();
+  }
+}
+async function mjRecordVoteResult(vote){
+  const si = Object.values(vote.votes).filter(x=>x==='si').length;
+  const no = Object.values(vote.votes).filter(x=>x==='no').length;
+  const total = si+no;
+  const resultado = si===no ? 'empate' : (si>no ? 'favorable' : 'contra');
+  const topicNum = vote.question;
+  const openTopics = mjTopics.filter(t=>!t.locked);
+  const t = topicNum==='0' ? mjTopics.find(x=>x.locked) : openTopics[parseInt(topicNum,10)-1];
+  await mjLoadVoteHistory();
+  /* Si se repite la votación sobre el mismo tema, solo queda registrada la última */
+  mjVoteHistory[topicNum] = {
+    topicTitle: t ? t.title : ('Tema '+topicNum),
+    si, no, total, resultado,
+    fecha: new Date().toLocaleString('es-ES')
+  };
+  await mjSaveVoteHistory();
 }
 function mjRenderVotePanel(){
   const wrap = document.getElementById('mjVotePanel');
@@ -2862,7 +2942,7 @@ function mjRenderVotePanel(){
   const myVote = v.votes[mjVoterId];
   if(!v.closed){
     wrap.innerHTML = `
-      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.question)}</div>
+      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.label||v.question)}</div>
       <div class="mj-vote-timer">${remaining}s</div>
       <div class="mj-vote-btns">
         <button class="mj-vote-btn si ${myVote==='si'?'chosen':''}" ${myVote?'disabled':''} onclick="mjCastVote('si')">✅ Sí</button>
@@ -2872,7 +2952,7 @@ function mjRenderVotePanel(){
   } else {
     const winner = si===no ? 'Empate' : (si>no ? '✅ Gana el SÍ' : '❌ Gana el NO');
     wrap.innerHTML = `
-      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.question)}</div>
+      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.label||v.question)}</div>
       <div class="mj-vote-result">${winner}</div>
       <div class="mj-vote-tally">${total} voto${total!==1?'s':''} totales · Sí ${si} — No ${no}</div>
       <button class="mj-ghost-btn" onclick="mjClearVote()">Cerrar</button>`;
@@ -2883,6 +2963,51 @@ async function mjClearVote(){
   clearInterval(mjVotePollInterval);
   await kvSet(MJ_VOTE_KEY, null);
   mjRenderVotePanel();
+}
+
+/* ---------------- HISTÓRICO DE VOTACIONES (editable/borrable con contraseña) ---------------- */
+function mjRenderVoteHistoryList(){
+  const wrap = document.getElementById('mjVoteHistList');
+  const countEl = document.getElementById('mj-vote-hist-count');
+  if(!wrap) return;
+  const entries = Object.entries(mjVoteHistory).sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
+  if(countEl) countEl.textContent = entries.length + (entries.length===1?' registro':' registros');
+  if(!entries.length){ wrap.innerHTML = '<div class="mj-empty-note">Todavía no hay votaciones registradas.</div>'; return; }
+  wrap.innerHTML = entries.map(([num,rec])=>{
+    const color = rec.resultado==='favorable' ? 'var(--mj-mint)' : rec.resultado==='contra' ? 'var(--mj-red)' : 'var(--mj-slate)';
+    const label = rec.resultado==='favorable' ? '✅ Favorable' : rec.resultado==='contra' ? '❌ En contra' : '➖ Empate';
+    return `<div class="mj-row" style="border-left-color:${color};align-items:center;">
+      <div class="mj-row-title">Tema ${num} — ${bmEscapeHtml(rec.topicTitle)}<span class="mj-carry-tag" style="color:${color};">${label}</span></div>
+      <div style="font-family:'Courier New',monospace;font-size:11px;color:var(--mj-text-dim);white-space:nowrap;">Sí ${rec.si} · No ${rec.no} · ${rec.total} votos · ${bmEscapeHtml(rec.fecha)}</div>
+      <button class="mj-icon-btn" title="Editar" onclick="mjEditVoteRecordGate('${num}')">✎</button>
+      <button class="mj-icon-btn" title="Eliminar" onclick="mjDeleteVoteRecordGate('${num}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+function mjDeleteVoteRecordGate(num){
+  mjOpenPwdGate(async ()=>{
+    delete mjVoteHistory[num];
+    await mjSaveVoteHistory();
+    mjRenderVoteHistoryList();
+    mjRenderOrbit(); mjRenderFallback();
+  }, 'Introduce la contraseña para eliminar este resultado de votación.');
+}
+function mjEditVoteRecordGate(num){
+  mjOpenPwdGate(async ()=>{
+    const rec = mjVoteHistory[num];
+    if(!rec) return;
+    const nuevoSi = prompt('Votos a favor (Sí):', rec.si);
+    if(nuevoSi===null) return;
+    const nuevoNo = prompt('Votos en contra (No):', rec.no);
+    if(nuevoNo===null) return;
+    const si = Math.max(0, parseInt(nuevoSi,10)||0);
+    const no = Math.max(0, parseInt(nuevoNo,10)||0);
+    rec.si = si; rec.no = no; rec.total = si+no;
+    rec.resultado = si===no ? 'empate' : (si>no ? 'favorable' : 'contra');
+    await mjSaveVoteHistory();
+    mjRenderVoteHistoryList();
+    mjRenderOrbit(); mjRenderFallback();
+  }, 'Introduce la contraseña para editar este resultado de votación.');
 }
 /* ---------------- HISTÓRICO ---------------- */
 let mjHistFilter = 'todos';
@@ -2957,6 +3082,7 @@ function mjRenderHistorico(){
       mjRenderHistorico();
     });
   });
+  mjRenderVoteHistoryList();
 }
 function mjRenderHistTopic(tp){
   const meta = MJ_STATUS_META[tp.status];
