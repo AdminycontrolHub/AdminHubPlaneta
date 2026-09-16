@@ -2612,12 +2612,14 @@ function mjRenderOrbit(){
     const node = document.createElement('div');
     const hasMove = t.status==='pendiente' && t.moveTo;
     let stCls;
-    if(t.status==='en_tratamiento' || hasMove){
-      /* En tratamiento o pospuesto: siempre gris neutro, ignora cualquier color de votación anterior */
+    if(voteOverrideCls){
+      /* El resultado de la votación manda siempre para esta burbuja concreta */
+      stCls = voteOverrideCls;
+    } else if(t.status==='en_tratamiento' || t.status==='cerrado' || hasMove){
+      /* Ya comentada en la reunión (en tratamiento, cerrada o pospuesta) y sin votar: gris neutro */
       stCls = 'st-neutral' + (hasMove ? ' has-move' : '');
     } else {
       stCls = MJ_STATUS_META[t.status].cls;
-      if(voteOverrideCls) stCls = voteOverrideCls;
     }
     node.className = 'mj-node ' + stCls;
     node.style.left = x+'%'; node.style.top = y+'%';
