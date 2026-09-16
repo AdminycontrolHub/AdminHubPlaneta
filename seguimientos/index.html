@@ -361,7 +361,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-node.has-move .mj-node-bubble{border-style:dashed;opacity:.75;}
 @keyframes mjPulseLive{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 .mj-node:hover .mj-node-bubble{transform:scale(1.08);}
-.mj-node-label{font-size:10.5px;text-align:center;max-width:88px;line-height:1.25;color:var(--mj-text-dim);}
+.mj-node-label{font-size:12px;font-weight:600;text-align:center;max-width:92px;line-height:1.25;color:var(--mj-text);}
 .mj-node:hover .mj-node-label{color:var(--mj-text);}
 .mj-live-fallback{display:none;flex-direction:column;gap:9px;}
 @media (max-width: 720px){ .mj-orbit-wrap{display:none;} .mj-live-fallback{display:flex;} }
@@ -2426,6 +2426,15 @@ function mjPersistTopics(){
   mjStore.extraTopics = mjTopics.filter(t=>!t.locked);
   mjSaveStore(mjStore);
 }
+function mjMoveTopic(id, dir){
+  const idx = mjTopics.findIndex(t=>t.id===id);
+  const swapIdx = idx + dir;
+  if(idx<0 || swapIdx<0 || swapIdx>=mjTopics.length) return;
+  if(mjTopics[idx].locked || mjTopics[swapIdx].locked) return;
+  [mjTopics[idx], mjTopics[swapIdx]] = [mjTopics[swapIdx], mjTopics[idx]];
+  mjPersistTopics();
+  mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+}
 function mjGetHistNote(hid){ mjStore.histNotes = mjStore.histNotes || {}; return mjStore.histNotes[hid] || {text:'', shared:false}; }
 function mjSetHistNote(hid, data){ mjStore.histNotes = mjStore.histNotes || {}; mjStore.histNotes[hid] = data; mjSaveStore(mjStore); }
 
@@ -2461,9 +2470,13 @@ function mjRenderAgenda(){
         <div class="mj-row-title">📌 ${t.title}<span style="display:block;font-size:11.5px;color:var(--mj-text-dim);margin-top:3px;">Módulo en construcción — se integrará próximamente</span></div>
         <span class="mj-lock-tag">Fijo cada semana</span>`;
     } else {
+      const openIdx = mjTopics.filter(x=>!x.locked).findIndex(x=>x.id===t.id);
+      const openCount = mjTopics.filter(x=>!x.locked).length;
       row.innerHTML = `
         <div class="mj-row-title" data-id="${t.id}">${t.title}${t.carriedFrom ? `<span class="mj-carry-tag">↳ viene de ${t.carriedFrom}</span>` : ''}</div>
         <div class="mj-avatar" title="${t.author}" style="background:color-mix(in srgb, ${mjColorFor(t.author)} 22%, var(--mj-surface-3));color:${mjColorFor(t.author)};border:1px solid color-mix(in srgb, ${mjColorFor(t.author)} 45%, transparent);">${t.author[0]}</div>
+        <button class="mj-icon-btn" title="Subir" data-mjact="up" data-id="${t.id}" ${openIdx===0?'disabled style="opacity:.25;cursor:default;"':''}>▲</button>
+        <button class="mj-icon-btn" title="Bajar" data-mjact="down" data-id="${t.id}" ${openIdx===openCount-1?'disabled style="opacity:.25;cursor:default;"':''}>▼</button>
         <button class="mj-icon-btn" title="Editar" data-mjact="edit" data-id="${t.id}">✎</button>
         <button class="mj-icon-btn" title="Eliminar" data-mjact="del" data-id="${t.id}">🗑</button>`;
       row.style.borderLeftColor = mjColorFor(t.author);
@@ -2472,6 +2485,12 @@ function mjRenderAgenda(){
   });
   document.getElementById('mj-count-antes').textContent = mjTopics.length + ' temas';
 
+  wrap.querySelectorAll('[data-mjact="up"]').forEach(b=>{
+    b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, -1));
+  });
+  wrap.querySelectorAll('[data-mjact="down"]').forEach(b=>{
+    b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, 1));
+  });
   wrap.querySelectorAll('[data-mjact="del"]').forEach(b=>{
     b.addEventListener('click', ()=> mjOpenPwdGate(b.dataset.id));
   });
@@ -2536,7 +2555,7 @@ function mjRenderOrbit(){
   const wrap = document.getElementById('mjOrbitWrap');
   wrap.querySelectorAll('.mj-node').forEach(n=>n.remove());
   const cx=50, cy=50, radius=46;
-  function placeNode(t, angleDeg){
+  function placeNode(t, angleDeg, orderNum){
     const angle = angleDeg * Math.PI/180;
     const x = cx + radius*Math.cos(angle), y = cy + radius*Math.sin(angle);
     const node = document.createElement('div');
@@ -2544,7 +2563,7 @@ function mjRenderOrbit(){
     const stCls = MJ_STATUS_META[t.status].cls + (hasMove ? ' has-move' : '');
     node.className = 'mj-node ' + stCls;
     node.style.left = x+'%'; node.style.top = y+'%';
-    const icon = t.locked ? '📌' : (t.status==='cerrado' ? '✓' : hasMove ? '↷' : t.status==='en_tratamiento' ? '●' : '');
+    const icon = t.locked ? '📌' : orderNum;
     node.innerHTML = `<div class="mj-node-bubble">${icon}</div><div class="mj-node-label">${mjShortTitle(t.title)}</div>`;
     node.addEventListener('click', ()=>mjOpenDetail(t.id));
     wrap.appendChild(node);
@@ -2555,7 +2574,7 @@ function mjRenderOrbit(){
   lockedTopics.forEach(t=>placeNode(t, -150)); // -150° = 10 en punto
   const n = openTopics.length;
   openTopics.forEach((t,i)=>{
-    placeNode(t, -90 + (i/n)*360);
+    placeNode(t, -90 + (i/n)*360, i+1);
   });
 }
 function mjShortTitle(str){ return str.length > 32 ? str.slice(0,30)+'…' : str; }
