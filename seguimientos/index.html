@@ -283,7 +283,10 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-brand-text b{font-size:15.5px;letter-spacing:.2px;display:block;}
 .mj-brand-text span{font-size:11px;color:var(--mj-text-dim);}
 .mj-tabs{display:flex;gap:6px;background:var(--mj-surface);padding:4px;border-radius:100px;border:1px solid var(--mj-line);}
-.mj-tab-btn{border:none;background:transparent;color:var(--mj-text-dim);font-weight:600;font-size:13px;padding:8px 16px;border-radius:100px;cursor:pointer;transition:.25s;font-family:inherit;}
+.mj-tab-btn{border:none;background:transparent;color:var(--mj-text-dim);font-weight:600;font-size:13px;padding:8px 16px;border-radius:100px;cursor:pointer;transition:.25s;font-family:inherit;position:relative;}
+.mj-tab-alert-dot{display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--mj-red);box-shadow:0 0 0 rgba(224,82,92,.6);animation:mjTabAlertPulse 1.4s ease-in-out infinite;}
+.mj-tab-alert-dot.show{display:block;}
+@keyframes mjTabAlertPulse{0%{box-shadow:0 0 0 0 rgba(224,82,92,.6);}70%{box-shadow:0 0 0 6px rgba(224,82,92,0);}100%{box-shadow:0 0 0 0 rgba(224,82,92,0);}}
 .mj-tab-btn.active{background:var(--mj-cyan);color:#022;}
 .mj-tab-btn:not(.active):hover{color:var(--mj-text);}
 .mj-right-cluster{display:flex;align-items:center;gap:10px;}
@@ -370,7 +373,8 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-aitor-big-fallback .mj-af{display:flex;gap:9px;}
 .mj-aitor-big-fallback .mj-eye{width:9px;height:13px;border-radius:5px;background:#022733;}
 .mj-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;z-index:4;}
-.mj-node-bubble{width:52px;height:52px;border-radius:50%;background:var(--mj-surface-2);border:1.5px solid rgba(0,194,222,.5);display:flex;align-items:center;justify-content:center;transition:.25s;font-family:'Courier New',monospace;font-size:13px;color:var(--mj-cyan-text);font-weight:600;}
+.mj-node-bubble{position:relative;width:52px;height:52px;border-radius:50%;background:var(--mj-surface-2);border:1.5px solid rgba(0,194,222,.5);display:flex;align-items:center;justify-content:center;transition:.25s;font-family:'Courier New',monospace;font-size:13px;color:var(--mj-cyan-text);font-weight:600;}
+.mj-node.mj-recurring .mj-node-bubble::after{content:'↻';position:absolute;top:-5px;right:-5px;width:17px;height:17px;border-radius:50%;background:var(--mj-cyan);color:#022;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--mj-surface-2);}
 .mj-node.locked .mj-node-bubble{border-color:rgba(0,255,180,.5);color:var(--mj-mint-text);border-style:dashed;}
 .mj-node.st-live .mj-node-bubble{border-color:var(--mj-amber);box-shadow:0 0 16px rgba(240,149,75,.4);animation:mjPulseLive 1.6s ease-in-out infinite;color:var(--mj-amber-text);}
 .mj-node.st-closed .mj-node-bubble{border-color:var(--mj-mint);color:var(--mj-mint-text);}
@@ -431,7 +435,8 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .mj-hist-search{display:flex;align-items:center;gap:8px;background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:100px;padding:9px 16px;margin:4px 0 14px;max-width:420px;}
 .mj-hist-search input{flex:1;background:transparent;border:none;outline:none;color:var(--mj-text);font-size:13.5px;font-family:inherit;}
 .mj-hist-search input::placeholder{color:var(--mj-text-dim);}
-.mj-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 22px;}
+.mj-filter-bar{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0 22px;padding-bottom:4px;scrollbar-width:thin;}
+.mj-filter-bar .mj-filter-chip{flex-shrink:0;}
 .mj-filter-chip{border:1px solid var(--mj-line);background:var(--mj-surface);color:var(--mj-text-dim);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:100px;cursor:pointer;font-family:inherit;}
 .mj-filter-chip.active{border-color:var(--mj-cyan);color:var(--mj-cyan-text);background:var(--mj-cyan-dim);}
 .mj-timeline{position:relative;padding-left:26px;}
@@ -1033,12 +1038,13 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       </div>
       <div class="mj-tabs">
         <button class="mj-tab-btn active" data-mjview="antes">Orden del día</button>
-        <button class="mj-tab-btn" data-mjview="vivo">En vivo</button>
+        <button class="mj-tab-btn" data-mjview="vivo" id="mjTabVivoBtn">En vivo<span class="mj-tab-alert-dot" id="mjTabVivoAlert"></span></button>
         <button class="mj-tab-btn" data-mjview="historico">Histórico</button>
       </div>
       <div class="mj-right-cluster">
         <span class="mj-timer-chip" id="mjTimerChip">⏱ 60:00</span>
-        <div class="mj-date-pill" id="mjDatePill"><span class="mj-dot-live"></span> Jueves · 10 sept 2026</div>
+        <div class="mj-date-pill" id="mjDatePill"><span class="mj-dot-live"></span> Jueves · 10 sept 2026 · 16:00</div>
+        <button class="mj-icon-btn" title="Cambiar día y hora de la reunión" onclick="mjOpenMeetingCfgEditor()" style="margin-left:-4px;">✎</button>
         <button class="mj-close-x" id="mjCloseBtn">✕</button>
       </div>
     </div>
@@ -1133,6 +1139,22 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
     <div class="imodal-btns">
       <button class="mbtn mbtn-cancel" onclick="document.getElementById('mVoteStart').classList.remove('show')">Cancelar</button>
       <button class="mbtn mbtn-ok" onclick="mjConfirmStartVote()">Iniciar votación</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cambiar día y hora de la reunión -->
+<div class="imodal-bg mj-modal-bg" id="mCfgEditor">
+  <div class="imodal sm">
+    <h3>🗓️ Día y hora de la reunión</h3>
+    <p>Esta fecha marca el día de la semana y la hora de referencia de Mesa del Jueves en todo el Hub.</p>
+    <label style="font-size:12px;color:var(--mj-text-dim);display:block;margin:10px 0 4px;">Fecha (marca el día de la semana)</label>
+    <input type="date" id="mjCfgDateInput" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--mj-line);font-family:inherit;font-size:14px;">
+    <label style="font-size:12px;color:var(--mj-text-dim);display:block;margin:10px 0 4px;">Hora</label>
+    <input type="time" id="mjCfgTimeInput" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--mj-line);font-family:inherit;font-size:14px;">
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('mCfgEditor').classList.remove('show')">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="mjConfirmMeetingCfg()">Guardar</button>
     </div>
   </div>
 </div>
@@ -2434,7 +2456,10 @@ function openOrgPersona(name){
       ${items.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
         ${items.map(t=>`
           <div style="background:#f8f5ef;border:1px solid #d8d0c4;border-radius:8px;padding:10px 12px;">
-            <div style="font-size:13px;color:#1a3a50;font-weight:600;margin-bottom:7px;">${bmEscapeHtml(t.title)}</div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px;">
+              <div style="font-size:13px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}</div>
+              <button onclick="mjOpenDetailFromPersona('${t.id}','${name.replace(/'/g,"\\'")}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;">Abrir ficha ✎</button>
+            </div>
             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
               <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Reasignar:</span>
               ${mjTeamMembers.map(m=>`<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${m.name===t.assignee?m.color:'#c0b8ae'};background:${m.name===t.assignee?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`).join('')}
@@ -2443,6 +2468,10 @@ function openOrgPersona(name){
       </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
     </div>`;
   area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function mjOpenDetailFromPersona(id, name){
+  mjDetailOpenedFromPersona = name;
+  mjOpenDetail(id);
 }
 function mjReassignTopic(id, newName, viewingName){
   const t = mjTopics.find(x=>x.id===id);
@@ -2469,40 +2498,112 @@ function mjMoveFollowup(status, moveTo, moveDate){
 let mjTopics = [
   {id:'seg', locked:true, title:'Seguimiento de casos', author:'Vero', status:'pendiente', comments:[]},
 ];
-const mjHistoricoPast = [];
+let mjHistoricoPast = [];
+let mjCurrentWeekKey = null;
 
 /* Los temas (agenda compartida) viven en KV, igual que el resto del Hub — así se ven
    igual desde cualquier navegador o dispositivo, incluido un enlace compartido en Teams.
    Las notas personales del Histórico ("solo tú la ves") sí se quedan en este navegador. */
 const MJ_TOPICS_KV_KEY = 'adminhub_mesajueves_topics_v1';
+const MJ_HIST_KV_KEY = 'adminhub_mesajueves_historico_semanas_v1';
 const MJ_LOCAL_KEY = 'mesa_jueves_notas_personales_v1';
 function mjLoadLocalStore(){ try{ return JSON.parse(localStorage.getItem(MJ_LOCAL_KEY)) || {}; }catch(e){ return {}; } }
 function mjSaveLocalStore(s){ localStorage.setItem(MJ_LOCAL_KEY, JSON.stringify(s)); }
 const mjLocalStore = mjLoadLocalStore();
 
+function mjWeekKeyFor(date){
+  const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function mjAddDays(date, days){ return new Date(date.getFullYear(), date.getMonth(), date.getDate()+days); }
+function mjComputeMoveTargetWeekKey(moveTo, moveDateStr){
+  const base = mjGetRelevantThursday();
+  if(moveTo==='proximo') return mjWeekKeyFor(mjAddDays(base,7));
+  if(moveTo==='dos') return mjWeekKeyFor(mjAddDays(base,14));
+  if(moveTo==='fecha' && moveDateStr){
+    let d = new Date(moveDateStr+'T00:00:00');
+    const wd = mjMeetingCfg.weekday;
+    const diff = (wd - d.getDay() + 7) % 7;
+    d = mjAddDays(d, diff);
+    return mjWeekKeyFor(d);
+  }
+  return null;
+}
+
+async function mjLoadHistoricoPast(){
+  try{ const saved = await kvGet(MJ_HIST_KV_KEY); if(Array.isArray(saved)) mjHistoricoPast = saved; }catch(e){}
+}
+async function mjSaveHistoricoPast(){ try{ await kvSet(MJ_HIST_KV_KEY, mjHistoricoPast); }catch(e){} }
+function mjArchiveWeek(weekKey, topics){
+  const openTopics = (topics||[]).filter(t=>!t.locked);
+  if(!openTopics.length) return;
+  mjHistoricoPast = [{
+    date: mjFormatThursdayShort(new Date(weekKey+'T00:00:00')),
+    weekKey,
+    topics: openTopics.map(t=>({
+      title:t.title, status:t.status, assignee:t.assignee||null,
+      flag: t.recurring ? t.recurring+'ª semana seguida' : null,
+      followup: mjMoveFollowup(t.status, t.moveTo, t.moveDate)
+    }))
+  }, ...mjHistoricoPast];
+}
+
 let mjTopicsReady = null;
 const MJ_OLD_LOCAL_KEY = 'mesa_jueves_mockup_v1'; // clave del sistema antiguo (solo local, previo a hoy)
 async function mjLoadTopics(){
-  try{
-    const saved = await kvGet(MJ_TOPICS_KV_KEY);
-    if(Array.isArray(saved) && saved.length) mjTopics = saved;
-  }catch(e){}
-  /* Migración: si el KV compartido todavía no tiene ningún tema propio (solo el fijo),
-     pero este navegador sí guardaba temas con el sistema antiguo (local), los rescatamos
-     y los subimos al KV para que a partir de ahora se vean desde cualquier sitio. */
-  if(!mjTopics.some(t=>!t.locked)){
+  const currentWeekKey = mjWeekKeyFor(mjGetRelevantThursday());
+  let kvFetchOk = false, stored = null;
+  try{ stored = await kvGet(MJ_TOPICS_KV_KEY); kvFetchOk = true; }catch(e){ kvFetchOk = false; }
+
+  if(!kvFetchOk){
+    // Sin conexión al KV compartido: no tocamos nada, nos quedamos con el estado local
+    // por defecto solo para esta sesión — nunca sobrescribimos lo que ya hay guardado.
+    mjCurrentWeekKey = currentWeekKey;
+    return;
+  }
+
+  let storedWeekKey = null, storedTopics = null;
+  if(Array.isArray(stored)){ storedTopics = stored; storedWeekKey = currentWeekKey; } // formato antiguo, sin weekKey
+  else if(stored && Array.isArray(stored.topics)){ storedTopics = stored.topics; storedWeekKey = stored.weekKey; }
+
+  if(storedTopics && storedTopics.length){
+    if(storedWeekKey === currentWeekKey){
+      mjTopics = storedTopics;
+      mjCurrentWeekKey = currentWeekKey;
+    } else {
+      /* Ha llegado el jueves siguiente: archivamos la semana anterior en el histórico
+         y solo recuperan burbuja los temas que se pospusieron para esta semana (recurrentes). */
+      mjArchiveWeek(storedWeekKey, storedTopics);
+      const locked = storedTopics.find(t=>t.locked) || mjTopics[0];
+      const reactivar = storedTopics.filter(t=>!t.locked && t.status==='pendiente' && t.moveTargetWeekKey && t.moveTargetWeekKey<=currentWeekKey);
+      mjTopics = [locked, ...reactivar.map(t=>({
+        id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        title:t.title, status:'pendiente', assignee:t.assignee||null,
+        comments:[], recurring:(t.recurring||0)+1
+      }))];
+      mjCurrentWeekKey = currentWeekKey;
+      await mjSaveHistoricoPast();
+      await mjPersistTopics();
+    }
+  } else if(!storedTopics){
+    /* Primera vez que se usa el KV compartido: si este navegador guardaba temas con el
+       sistema antiguo (local), los rescatamos y los subimos para que se vean en todas partes. */
+    mjCurrentWeekKey = currentWeekKey;
+    let migrado = false;
     try{
       const old = JSON.parse(localStorage.getItem(MJ_OLD_LOCAL_KEY));
       if(old){
-        if(old.topics && old.topics['seg']) Object.assign(mjTopics[0], old.topics['seg']);
-        if(Array.isArray(old.extraTopics) && old.extraTopics.length) old.extraTopics.forEach(t=>mjTopics.push(t));
+        if(old.topics && old.topics['seg']){ Object.assign(mjTopics[0], old.topics['seg']); migrado = true; }
+        if(Array.isArray(old.extraTopics) && old.extraTopics.length){ old.extraTopics.forEach(t=>mjTopics.push(t)); migrado = true; }
       }
     }catch(e){}
+    await mjPersistTopics();
+  } else {
+    mjCurrentWeekKey = currentWeekKey;
   }
-  await mjPersistTopics();
 }
 async function mjPersistTopics(){
-  try{ await kvSet(MJ_TOPICS_KV_KEY, mjTopics); }catch(e){}
+  try{ await kvSet(MJ_TOPICS_KV_KEY, {weekKey: mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday()), topics: mjTopics}); }catch(e){}
 }
 function mjMoveTopic(id, dir){
   const idx = mjTopics.findIndex(t=>t.id===id);
@@ -2521,6 +2622,7 @@ function mjSetHistNote(hid, data){ mjLocalStore.histNotes = mjLocalStore.histNot
 function mjOpenTool(view){
   document.getElementById('mjOverlay').classList.add('open');
   document.querySelector(`.mj-tab-btn[data-mjview="${view}"]`).click();
+  mjWatchVote(); // escuchar la votación compartida desde el momento en que se abre la herramienta
 }
 document.getElementById('mjCloseBtn').addEventListener('click', ()=>{
   document.getElementById('mjOverlay').classList.remove('open');
@@ -2535,13 +2637,11 @@ document.querySelectorAll('.mj-tab-btn').forEach(btn=>{
     btn.classList.add('active');
     document.getElementById('mj-view-'+btn.dataset.mjview).classList.add('active');
     if(btn.dataset.mjview === 'vivo'){
-      mjStartTimer(); mjWatchVote();
+      mjStartTimer();
+      document.getElementById('mjTabVivoAlert').classList.remove('show');
       mjLoadVoteHistory().then(()=>{ mjRenderOrbit(); mjRenderFallback(); });
-    } else {
-      clearInterval(mjVotePollInterval);
-      if(btn.dataset.mjview === 'historico'){
-        mjLoadVoteHistory().then(mjRenderHistorico);
-      }
+    } else if(btn.dataset.mjview === 'historico'){
+      mjLoadVoteHistory().then(mjRenderHistorico);
     }
   });
 });
@@ -2615,6 +2715,7 @@ function mjAddTopicFromInput(){
   mjPersistTopics();
   input.value = '';
   mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+  mjOpenDetail(id); // abre la ficha al momento para poder asignar y/o posponer (jueves, 2 jueves, fecha)
 }
 
 /* ---------------- CONTRASEÑA (temas, votaciones del histórico) ---------------- */
@@ -2666,7 +2767,7 @@ function mjRenderOrbit(){
       const tocado = !!(t.assignee || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
       stCls = tocado ? 'st-live' : MJ_STATUS_META[t.status].cls;
     }
-    node.className = 'mj-node ' + stCls;
+    node.className = 'mj-node ' + stCls + (t.recurring ? ' mj-recurring' : '');
     node.style.left = x+'%'; node.style.top = y+'%';
     const icon = t.locked ? '📌' : orderNum;
     node.innerHTML = `<div class="mj-node-bubble">${icon}</div><div class="mj-node-label">${mjShortTitle(t.title)}</div>`;
@@ -2799,18 +2900,23 @@ function mjOpenDetail(id){
       const yaActiva = b.classList.contains('active');
       document.querySelectorAll('#mjMoveOptions .mj-opt-btn').forEach(x=>x.classList.remove('active'));
       if(yaActiva){
-        t.moveTo = null; t.moveDate = null;
+        t.moveTo = null; t.moveDate = null; t.moveTargetWeekKey = null;
         document.getElementById('mjMoveDate').style.display = 'none';
         document.getElementById('mjMoveDate').value = '';
       } else {
         b.classList.add('active');
         t.moveTo = b.dataset.m;
+        t.moveTargetWeekKey = mjComputeMoveTargetWeekKey(t.moveTo, t.moveDate);
         document.getElementById('mjMoveDate').style.display = b.dataset.m==='fecha' ? 'inline-block' : 'none';
       }
       mjPersistTopics(); mjRenderOrbit(); mjRenderFallback();
     });
   });
-  document.getElementById('mjMoveDate').addEventListener('change', e=>{ t.moveDate = e.target.value; mjPersistTopics(); mjRenderOrbit(); mjRenderFallback(); });
+  document.getElementById('mjMoveDate').addEventListener('change', e=>{
+    t.moveDate = e.target.value;
+    if(t.moveTo==='fecha') t.moveTargetWeekKey = mjComputeMoveTargetWeekKey('fecha', t.moveDate);
+    mjPersistTopics(); mjRenderOrbit(); mjRenderFallback();
+  });
 
   mjRenderPublished(t);
 
@@ -2852,11 +2958,20 @@ function mjRenderPublished(t){
       <div class="mj-published-body"><div class="mj-published-meta">${c.author} · ${c.time}</div>${c.text}</div>
     </div>`).join('');
 }
-function mjCloseDetail(){ document.getElementById('mjDetailOverlay').classList.remove('open'); }
+let mjDetailOpenedFromPersona = null;
+function mjCloseDetail(){
+  document.getElementById('mjDetailOverlay').classList.remove('open');
+  if(mjDetailOpenedFromPersona){
+    const nombre = mjDetailOpenedFromPersona;
+    mjDetailOpenedFromPersona = null;
+    openOrgPersona(nombre);
+  }
+}
 document.getElementById('mjDetailOverlay').addEventListener('click', e=>{ if(e.target.id==='mjDetailOverlay') mjCloseDetail(); });
 
 /* ---------------- TIMER (fijo a 60 min) ---------------- */
-let mjTimerSeconds = 60*60, mjTimerInterval=null, mjTimerWarned=false, mjTimerStarted=false;
+let mjTimerSeconds = 60*60, mjTimerInterval=null, mjTimerWarned=false, mjTimerAnchor=null;
+const MJ_TIMER_KEY = 'adminhub_mesajueves_timer_v1';
 function mjFmt(s){ const m=Math.floor(s/60), sec=s%60; return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
 function mjUpdateTimerUI(){
   document.getElementById('mjTimerDisplay').textContent = mjFmt(mjTimerSeconds);
@@ -2866,15 +2981,32 @@ function mjUpdateTimerUI(){
   document.getElementById('mjTimerPanel').classList.toggle('warning', isWarn);
   chip.classList.toggle('warning', isWarn);
 }
-function mjStartTimer(){
-  if(mjTimerStarted) return;
-  mjTimerStarted = true;
+async function mjStartTimer(){
   document.getElementById('mjTimerChip').style.display = 'flex';
-  mjTimerInterval = setInterval(()=>{
-    if(mjTimerSeconds<=0){ clearInterval(mjTimerInterval); mjTimerInterval=null; return; }
-    mjTimerSeconds--; mjUpdateTimerUI();
-    if(mjTimerSeconds === 15*60 && !mjTimerWarned){ mjTimerWarned = true; mjShowWarning(); }
-  },1000);
+  if(mjTimerAnchor) return; // ya sincronizado en esta sesión
+  const weekKey = mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday());
+  let anchor = null;
+  try{
+    anchor = await kvGet(MJ_TIMER_KEY);
+    if(!anchor || anchor.weekKey !== weekKey){
+      anchor = { startedAt: Date.now(), weekKey };
+      await kvSet(MJ_TIMER_KEY, anchor);
+    }
+  }catch(e){
+    anchor = { startedAt: Date.now(), weekKey }; // sin red: seguimos con cuenta local de emergencia
+  }
+  mjTimerAnchor = anchor;
+  mjTimerTick();
+  clearInterval(mjTimerInterval);
+  mjTimerInterval = setInterval(mjTimerTick, 1000);
+}
+function mjTimerTick(){
+  if(!mjTimerAnchor) return;
+  const elapsed = Math.floor((Date.now() - mjTimerAnchor.startedAt)/1000);
+  mjTimerSeconds = Math.max(0, 60*60 - elapsed);
+  mjUpdateTimerUI();
+  if(mjTimerSeconds===0 && mjTimerInterval){ clearInterval(mjTimerInterval); mjTimerInterval=null; }
+  if(mjTimerSeconds <= 15*60 && mjTimerSeconds > 0 && !mjTimerWarned){ mjTimerWarned = true; mjShowWarning(); }
 }
 function mjShowWarning(){
   document.getElementById('mjWarningBanner').classList.add('show');
@@ -2899,7 +3031,16 @@ async function mjLoadVoteHistory(){
 async function mjSaveVoteHistory(){ try{ await kvSet(MJ_VOTE_HIST_KEY, mjVoteHistory); }catch(e){} }
 mjLoadVoteHistory().then(()=>{ mjRenderOrbit(); mjRenderFallback(); });
 
-function mjOpenVotePrompt(){
+async function mjOpenVotePrompt(){
+  try{
+    const activa = await kvGet(MJ_VOTE_KEY);
+    if(activa && !activa.closed){
+      mjCurrentVote = activa;
+      mjRenderVotePanel();
+      mjWatchVote();
+      return; // ya hay una votación en marcha — no se lanza otra encima
+    }
+  }catch(e){}
   const openTopics = mjTopics.filter(t=>!t.locked);
   const select = document.getElementById('voteStartTopicSelect');
   const nums = ['0', ...openTopics.map((t,i)=>String(i+1))];
@@ -2949,6 +3090,8 @@ async function mjPollVote(){
   }
   mjCurrentVote = fresh;
   mjRenderVotePanel();
+  const enVivo = document.getElementById('mj-view-vivo').classList.contains('active');
+  document.getElementById('mjTabVivoAlert').classList.toggle('show', !fresh.closed && !enVivo);
   if(fresh.closed){
     clearInterval(mjVotePollInterval);
     mjRenderOrbit(); mjRenderFallback();
@@ -3073,23 +3216,58 @@ document.getElementById('mjHistSearchInput').addEventListener('input', e=>{
   mjRenderHistorico();
 });
 
-/* ---------------- FECHA REAL DEL JUEVES (hoy si es jueves, si no el próximo) ---------------- */
+/* ---------------- CONFIGURACIÓN DE DÍA/HORA DE LA REUNIÓN (editable con contraseña) ---------------- */
+const MJ_CFG_KEY = 'adminhub_mesajueves_config_v1';
+let mjMeetingCfg = { weekday: 4, hour: 16 }; // por defecto: jueves a las 16:00
+async function mjLoadMeetingCfg(){
+  try{
+    const c = await kvGet(MJ_CFG_KEY);
+    if(c && typeof c.weekday==='number' && typeof c.hour==='number') mjMeetingCfg = c;
+  }catch(e){}
+}
+async function mjSaveMeetingCfg(weekday, hour){
+  mjMeetingCfg = {weekday, hour};
+  try{ await kvSet(MJ_CFG_KEY, mjMeetingCfg); }catch(e){}
+}
 function mjGetRelevantThursday(){
   const now = new Date();
-  const diff = (4 - now.getDay() + 7) % 7; // 4 = jueves; 0 si hoy ya es jueves
+  const wd = mjMeetingCfg.weekday;
+  const diff = (wd - now.getDay() + 7) % 7; // 0 si hoy ya es el día de reunión
   const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
   return d;
 }
 const MJ_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MJ_MESES_ABR = ['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
+const MJ_DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 function mjFormatThursdayLong(d){ return `${d.getDate()} de ${MJ_MESES[d.getMonth()]}`; }
-function mjFormatThursdayShort(d){ return `Jueves · ${d.getDate()} ${MJ_MESES_ABR[d.getMonth()]} ${d.getFullYear()}`; }
+function mjFormatThursdayShort(d){ const dia = MJ_DIAS[d.getDay()]; return `${dia.charAt(0).toUpperCase()+dia.slice(1)} · ${d.getDate()} ${MJ_MESES_ABR[d.getMonth()]} ${d.getFullYear()}`; }
 function mjUpdateDates(){
   const d = mjGetRelevantThursday();
   const aitorEl = document.getElementById('mjAitorDate');
   if(aitorEl) aitorEl.textContent = mjFormatThursdayLong(d);
+  const horaTxt = String(mjMeetingCfg.hour).padStart(2,'0')+':00';
   const pillEl = document.getElementById('mjDatePill');
-  if(pillEl) pillEl.innerHTML = '<span class="mj-dot-live"></span> ' + mjFormatThursdayShort(d);
+  if(pillEl) pillEl.innerHTML = `<span class="mj-dot-live"></span> ${mjFormatThursdayShort(d)} · ${horaTxt}`;
+}
+function mjOpenMeetingCfgEditor(){
+  mjOpenPwdGate(()=>{
+    const d = mjGetRelevantThursday();
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    document.getElementById('mjCfgDateInput').value = isoDate;
+    document.getElementById('mjCfgTimeInput').value = String(mjMeetingCfg.hour).padStart(2,'0')+':00';
+    document.getElementById('mCfgEditor').classList.add('show');
+  }, 'Introduce la contraseña para cambiar el día y la hora de la reunión.');
+}
+async function mjConfirmMeetingCfg(){
+  const dateVal = document.getElementById('mjCfgDateInput').value;
+  const timeVal = document.getElementById('mjCfgTimeInput').value;
+  if(!dateVal || !timeVal) return;
+  const weekday = new Date(dateVal+'T00:00:00').getDay();
+  const hour = parseInt(timeVal.split(':')[0],10);
+  await mjSaveMeetingCfg(weekday, hour);
+  document.getElementById('mCfgEditor').classList.remove('show');
+  mjUpdateDates();
+  mjRenderHistorico();
 }
 
 function mjBuildCurrentWeekEntry(){
@@ -3128,6 +3306,7 @@ function mjRenderHistorico(){
   wrap.querySelectorAll('.mj-tl-topic').forEach(el=>{
     el.addEventListener('click', (e)=>{
       if(e.target.closest('[data-mjact]')) return;
+      if(e.target.closest('.mj-tl-note-panel.show')) return; // no cerrar al escribir/pulsar dentro de la nota ya abierta
       const panel = el.querySelector('.mj-tl-note-panel');
       panel.classList.toggle('show');
     });
@@ -3207,13 +3386,16 @@ function mjRenderHistTopic(tp){
 }
 
 /* ---------------- INIT MESA DEL JUEVES ---------------- */
-mjUpdateDates();
-mjTopicsReady = mjLoadTopics().then(()=>{
-  mjRenderAgenda();
-  mjRenderOrbit();
-  mjRenderFallback();
-  mjRenderHistorico();
-});
+mjTopicsReady = mjLoadMeetingCfg()
+  .then(()=>{ mjUpdateDates(); return mjLoadHistoricoPast(); })
+  .then(()=> mjLoadTopics())
+  .then(()=>{
+    mjUpdateDates();
+    mjRenderAgenda();
+    mjRenderOrbit();
+    mjRenderFallback();
+    mjRenderHistorico();
+  });
 </script>
 </body>
 </html>
