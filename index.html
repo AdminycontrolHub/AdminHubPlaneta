@@ -639,16 +639,29 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     });
   });
 
-  // ── Acceso directo Mesa del Jueves — parpadeo los jueves de 16h a 17h ──
+  // ── Acceso directo Mesa del Jueves — parpadeo alineado con el día y hora configurados en la herramienta ──
+  const MJ_CFG_KEY = 'adminhub_mesajueves_config_v1';
+  let mjMeetingCfg = { weekday: 4, hour: 16 }; // por defecto: jueves a las 16:00, hasta que se cargue la config real
+  async function loadMjMeetingCfg() {
+    try {
+      const res = await fetch(`${WORKER_URL}/kv?key=${MJ_CFG_KEY}`);
+      const data = await res.json();
+      if (data.value) {
+        const c = JSON.parse(data.value);
+        if (c && typeof c.weekday === 'number' && typeof c.hour === 'number') mjMeetingCfg = c;
+      }
+    } catch(e) {}
+  }
   function updateVivoBlink() {
     const btn = document.getElementById('vivoBtn');
     if (!btn) return;
     const now = new Date();
-    const esJuevesEnDirecto = now.getDay() === 4 && now.getHours() >= 16 && now.getHours() < 17;
-    btn.classList.toggle('blink', esJuevesEnDirecto);
+    const enDirecto = now.getDay() === mjMeetingCfg.weekday && now.getHours() >= mjMeetingCfg.hour && now.getHours() < mjMeetingCfg.hour + 1;
+    btn.classList.toggle('blink', enDirecto);
   }
+  loadMjMeetingCfg().then(updateVivoBlink);
   updateVivoBlink();
-  setInterval(updateVivoBlink, 30000);
+  setInterval(() => { loadMjMeetingCfg().then(updateVivoBlink); }, 5 * 60000);
 
   // ── Modal Control de Gestión ──
   function openCtrlModal() {
