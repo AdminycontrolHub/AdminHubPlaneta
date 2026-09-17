@@ -2293,6 +2293,24 @@ bmLoadBubbles();
     });
   }
 })();
+
+// ── Acceso directo y EXCLUSIVO a la Orden del día de Mesa del Jueves (para compartir fuera del Hub) ──
+// Oculta el resto del Hub y las pestañas «En vivo» / «Histórico»: solo se ve la agenda.
+(function(){
+  if(window.location.hash === '#mesa-jueves-orden'){
+    document.querySelectorAll('.topbar,.page-head,.nodes-area,.divider,.stats-grid,.sys-tag').forEach(el=>{ if(el) el.style.display='none'; });
+    window.addEventListener('load', function(){
+      (mjTopicsReady || Promise.resolve()).then(()=>{
+        mjOpenTool('antes');
+        mjRenderAgenda();
+        const vivoBtn = document.querySelector('.mj-tab-btn[data-mjview="vivo"]');
+        const histBtn = document.querySelector('.mj-tab-btn[data-mjview="historico"]');
+        if(vivoBtn) vivoBtn.style.display='none';
+        if(histBtn) histBtn.style.display='none';
+      });
+    });
+  }
+})();
 /* ===================== MESA DEL JUEVES (namespaced mj) ===================== */
 const MJ_TEAM_KV_KEY = 'adminhub_mesajueves_team_v1';
 const MJ_TEAM_DEFAULT = [
@@ -2442,27 +2460,28 @@ let mjTopics = [
 ];
 const mjHistoricoPast = [];
 
-const MJ_STORE_KEY = 'mesa_jueves_mockup_v1';
-function mjLoadStore(){ try{ return JSON.parse(localStorage.getItem(MJ_STORE_KEY)) || {}; }catch(e){ return {}; } }
-function mjSaveStore(s){ localStorage.setItem(MJ_STORE_KEY, JSON.stringify(s)); }
-const mjStore = mjLoadStore();
+/* Los temas (agenda compartida) viven en KV, igual que el resto del Hub — así se ven
+   igual desde cualquier navegador o dispositivo, incluido un enlace compartido en Teams.
+   Las notas personales del Histórico ("solo tú la ves") sí se quedan en este navegador. */
+const MJ_TOPICS_KV_KEY = 'adminhub_mesajueves_topics_v1';
+const MJ_LOCAL_KEY = 'mesa_jueves_notas_personales_v1';
+function mjLoadLocalStore(){ try{ return JSON.parse(localStorage.getItem(MJ_LOCAL_KEY)) || {}; }catch(e){ return {}; } }
+function mjSaveLocalStore(s){ localStorage.setItem(MJ_LOCAL_KEY, JSON.stringify(s)); }
+const mjLocalStore = mjLoadLocalStore();
 
-mjTopics.forEach(t=>{
-  if(mjStore.topics && mjStore.topics[t.id]){
-    Object.assign(t, mjStore.topics[t.id]);
-  }
-});
-/* Restaurar temas añadidos manualmente en sesiones anteriores (persistidos aparte, ya que mjTopics arranca solo con el fijo) */
-if(mjStore.extraTopics && Array.isArray(mjStore.extraTopics)){
-  mjStore.extraTopics.forEach(t=>mjTopics.push(t));
+let mjTopicsReady = null;
+async function mjLoadTopics(){
+  try{
+    const saved = await kvGet(MJ_TOPICS_KV_KEY);
+    if(Array.isArray(saved) && saved.length){
+      mjTopics = saved;
+    } else {
+      await mjPersistTopics(); // primera vez: siembra el KV con el tema fijo por defecto
+    }
+  }catch(e){}
 }
-function mjPersistTopics(){
-  mjStore.topics = mjStore.topics || {};
-  mjTopics.forEach(t=>{
-    mjStore.topics[t.id] = {status:t.status, assignee:t.assignee, treatedBy:t.treatedBy, moveTo:t.moveTo, moveDate:t.moveDate, comments:t.comments, privateNote:t.privateNote};
-  });
-  mjStore.extraTopics = mjTopics.filter(t=>!t.locked);
-  mjSaveStore(mjStore);
+async function mjPersistTopics(){
+  try{ await kvSet(MJ_TOPICS_KV_KEY, mjTopics); }catch(e){}
 }
 function mjMoveTopic(id, dir){
   const idx = mjTopics.findIndex(t=>t.id===id);
@@ -2473,8 +2492,9 @@ function mjMoveTopic(id, dir){
   mjPersistTopics();
   mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
 }
-function mjGetHistNote(hid){ mjStore.histNotes = mjStore.histNotes || {}; return mjStore.histNotes[hid] || {text:'', shared:false}; }
-function mjSetHistNote(hid, data){ mjStore.histNotes = mjStore.histNotes || {}; mjStore.histNotes[hid] = data; mjSaveStore(mjStore); }
+function mjGetHistNote(hid){ mjLocalStore.histNotes = mjLocalStore.histNotes || {}; return mjLocalStore.histNotes[hid] || {text:'', shared:false}; }
+function mjSetHistNote(hid, data){ mjLocalStore.histNotes = mjLocalStore.histNotes || {}; mjLocalStore.histNotes[hid] = data; mjSaveLocalStore(mjLocalStore); }
+
 
 /* ---------------- NAVEGACIÓN: burbuja Seguimientos → herramienta ---------------- */
 function mjOpenTool(view){
@@ -3121,10 +3141,12 @@ function mjRenderHistTopic(tp){
 }
 
 /* ---------------- INIT MESA DEL JUEVES ---------------- */
-mjRenderAgenda();
-mjRenderOrbit();
-mjRenderFallback();
-mjRenderHistorico();
+mjTopicsReady = mjLoadTopics().then(()=>{
+  mjRenderAgenda();
+  mjRenderOrbit();
+  mjRenderFallback();
+  mjRenderHistorico();
+});
 </script>
 </body>
 </html>
