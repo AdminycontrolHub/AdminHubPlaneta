@@ -1038,7 +1038,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
       </div>
       <div class="mj-right-cluster">
         <span class="mj-timer-chip" id="mjTimerChip">⏱ 60:00</span>
-        <div class="mj-date-pill"><span class="mj-dot-live"></span> Jueves 10 · 10 sept 2026</div>
+        <div class="mj-date-pill" id="mjDatePill"><span class="mj-dot-live"></span> Jueves · 10 sept 2026</div>
         <button class="mj-close-x" id="mjCloseBtn">✕</button>
       </div>
     </div>
@@ -1064,7 +1064,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div class="mj-live-frame">
           <div class="mj-aitor-line" style="align-self:flex-start;">
             <div class="mj-aitor"><div class="mj-core"><div class="mj-af"><div class="mj-eye"></div><div class="mj-eye"></div></div></div><div class="mj-tail"></div><div class="mj-spark s1">✦</div><div class="mj-spark s2">✦</div></div>
-            <div class="mj-aitor-bubble" id="mjAitorVivoBubble"><span class="mj-aitor-label">AITOR · en directo</span>Toca cualquier tema para abrirlo. Los puntos se van coloreando según los tratáis: <b>ámbar</b> mientras están abiertos, <b>verde</b> al cerrarlos.</div>
+            <div class="mj-aitor-bubble" id="mjAitorVivoBubble"><span class="mj-aitor-label">AITOR · en directo</span>Toca cualquier tema para abrirlo. Los puntos se colorean según su estado: <b>ámbar</b> en tratamiento o con cambios (asignación, traslado, comentarios…), <b>gris</b> cerrados, y <b>verde/rojo</b> si se han votado.</div>
           </div>
           <div class="mj-timer-panel" id="mjTimerPanel">
             <div style="text-align:center;"><div class="mj-timer-display" id="mjTimerDisplay">60:00</div></div>
@@ -2294,6 +2294,17 @@ bmLoadBubbles();
   }
 })();
 
+// ── Acceso directo desde el Hub: #mesa-jueves-vivo abre Mesa del Jueves directamente en "En vivo" ──
+(function(){
+  if(window.location.hash === '#mesa-jueves-vivo'){
+    window.addEventListener('load', function(){
+      (mjTopicsReady || Promise.resolve()).then(()=>{
+        mjOpenTool('vivo');
+      });
+    });
+  }
+})();
+
 // ── Acceso directo y EXCLUSIVO a la Orden del día de Mesa del Jueves (para compartir fuera del Hub) ──
 // Oculta el resto del Hub y las pestañas «En vivo» / «Histórico»: solo se ve la agenda.
 (function(){
@@ -2640,16 +2651,20 @@ function mjRenderOrbit(){
     const angle = angleDeg * Math.PI/180;
     const x = cx + radius*Math.cos(angle), y = cy + radius*Math.sin(angle);
     const node = document.createElement('div');
-    const hasMove = t.status==='pendiente' && t.moveTo;
     let stCls;
     if(voteOverrideCls){
       /* El resultado de la votación manda siempre para esta burbuja concreta */
       stCls = voteOverrideCls;
-    } else if(t.status==='en_tratamiento' || t.status==='cerrado' || hasMove){
-      /* Ya comentada en la reunión (en tratamiento, cerrada o pospuesta) y sin votar: gris neutro */
-      stCls = 'st-neutral' + (hasMove ? ' has-move' : '');
+    } else if(t.status==='cerrado'){
+      /* Cerrado y sin votar: gris */
+      stCls = 'st-neutral';
+    } else if(t.status==='en_tratamiento'){
+      /* En tratamiento: ámbar */
+      stCls = 'st-live';
     } else {
-      stCls = MJ_STATUS_META[t.status].cls;
+      /* Pendiente: ámbar en cuanto se ha tocado algo (asignación, traslado, comentario, nota…); si no, aspecto por defecto */
+      const tocado = !!(t.assignee || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
+      stCls = tocado ? 'st-live' : MJ_STATUS_META[t.status].cls;
     }
     node.className = 'mj-node ' + stCls;
     node.style.left = x+'%'; node.style.top = y+'%';
@@ -2729,16 +2744,6 @@ function mjOpenDetail(id){
       <button class="mj-status-chip-btn st-closed" data-s="cerrado">Cerrado</button>
     </div>
 
-    <div class="mj-subpanel" id="mjBySubpanel">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:13px;color:var(--mj-text-dim);">En tratamiento por</span>
-        <select class="mj-by-select" id="mjBySelect">
-          <option value="">Sin asignar todavía</option>
-          ${mjTeamMembers.map(p=>`<option value="${p.name}">${p.icon} ${p.name}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-
     <div class="mj-subpanel" id="mjMoveSubpanel">
       <div class="mj-status-label" style="margin-bottom:9px;">¿SE TRASLADA?</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="mjMoveOptions">
@@ -2775,7 +2780,6 @@ function mjOpenDetail(id){
     const btn = card.querySelector(`.mj-status-chip-btn[data-s="${t.status}"]`);
     if(btn) btn.classList.add('active');
     document.getElementById('mjMoveSubpanel').classList.toggle('show', t.status==='pendiente');
-    document.getElementById('mjBySubpanel').classList.toggle('show', t.status==='en_tratamiento');
   }
   mjPaintStatus();
   card.querySelectorAll('.mj-status-chip-btn').forEach(b=>{
@@ -2792,18 +2796,21 @@ function mjOpenDetail(id){
   }
   document.getElementById('mjMoveOptions').querySelectorAll('.mj-opt-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
+      const yaActiva = b.classList.contains('active');
       document.querySelectorAll('#mjMoveOptions .mj-opt-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-      t.moveTo = b.dataset.m;
-      document.getElementById('mjMoveDate').style.display = b.dataset.m==='fecha' ? 'inline-block' : 'none';
+      if(yaActiva){
+        t.moveTo = null; t.moveDate = null;
+        document.getElementById('mjMoveDate').style.display = 'none';
+        document.getElementById('mjMoveDate').value = '';
+      } else {
+        b.classList.add('active');
+        t.moveTo = b.dataset.m;
+        document.getElementById('mjMoveDate').style.display = b.dataset.m==='fecha' ? 'inline-block' : 'none';
+      }
       mjPersistTopics(); mjRenderOrbit(); mjRenderFallback();
     });
   });
   document.getElementById('mjMoveDate').addEventListener('change', e=>{ t.moveDate = e.target.value; mjPersistTopics(); mjRenderOrbit(); mjRenderFallback(); });
-
-  const bySelect = document.getElementById('mjBySelect');
-  bySelect.value = t.treatedBy || '';
-  bySelect.addEventListener('change', e=>{ t.treatedBy = e.target.value || null; mjPersistTopics(); });
 
   mjRenderPublished(t);
 
@@ -3066,9 +3073,28 @@ document.getElementById('mjHistSearchInput').addEventListener('input', e=>{
   mjRenderHistorico();
 });
 
+/* ---------------- FECHA REAL DEL JUEVES (hoy si es jueves, si no el próximo) ---------------- */
+function mjGetRelevantThursday(){
+  const now = new Date();
+  const diff = (4 - now.getDay() + 7) % 7; // 4 = jueves; 0 si hoy ya es jueves
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  return d;
+}
+const MJ_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MJ_MESES_ABR = ['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
+function mjFormatThursdayLong(d){ return `${d.getDate()} de ${MJ_MESES[d.getMonth()]}`; }
+function mjFormatThursdayShort(d){ return `Jueves · ${d.getDate()} ${MJ_MESES_ABR[d.getMonth()]} ${d.getFullYear()}`; }
+function mjUpdateDates(){
+  const d = mjGetRelevantThursday();
+  const aitorEl = document.getElementById('mjAitorDate');
+  if(aitorEl) aitorEl.textContent = mjFormatThursdayLong(d);
+  const pillEl = document.getElementById('mjDatePill');
+  if(pillEl) pillEl.innerHTML = '<span class="mj-dot-live"></span> ' + mjFormatThursdayShort(d);
+}
+
 function mjBuildCurrentWeekEntry(){
   return {
-    date:'Jueves 10 · 10 sept 2026', current:true,
+    date: mjFormatThursdayShort(mjGetRelevantThursday()), current:true,
     topics: mjTopics.filter(t=>!t.locked).map(t=>({
       title:t.title, status:t.status,
       flag: t.recurring ? t.recurring+'ª semana seguida' : null,
@@ -3100,9 +3126,37 @@ function mjRenderHistorico(){
   wrap.innerHTML = rendered || `<div class="mj-empty-note">${mjTopics.filter(t=>!t.locked).length===0 && mjHistoricoPast.length===0 ? 'Todavía no hay histórico — se irá creando a partir de las reuniones que celebréis.' : 'No hay temas con ese filtro.'}</div>`;
 
   wrap.querySelectorAll('.mj-tl-topic').forEach(el=>{
-    el.addEventListener('click', ()=>{
+    el.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-mjact]')) return;
       const panel = el.querySelector('.mj-tl-note-panel');
       panel.classList.toggle('show');
+    });
+  });
+  wrap.querySelectorAll('[data-mjact="hdel"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      mjOpenPwdGate(()=>{
+        mjTopics = mjTopics.filter(t=>t.id!==b.dataset.id);
+        mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback(); mjRenderHistorico();
+      }, 'Introduce la contraseña para eliminar este tema.');
+    });
+  });
+  wrap.querySelectorAll('[data-mjact="hedit"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const titleEl = wrap.querySelector(`.mj-ttl[data-real-id="${b.dataset.id}"]`);
+      const t = mjTopics.find(x=>x.id===b.dataset.id);
+      if(!titleEl||!t) return;
+      titleEl.innerHTML = `<input class="mj-edit-input" type="text" value="${t.title.replace(/"/g,'&quot;')}">`;
+      const input = titleEl.querySelector('input');
+      input.focus(); input.select();
+      const save = ()=>{
+        const val = input.value.trim();
+        if(val) t.title = val;
+        mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback(); mjRenderHistorico();
+      };
+      input.addEventListener('keydown', ev=>{ if(ev.key==='Enter') save(); });
+      input.addEventListener('blur', save);
     });
   });
   wrap.querySelectorAll('.mj-hist-save').forEach(b=>{
@@ -3129,12 +3183,14 @@ function mjRenderHistorico(){
 function mjRenderHistTopic(tp){
   const meta = MJ_STATUS_META[tp.status];
   const note = mjGetHistNote(tp._id);
+  const realId = tp._id.startsWith('cur_') ? tp._id.slice(4) : null;
   return `
     <div class="mj-tl-topic">
       <div class="mj-tl-topic-top">
-        <span class="mj-ttl">${tp.title}${tp.flag ? `<span class="mj-carry-tag" style="display:inline;margin-left:6px;">↻ ${tp.flag}</span>`:''}</span>
+        <span class="mj-ttl" data-real-id="${realId||''}">${tp.title}${tp.flag ? `<span class="mj-carry-tag" style="display:inline;margin-left:6px;">↻ ${tp.flag}</span>`:''}</span>
         ${note.shared ? '<span class="mj-shared-tag">🔓 Compartida</span>' : ''}
         <span class="mj-status-chip ${meta.cls}">${meta.label}</span>
+        ${realId ? `<button class="mj-icon-btn" title="Editar" data-mjact="hedit" data-id="${realId}">✎</button><button class="mj-icon-btn" title="Eliminar" data-mjact="hdel" data-id="${realId}">🗑</button>` : ''}
       </div>
       ${tp.followup ? `<span class="mj-followup">↳ ${tp.followup}</span>` : ''}
       <div class="mj-tl-note-panel">
@@ -3151,6 +3207,7 @@ function mjRenderHistTopic(tp){
 }
 
 /* ---------------- INIT MESA DEL JUEVES ---------------- */
+mjUpdateDates();
 mjTopicsReady = mjLoadTopics().then(()=>{
   mjRenderAgenda();
   mjRenderOrbit();
