@@ -2470,15 +2470,25 @@ function mjSaveLocalStore(s){ localStorage.setItem(MJ_LOCAL_KEY, JSON.stringify(
 const mjLocalStore = mjLoadLocalStore();
 
 let mjTopicsReady = null;
+const MJ_OLD_LOCAL_KEY = 'mesa_jueves_mockup_v1'; // clave del sistema antiguo (solo local, previo a hoy)
 async function mjLoadTopics(){
   try{
     const saved = await kvGet(MJ_TOPICS_KV_KEY);
-    if(Array.isArray(saved) && saved.length){
-      mjTopics = saved;
-    } else {
-      await mjPersistTopics(); // primera vez: siembra el KV con el tema fijo por defecto
-    }
+    if(Array.isArray(saved) && saved.length) mjTopics = saved;
   }catch(e){}
+  /* Migración: si el KV compartido todavía no tiene ningún tema propio (solo el fijo),
+     pero este navegador sí guardaba temas con el sistema antiguo (local), los rescatamos
+     y los subimos al KV para que a partir de ahora se vean desde cualquier sitio. */
+  if(!mjTopics.some(t=>!t.locked)){
+    try{
+      const old = JSON.parse(localStorage.getItem(MJ_OLD_LOCAL_KEY));
+      if(old){
+        if(old.topics && old.topics['seg']) Object.assign(mjTopics[0], old.topics['seg']);
+        if(Array.isArray(old.extraTopics) && old.extraTopics.length) old.extraTopics.forEach(t=>mjTopics.push(t));
+      }
+    }catch(e){}
+  }
+  await mjPersistTopics();
 }
 async function mjPersistTopics(){
   try{ await kvSet(MJ_TOPICS_KV_KEY, mjTopics); }catch(e){}
