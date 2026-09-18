@@ -2585,6 +2585,7 @@ function mjArchiveWeek(weekKey, topics){
 
 let mjTopicsReady = null;
 const MJ_OLD_LOCAL_KEY = 'mesa_jueves_mockup_v1'; // clave del sistema antiguo (solo local, previo a hoy)
+let mjTopicsLoadedOk = false; // seguro: no se persiste nada hasta haber cargado los datos reales del servidor
 async function mjLoadTopics(){
   const currentWeekKey = mjWeekKeyFor(mjGetRelevantThursday());
   let kvFetchOk = false, stored = null;
@@ -2610,15 +2611,17 @@ async function mjLoadTopics(){
          y solo recuperan burbuja los temas que se pospusieron para esta semana (recurrentes). */
       mjArchiveWeek(storedWeekKey, storedTopics);
       const locked = storedTopics.find(t=>t.locked) || mjTopics[0];
-      const reactivar = storedTopics.filter(t=>!t.locked && t.status==='pendiente' && t.moveTargetWeekKey && t.moveTargetWeekKey<=currentWeekKey);
+      const reactivar = storedTopics.filter(t=>!t.locked && t.status!=='cerrado' && t.moveTargetWeekKey && t.moveTargetWeekKey<=currentWeekKey);
       mjTopics = [locked, ...reactivar.map(t=>({
         id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
         title:t.title, status:'pendiente', assignee:t.assignee||null,
         comments:[], recurring:(t.recurring||0)+1
       }))];
       mjCurrentWeekKey = currentWeekKey;
+      mjTopicsLoadedOk = true;
       await mjSaveHistoricoPast();
       await mjPersistTopics();
+      return;
     }
   } else if(!storedTopics){
     /* Primera vez que se usa el KV compartido: si este navegador guardaba temas con el
@@ -2632,12 +2635,16 @@ async function mjLoadTopics(){
         if(Array.isArray(old.extraTopics) && old.extraTopics.length){ old.extraTopics.forEach(t=>mjTopics.push(t)); migrado = true; }
       }
     }catch(e){}
+    mjTopicsLoadedOk = true;
     await mjPersistTopics();
+    return;
   } else {
     mjCurrentWeekKey = currentWeekKey;
   }
+  mjTopicsLoadedOk = true;
 }
 async function mjPersistTopics(){
+  if(!mjTopicsLoadedOk) return; // seguro: nunca guardar antes de haber cargado los datos reales del servidor
   try{ await kvSet(MJ_TOPICS_KV_KEY, {weekKey: mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday()), topics: mjTopics}); }catch(e){}
 }
 function mjMoveTopic(id, dir){
