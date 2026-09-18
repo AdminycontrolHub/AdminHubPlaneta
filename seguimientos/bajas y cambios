@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bajas y Cambios — Admin Hub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#e8e2d5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a3a50;min-height:100vh;padding:40px 16px 60px;display:flex;justify-content:center;}
+.page-box{background:#F5F0E8;border-radius:16px;padding:1.5rem;width:100%;max-width:1040px;box-shadow:0 4px 24px rgba(0,0,0,0.08);align-self:flex-start;}
+.wrap{max-width:100%;margin:0 auto;}
+.sub{font-size:12px;color:#9a8e82;margin-bottom:20px;}
+
+.n1-eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#9a8e82;font-weight:700;margin-bottom:5px;margin-left:13px;}
+.n1-title-row{display:flex;align-items:center;gap:10px;}
+.n1-title-line{width:3px;height:20px;background:#2a7f8a;border-radius:2px;}
+.n1-title-text{font-size:17px;font-weight:600;color:#1a3a50;}
+.n1-count{font-size:11px;color:#9a8e82;margin:6px 0 0 13px;}
+
+.btn-subtle{display:flex;align-items:center;gap:6px;background:#F5F0E8;border:1px solid #d8d0c4;color:#5a6e80;font-size:11px;font-weight:600;padding:6px 13px;border-radius:9px;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-subtle:hover{background:#ede8df;}
+.btn-x{background:#F5F0E8;border:1px solid #d8d0c4;color:#5a6e80;width:32px;height:32px;border-radius:9px;font-size:10.5px;font-weight:600;font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;cursor:pointer;}
+.btn-x:hover{background:#ede8df;}
+
+/* ===== NIVEL 1: fichas ===== */
+.n1-row{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;margin-top:44px;margin-bottom:24px;justify-content:center;}
+.n1-footer{display:flex;justify-content:flex-end;margin-bottom:24px;}
+.btn-aitor{background:#fff;border:1px solid #d8d0c4;padding:8px 14px;border-radius:20px;display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#1a3a50;cursor:pointer;font-family:inherit;}
+.btn-aitor:hover{background:#faf8f4;}
+.btn-aitor-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:#2a7f8a;border-radius:50%;border:2px solid #F5F0E8;pointer-events:none;}
+.tooltip-aitor{display:none;position:absolute;top:38px;right:0;background:#1a3a50;color:#fff;font-size:10px;font-weight:600;padding:6px 11px;border-radius:7px;white-space:nowrap;z-index:10;}
+.tooltip-aitor.show{display:block;}
+.n1-card{flex-shrink:0;width:120px;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08);cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .15s;}
+.n1-card:hover{transform:translateY(-2px);}
+.n1-card.selected{border-color:#1a3a50;}
+.n1-card.empty{opacity:0.65;}
+.n1-top{padding:12px 8px 8px;text-align:center;}
+.n1-icon{width:20px;height:20px;margin:0 auto;}
+.n1-name{font-size:10.5px;font-weight:700;color:#1a3a50;margin-top:6px;line-height:1.25;}
+.n1-div{border-top:1.5px dashed #d8d0c4;}
+.n1-bottom{padding:9px 8px;display:flex;align-items:center;justify-content:center;gap:7px;}
+.n1-ring text{font-weight:800;fill:#1a3a50;}
+.n1-badge{font-size:9px;font-weight:800;}
+.n1-empty{font-size:9px;color:#9a8e82;font-weight:600;}
+
+/* ===== NIVEL 2 (contenido dentro del overlay) ===== */
+.badge-mini{background:#a4293f;color:#fff;font-size:9px;font-weight:800;border-radius:8px;padding:1px 6px;margin-left:3px;}
+
+.n2-search{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #d8d0c4;border-radius:9px;padding:7px 11px;margin:0 0 12px;max-width:360px;}
+.n2-search input{border:none;outline:none;font-size:11px;color:#1a3a50;flex:1;background:transparent;}
+.n2-search svg{flex-shrink:0;}
+
+.n2-chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 14px;}
+.chip{font-size:11px;font-weight:700;padding:6px 14px;border-radius:16px;cursor:pointer;background:#fff;border:1.5px solid #d8d0c4;color:#5a6e80;}
+.chip.active{background:#1a3a50;color:#fff;border-color:#1a3a50;}
+
+.n2-body{padding:0 20px 20px;display:flex;flex-direction:column;gap:8px;}
+.row{background:#fff;border-radius:12px;overflow:hidden;}
+.row-head{padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;}
+.row-id{font-family:monospace;font-size:13px;font-weight:800;color:#1a3a50;}
+.row-name{font-size:12.5px;font-weight:700;color:#1a3a50;}
+.row-fecha{margin-left:auto;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:7px;}
+.row-chev{color:#9a8e82;font-size:14px;}
+.row-detail{padding:14px 16px 16px;border-top:1px solid #e8e2da;display:none;}
+.row.open .row-detail{display:block;}
+.row.open .row-head{border-bottom:0;}
+.row.incidencia{background:#fdf2f0;border:1px solid #f0b0a8;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.field-grid.g3{grid-template-columns:1fr 1fr 1fr;}
+.field label{font-size:9px;color:#9a8e82;text-transform:uppercase;font-weight:700;display:block;margin-bottom:2px;}
+.field input,.field select{width:100%;border:1px solid #c0b8ae;border-radius:6px;padding:6px 8px;font-size:11px;color:#1a3a50;font-family:inherit;}
+.incidencia-toggle{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#5a6e80;cursor:pointer;margin-bottom:12px;}
+
+.copybox{background:#eef6f8;border:1px solid #cfe6ea;border-radius:8px;padding:11px 13px;margin-bottom:12px;}
+.copybox-title{font-size:9px;color:#2a7f8a;text-transform:uppercase;font-weight:800;display:block;margin-bottom:6px;}
+.copybox-row{display:flex;gap:8px;margin-bottom:9px;flex-wrap:wrap;}
+.copybox-row select,.copybox-row input{font-size:10.5px;font-weight:400;color:#5a6e80;border:1px solid #c0b8ae;border-radius:6px;padding:6px 8px;font-family:inherit;}
+.copybox-row select{width:150px;flex-shrink:0;}
+.copybox-row input{flex:1;min-width:120px;}
+.copybox-text-row{display:flex;align-items:center;gap:8px;}
+.copybox-text{flex:1;background:#fff;border:1px dashed #c0b8ae;border-radius:6px;padding:8px 10px;font-size:10.5px;color:#5a6e80;line-height:1.5;}
+.copy-btn{background:#fff;border:1px solid #2a7f8a;width:30px;height:30px;border-radius:7px;position:relative;flex-shrink:0;cursor:pointer;}
+.copy-btn:hover{background:#eef6f8;}
+.copy-btn.copied{background:#2a7f8a;}
+.copy-icon-a{position:absolute;top:8px;left:12px;width:10px;height:13px;border:1.5px solid #2a7f8a;border-radius:2px;background:#fff;}
+.copy-icon-b{position:absolute;top:10.5px;left:9px;width:10px;height:13px;border:1.5px solid #2a7f8a;border-radius:2px;background:#eef6f8;}
+.copy-btn.copied .copy-icon-a,.copy-btn.copied .copy-icon-b{border-color:#fff;background:#2a7f8a;}
+.copy-btn-mini{background:#fff;border:1px solid #c0b8ae;width:26px;height:26px;border-radius:6px;position:relative;flex-shrink:0;cursor:pointer;}
+.copy-btn-mini:hover{background:#eef6f8;}
+.copy-btn-mini .copy-icon-a{top:6px;left:9px;width:8px;height:10px;}
+.copy-btn-mini .copy-icon-b{top:8px;left:7px;width:8px;height:10px;}
+.copy-btn-mini.copied{background:#2a7f8a;}
+.copy-btn-mini.copied .copy-icon-a,.copy-btn-mini.copied .copy-icon-b{border-color:#fff;background:#2a7f8a;}
+
+/* ===== Atenea ===== */
+.btn-atenea{background:#fff;border:1px solid #f0d9a8;color:#8a6a1a;padding:7px 14px;border-radius:20px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.btn-atenea:hover{background:#fdf6d9;}
+.atenea-popover{position:absolute;top:42px;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.15);padding:12px;width:300px;z-index:20;display:none;}
+.atenea-popover.show{display:block;}
+.atenea-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.atenea-titulo{font-size:9px;color:#8a6a1a;text-transform:uppercase;font-weight:800;}
+.atenea-mes{display:flex;align-items:center;gap:5px;}
+.atenea-mes span{font-size:9.5px;color:#5a6e80;}
+.atenea-mes button{background:#f0eae2;border:1px solid #c0b8ae;color:#5a6e80;width:20px;height:20px;border-radius:5px;font-size:9px;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;}
+.atenea-texto{background:#faf8f4;border:1px dashed #d8d0c4;border-radius:6px;padding:9px 10px;font-size:10px;color:#5a6e80;line-height:1.6;white-space:pre-line;}
+.aitor-inc-detalle{display:none;}
+.aitor-inc-detalle.show{display:block;}
+.row-nacs-badge{background:#eef6f8;color:#2a7f8a;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;}
+.row-nacs-vacio{font-size:9px;color:#c0b8ae;font-style:italic;}
+.row-mail-label{font-size:8px;color:#9a8e82;text-transform:uppercase;font-weight:700;letter-spacing:0.03em;text-align:right;}
+
+.btn-cerrar{background:#e8f5e9;border:1px solid #81c784;color:#1B5E20;padding:7px 16px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-cerrar:hover{background:#d5ecd6;}
+
+.empty-msg{text-align:center;padding:30px;color:#9a8e82;font-size:12px;}
+.loading{text-align:center;padding:40px;color:#9a8e82;font-size:12px;}
+
+.nacs-plazo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0;margin-bottom:14px;}
+.nacs-deadline{font-size:10px;font-weight:800;padding:5px 11px;border-radius:7px;}
+.btn-prorrogar{background:#fff;border:1px solid #d8d0c4;color:#5a6e80;font-size:9.5px;font-weight:700;padding:5px 11px;border-radius:7px;cursor:pointer;}
+.btn-prorrogar:hover{background:#ede8df;}
+.nacs-grupo-marca{display:flex;align-items:center;gap:8px;margin-bottom:10px;line-height:1;}
+.nacs-grupo-marca .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.nacs-grupo-marca .label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;}
+.nacs-grupo-cat{padding-left:17px;margin-bottom:18px;}
+.nacs-subgrupo-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;margin-bottom:5px;}
+.nacs-fila{background:#fff;border-radius:9px;overflow:hidden;display:flex;margin-bottom:6px;}
+.nacs-fila.incidencia-nacs{background:#fce4e4;}
+.nacs-fila.ok-nacs{opacity:0.65;}
+.nacs-fila-stripe{width:4px;flex-shrink:0;}
+.nacs-fila-body{padding:9px 12px;flex:1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.nacs-fila-body.col{flex-direction:column;align-items:stretch;}
+.btn-nacs-ok{background:#e8f5e9;border:1px solid #a5d6a7;color:#1B5E20;padding:5px 13px;border-radius:20px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-nacs-incidencia{background:#fdeeea;border:1px solid #f0b0a8;color:#c45200;padding:5px 13px;border-radius:20px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.badge-nacs-ok{background:#e8f5e9;color:#1B5E20;font-size:9px;font-weight:700;padding:3px 9px;border-radius:6px;}
+.nacs-row-actions{margin-left:auto;display:flex;gap:6px;}
+.btn-ok-revisado{background:#e8f5e9;border:1.5px solid #81c784;color:#1B5E20;padding:5px 12px;border-radius:7px;font-size:10.5px;font-weight:700;cursor:pointer;}
+.btn-incidencia{background:#fff;border:1.5px solid #f0b0a8;color:#a4293f;padding:5px 12px;border-radius:7px;font-size:10.5px;font-weight:700;cursor:pointer;}
+.btn-incidencia.activa{background:#a4293f;border-color:#a4293f;color:#fff;}
+.nacs-ok-badge{margin-left:auto;background:#e8f5e9;color:#1B5E20;font-size:10px;font-weight:700;padding:3px 10px;border-radius:7px;}
+.nacs-incidencia-body{padding:12px 14px;border-top:1px solid #f0ece5;background:#faf8f4;}
+.nacs-incidencia-texto{padding:10px 14px;font-size:10.5px;color:#5a6e80;line-height:1.5;}
+.nacs-incidencia-footer{padding:0 14px 12px;display:flex;justify-content:flex-end;}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:#F5F0E8;border-radius:12px;padding:20px;width:380px;max-width:100%;}
+.modal h3{font-size:14px;font-weight:700;color:#1a3a50;margin-bottom:8px;}
+.modal p{font-size:11.5px;color:#7a6e62;margin-bottom:14px;line-height:1.5;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+.mbtn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;border:none;cursor:pointer;}
+.mbtn-cancel{background:#ede8df;color:#5a6e80;border:1px solid #c0b8ae;}
+.mbtn-ok{background:#2a7f8a;color:#fff;}
+
+/* ===== Overlays grandes (Nivel 2 / Historico / Revisar NACS) ===== */
+.big-overlay{display:none;position:fixed;inset:0;z-index:150;background:rgba(4,28,46,0.55);backdrop-filter:blur(2px);align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;}
+.big-overlay.show{display:flex;}
+.big-modal{background:#F5F0E8;border-radius:16px;width:100%;max-width:1040px;max-height:calc(100vh - 48px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+.big-close{position:sticky;top:0;z-index:2;background:#F5F0E8;padding:14px 20px 14px 0;display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0;}
+.big-close-left{display:flex;align-items:center;gap:10px;padding-left:20px;}
+.big-close-line{width:3px;height:32px;border-radius:2px;}
+.big-close-title{color:#1a3a50;font-size:14px;font-weight:700;}
+.big-close-sub{color:#9a8e82;font-size:11px;}
+
+.top-actions{display:flex;gap:8px;margin:14px 0 20px;flex-wrap:wrap;}
+.btn-general{background:#fff;border:1px solid #d8d0c4;color:#1a3a50;font-size:11.5px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.btn-general:hover{background:#ede8df;}
+.btn-general .badge-mini{background:#a4293f;color:#fff;font-size:9px;font-weight:800;border-radius:8px;padding:1px 6px;}
+
+/* Tabla de solo lectura para Buscar Historico */
+.tabla-historico-wrap{border:1px solid #e5ded2;border-radius:14px;overflow:hidden;}
+.tabla-historico{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:10.5px;table-layout:fixed;padding:0 6px 6px;}
+.tabla-historico th{background:#faf7f0;color:#7a6e62;padding:9px 12px;text-align:left;font-weight:700;text-transform:uppercase;font-size:8.5px;letter-spacing:0.03em;position:sticky;top:0;}
+.tabla-historico th .th-ico{color:#c0b8ae;font-weight:400;margin-left:2px;}
+.tabla-historico th.th-activo .th-ico{color:#0f6e56;}
+.tabla-historico td{padding:8px 12px;color:#1a3a50;background:#faf8f4;}
+.tabla-historico tr:hover td{background:#f2ede4;}
+.tabla-historico td:first-child{border-radius:10px 0 0 10px;}
+.tabla-historico td:last-child{border-radius:0 10px 10px 0;}
+.td-truncado{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:1px;}
+
+/* ===== Panel de filtros compacto (Historico y NACS) ===== */
+.filtros-row{display:flex;gap:6px;margin-bottom:8px;}
+.btn-filtros{background:#fff;border:1px solid #d8d0c4;color:#5a6e80;font-size:10.5px;font-weight:700;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;font-family:inherit;}
+.btn-filtros.activo{background:#eef6f8;border-color:#2a7f8a;color:#2a7f8a;}
+.filtros-panel{background:#fff;border-radius:9px;padding:8px;display:none;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:12px;}
+.filtros-panel.show{display:flex;}
+.filtros-panel select,.filtros-panel input[type=date]{border:1px solid #d8d0c4;border-radius:7px;padding:6px 8px;font-size:10px;color:#5a6e80;background:#faf8f4;font-weight:600;flex-shrink:0;font-family:inherit;}
+.filtros-panel select{width:130px;}
+.filtros-panel input[type=date]{width:105px;}
+.filtros-panel select.activo{border:2px solid #5a2aaa;background:#eeedfe;color:#5a2aaa;font-weight:700;}
+.btn-limpiar-filtros{background:#F5F0E8;border:1px solid #d8d0c4;color:#5a6e80;font-size:10px;font-weight:700;padding:6px 12px;border-radius:7px;flex-shrink:0;white-space:nowrap;margin-left:auto;cursor:pointer;font-family:inherit;}
+
+/* Selects con la misma tipografia que el resto del Hub */
+select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+@media(max-width:600px){
+  .field-grid,.field-grid.g3{grid-template-columns:1fr;}
+  .copybox-row{flex-direction:column;}
+  .copybox-row select{width:100%;}
+}
+</style>
+</head>
+<body>
+<div class="page-box">
+<div class="wrap">
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px;">
+    <a href="../index.html" class="btn-subtle">← Volver al Hub</a>
+    <button class="btn-x" onclick="window.location.href='../index.html'">✕</button>
+  </div>
+  <div class="top-actions" style="justify-content:flex-end;margin:0 0 24px;">
+    <button class="btn-general" onclick="abrirAyuda()" style="border-radius:20px;width:34px;display:flex;align-items:center;justify-content:center;padding:8px 0;">?</button>
+    <button class="btn-general" onclick="abrirHistoricoGeneral()" style="border-radius:20px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+      Buscar Histórico
+    </button>
+    <button class="btn-general" onclick="abrirNacsGeneral()" style="border-radius:20px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Revisar NACS <span class="badge-mini" id="badgeNacsGeneral" style="display:none;"></span>
+    </button>
+    <button class="btn-general" onclick="document.getElementById('inputCruceNacs').click()" style="border-radius:20px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
+      Cargar Excel NACS
+    </button>
+    <input type="file" id="inputCruceNacs" accept=".xlsx,.xls" style="display:none;" onchange="cargarExcelCruceNacs(this.files[0])">
+    <input type="file" id="inputHistorico" accept=".xlsx,.xls" style="display:none;" onchange="cargarExcelHistorico(this.files[0])">
+  </div>
+
+  <div class="n1-eyebrow">módulo · seguimiento</div>
+  <div class="n1-title-row">
+    <div class="n1-title-line"></div>
+    <span class="n1-title-text">Bajas y Cambios</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:13px;">
+    <div class="n1-count" id="subHeader" style="margin:0;">Cargando casos...</div>
+    <button onclick="actualizarDatos()" style="background:#fff;border:1px solid #d8d0c4;color:#5a6e80;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;cursor:pointer;font-family:inherit;">↻ Actualizar</button>
+  </div>
+
+  <div style="position:relative;margin:12px 13px 4px;max-width:420px;">
+    <input type="text" id="buscadorGlobal" placeholder="Buscar por ID o nombre..." autocomplete="off"
+      style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:9px;border:1px solid #d8d0c4;font-size:12px;color:#1a3a50;background:#fff;font-family:inherit;"
+      oninput="renderBuscadorGlobal()" onfocus="renderBuscadorGlobal()">
+    <div id="buscadorGlobalResultados" style="display:none;position:absolute;top:42px;left:0;right:0;background:#fff;border:1px solid #d8d0c4;border-radius:9px;box-shadow:0 6px 16px rgba(0,0,0,0.12);overflow:hidden;z-index:30;max-height:320px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="n1-row" id="n1Row"></div>
+
+  <div class="n1-footer" style="position:relative;">
+    <div style="position:relative;">
+      <button class="btn-aitor" onclick="toggleAitor()" onmouseenter="mostrarTooltipAitor(true)" onmouseleave="mostrarTooltipAitor(false)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        Resumen semanal
+      </button>
+      <span class="btn-aitor-dot"></span>
+      <div class="tooltip-aitor" id="tooltipAitor">Aitor te hace un resumen</div>
+    </div>
+  </div>
+  <div style="text-align:right;margin:-16px 0 24px;">
+    <span onclick="document.getElementById('inputHistorico').click()" style="font-size:10px;color:#b0a89c;text-decoration:underline;cursor:pointer;">Cargar histórico (uso excepcional)</span>
+  </div>
+
+  <!-- ===== NIVEL 2 (overlay, una categoria) ===== -->
+  <div class="big-overlay" id="n2Overlay">
+    <div class="big-modal">
+      <div class="big-close">
+        <div class="big-close-left">
+          <div class="big-close-line" id="n2Linea"></div>
+          <div>
+            <div class="big-close-title" id="n2Title"></div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="big-close-sub" id="n2Count"></div>
+              <button onclick="actualizarDatos()" style="background:#fff;border:1px solid #d8d0c4;color:#5a6e80;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;cursor:pointer;font-family:inherit;">↻ Actualizar</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-subtle" onclick="cerrarNivel2()">← Volver al Hub</button>
+          <button class="btn-x" onclick="cerrarNivel2()">✕</button>
+        </div>
+      </div>
+      <div style="padding:0 20px 20px;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
+          <div class="n2-search" style="margin:0;flex:1;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a6e62" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="n2Search" placeholder="Buscar por ID de oportunidad o nombre...">
+          </div>
+          <div style="position:relative;" id="ateneaWrap"></div>
+        </div>
+        <div class="n2-chips" id="n2Chips" style="padding:0 0 14px;"></div>
+        <div class="n2-body" id="n2Body" style="padding:0;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BUSCAR HISTORICO (overlay, todas las categorias) ===== -->
+  <div class="big-overlay" id="historicoOverlay">
+    <div class="big-modal">
+      <div class="big-close">
+        <div class="big-close-left">
+          <div class="big-close-line" style="background:#1a3a50;"></div>
+          <div>
+            <div class="big-close-title">Buscar histórico</div>
+            <div class="big-close-sub">Todas las categorías · Bajas y Cambios</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-subtle" onclick="cerrarHistoricoGeneral()">← Volver al Hub</button>
+          <button class="btn-x" onclick="cerrarHistoricoGeneral()">✕</button>
+        </div>
+      </div>
+      <div style="padding:0 20px 20px;">
+        <div style="display:flex;gap:6px;margin-top:14px;margin-bottom:8px;">
+          <div class="n2-search" style="max-width:none;margin:0;flex:1;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a6e62" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="historicoSearch" placeholder="Buscar por ID de oportunidad, ID NACS o nombre...">
+          </div>
+          <button class="btn-filtros" id="btnFiltrosHistorico" onclick="toggleFiltrosHistorico()">⚙ Filtros</button>
+        </div>
+        <div class="filtros-panel" id="filtrosPanelHistorico">
+          <select id="filtroHistMarca" onchange="renderHistoricoGeneral()"><option value="">Todas las marcas</option></select>
+          <select id="filtroHistCategoria" onchange="renderHistoricoGeneral()"><option value="">Todas las categorías</option></select>
+          <input type="date" id="filtroHistDesde" onchange="renderHistoricoGeneral()">
+          <input type="date" id="filtroHistHasta" onchange="renderHistoricoGeneral()">
+          <button class="btn-limpiar-filtros" onclick="limpiarFiltrosHistorico()">Limpiar</button>
+        </div>
+        <div class="tabla-historico-wrap">
+          <div style="overflow-x:auto;">
+            <table class="tabla-historico" id="tablaHistorico"></table>
+          </div>
+        </div>
+        <div style="font-size:9.5px;color:#9a8e82;padding:6px 2px 0;">—* : caso del histórico importado, sin motivo por separado (solo el texto genérico del Excel).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REVISAR NACS GENERAL (overlay, todas las categorias) ===== -->
+  <div class="big-overlay" id="nacsGeneralOverlay">
+    <div class="big-modal">
+      <div class="big-close">
+        <div class="big-close-left">
+          <div class="big-close-line" style="background:#1a3a50;"></div>
+          <div>
+            <div class="big-close-title">Revisar NACS</div>
+            <div class="big-close-sub">Todas las categorías · comprobación mensual</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-subtle" onclick="cerrarNacsGeneral()">← Volver al Hub</button>
+          <button class="btn-x" onclick="cerrarNacsGeneral()">✕</button>
+        </div>
+      </div>
+      <div style="padding:0 20px 20px;">
+        <div style="display:flex;gap:6px;margin-top:14px;margin-bottom:8px;">
+          <div class="n2-search" style="max-width:none;margin:0;flex:1;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7a6e62" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="nacsGeneralSearch" placeholder="Buscar por ID de oportunidad, ID NACS o nombre...">
+          </div>
+          <button class="btn-filtros" id="btnFiltrosNacs" onclick="toggleFiltrosNacs()">⚙ Filtros</button>
+        </div>
+        <div class="filtros-panel" id="filtrosPanelNacs">
+          <select id="filtroNacsMarcaSel" onchange="renderNacsGeneral()"><option value="">Todas las marcas</option></select>
+          <select id="filtroNacsCategoriaSel" onchange="renderNacsGeneral()"><option value="">Todas las categorías</option></select>
+          <input type="date" id="filtroNacsDesde" onchange="renderNacsGeneral()">
+          <input type="date" id="filtroNacsHasta" onchange="renderNacsGeneral()">
+          <button class="btn-limpiar-filtros" onclick="limpiarFiltrosNacs()">Limpiar</button>
+        </div>
+        <div class="nacs-plazo" id="nacsPlazo"></div>
+        <div class="n2-chips" id="nacsSubChips" style="padding:0 0 14px;"></div>
+        <div id="nacsGeneralBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="big-overlay" id="ayudaOverlay">
+  <div style="background:#F5F0E8;border-radius:18px;padding:22px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h3 style="font-size:16px;font-weight:700;color:#1a3a50;margin:0;">Cómo usar el Hub</h3>
+      <button class="btn-x" style="width:22px;height:22px;border-radius:6px;font-size:10px;" onclick="cerrarAyuda()">✕</button>
+    </div>
+    <p style="font-size:11px;color:#7a6e62;margin:0 0 16px;">Guía rápida del día a día.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+
+      <div style="background:#fff;border-radius:16px;padding:16px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">🏷️</div>
+            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">Etiquetas el correo en Outlook</div>
+          </div>
+          <div style="color:#c0b8ae;font-size:13px;margin-bottom:16px;">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">✨</div>
+            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">El caso se crea solo</div>
+          </div>
+          <div style="color:#c0b8ae;font-size:13px;margin-bottom:16px;">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">📋</div>
+            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">Aparece en su tarjeta</div>
+          </div>
+          <div style="color:#c0b8ae;font-size:13px;margin-bottom:16px;">→</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">🔎</div>
+            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">O lo buscas por ID/nombre</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#eef6f8;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #2a7f8a;">
+        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">✔ Cerrar un caso</div>
+        <div style="font-size:11px;color:#3a5560;line-height:1.6;">El cierre se hace mediante la etiqueta <b>"OK. Gestionado"</b> en Outlook — con eso, se cierra solo, sin tener que hacer nada en el Hub.</div>
+        <div style="margin-top:10px;background:#fdf0dc;border-radius:10px;padding:9px 11px;">
+          <div style="display:inline-block;background:#8a5a10;color:#fff;font-size:8.5px;font-weight:800;text-transform:uppercase;padding:2px 8px;border-radius:10px;margin-bottom:6px;">Caso excepcional</div>
+          <div style="font-size:11px;color:#6e4a0d;line-height:1.6;">Si hace falta cerrarlo a mano desde el Hub, pulsa <b>"Cerrar expediente"</b> (o "Devolución completada" en esa categoría).<br>La <b>primera vez</b> que uses este botón <b>en este ordenador</b>, te pedirá elegir tu nombre. Después de esa primera vez, ya no te lo vuelve a preguntar — lo recuerda automáticamente cada vez que lo uses desde ese mismo ordenador.</div>
+        </div>
+      </div>
+
+      <div style="background:#e1f5ee;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #0f6e56;">
+        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">💶 Devolución — cómo se crea el caso</div>
+        <div style="font-size:11px;color:#0f5443;line-height:1.6;">
+          Se crea directamente cuando el correo se etiqueta como <b>"Devolución"</b>.<br><br>
+          Una <b>Baja con Devolución</b> también pasa a tratarse como Devolución, pero solo si se cumplen <b>las dos cosas a la vez</b>:
+          <div style="margin:6px 0 6px 4px;">① el correo lleva además la etiqueta <b>"Pte Devolución"</b> (no basta con "Baja con Devolución" sola)<br>② dentro del caso se elige <b>Transferencia</b> o <b>Flywire</b> como medio, en el desplegable de seguimiento</div>
+          Si falta cualquiera de las dos, el caso se queda solo como Baja con Devolución — no aparece en Devolución.
+        </div>
+      </div>
+
+      <div style="background:#fdeceb;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #a4293f;">
+        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">⚠ Marcar una incidencia</div>
+        <div style="font-size:11px;color:#6b2530;line-height:1.5;">
+          Etiquetando en Outlook con una categoría que contenga "incidencia", o con la casilla manual dentro del caso.<br><br>
+          En cualquiera de los dos casos, hay que rellenar el campo <b>"Observación"</b> con el motivo de la incidencia — sin eso, queda marcada pero sin explicar el porqué.
+        </div>
+      </div>
+
+      <div style="background:#fdf0dc;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #8a5a10;">
+        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">🗒️ Revisar NACS</div>
+        <div style="font-size:11px;color:#6e4a0d;line-height:1.5;">Lista los casos ya cerrados en los que, una vez revisado que en NACS está gestionado, hay que ponerle OK o indicar la incidencia. El OK queda para siempre, no hay que repetirlo cada mes.</div>
+      </div>
+
+      <div style="background:#ede8df;border-radius:16px;padding:12px 16px 12px 18px;border-left:5px solid #5a6e80;position:relative;">
+        <div style="position:absolute;top:8px;right:10px;background:#5a6e80;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;text-transform:uppercase;">Nuevo</div>
+        <div style="font-weight:700;font-size:12px;color:#1a3a50;margin-bottom:3px;">🚫 Caso cargado por error</div>
+        <div style="font-size:10.5px;color:#3a4550;line-height:1.5;">Si un alumno se cargó por equivocación y la gestión nunca fue real, usa el botón ⚠ de su ficha (junto al de eliminar). Marca el caso con ese aviso y lo cierra en el mismo paso — queda visible en el Histórico como caso no válido, sin necesidad de tocar nada en Outlook.</div>
+      </div>
+
+      <div style="background:#fff;border-radius:16px;padding:14px 16px;">
+        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">📖 Buscar Histórico</div>
+        <div style="font-size:11px;color:#5a6e80;line-height:1.5;">Todos los casos cerrados, con filtros por marca/categoría/fecha y buscador propio. Se ve el motivo, el medio de devolución, quién lo cerró y cuándo.</div>
+      </div>
+
+      <div style="background:#fff;border-radius:16px;padding:14px 16px;">
+        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">🪄 Resumen semanal</div>
+        <div style="font-size:11px;color:#5a6e80;line-height:1.5;">Resumen de todos los pendientes agrupado por marca y categoría, con botón para copiar como texto.</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:12px;font-size:10px;color:#b0a89c;">Cargar Excel NACS y Cargar Histórico son cargas puntuales — casi nunca hace falta tocarlas.</div>
+  </div>
+</div>
+
+<div class="big-overlay" id="aitorOverlay">
+  <div style="background:#F5F0E8;border-radius:12px;padding:14px;width:400px;max-width:100%;">
+    <div id="aitorPopover"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalAvisoError">
+  <div class="modal">
+    <h3>⚠ Marcar como cargado por error</h3>
+    <p id="modalAvisoErrorTexto"></p>
+    <div style="background:#fdf0ec;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#a4293f;font-weight:600;margin-bottom:14px;" id="modalAvisoErrorCaso"></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="cerrarModalAvisoError()">Cancelar</button>
+      <button class="mbtn mbtn-ok" style="background:#a4293f;" onclick="confirmarMarcarError()">Marcar y continuar →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalEliminar">
+  <div class="modal">
+    <h3>🗑️ Eliminar caso</h3>
+    <p id="modalEliminarTexto"></p>
+    <p style="color:#a4293f;font-weight:600;font-size:11px;">Esta acción no se puede deshacer.</p>
+    <input type="password" id="modalEliminarPass" placeholder="Contraseña" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:1px solid #d8d0c4;font-size:12px;margin-bottom:6px;font-family:inherit;">
+    <p id="modalEliminarError" style="color:#a4293f;font-size:11px;display:none;margin-bottom:6px;">Contraseña incorrecta.</p>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="cerrarModalEliminar()">Cancelar</button>
+      <button class="mbtn mbtn-ok" style="background:#a4293f;" onclick="confirmarEliminar()">Eliminar definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalCerrar">
+  <div class="modal">
+    <h3>⚠ Confirmar cierre manual</h3>
+    <p id="modalCerrarTexto"></p>
+    <div id="modalCerrarQuien" style="background:#fff;border:1px solid #d8d0c4;border-radius:8px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;color:#5a6e80;">Cerrado por</span>
+      <span style="font-size:12px;font-weight:700;color:#1a3a50;"><span id="modalCerrarNombre"></span> <span style="font-weight:400;color:#9a8e82;text-decoration:underline;cursor:pointer;font-size:10px;" onclick="cambiarUsuarioActual()">(cambiar)</span></span>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="confirmarCierre()">Sí, cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalQuienEres">
+  <div class="modal">
+    <h3>¿Quién eres?</h3>
+    <p>Se guarda en este ordenador, para saber quién cierra cada caso sin tener que preguntarlo cada vez.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="mbtn" style="background:#fff;border:1px solid #d8d0c4;color:#1a3a50;text-align:left;padding:10px 14px;" onclick="elegirUsuarioActual('Noelia')">Noelia</button>
+      <button class="mbtn" style="background:#fff;border:1px solid #d8d0c4;color:#1a3a50;text-align:left;padding:10px 14px;" onclick="elegirUsuarioActual('Ana')">Ana</button>
+      <button class="mbtn" style="background:#fff;border:1px solid #d8d0c4;color:#1a3a50;text-align:left;padding:10px 14px;" onclick="elegirUsuarioActual('Elsa')">Elsa</button>
+      <button class="mbtn" style="background:#fff;border:1px solid #d8d0c4;color:#1a3a50;text-align:left;padding:10px 14px;" onclick="elegirUsuarioActual('Silvia')">Silvia</button>
+    </div>
+  </div>
+</div>
+
+<script>
+console.log('%cHub Bajas y Cambios — versión 2026-09-17-d', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
+// ============================================================
+// CONFIGURACION
+// ============================================================
+const KV_BASE = 'https://seguimiento-correos.adminhubplaneta.workers.dev/kv';
+const KV_LIST = 'https://seguimiento-correos.adminhubplaneta.workers.dev/kv/list';
+const KV_KEY_CONFIG = 'config_mes_convocatoria';
+const KV_KEY_PLAZO_NACS = 'config_plazo_revisar_nacs';
+const KV_KEY_CRUCE_NACS = 'config_cruce_nacs';
+
+const CATEGORIAS = [
+  { id:'cc', nombre:'CC', color:'#2a7f8a', match:t=>['CC a Oct','CC a Sept','CC a Abril','CC'].includes(t) },
+  { id:'bajacon', nombre:'Baja con Devolución', color:'#c45200', match:t=>t==='Baja con Devolución' },
+  { id:'devolucion', nombre:'Devolución', color:'#0f6e56', match:(t,c)=>
+      t==='Devolución' || t==='Pte Cert Bancario' || t==='Pte Certificado' ||
+      (t==='Baja con Devolución' && c && tieneEtiquetaPteDevolucion(c) && (c.textoMetodo==='Transferencia' || c.textoMetodo==='Flywire'))
+  },
+  { id:'bajasin', nombre:'Baja sin Devolución', color:'#8a6a1a', match:t=>t==='Baja sin Devolución' },
+  { id:'ce', nombre:'CE', color:'#5a2aaa', match:t=>t==='CE' },
+  { id:'cp', nombre:'CP', color:'#c62858', match:t=>t==='CP' },
+];
+
+const ICONOS = {
+  cc:'<path d="M3 10a9 9 0 1 1 2.5 6.2"/><path d="M3 4v6h6"/>',
+  bajacon:'<path d="M12 3v10M12 13l-5 5M12 13l5 5"/>',
+  devolucion:'<path d="M3 10a9 9 0 1 1 2.5 6.2"/><path d="M3 4v6h6"/>',
+  bajasin:'<path d="M12 3v10M12 13l-5 5M12 13l5 5"/>',
+  ce:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>',
+  cp:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>'
+};
+
+const METODOS_DEVOLUCION = ['Retroceso de tarjeta','Transferencia','Flywire'];
+
+const TEXTOS = {
+  bajacon: {
+    variantes: ['Desistimiento','Otros motivos'],
+    tieneMetodo: true,
+    campos: { 'Desistimiento':[], 'Otros motivos':['motivo'] },
+    generar: (v, d, mes, metodo) => {
+      const m = metodo || 'Retroceso de tarjeta';
+      const motivo = d.motivo || '_____';
+      if(v === 'Desistimiento'){
+        if(m === 'Retroceso de tarjeta') return 'Baja en periodo de desistimiento con devolución de importes. Retroceder visa y abonar facturación';
+        if(m === 'Transferencia') return 'Baja en periodo de desistimiento con devolución de importes, la devolución será gestionada mediante transferencia. Abonar facturación';
+        return 'Baja en periodo de desistimiento con devolución de importes, la devolución será gestionada mediante Flywire. Abonar facturación';
+      } else {
+        if(m === 'Retroceso de tarjeta') return `Baja por motivos ${motivo} con devolución de importes. Retroceder visa y abonar facturación`;
+        if(m === 'Transferencia') return `Baja por motivos ${motivo} con devolución de importes, la devolución será gestionada mediante transferencia. Abonar facturación`;
+        return `Baja por motivos ${motivo} con devolución de importes la devolución será gestionada mediante Flywire. Abonar facturación`;
+      }
+    }
+  },
+  bajasin: {
+    variantes: null,
+    tieneMetodo: false,
+    campos: { unica:['motivo'] },
+    generar: (v, d) => `Baja por motivos ${d.motivo||'_____'} sin devolución de importes. Abonar facturación`
+  },
+  ce: {
+    variantes: ['Con pago de tasas','Sin pago de tasas'],
+    tieneMetodo: false,
+    tieneAbonadas: true,
+    campos: { 'Con pago de tasas':['vencimiento'], 'Sin pago de tasas':[] },
+    generar: (v, d, mes, metodo, abonadas) => {
+      if(v !== 'Con pago de tasas') return `Cambio de edición a ${mes} sin pago de tasas académicas. Abonar facturación y trasladar a la nueva`;
+      if(abonadas === 'Sí') return `Cambio de edición a ${mes} con pago de tasas académicas de 306 euros. Crear cargo tasas ya abonadas. Abonar facturación y trasladar a la nueva`;
+      return `Cambio de edición a ${mes} con pago de tasas académicas de 306 euros. Crear cargo con vencimiento ${d.vencimiento||'xx/xx/xxxx'}. Abonar facturación y trasladar a la nueva`;
+    }
+  },
+  cp: {
+    variantes: ['Sin pago de tasas','Con pago de tasas'],
+    tieneMetodo: false,
+    tieneAbonadas: true,
+    campos: { 'Sin pago de tasas':[], 'Con pago de tasas':[] },
+    generar: (v, d, mes, metodo, abonadas) => {
+      if(v !== 'Con pago de tasas') return 'Cambio de programa sin pago de tasas académicas. Abonar facturación y traspasar a la nueva';
+      if(abonadas === 'Sí') return 'Cambio de programa con pago de tasas académicas de 306€. Crear cargo tasas ya abonadas. Abonar facturación y traspasar a la nueva';
+      return 'Cambio de programa con pago de tasas académicas de 306€. Crear cargo. Abonar facturación y traspasar a la nueva';
+    }
+  },
+  cc: {
+    variantes: ['Con pago de tasas','Sin pago de tasas'],
+    tieneMetodo: false,
+    tieneAbonadas: true,
+    campos: { 'Con pago de tasas':['vencimiento'], 'Sin pago de tasas':[] },
+    generar: (v, d, mes, metodo, abonadas) => {
+      if(v !== 'Con pago de tasas') return `Cambio de convocatoria a ${mes} sin pago de tasas académicas. Abonar facturación y trasladar a la nueva`;
+      if(abonadas === 'Sí') return `Cambio de convocatoria a ${mes} con pago de tasas académicas de 306 euros. Crear cargo tasas ya abonadas. Abonar facturación y trasladar a la nueva`;
+      return `Cambio de convocatoria a ${mes} con pago de tasas académicas de 306 euros. Crear cargo con vencimiento ${d.vencimiento||'xx/xx/xxxx'}. Abonar facturación y trasladar a la nueva`;
+    }
+  }
+};
+
+// Texto general "para Atenea" (no por caso): un bloque de plantilla fija por
+// categoria, con el mes de convocatoria compartido insertado donde corresponda.
+const TEXTOS_ATENEA = {
+  ce: (mes) => `Cambio de Edición - ${mes}
+Cambio de convocatoria a: 
+Convocatoria: ${mes}
+Facturación: 
+Importe pago inicial: 
+Num cuotas: 
+fecha vencimiento 1ª cuota: 
+Método de pago: tarjeta
+ 
+Con o sin pago de tasas académicas 306€ con vencimiento: xx/xx/2026
+Hecha GI en NACS`,
+  cp: (mes) => `Cambio de Programa
+Cambio de programa a: 
+Convocatoria: ${mes}
+Facturación: 
+Importe Pago Inicial:
+Num cuotas: 
+Fecha 1er vencimiento: 
+Método de pago: tarjeta
+Con o Sin pago de tasas académicas 306€.
+Hecha GI en Nacs`,
+  cc: (mes) => `Cambio Convocatoria ${mes}
+Cambio de convocatoria a: ( PROGRAMA)
+Convocatoria: ${mes}
+Facturación: 
+Importe pago inicial: 
+Num cuotas: 
+fecha vencimiento 1ª cuota: 
+Método de pago: tarjeta
+ 
+Con o sin pago de tasas académicas 306€ con vencimiento: xx/xx/2025
+Hecha GI en NACS`
+};
+
+// ============================================================
+// ESTADO EN MEMORIA
+// ============================================================
+let casos = [];          // [{...macro, ...hub, key}]
+let mesConvocatoria = 'Abril 2027';
+async function editarMesConvocatoria(){
+  const nuevo = window.prompt('Mes de convocatoria (ej: Abril 2027):', mesConvocatoria);
+  if(!nuevo || !nuevo.trim()) return;
+  mesConvocatoria = nuevo.trim();
+  await kvSet(KV_KEY_CONFIG, mesConvocatoria);
+  renderNivel2();
+  if(ateneaAbierta && catActiva){
+    renderAteneaPopover(catActiva);
+    document.getElementById('ateneaPopover').classList.add('show');
+  }
+}
+let catActiva = null;
+let tabActiva = 'pendientes';
+let marcaActiva = 'todas';
+let nacsSubFiltro = 'porrevisar'; // porrevisar | incidencias | okmes
+let plazoNacs = null; // fecha limite del mes en curso (string dd/mm/yyyy)
+
+// ============================================================
+// KV HELPERS (mismo patron que ya usas en Referidos OBS)
+// ============================================================
+async function kvGet(key, intentos){
+  intentos = intentos || 3;
+  for(let i = 0; i < intentos; i++){
+    try{
+      const res = await fetch(`${KV_BASE}?key=${encodeURIComponent(key)}`);
+      if(!res.ok){
+        if(i < intentos - 1){ await new Promise(r => setTimeout(r, 300)); continue; }
+        return null;
+      }
+      const d = await res.json();
+      return d.value ? JSON.parse(d.value) : null;
+    }catch(e){
+      if(i < intentos - 1){ await new Promise(r => setTimeout(r, 300)); continue; }
+      return null;
+    }
+  }
+  return null;
+}
+async function kvSet(key, value, intentos){
+  intentos = intentos || 3;
+  for(let i = 0; i < intentos; i++){
+    try{
+      const res = await fetch(KV_BASE, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ key, value })
+      });
+      if(res.ok) return true;
+      if(i < intentos - 1){ await new Promise(r => setTimeout(r, 300)); continue; }
+      return false;
+    }catch(e){
+      if(i < intentos - 1){ await new Promise(r => setTimeout(r, 300)); continue; }
+      return false;
+    }
+  }
+  return false;
+}
+async function kvList(){
+  try{
+    const res = await fetch(KV_LIST);
+    if(!res.ok) return [];
+    const d = await res.json();
+    return d.keys || [];
+  }catch(e){ return []; }
+}
+
+// ============================================================
+// CARGA DE DATOS
+// ============================================================
+async function cargarTodo(){
+  const [keys, mesGuardado, plazoGuardado, cruceGuardado] = await Promise.all([kvList(), kvGet(KV_KEY_CONFIG), kvGet(KV_KEY_PLAZO_NACS), kvGet(KV_KEY_CRUCE_NACS)]);
+  if(mesGuardado) mesConvocatoria = mesGuardado;
+  plazoNacs = plazoGuardado || finDeMesActual();
+  const cruceNacs = cruceGuardado || {};
+
+  const idsClaves = keys.filter(k => k !== KV_KEY_CONFIG && k !== KV_KEY_PLAZO_NACS && k !== KV_KEY_CRUCE_NACS && !k.startsWith('hub_'));
+
+  // Se piden en tandas (no todos a la vez) para evitar que el navegador
+  // sature de conexiones simultaneas cuando hay muchos casos (por ejemplo,
+  // tras cargar un historico grande) — cada tanda espera a la anterior, con
+  // una pausa breve entre tandas para no forzar al Worker.
+  const TAMANO_TANDA = 40;
+  const resultados = [];
+  for(let i = 0; i < idsClaves.length; i += TAMANO_TANDA){
+    const tanda = idsClaves.slice(i, i + TAMANO_TANDA);
+    const parcial = await Promise.all(tanda.map(async key => {
+      const [macroData, hubData] = await Promise.all([kvGet(key), kvGet('hub_' + key)]);
+      if(!macroData) return null;
+      return Object.assign({ key }, macroData, hubData || {});
+    }));
+    resultados.push(...parcial);
+    const hasta = Math.min(i + TAMANO_TANDA, idsClaves.length);
+    document.getElementById('subHeader').textContent = `Cargando casos... (${hasta}/${idsClaves.length})`;
+    if(hasta < idsClaves.length) await new Promise(r => setTimeout(r, 20));
+  }
+
+  casos = resultados.filter(c => c !== null);
+
+  // Completar ID NACS solo en los casos que aun no lo tienen, cruzando por
+  // ID de Oportunidad contra el Excel cargado. Nunca se sobrescribe un
+  // ID NACS que ya exista (manual o de una carga anterior).
+  const pendientesDeGuardar = [];
+  casos.forEach(c => {
+    if(!c.idNacs && c.idOportunidad && cruceNacs[c.idOportunidad]){
+      c.idNacs = cruceNacs[c.idOportunidad];
+      pendientesDeGuardar.push(c);
+    }
+  });
+  if(pendientesDeGuardar.length > 0){
+    Promise.all(pendientesDeGuardar.map(c => guardarHubData(c.key, c)));
+  }
+
+  renderNivel1();
+  actualizarBadgeNacsGeneral();
+  poblarSelectsFiltro();
+  const totalNivel1 = casos.filter(perteneceANivel1).length;
+  const pendientesNivel1 = casos.filter(c => perteneceANivel1(c) && esPendiente(c)).length;
+  document.getElementById('subHeader').textContent = `${totalNivel1} casos totales · ${pendientesNivel1} pendientes`;
+}
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+function normalizar(s){ return (s||'').toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function parseFecha(f){
+  if(!f) return null;
+  const p = f.split('/');
+  if(p.length !== 3) return null;
+  return new Date(p[2], p[1]-1, p[0]);
+}
+function diasDesde(f){
+  const d = parseFecha(f);
+  if(!d) return 0;
+  const hoy = new Date();
+  return Math.floor((hoy - d) / 86400000);
+}
+function colorAntiguedad(dias){
+  if(dias > 7) return { bg:'#fce4e4', fg:'#a4293f' };
+  if(dias >= 3) return { bg:'#fdf0dc', fg:'#8a5a10' };
+  return { bg:'#e6f2ee', fg:'#0f6e56' };
+}
+function finDeMesActual(){
+  const hoy = new Date();
+  const fin = new Date(hoy.getFullYear(), hoy.getMonth()+1, 0);
+  return `${String(fin.getDate()).padStart(2,'0')}/${String(fin.getMonth()+1).padStart(2,'0')}/${fin.getFullYear()}`;
+}
+function diasHasta(fechaStr){
+  const d = parseFecha(fechaStr);
+  if(!d) return 0;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return Math.ceil((d - hoy) / 86400000);
+}
+function esPendiente(c){ return c.cierreManual ? false : c.estado !== 'Cerrado'; }
+function esPendienteParaCategoria(c, cat){
+  // Devolucion tiene su propio cierre, INDEPENDIENTE del estado general del
+  // caso: aunque OK.Gestionado ya haya cerrado la Baja, la Devolucion sigue
+  // pendiente hasta que se marque a mano como completada.
+  if(cat.id === 'devolucion') return !c.devolucionResuelta;
+  return esPendiente(c);
+}
+function tieneEtiquetaPteDevolucion(c){
+  // cuenta cuantas veces aparece el radical "devoluc" en las categorias
+  // originales: 1 vez = solo la propia categoria principal; 2+ veces =
+  // hay una etiqueta extra de devolucion (ej. "Pte Devolucion")
+  const cats = normalizar(c.categoriasOriginales);
+  const apariciones = (cats.match(/devoluc/g) || []).length;
+  return apariciones >= 2;
+}
+function esPteDevolucionCruzada(c, cat){
+  // Para el badge visual dentro de "Baja con Devolucion"
+  if(cat.id !== 'bajacon') return false;
+  return tieneEtiquetaPteDevolucion(c);
+}
+function tieneIncidencia(c){
+  if(c.incidenciaTocada){
+    return !!c.incidenciaManual; // el usuario decidio explicitamente (on u off)
+  }
+  const porEtiqueta = normalizar(c.categoriasOriginales).includes('incidencia');
+  const porObservacion = !!(c.observacion && c.observacion.trim().length > 0);
+  return porEtiqueta || porObservacion;
+}
+const PREFIJOS_NACS = { 'OBS': '40', 'INESDI': '22', 'ESDesign': '72', 'UCMA': '32' };
+function idNacsMostrado(c){
+  // El ID NACS se guarda "en crudo" (sin prefijo) porque asi es como llega
+  // del Excel de cruce y como hay que compararlo para el auto-relleno. El
+  // prefijo por marca es solo para MOSTRARLO como se ve de verdad en NACS,
+  // nunca se guarda pegado al dato real.
+  if(!c.idNacs) return '';
+  const prefijo = PREFIJOS_NACS[nombreMarca(c.marca)] || '';
+  return prefijo + c.idNacs;
+}
+function nombreMarca(cuenta){
+  const c = (cuenta||'').toLowerCase();
+  if(c.includes('obsbusiness')) return 'OBS';
+  if(c.includes('inesdi')) return 'INESDI';
+  if(c.includes('esdesignbarcelona')) return 'ESDesign';
+  if(c.includes('planetadeagostini')) return 'UCMA';
+  return cuenta || '—';
+}
+const MARCA_COLORES = {
+  'OBS':      { bg:'#e6f1fb', fg:'#0c447c', dot:'#0c447c' },
+  'ESDesign': { bg:'#fdeee0', fg:'#c45200', dot:'#c45200' },
+  'INESDI':   { bg:'#f3ece0', fg:'#6b4a1f', dot:'#8a6a3a' },
+  'UCMA':     { bg:'#fdf6d9', fg:'#a6870c', dot:'#e0b30c' }
+};
+function coloresMarca(cuenta){
+  return MARCA_COLORES[nombreMarca(cuenta)] || { bg:'#ede8df', fg:'#5a6e80', dot:'#9a8e82' };
+}
+const TIPO_COLORES = {
+  bajacon: { bg:'#fce4e4', fg:'#a4293f' },
+  bajasin: { bg:'#fdf0dc', fg:'#8a5a10' },
+  cc:      { bg:'#e1f5ee', fg:'#0f6e56' },
+  cp:      { bg:'#fbeaf0', fg:'#993556' },
+  ce:      { bg:'#eeedfe', fg:'#3c3489' },
+  devolucion: { bg:'#e1f5ee', fg:'#0f6e56' }
+};
+function categoriaDeCaso(c){
+  // La categoria 'devolucion' tiene una condicion especial de cruce: un caso
+  // con tipoGestion 'Baja con Devolucion' que ademas tiene una devolucion
+  // pendiente por transferencia/Flywire se trabaja en la pestaña "Devolucion"
+  // mientras esta pendiente (esa pestaña usa cat.match directamente). Antes,
+  // esta funcion (la que usa el Historico) no aplicaba esa misma prioridad y
+  // siempre devolvia 'bajacon' primero, asi que al cerrarse esos casos
+  // "desaparecian" del Historico de Devolucion, quedando mal etiquetados
+  // como Baja con Devolucion. Comprobamos 'devolucion' primero para que la
+  // clasificacion final coincida con la pestaña donde se trabajo el caso.
+  const devolucion = CATEGORIAS.find(cat => cat.id === 'devolucion');
+  if(devolucion && devolucion.match(c.tipoGestion, c)) return devolucion;
+  return CATEGORIAS.find(cat => cat.id !== 'devolucion' && cat.match(c.tipoGestion, c)) || null;
+}
+function categoriasDeCaso(c){
+  // A diferencia de categoriaDeCaso (que da UNA sola, la "principal", para
+  // colorear tarjetas/pestañas), esta devuelve TODAS las categorias que el
+  // caso cumple a la vez. Un caso "Baja con Devolucion" cuya devolucion
+  // ademas quedo pendiente por transferencia/Flywire es, a efectos reales,
+  // las dos cosas - y debe poder encontrarse y filtrarse por cualquiera de
+  // las dos en el Historico, no solo por la que se eligio como principal.
+  return CATEGORIAS.filter(cat => cat.match(c.tipoGestion, c));
+}
+function perteneceANivel1(c){
+  return !!categoriaDeCaso(c);
+}
+function idMostrado(c){ return c.idOportunidadManual || c.idOportunidad || c.key; }
+function nombreMostrado(c){ return c.alumnoManual || c.alumno || c.asunto || '(sin nombre)'; }
+function escHtml(s){ const d=document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+// ============================================================
+// NIVEL 1
+// ============================================================
+function renderNivel1(){
+  const el = document.getElementById('n1Row');
+
+  const filas = CATEGORIAS.map(cat => {
+    const delGrupo = casos.filter(c => cat.match(c.tipoGestion, c) && esPendienteParaCategoria(c, cat));
+    const total = casos.filter(c => cat.match(c.tipoGestion, c)).length || 1;
+    const pendientes = delGrupo.length;
+    const pct = Math.min(100, Math.round((pendientes / Math.max(total,1)) * 100));
+    const circunf = 107; // 2*pi*17
+    const dash = Math.round((pct/100) * circunf);
+
+    let masAntiguo = 0;
+    delGrupo.forEach(c => { const d = diasDesde(c.fechaIngreso); if(d > masAntiguo) masAntiguo = d; });
+    const col = colorAntiguedad(masAntiguo);
+
+    return { cat, pendientes, dash, masAntiguo, col };
+  });
+
+  filas.sort((a,b) => b.pendientes - a.pendientes);
+
+  el.innerHTML = filas.map(({cat, pendientes, dash, masAntiguo, col}) => {
+    const vacia = pendientes === 0;
+    const iconColor = vacia ? '#9a8e82' : cat.color;
+    return `
+    <div class="n1-card ${catActiva===cat.id?'selected':''} ${vacia?'empty':''}" onclick="seleccionarCategoria('${cat.id}')">
+      <div class="n1-top">
+        <svg class="n1-icon" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.7">${ICONOS[cat.id]}</svg>
+        <div class="n1-name" style="${vacia?'color:#9a8e82;':''}">${cat.nombre}</div>
+      </div>
+      <div class="n1-div"></div>
+      <div class="n1-bottom">
+        ${!vacia ? `
+        <svg width="40" height="40" viewBox="0 0 40 40" class="n1-ring">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#e8e2da" stroke-width="2"/>
+          <circle cx="20" cy="20" r="17" fill="none" stroke="${cat.color}" stroke-width="2" stroke-dasharray="${dash} 107" stroke-linecap="round" transform="rotate(-90 20 20)"/>
+          <text x="20" y="24" text-anchor="middle" font-size="12">${pendientes}</text>
+        </svg>
+        <div class="n1-badge" style="color:${col.fg};">&gt; ${masAntiguo} d</div>
+        ` : `<div class="n1-empty">sin pendientes</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CARGAR EXCEL DE CRUCE NACS (ID Oportunidad -> ID NACS)
+// ============================================================
+async function cargarExcelCruceNacs(file){
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){
+    alert('No se pudo cargar la librería de lectura de Excel. Revisa tu conexión e inténtalo de nuevo.');
+    return;
+  }
+
+  try{
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+
+    let colIdOportunidad = null;
+    let colIdNacs = null;
+    let filas = null;
+
+    // Buscar en todas las hojas la que tenga las dos columnas esperadas
+    for(const nombreHoja of wb.SheetNames){
+      const hoja = wb.Sheets[nombreHoja];
+      const json = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+      if(json.length === 0) continue;
+      const cabeceras = Object.keys(json[0]);
+      const cId = cabeceras.find(h => h.toLowerCase().includes('opportunity id'));
+      const cNacs = cabeceras.find(h => h.toLowerCase().includes('ganet'));
+      if(cId && cNacs){
+        colIdOportunidad = cId;
+        colIdNacs = cNacs;
+        filas = json;
+        break;
+      }
+    }
+
+    if(!filas){
+      alert('No se encontró en el Excel una hoja con las columnas de ID de Oportunidad e ID NACS esperadas.');
+      return;
+    }
+
+    const cruce = {};
+    filas.forEach(fila => {
+      const id = String(fila[colIdOportunidad] || '').trim();
+      const nacs = String(fila[colIdNacs] || '').trim();
+      if(id && nacs) cruce[id] = nacs;
+    });
+
+    await kvSet(KV_KEY_CRUCE_NACS, cruce);
+
+    document.getElementById('inputCruceNacs').value = '';
+    await cargarTodo();
+
+    alert(`Cruce cargado: ${Object.keys(cruce).length} coincidencias en el Excel. Se completaron los ID NACS que estaban vacíos.`);
+  }catch(e){
+    alert('Hubo un error leyendo el Excel. Revisa que el archivo no esté dañado y vuelve a intentarlo.');
+  }
+}
+
+// ============================================================
+// CARGAR HISTORICO — hoja "Correo" del Excel de seguimiento manual
+// ============================================================
+const MAPA_CATEGORIAS_EXCEL = {
+  'BAJA SIN DEVOLUCION': 'Baja sin Devolución',
+  'CE': 'CE',
+  'CC': 'CC',
+  'BAJA CON DEVOLUCION': 'Baja con Devolución',
+  'CP': 'CP',
+  'DEVOLUCIONES PENDIENTES': 'Devolución'
+};
+
+function capitalizarNombre(s){
+  return String(s||'').trim().toLowerCase().replace(/(^|\s)([a-záéíóúñ])/g, (m,esp,letra) => esp + letra.toUpperCase());
+}
+
+function mapearMarcaExcel(abrev){
+  const a = String(abrev||'').trim().toUpperCase();
+  if(a === 'OBS') return 'importado@obsbusiness.school';
+  if(a === 'INESDI') return 'importado@inesdi.com';
+  if(a === 'ESD') return 'importado@esdesignbarcelona.com';
+  if(a === 'UCMA') return 'importado@planetadeagostini.com';
+  return abrev || '';
+}
+
+function fechaExcelAFormato(valor){
+  if(!valor) return '';
+  if(valor instanceof Date){
+    return `${String(valor.getDate()).padStart(2,'0')}/${String(valor.getMonth()+1).padStart(2,'0')}/${valor.getFullYear()}`;
+  }
+  const s = String(valor).trim();
+  // yyyy-mm-dd o yyyy-mm-dd hh:mm:ss
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[3]}/${m[2]}/${m[1]}`;
+  // ya viene como dd/mm/yyyy
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return `${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}/${m[3]}`;
+  return '';
+}
+
+async function cargarExcelHistorico(file){
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){
+    alert('No se pudo cargar la librería de lectura de Excel. Revisa tu conexión e inténtalo de nuevo.');
+    return;
+  }
+
+  try{
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+
+    const nombreHoja = wb.SheetNames.find(n => n.trim().toLowerCase() === 'correo') || wb.SheetNames[0];
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[nombreHoja], { defval: '' });
+
+    if(filas.length === 0){
+      alert('No se encontraron filas en la hoja "Correo" del Excel.');
+      return;
+    }
+
+    // IDs ya existentes en el Hub, para no duplicar
+    // Se compara contra la lista de claves REAL del Worker (no contra la
+    // memoria de la pagina, que podria estar incompleta si algun caso no
+    // llego a cargar bien) para que la deteccion de duplicados sea fiable.
+    const clavesReales = await kvList();
+    const idsExistentes = new Set(clavesReales.filter(k => !k.startsWith('hub_') && !k.startsWith('sinid_') && !k.startsWith('histNacs_') && !k.startsWith('config_')));
+
+    let creadosPendientes = 0, agregadosHistorico = 0, omitidosDuplicados = 0, omitidosSinId = 0;
+    const guardados = [];
+
+    for(const fila of filas){
+      const idOportunidad = String(fila['ID OPORTUNIDAD'] || '').trim();
+      const idNacs = String(fila['NACS'] || '').trim();
+
+      if(!idOportunidad && !idNacs){ omitidosSinId++; continue; }
+
+      const claveCaso = idOportunidad || ('histNacs_' + idNacs);
+      if(idOportunidad && idsExistentes.has(idOportunidad)){ omitidosDuplicados++; continue; }
+
+      // Buscar cual de las 6 columnas de categoria tiene texto
+      let columnaCat = null, textoCat = '';
+      for(const colExcel of Object.keys(MAPA_CATEGORIAS_EXCEL)){
+        // las cabeceras del Excel a veces tienen espacio final
+        const clave = Object.keys(fila).find(k => k.trim().toUpperCase() === colExcel);
+        if(clave && String(fila[clave]||'').trim()){
+          columnaCat = colExcel;
+          textoCat = String(fila[clave]).trim();
+          break;
+        }
+      }
+      if(!columnaCat) continue; // fila sin ninguna categoria reconocible
+
+      const tipoGestion = MAPA_CATEGORIAS_EXCEL[columnaCat];
+      const esPendiente = normalizar(textoCat).includes('pte');
+      const fechaCorreo = fechaExcelAFormato(fila['MAIL']);
+      const fechaResolucion = fechaExcelAFormato(fila['FECHA RESOLUCION']);
+
+      const macroData = {
+        idOportunidad: idOportunidad,
+        alumno: capitalizarNombre(fila['NOMBRE Y APELLIDO']),
+        asunto: capitalizarNombre(fila['NOMBRE Y APELLIDO']),
+        fechaIngreso: fechaCorreo,
+        marca: mapearMarcaExcel(fila['MARCA']),
+        tipoGestion: tipoGestion,
+        responsable: 'Noelia',
+        categoriasOriginales: textoCat,
+        estado: esPendiente ? 'Pendiente' : 'Cerrado',
+        fechaCierre: esPendiente ? '' : fechaResolucion,
+        origen: 'historico'
+      };
+
+      await kvSet(claveCaso, macroData);
+
+      if(tipoGestion === 'Devolución'){
+        const certificado = String(fila['CERTIFICADO PTE'] || '').trim();
+        if(certificado){
+          await kvSet('hub_' + claveCaso, { estadoDevolucion: 'Pte. Cert. Bancario' });
+        }
+      }
+
+      guardados.push(claveCaso);
+      if(esPendiente) creadosPendientes++; else agregadosHistorico++;
+    }
+
+    document.getElementById('inputHistorico').value = '';
+    await cargarTodo();
+
+    alert(`Histórico cargado:\n· ${agregadosHistorico} registros cerrados añadidos al Histórico\n· ${creadosPendientes} casos creados como pendientes\n· ${omitidosDuplicados} ya existían (omitidos, sin duplicar)\n· ${omitidosSinId} filas sin ID de Oportunidad ni ID NACS (omitidas)`);
+  }catch(e){
+    alert('Hubo un error leyendo el Excel. Revisa que el archivo no esté dañado y vuelve a intentarlo.');
+  }
+}
+
+
+// ============================================================
+// AITOR — resumen de pendientes por marca, en texto plano
+// ============================================================
+let aitorAbierto = false;
+
+function mostrarTooltipAitor(mostrar){
+  document.getElementById('tooltipAitor').classList.toggle('show', mostrar);
+}
+
+function abrirAyuda(){
+  document.getElementById('ayudaOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function cerrarAyuda(){
+  document.getElementById('ayudaOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function toggleAitor(){
+  aitorAbierto = !aitorAbierto;
+  if(aitorAbierto) renderAitorPopover();
+  document.getElementById('aitorOverlay').classList.toggle('show', aitorAbierto);
+  document.body.style.overflow = aitorAbierto ? 'hidden' : '';
+}
+
+function renderAitorPopover(){
+  const pendientes = casos.filter(c => {
+    if(!perteneceANivel1(c)) return false;
+    const cat = categoriaDeCaso(c);
+    return cat ? esPendienteParaCategoria(c, cat) : esPendiente(c);
+  });
+
+  // Caso mas antiguo, para la frase inicial
+  let masAntiguoCaso = null;
+  let masAntiguoDias = -1;
+  pendientes.forEach(c => {
+    const d = diasDesde(c.fechaIngreso);
+    if(d > masAntiguoDias){ masAntiguoDias = d; masAntiguoCaso = c; }
+  });
+  const masAntiguoCat = masAntiguoCaso ? (categoriaDeCaso(masAntiguoCaso) ? categoriaDeCaso(masAntiguoCaso).nombre : masAntiguoCaso.tipoGestion) : '';
+  const masAntiguoMarca = masAntiguoCaso ? nombreMarca(masAntiguoCaso.marca) : '';
+  const intro = `Hay ${pendientes.length} pendiente${pendientes.length===1?'':'s'} de gestión` +
+    (masAntiguoCaso ? `, de los cuales el más antiguo lleva ${masAntiguoDias} días (${masAntiguoCat}, ${masAntiguoMarca}).` : '.');
+
+  // Agrupar: Marca -> Categoria -> lista de casos
+  const porMarca = {};
+  pendientes.forEach(c => {
+    const marca = nombreMarca(c.marca) || 'Sin marca';
+    const cat = categoriaDeCaso(c);
+    const catId = cat ? cat.id : 'otro';
+    porMarca[marca] = porMarca[marca] || {};
+    porMarca[marca][catId] = porMarca[marca][catId] || [];
+    porMarca[marca][catId].push(c);
+  });
+
+  const nombresFijos = Object.keys(MARCA_COLORES); // ['OBS','ESDesign','INESDI','UCMA']
+  const conTareas = nombresFijos.filter(n => porMarca[n]);
+  const sinTareas = nombresFijos.filter(n => !porMarca[n]);
+  if(porMarca['Sin marca']) conTareas.push('Sin marca');
+  const totalDeMarca = n => Object.values(porMarca[n]).reduce((s,l)=>s+l.length,0);
+  conTareas.sort((a,b) => totalDeMarca(b) - totalDeMarca(a));
+
+  const ETIQUETAS_CORTAS = { cc:'CC', bajacon:'Baja C/Dev', devolucion:'Dev.', bajasin:'Baja S/Dev', ce:'CE', cp:'CP' };
+  const catsOrdenadasDe = catsDeMarca => {
+    const ids = CATEGORIAS.filter(cat => catsDeMarca[cat.id]).map(cat => cat.id);
+    if(catsDeMarca['otro']) ids.push('otro');
+    return ids;
+  };
+  const masAntiguoDeLista = lista => {
+    let fecha = null, dias = -1;
+    lista.forEach(c => { const d = diasDesde(c.fechaIngreso); if(d > dias){ dias = d; fecha = c.fechaIngreso; } });
+    return fecha;
+  };
+
+  // --- Version visual (se ve en pantalla) ---
+  let incContador = 0;
+  const htmlBloques = conTareas.map(nombre => {
+    const catsDeMarca = porMarca[nombre];
+    const total = totalDeMarca(nombre);
+    const mCol = MARCA_COLORES[nombre] || { fg:'#5a6e80' };
+
+    const filas = catsOrdenadasDe(catsDeMarca).map(catId => {
+      const lista = catsDeMarca[catId];
+      const catInfo = CATEGORIAS.find(x=>x.id===catId);
+      const catNombreCorto = catInfo ? (ETIQUETAS_CORTAS[catInfo.id] || catInfo.nombre) : 'Otro';
+      const catColor = catInfo ? catInfo.color : '#5a6e80';
+      const masAntiguoFecha = masAntiguoDeLista(lista);
+      const conIncidencia = lista.filter(c => tieneIncidencia(c));
+      let incidenciaHtml = '';
+      if(conIncidencia.length){
+        incContador++;
+        const idInc = `aitorInc${incContador}`;
+        const detalle = conIncidencia[0].observacion && conIncidencia[0].observacion.trim() ? ` — "${escHtml(conIncidencia[0].observacion.trim())}"` : '';
+        incidenciaHtml = `
+        <div style="padding-left:82px;">
+          <span onclick="document.getElementById('${idInc}').classList.toggle('show')" style="font-size:10px;color:#a4293f;font-weight:700;cursor:pointer;text-decoration:underline dotted;">⚠ ${conIncidencia.length} con incidencia${conIncidencia.length>1?'s':''}</span>
+          <div id="${idInc}" style="font-size:10px;color:#a4293f;margin-top:3px;line-height:1.4;" class="aitor-inc-detalle">${escHtml(conIncidencia[0].observacion && conIncidencia[0].observacion.trim() ? conIncidencia[0].observacion.trim() : 'Sin detalle de motivo.')}</div>
+        </div>`;
+      }
+      return `
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:9.5px;font-weight:800;color:${catColor};background:${catColor}1a;padding:3px 9px;border-radius:8px;min-width:74px;text-align:center;flex-shrink:0;">${escHtml(catNombreCorto)}</span>
+          <span style="font-size:11px;color:#1a3a50;">${lista.length} pendiente${lista.length===1?'':'s'}${masAntiguoFecha ? ` · más antiguo ${masAntiguoFecha}` : ''}</span>
+        </div>${incidenciaHtml}`;
+    }).join('');
+
+    return `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:8px;">
+          <span style="font-size:13px;font-weight:800;color:${mCol.fg};">${escHtml(nombre)}</span>
+          <span style="font-size:11px;color:#5a6e80;">${total} pendiente${total===1?'':'s'}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;">${filas}</div>
+      </div>`;
+  }).join('');
+
+  const htmlSinTareas = sinTareas.length ? `<div style="font-size:10px;color:#9a8e82;font-weight:600;">${escHtml(sinTareas.join(', '))} — sin pendientes</div>` : '';
+
+  // --- Version texto plano (la que se copia con el boton) ---
+  const bloquesTexto = conTareas.map(nombre => {
+    const catsDeMarca = porMarca[nombre];
+    const total = totalDeMarca(nombre);
+    const lineas = catsOrdenadasDe(catsDeMarca).map(catId => {
+      const lista = catsDeMarca[catId];
+      const catInfo = CATEGORIAS.find(x=>x.id===catId);
+      const catNombre = catInfo ? catInfo.nombre : 'Otro';
+      const masAntiguoFecha = masAntiguoDeLista(lista);
+      const conIncidencia = lista.filter(c => tieneIncidencia(c));
+      let linea = `  · ${catNombre} — ${lista.length} pendiente${lista.length===1?'':'s'}${masAntiguoFecha ? ` · más antiguo: ${masAntiguoFecha}` : ''}`;
+      if(conIncidencia.length){
+        linea += `\n    ⚠ ${conIncidencia.length} con incidencia${conIncidencia.length>1?'s':''}${conIncidencia[0].observacion && conIncidencia[0].observacion.trim() ? ` ("${conIncidencia[0].observacion.trim()}")` : ''}`;
+      }
+      return linea;
+    }).join('\n');
+    return `${nombre} — ${total} pendiente${total===1?'':'s'}\n${lineas}`;
+  });
+  const bloqueSinTareasTexto = sinTareas.length ? `\n${sinTareas.join(', ')}: sin pendientes` : '';
+  const textoPlano = intro + '\n\n' + bloquesTexto.join('\n\n') + bloqueSinTareasTexto;
+
+  document.getElementById('aitorPopover').innerHTML = `
+    <div class="atenea-head">
+      <span class="atenea-titulo">Resumen de pendientes · por marca</span>
+      <button class="btn-x" style="width:22px;height:22px;border-radius:6px;font-size:9px;" onclick="toggleAitor()">✕</button>
+    </div>
+    <div style="font-size:11px;color:#5a6e80;margin:10px 0 14px;">${escHtml(intro)}</div>
+    ${htmlBloques}
+    ${htmlSinTareas}
+    <div class="atenea-texto" style="display:none;">${escHtml(textoPlano)}</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+      <button class="copy-btn" onclick="copiarTextoAitor(this)" title="Copiar texto">
+        <span class="copy-icon-a"></span><span class="copy-icon-b"></span>
+      </button>
+    </div>
+  `;
+}
+
+function copiarTextoAitor(btn){
+  const texto = document.getElementById('aitorPopover').querySelector('.atenea-texto').textContent;
+  navigator.clipboard.writeText(texto).then(()=>{
+    btn.classList.add('copied');
+    setTimeout(()=>btn.classList.remove('copied'), 1200);
+  });
+}
+
+
+function seleccionarCategoria(id){
+  catActiva = id;
+  const cat = CATEGORIAS.find(c => c.id === id);
+  const pendientesCat = cat ? casos.filter(c => cat.match(c.tipoGestion, c) && esPendienteParaCategoria(c, cat)) : [];
+  const marcasConPendientes = new Set(pendientesCat.map(c => nombreMarca(c.marca)));
+  const primeraConPendientes = Object.keys(MARCA_COLORES).find(m => marcasConPendientes.has(m));
+  marcaActiva = primeraConPendientes || 'todas';
+  document.getElementById('n2Search').value = '';
+  renderNivel1();
+  document.getElementById('n2Overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  renderNivel2();
+}
+function cerrarNivel2(){
+  document.getElementById('n2Overlay').classList.remove('show');
+  document.body.style.overflow = '';
+  catActiva = null;
+  renderNivel1();
+}
+
+// ============================================================
+// NIVEL 2
+// ============================================================
+function mesActualISO(){ return new Date().toISOString().slice(0,7); }
+
+function renderNivel2(){
+  const cat = CATEGORIAS.find(c => c.id === catActiva);
+  if(!cat) return;
+
+  const pendientes = casos.filter(c => cat.match(c.tipoGestion, c) && esPendienteParaCategoria(c, cat));
+
+  document.getElementById('n2Title').textContent = cat.nombre;
+  document.getElementById('n2Count').textContent = `${pendientes.length} pendientes`;
+  document.getElementById('n2Linea').style.background = cat.color;
+
+  renderAteneaBoton(cat);
+
+  let fuente = pendientes;
+
+  // buscador
+  const q = normalizar(document.getElementById('n2Search').value);
+  if(q.length >= 2){
+    fuente = fuente.filter(c => normalizar(idMostrado(c)).includes(q) || normalizar(nombreMostrado(c)).includes(q));
+  }
+
+  // chips de marca
+  const marcas = [...new Set(fuente.map(c => nombreMarca(c.marca))), 'todas'];
+  document.getElementById('n2Chips').innerHTML = marcas.map(m => `
+    <div class="chip ${marcaActiva===m?'active':''}" onclick="filtrarMarca('${m}')">${m==='todas'?'Todas':m}</div>
+  `).join('');
+  if(marcaActiva !== 'todas'){
+    fuente = fuente.filter(c => nombreMarca(c.marca) === marcaActiva);
+  } else {
+    fuente = [...fuente].sort((a, b) => {
+      const incA = tieneIncidencia(a) ? 1 : 0;
+      const incB = tieneIncidencia(b) ? 1 : 0;
+      if(incA !== incB) return incA - incB; // sin incidencia primero, con incidencia al final
+      const fA = parseFecha(a.fechaIngreso);
+      const fB = parseFecha(b.fechaIngreso);
+      if(!fA && !fB) return 0;
+      if(!fA) return 1;
+      if(!fB) return -1;
+      return fA - fB; // mas antiguo primero
+    });
+  }
+
+  const body = document.getElementById('n2Body');
+  if(fuente.length === 0){
+    body.innerHTML = '<div class="empty-msg">Sin casos pendientes en esta categoría</div>';
+    return;
+  }
+  body.innerHTML = fuente.map(c => renderFila(c, cat)).join('');
+}
+
+// ============================================================
+// ATENEA — texto general de plantilla por categoria (CE, CC, CP)
+// No es por caso: es un texto fijo con el mes de convocatoria
+// compartido insertado donde corresponde.
+// ============================================================
+let ateneaAbierta = false;
+
+function renderAteneaBoton(cat){
+  const wrap = document.getElementById('ateneaWrap');
+  if(!TEXTOS_ATENEA[cat.id]){
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = `
+    <button class="btn-atenea" onclick="toggleAtenea('${cat.id}')">✨ Atenea</button>
+    <div class="atenea-popover" id="ateneaPopover"></div>
+  `;
+}
+
+function toggleAtenea(catId){
+  ateneaAbierta = !ateneaAbierta;
+  if(ateneaAbierta){
+    renderAteneaPopover(catId);
+  }
+  document.getElementById('ateneaPopover').classList.toggle('show', ateneaAbierta);
+}
+
+function renderAteneaPopover(catId){
+  const cat = CATEGORIAS.find(c => c.id === catId);
+  const texto = TEXTOS_ATENEA[catId](mesConvocatoria);
+  document.getElementById('ateneaPopover').innerHTML = `
+    <div class="atenea-head">
+      <span class="atenea-titulo">Texto Atenea — ${cat.nombre}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="copy-btn" onclick="copiarTextoAtenea(this)" title="Copiar texto">
+          <span class="copy-icon-a"></span><span class="copy-icon-b"></span>
+        </button>
+        <button class="btn-x" style="width:22px;height:22px;border-radius:6px;font-size:9px;" onclick="toggleAtenea('${catId}')">✕</button>
+      </div>
+    </div>
+    <div class="atenea-texto">${escHtml(texto)}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;">
+      <span style="font-size:9.5px;color:#5a6e80;">Mes de convocatoria:</span>
+      <span style="font-size:9.5px;font-weight:700;color:#1a3a50;">${escHtml(mesConvocatoria)}</span>
+      <button onclick="editarMesConvocatoria()">✎</button>
+    </div>
+  `;
+}
+
+function copiarTextoAtenea(btn){
+  const texto = btn.closest('.atenea-popover').querySelector('.atenea-texto').textContent;
+  navigator.clipboard.writeText(texto).then(()=>{
+    btn.classList.add('copied');
+    setTimeout(()=>btn.classList.remove('copied'), 1200);
+  });
+}
+
+function filtrarMarca(m){ marcaActiva = m; renderNivel2(); }
+
+// ============================================================
+// REVISAR NACS (vista general — todas las categorías)
+// ============================================================
+function abrirNacsGeneral(){
+  document.getElementById('nacsGeneralOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('nacsGeneralSearch').value = '';
+  document.getElementById('filtroNacsMarcaSel').value = '';
+  document.getElementById('filtroNacsCategoriaSel').value = '';
+  document.getElementById('filtroNacsDesde').value = '';
+  document.getElementById('filtroNacsHasta').value = '';
+  document.getElementById('filtrosPanelNacs').classList.remove('show');
+  nacsSubFiltro = 'porrevisar';
+  renderNacsGeneral();
+}
+function toggleFiltrosNacs(){
+  document.getElementById('filtrosPanelNacs').classList.toggle('show');
+}
+function limpiarFiltrosNacs(){
+  document.getElementById('filtroNacsMarcaSel').value = '';
+  document.getElementById('filtroNacsCategoriaSel').value = '';
+  document.getElementById('filtroNacsDesde').value = '';
+  document.getElementById('filtroNacsHasta').value = '';
+  renderNacsGeneral();
+}
+function cerrarNacsGeneral(){
+  document.getElementById('nacsGeneralOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function tipoGestionLabel(c){
+  const cat = categoriaDeCaso(c);
+  return cat ? cat.nombre : (c.tipoGestion || '—');
+}
+
+function actualizarBadgeNacsGeneral(){
+  const n = casos.filter(c => !esPendiente(c) && c.nacsIncidenciaAbierta).length;
+  const el = document.getElementById('badgeNacsGeneral');
+  if(n > 0){ el.style.display='inline'; el.textContent = n; } else { el.style.display='none'; }
+}
+
+function renderPlazoNacs(){
+  const dias = diasHasta(plazoNacs);
+  let col = colorAntiguedad(dias <= 3 ? 8 : (dias <= 7 ? 5 : 0)); // reutiliza semaforo: <=3d rojo, <=7d ambar, resto verde
+  const textoDias = dias > 0 ? `quedan ${dias} día${dias===1?'':'s'}` : (dias === 0 ? 'vence hoy' : `vencido hace ${Math.abs(dias)} día${Math.abs(dias)===1?'':'s'}`);
+  document.getElementById('nacsPlazo').innerHTML = `
+    <span class="nacs-deadline" style="background:${col.bg};color:${col.fg};">📅 Revisar antes del ${escHtml(plazoNacs)} · ${textoDias}</span>
+    <button class="btn-prorrogar" onclick="prorrogarPlazoNacs()">⏳ Prorrogar plazo (mes completo)</button>
+  `;
+}
+
+async function prorrogarPlazoNacs(){
+  const nueva = window.prompt('Nueva fecha límite (dd/mm/aaaa):', plazoNacs);
+  if(!nueva) return;
+  plazoNacs = nueva.trim();
+  await kvSet(KV_KEY_PLAZO_NACS, plazoNacs);
+  renderNacsGeneral();
+}
+
+function renderSubChipsNacs(cerrados){
+  const nPorRevisar = cerrados.filter(c => !c.nacsIncidenciaAbierta && !c.nacsRevisadoMes).length;
+  const nIncidencias = cerrados.filter(c => c.nacsIncidenciaAbierta).length;
+  const nOk = cerrados.filter(c => !c.nacsIncidenciaAbierta && c.nacsRevisadoMes).length;
+  document.getElementById('nacsSubChips').innerHTML = `
+    <div class="chip ${nacsSubFiltro==='porrevisar'?'active':''}" onclick="cambiarSubFiltroNacs('porrevisar')">Por revisar · ${nPorRevisar}</div>
+    <div class="chip ${nacsSubFiltro==='incidencias'?'active':''}" onclick="cambiarSubFiltroNacs('incidencias')" style="${nacsSubFiltro!=='incidencias'?'color:#a4293f;border-color:#f0b0a8;':''}">⚠ Incidencias · ${nIncidencias}</div>
+    <div class="chip ${nacsSubFiltro==='okmes'?'active':''}" onclick="cambiarSubFiltroNacs('okmes')" style="${nacsSubFiltro!=='okmes'?'color:#1B5E20;border-color:#a5d6a7;':''}">✔ Revisados · ${nOk}</div>
+  `;
+}
+function cambiarSubFiltroNacs(f){ nacsSubFiltro = f; renderNacsGeneral(); }
+
+function renderNacsGeneral(){
+  renderPlazoNacs();
+
+  let cerrados = casos.filter(c => !esPendiente(c) && perteneceANivel1(c) && c.origen !== 'historico');
+
+  const q = normalizar(document.getElementById('nacsGeneralSearch').value);
+  if(q.length >= 2){
+    cerrados = cerrados.filter(c => normalizar(idMostrado(c)).includes(q) || normalizar(c.idNacs).includes(q) || normalizar(nombreMostrado(c)).includes(q));
+  }
+
+  const fMarca = document.getElementById('filtroNacsMarcaSel').value;
+  const fCat = document.getElementById('filtroNacsCategoriaSel').value;
+  const fDesde = document.getElementById('filtroNacsDesde').value;
+  const fHasta = document.getElementById('filtroNacsHasta').value;
+  const filtrosActivos = [fMarca, fCat, fDesde, fHasta].filter(Boolean).length;
+  document.getElementById('btnFiltrosNacs').classList.toggle('activo', filtrosActivos > 0);
+
+  if(fMarca) cerrados = cerrados.filter(c => nombreMarca(c.marca) === fMarca);
+  if(fCat) cerrados = cerrados.filter(c => { const cat = categoriaDeCaso(c); return cat && cat.id === fCat; });
+  if(fDesde) cerrados = cerrados.filter(c => { const f = fechaISOaComparar(fechaCierreDe(c)); return f && f >= fDesde; });
+  if(fHasta) cerrados = cerrados.filter(c => { const f = fechaISOaComparar(fechaCierreDe(c)); return f && f <= fHasta; });
+
+  renderSubChipsNacs(cerrados);
+  let vista;
+  if(nacsSubFiltro === 'incidencias') vista = cerrados.filter(c => c.nacsIncidenciaAbierta);
+  else if(nacsSubFiltro === 'okmes') vista = cerrados.filter(c => !c.nacsIncidenciaAbierta && c.nacsRevisadoMes);
+  else vista = cerrados.filter(c => !c.nacsIncidenciaAbierta && !c.nacsRevisadoMes);
+
+  const body = document.getElementById('nacsGeneralBody');
+  if(vista.length === 0){ body.innerHTML = '<div class="empty-msg">Sin casos en esta vista</div>'; return; }
+
+  // Agrupacion anidada: Marca (grupo principal) -> Categoria (subgrupo)
+  const porMarca = {};
+  vista.forEach(c => {
+    const m = nombreMarca(c.marca);
+    const cat = categoriaDeCaso(c);
+    const catId = cat ? cat.id : 'otro';
+    porMarca[m] = porMarca[m] || {};
+    porMarca[m][catId] = porMarca[m][catId] || [];
+    porMarca[m][catId].push(c);
+  });
+
+  const marcasOrdenadas = Object.keys(porMarca).sort();
+  body.innerHTML = marcasOrdenadas.map(m => {
+    const mCol = coloresMarca(m);
+    const totalMarca = Object.values(porMarca[m]).reduce((s,arr)=>s+arr.length,0);
+    const catsHtml = Object.keys(porMarca[m]).map(catId => {
+      const cat = CATEGORIAS.find(cc => cc.id === catId);
+      const catColor = cat ? cat.color : '#9a8e82';
+      const catNombre = cat ? cat.nombre : 'Otro';
+      const filasHtml = porMarca[m][catId].map(c => renderFilaNacs(c, catColor)).join('');
+      return `
+      <div class="nacs-grupo-cat" style="padding-left:0;margin-bottom:12px;">
+        <div class="nacs-subgrupo-label" style="color:${catColor};">${escHtml(catNombre)} · ${porMarca[m][catId].length}</div>
+        ${filasHtml}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="nacs-grupo-marca">
+      <span class="dot" style="background:${mCol.dot};"></span>
+      <span class="label" style="color:${mCol.fg};">${escHtml(m)} · ${totalMarca}</span>
+    </div>
+    <div class="nacs-grupo-cat">${catsHtml}</div>`;
+  }).join('');
+}
+
+function renderFilaNacs(c, catColor){
+  const nombre = nombreMostrado(c);
+  const nacsId = idNacsMostrado(c) || '(sin ID NACS)';
+
+  if(c.nacsIncidenciaAbierta){
+    return `
+    <div class="nacs-fila incidencia-nacs">
+      <div class="nacs-fila-stripe" style="background:${catColor};"></div>
+      <div class="nacs-fila-body col">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="row-id" style="font-size:10.5px;">${escHtml(nacsId)}</span>
+          <span class="row-name" style="font-size:11px;">${escHtml(nombre)}</span>
+          <span style="margin-left:auto;background:#a4293f;color:#fff;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;">⚠ SIN RESOLVER</span>
+        </div>
+        <div style="font-size:10px;color:#7a6e62;margin-top:4px;">"${escHtml(c.nacsIncidenciaTexto||'')}"</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button class="btn-nacs-ok" onclick="resolverIncidenciaNacs('${c.key}')">✓ Marcar como resuelta</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if(c.nacsRevisadoMes){
+    return `
+    <div class="nacs-fila ok-nacs">
+      <div class="nacs-fila-stripe" style="background:${catColor};"></div>
+      <div class="nacs-fila-body">
+        <span class="row-id" style="font-size:10.5px;">${escHtml(nacsId)}</span>
+        <span class="row-name" style="font-size:11px;">${escHtml(nombre)}</span>
+        <span class="badge-nacs-ok" style="margin-left:auto;">✔ OK Revisado</span>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="nacs-fila" id="nacsrow_${c.key}">
+    <div class="nacs-fila-stripe" style="background:${catColor};"></div>
+    <div class="nacs-fila-body col">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="row-id" style="font-size:10.5px;">${escHtml(nacsId)}</span>
+        <span class="row-name" style="font-size:11px;">${escHtml(nombre)}</span>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="btn-nacs-ok" onclick="marcarOkRevisado('${c.key}')">✓ OK</button>
+          <button class="btn-nacs-incidencia" onclick="mostrarIncidenciaForm('${c.key}')">⚠ Incidencia</button>
+        </div>
+      </div>
+      <div id="nacsform_${c.key}" style="display:none;margin-top:8px;">
+        <label style="font-size:8.5px;color:#9a8e82;text-transform:uppercase;font-weight:700;display:block;margin-bottom:4px;">Describe la incidencia</label>
+        <textarea id="nacstxt_${c.key}" placeholder="Ej: no se ha podido retroceder tarjeta, pendiente Cert. Bancario" style="width:100%;border:1px solid #c0b8ae;border-radius:6px;padding:6px 8px;font-size:10.5px;height:44px;font-family:inherit;"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+          <button class="mbtn mbtn-ok" onclick="guardarIncidenciaNacs('${c.key}')">Guardar incidencia</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function marcarOkRevisado(key){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  c.nacsRevisadoMes = mesActualISO();
+  c.nacsIncidenciaAbierta = false;
+  c.nacsIncidenciaTexto = '';
+  await guardarHubData(key, c);
+  renderNacsGeneral();
+  actualizarBadgeNacsGeneral();
+}
+
+function mostrarIncidenciaForm(key){
+  const form = document.getElementById('nacsform_'+key);
+  if(form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function guardarIncidenciaNacs(key){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  const texto = document.getElementById('nacstxt_'+key).value.trim();
+  if(!texto) return;
+  c.nacsIncidenciaAbierta = true;
+  c.nacsIncidenciaTexto = texto;
+  c.nacsRevisadoMes = '';
+  await guardarHubData(key, c);
+  renderNacsGeneral();
+  actualizarBadgeNacsGeneral();
+}
+
+async function resolverIncidenciaNacs(key){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  c.nacsIncidenciaAbierta = false;
+  c.nacsIncidenciaTexto = '';
+  await guardarHubData(key, c);
+  renderNacsGeneral();
+  actualizarBadgeNacsGeneral();
+}
+
+let historicoBuscarTimeout = null;
+document.getElementById('nacsGeneralSearch').addEventListener('input', () => {
+  clearTimeout(historicoBuscarTimeout);
+  historicoBuscarTimeout = setTimeout(renderNacsGeneral, 200);
+});
+
+// ============================================================
+// BUSCAR HISTORICO (vista general — todas las categorías, solo lectura)
+// ============================================================
+function abrirHistoricoGeneral(){
+  document.getElementById('historicoOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('historicoSearch').value = '';
+  document.getElementById('filtroHistMarca').value = '';
+  document.getElementById('filtroHistCategoria').value = '';
+  document.getElementById('filtroHistDesde').value = '';
+  document.getElementById('filtroHistHasta').value = '';
+  document.getElementById('filtrosPanelHistorico').classList.remove('show');
+  renderHistoricoGeneral();
+}
+function cerrarHistoricoGeneral(){
+  document.getElementById('historicoOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function poblarSelectsFiltro(){
+  const marcas = ['OBS','ESDesign','INESDI','UCMA'];
+  const cats = CATEGORIAS.map(c => ({id:c.id, nombre:c.nombre}));
+  [['filtroHistMarca',marcas,'marca'], ['filtroNacsMarcaSel',marcas,'marca']].forEach(([id, lista]) => {
+    const sel = document.getElementById(id);
+    if(sel) sel.innerHTML = `<option value="">Todas las marcas</option>` + lista.map(m=>`<option value="${m}">${m}</option>`).join('');
+  });
+  [['filtroHistCategoria',cats], ['filtroNacsCategoriaSel',cats]].forEach(([id, lista]) => {
+    const sel = document.getElementById(id);
+    if(sel) sel.innerHTML = `<option value="">Todas las categorías</option>` + lista.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  });
+}
+
+function toggleFiltrosHistorico(){
+  document.getElementById('filtrosPanelHistorico').classList.toggle('show');
+}
+function limpiarFiltrosHistorico(){
+  document.getElementById('filtroHistMarca').value = '';
+  document.getElementById('filtroHistCategoria').value = '';
+  document.getElementById('filtroHistDesde').value = '';
+  document.getElementById('filtroHistHasta').value = '';
+  renderHistoricoGeneral();
+}
+
+function fechaCierreDe(c){ return c.fechaCierreManual || c.fechaCierre || ''; }
+function fechaISOaComparar(ddmmyyyy){
+  // convierte dd/mm/yyyy a yyyy-mm-dd para comparar con <input type=date>
+  // (relleno con cero por si llega sin el cero inicial, p.ej. "10/9/2026")
+  const p = (ddmmyyyy||'').split('/');
+  if(p.length !== 3) return '';
+  const dd = p[0].padStart(2,'0');
+  const mm = p[1].padStart(2,'0');
+  return `${p[2]}-${mm}-${dd}`;
+}
+
+function renderHistoricoGeneral(){
+  let cerrados = casos.filter(c => !esPendiente(c) && perteneceANivel1(c));
+
+  const q = normalizar(document.getElementById('historicoSearch').value);
+  if(q.length >= 2){
+    cerrados = cerrados.filter(c =>
+      normalizar(idMostrado(c)).includes(q) ||
+      normalizar(c.idNacs).includes(q) ||
+      normalizar(nombreMostrado(c)).includes(q)
+    );
+  }
+
+  const fMarca = document.getElementById('filtroHistMarca').value;
+  const fCat = document.getElementById('filtroHistCategoria').value;
+  const fDesde = document.getElementById('filtroHistDesde').value;
+  const fHasta = document.getElementById('filtroHistHasta').value;
+  const filtrosActivos = [fMarca, fCat, fDesde, fHasta].filter(Boolean).length;
+  document.getElementById('btnFiltrosHistorico').classList.toggle('activo', filtrosActivos > 0);
+
+  if(fMarca) cerrados = cerrados.filter(c => nombreMarca(c.marca) === fMarca);
+  if(fCat) cerrados = cerrados.filter(c => categoriasDeCaso(c).some(cat => cat.id === fCat));
+  if(fDesde) cerrados = cerrados.filter(c => { const f = fechaISOaComparar(fechaCierreDe(c)); return f && f >= fDesde; });
+  if(fHasta) cerrados = cerrados.filter(c => { const f = fechaISOaComparar(fechaCierreDe(c)); return f && f <= fHasta; });
+
+  cerrados.sort((a,b) => fechaISOaComparar(fechaCierreDe(b)).localeCompare(fechaISOaComparar(fechaCierreDe(a))));
+
+  const tabla = document.getElementById('tablaHistorico');
+  if(cerrados.length === 0){
+    tabla.innerHTML = '<tbody><tr><td colspan="11" style="padding:24px;text-align:center;color:#9a8e82;font-size:12px;">Sin resultados</td></tr></tbody>';
+    return;
+  }
+
+  const filas = cerrados.map(c => {
+    const mCol = coloresMarca(c.marca);
+    const cats = categoriasDeCaso(c);
+    const tipoTexto = cats.length ? cats.map(cc => cc.nombre).join(' + ') : (c.tipoGestion || '—');
+    const nombre = nombreMostrado(c);
+    let variantePorDefecto = '';
+    for(const cc of cats){
+      if(TEXTOS[cc.id] && TEXTOS[cc.id].variantes){ variantePorDefecto = TEXTOS[cc.id].variantes[0]; break; }
+    }
+    const motivo = (c.textoMotivo && c.textoMotivo.trim())
+      ? c.textoMotivo.trim()
+      : (c.origen === 'historico' ? '—*' : (c.textoVariante || variantePorDefecto || '—'));
+    const medio = c.textoMetodo || '—';
+    return `
+    <tr>
+      <td><span style="background:${mCol.bg};color:${mCol.fg};font-size:9.5px;font-weight:700;padding:4px 11px;border-radius:20px;white-space:nowrap;">${escHtml(nombreMarca(c.marca))}</span></td>
+      <td style="font-family:monospace;" class="td-truncado" title="${escHtml(idMostrado(c))}">${escHtml(idMostrado(c))}</td>
+      <td class="td-truncado" title="${escHtml(nombre)}">${escHtml(nombre)}</td>
+      <td>${escHtml(idNacsMostrado(c)||'—')}</td>
+      <td class="td-truncado" title="${escHtml(tipoTexto)}">${escHtml(tipoTexto)}</td>
+      <td class="td-truncado" title="${escHtml(motivo)}">${escHtml(motivo)}</td>
+      <td>${escHtml(medio)}</td>
+      <td>${escHtml(fechaCierreDe(c) || '—')}</td>
+      <td>${escHtml(c.responsableManual || c.responsable || '—')}</td>
+      <td>${escHtml(c.cerradoPor || '—')}</td>
+      <td class="td-truncado" style="${c.avisoError?'color:#a4293f;font-weight:600;':''}" title="${escHtml(c.avisoError||'')}">${escHtml(c.avisoError || '—')}</td>
+    </tr>`;
+  }).join('');
+
+  tabla.innerHTML = `
+    <thead><tr>
+      <th style="width:10%;">Marca <span class="th-ico">⇅</span></th><th style="width:13%;">ID Oportunidad</th><th style="width:16%;">Nombre <span class="th-ico">⇅</span></th><th style="width:9%;">ID NACS</th><th style="width:12%;">Tipo de gestión <span class="th-ico">⇅</span></th><th style="width:12%;">Motivo</th><th style="width:10%;">Medio devolución</th><th style="width:10%;" class="th-activo">Fecha de cierre <span class="th-ico">▼</span></th><th style="width:8%;">Responsable</th><th style="width:8%;">Cerrado por</th><th style="width:8%;color:#a4293f;">⚠ Aviso</th>
+    </tr></thead>
+    <tbody>${filas}</tbody>`;
+}
+
+let historicoSearchTimeout = null;
+document.getElementById('historicoSearch').addEventListener('input', () => {
+  clearTimeout(historicoSearchTimeout);
+  historicoSearchTimeout = setTimeout(renderHistoricoGeneral, 200);
+});
+
+function renderFila(c, cat){
+  const dias = diasDesde(c.fechaIngreso);
+  const col = colorAntiguedad(dias);
+  const incidencia = tieneIncidencia(c) && esPendiente(c);
+  const esDevolucion = cat.id === 'devolucion';
+  const textoConf = TEXTOS[cat.id];
+  const idMostradoVal = idMostrado(c);
+  const nombreMostradoVal = nombreMostrado(c);
+  const marcaCol = coloresMarca(c.marca);
+
+  return `
+  <div class="row ${incidencia?'incidencia':''}" id="row_${c.key}">
+    <div class="row-head" onclick="toggleFila('${c.key}')">
+      ${marcaActiva==='todas' ? `<span style="display:inline-flex;align-items:center;gap:5px;background:${marcaCol.bg};color:${marcaCol.fg};font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:6px;"><span style="width:6px;height:6px;border-radius:50%;background:${marcaCol.dot};"></span>${escHtml(nombreMarca(c.marca))}</span>` : ''}
+      <span class="row-id">${escHtml(idMostradoVal)}</span>
+      <span class="row-name">${escHtml(nombreMostradoVal)}
+        ${esPteDevolucionCruzada(c, cat) ? '<span style="display:block;background:#fdeee0;color:#8a5a10;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px;width:fit-content;margin-top:2px;">también en Devolución</span>' : ''}
+      </span>
+      ${incidencia ? '<span style="background:#a4293f;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:6px;">⚠ INCIDENCIA</span>' : ''}
+      ${c.idNacs ? `<span class="row-nacs-badge">NACS ${escHtml(idNacsMostrado(c))}</span>` : '<span class="row-nacs-vacio">sin NACS todavía</span>'}
+      ${c.estadoDevolucion ? `<span style="background:${c.estadoDevolucion==='Gestionado'?'#e1f5ee':'#fdf0dc'};color:${c.estadoDevolucion==='Gestionado'?'#0f6e56':'#8a5a10'};font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;">${escHtml(c.estadoDevolucion)}</span>` : ''}
+      ${c.avisoError ? `<span style="background:#fdf0ec;color:#a4293f;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;">⚠ ${escHtml(c.avisoError)}</span>` : ''}
+      <span style="margin-left:auto;text-align:right;">
+        <div class="row-mail-label">Mail</div>
+        <span class="row-fecha" style="background:${col.bg};color:${col.fg};margin-left:0;">${escHtml(c.fechaIngreso||'—')}</span>
+      </span>
+      <span class="row-chev">▾</span>
+    </div>
+    <div class="row-detail">
+      <div class="field-grid g3">
+        <div class="field"><label>Marca</label><input type="text" value="${escHtml(nombreMarca(c.marca))}" disabled style="background:#f0eae2;color:#5a6e80;"></div>
+        <div class="field"><label>ID Oportunidad</label>
+          <div style="display:flex;gap:4px;">
+            <input type="text" value="${escHtml(idMostradoVal)}" onchange="guardarCampo('${c.key}','idOportunidadManual',this.value)" style="flex:1;">
+            <button class="copy-btn-mini" onclick="copiarValorCampo(this)" title="Copiar ID de Oportunidad"><span class="copy-icon-a"></span><span class="copy-icon-b"></span></button>
+          </div>
+        </div>
+        <div class="field"><label>Alumno</label><input type="text" value="${escHtml(nombreMostradoVal)}" onchange="guardarCampo('${c.key}','alumnoManual',this.value)"></div>
+      </div>
+      <div class="field-grid">
+        <div class="field"><label>ID NACS</label>
+          <div style="display:flex;gap:4px;">
+            <input type="text" value="${escHtml(c.idNacs||'')}" onchange="guardarCampo('${c.key}','idNacs',this.value)" style="flex:1;">
+            <button class="copy-btn-mini" onclick="copiarIdNacs(this,'${c.key}')" title="Copiar ID NACS (con prefijo de marca)"><span class="copy-icon-a"></span><span class="copy-icon-b"></span></button>
+          </div>
+        </div>
+        <div class="field"><label>Responsable</label>
+          <select onchange="guardarCampo('${c.key}','responsableManual',this.value)">
+            ${['','Noelia','Ana','Elsa','Silvia'].map(o=>`<option value="${o}" ${(c.responsableManual||'')===o?'selected':''}>${o||('Auto: '+(c.responsable||'—'))}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${esDevolucion?`
+      <div class="field-grid">
+        <div class="field"><label>Estado devolución</label>
+          <select onchange="guardarCampo('${c.key}','estadoDevolucion',this.value)">
+            ${['','Pte gestionar','Pte. Cert. Bancario','Pte Firma','Pte Flywire','Gestionado'].map(o=>`<option value="${o}" ${c.estadoDevolucion===o?'selected':''}>${o||'—'}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Reclamado</label><input type="date" value="${escHtml(c.reclamado||'')}" onchange="guardarCampo('${c.key}','reclamado',this.value)"></div>
+      </div>
+      `:''}
+
+      <div class="field" style="margin-bottom:12px;">
+        <label>Observación</label>
+        <input type="text" placeholder="Añadir nota..." value="${escHtml(c.observacion||'')}" onchange="guardarCampo('${c.key}','observacion',this.value)">
+      </div>
+
+      <label class="incidencia-toggle">
+        <input type="checkbox" ${c.incidenciaManual?'checked':''} onchange="marcarIncidenciaManual('${c.key}', this.checked)">
+        Marcar como incidencia manualmente
+      </label>
+
+      ${textoConf ? renderCopyBox(c, cat, textoConf) : ''}
+
+      <div style="display:flex;align-items:center;">
+        ${esDevolucion
+          ? (!c.devolucionResuelta ? `<button class="btn-cerrar" onclick="pedirDevolucionCompletada('${c.key}','${escHtml(nombreMostradoVal)}')">✔ Devolución completada</button>` : '')
+          : (esPendiente(c) ? `<button class="btn-cerrar" onclick="pedirCierre('${c.key}','${escHtml(nombreMostradoVal)}')">✔ Cerrar expediente</button>` : '')
+        }
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button title="Marcar como cargado por error" style="background:#fdf0ec;border:none;color:#a4293f;width:28px;height:28px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="pedirMarcarError('${c.key}','${escHtml(nombreMostradoVal)}')">⚠</button>
+          <button title="Eliminar caso" style="background:#fdf0ec;border:none;color:#a4293f;width:28px;height:28px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="pedirEliminar('${c.key}','${escHtml(nombreMostradoVal)}')">🗑️</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCopyBox(c, cat, conf){
+  const variantes = conf.variantes;
+  const varSel = c.textoVariante || (variantes ? variantes[0] : 'unica');
+  const campos = conf.campos[varSel] || [];
+  const metodoSel = c.textoMetodo || METODOS_DEVOLUCION[0];
+  const esConPago = varSel === 'Con pago de tasas';
+  const abonadasSel = c.textoAbonadas || 'No';
+  const mostrarAbonadas = conf.tieneAbonadas && esConPago;
+  const mostrarVencimiento = campos.includes('vencimiento') && !(mostrarAbonadas && abonadasSel === 'Sí');
+  const datos = { motivo: c.textoMotivo||'', vencimiento: c.textoVencimiento||'' };
+  const texto = conf.generar(varSel, datos, mesConvocatoria, metodoSel, mostrarAbonadas ? abonadasSel : undefined);
+
+  return `
+  <div class="copybox">
+    <label class="copybox-title">Texto para copiar</label>
+    <div class="copybox-row">
+      ${variantes ? `
+      <select onchange="guardarCampoTexto('${c.key}','textoVariante',this.value)">
+        ${variantes.map(v=>`<option value="${v}" ${v===varSel?'selected':''}>${v}</option>`).join('')}
+      </select>` : ''}
+      ${campos.includes('motivo') ? `<input type="text" placeholder="Motivo..." value="${escHtml(datos.motivo)}" onchange="guardarCampoTexto('${c.key}','textoMotivo',this.value)">` : ''}
+      ${conf.tieneMetodo ? `
+      <select onchange="guardarCampoTexto('${c.key}','textoMetodo',this.value)">
+        ${METODOS_DEVOLUCION.map(m=>`<option value="${m}" ${m===metodoSel?'selected':''}>${m}</option>`).join('')}
+      </select>` : ''}
+      ${mostrarAbonadas ? `
+      <select onchange="guardarCampoTexto('${c.key}','textoAbonadas',this.value)">
+        <option value="No" ${abonadasSel==='No'?'selected':''}>Tasas pendientes</option>
+        <option value="Sí" ${abonadasSel==='Sí'?'selected':''}>Tasas ya abonadas</option>
+      </select>` : ''}
+      ${mostrarVencimiento ? `<input type="date" value="${escHtml(datos.vencimiento)}" onchange="guardarCampoTexto('${c.key}','textoVencimiento',this.value)">` : ''}
+    </div>
+    <div class="copybox-text-row">
+      <div class="copybox-text">${escHtml(texto)}</div>
+      <button class="copy-btn" onclick="copiarTexto(this,'${c.key}')" title="Copiar texto">
+        <span class="copy-icon-a"></span><span class="copy-icon-b"></span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function toggleFila(key){
+  document.getElementById('row_'+key).classList.toggle('open');
+}
+
+async function guardarCampoTexto(key, campo, valor){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  c[campo] = valor;
+  await guardarHubData(key, c);
+
+  // El campo de fecha (vencimiento) es el unico que NO puede disparar un
+  // re-render completo: los selectores de fecha nativos a veces lanzan el
+  // evento de cambio segmento a segmento (dia/mes/año) mientras se escribe,
+  // y reconstruir el campo a mitad de esa escritura corta el año a medias
+  // (por eso aparecia "01/01/0027"). Para este campo, actualizamos solo el
+  // texto generado, sin tocar el input.
+  if(campo === 'textoVencimiento'){
+    const cat = categoriaDeCaso(c);
+    const conf = cat ? TEXTOS[cat.id] : null;
+    if(conf){
+      const varSel = c.textoVariante || (conf.variantes ? conf.variantes[0] : 'unica');
+      const metodoSel = c.textoMetodo || METODOS_DEVOLUCION[0];
+      const abonadasSel = c.textoAbonadas || 'No';
+      const esConPago = varSel === 'Con pago de tasas';
+      const mostrarAbonadas = conf.tieneAbonadas && esConPago;
+      const datos = { motivo: c.textoMotivo||'', vencimiento: c.textoVencimiento||'' };
+      const texto = conf.generar(varSel, datos, mesConvocatoria, metodoSel, mostrarAbonadas ? abonadasSel : undefined);
+      const row = document.getElementById('row_'+key);
+      const textoEl = row ? row.querySelector('.copybox-text') : null;
+      if(textoEl) textoEl.textContent = texto;
+    }
+    return;
+  }
+
+  renderNivel2();
+  const row = document.getElementById('row_'+key);
+  if(row) row.classList.add('open');
+}
+
+function copiarIdNacs(btn, key){
+  const c = casos.find(x => x.key === key);
+  if(!c) return;
+  const valor = idNacsMostrado(c);
+  if(!valor) return;
+  navigator.clipboard.writeText(valor).then(()=>{
+    btn.classList.add('copied');
+    setTimeout(()=>btn.classList.remove('copied'), 1200);
+  });
+}
+
+function copiarValorCampo(btn){
+  const input = btn.previousElementSibling;
+  if(!input || !input.value) return;
+  navigator.clipboard.writeText(input.value).then(()=>{
+    btn.classList.add('copied');
+    setTimeout(()=>btn.classList.remove('copied'), 1200);
+  });
+}
+
+function copiarTexto(btn, key){
+  const box = btn.closest('.copybox').querySelector('.copybox-text').textContent;
+  navigator.clipboard.writeText(box).then(()=>{
+    btn.classList.add('copied');
+    setTimeout(()=>btn.classList.remove('copied'), 1200);
+  });
+}
+
+// ============================================================
+// GUARDADO (cajon del Hub — nunca toca el cajon de la macro)
+// ============================================================
+function hubDataDeCaso(c){
+  return {
+    observacion: c.observacion||'', idNacs: c.idNacs||'',
+    responsableManual: c.responsableManual||'', incidenciaManual: !!c.incidenciaManual,
+    incidenciaTocada: !!c.incidenciaTocada,
+    estadoDevolucion: c.estadoDevolucion||'', reclamado: c.reclamado||'',
+    cierreManual: !!c.cierreManual, fechaCierreManual: c.fechaCierreManual||'',
+    nacsRevisadoMes: c.nacsRevisadoMes||'', nacsIncidenciaAbierta: !!c.nacsIncidenciaAbierta,
+    nacsIncidenciaTexto: c.nacsIncidenciaTexto||'',
+    textoVariante: c.textoVariante||'', textoMetodo: c.textoMetodo||'',
+    textoMotivo: c.textoMotivo||'', textoVencimiento: c.textoVencimiento||'',
+    textoAbonadas: c.textoAbonadas||'',
+    idOportunidadManual: c.idOportunidadManual||'', alumnoManual: c.alumnoManual||'',
+    devolucionResuelta: !!c.devolucionResuelta,
+    origen: c.origen||'',
+    cerradoPor: c.cerradoPor||'',
+    avisoError: c.avisoError||''
+  };
+}
+async function guardarHubData(key, c){
+  await kvSet('hub_'+key, hubDataDeCaso(c));
+}
+async function guardarCampo(key, campo, valor){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  c[campo] = valor;
+  await guardarHubData(key, c);
+  if(campo === 'observacion') renderNivel1();
+}
+
+async function pedirDevolucionCompletada(key, nombre){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  claveCierrePendiente = key;
+  accionCierrePendiente = 'devolucion';
+  document.getElementById('modalCerrarTexto').textContent =
+    `Vas a marcar la devolución de ${nombre} como completada. Esta acción quedará registrada.`;
+  const usuario = await obtenerUsuarioActual();
+  document.getElementById('modalCerrarNombre').textContent = usuario;
+  document.getElementById('modalCerrar').classList.add('show');
+}
+
+async function marcarIncidenciaManual(key, checked){
+  const c = casos.find(x=>x.key===key);
+  if(!c) return;
+  c.incidenciaManual = checked;
+  c.incidenciaTocada = true;
+  await guardarHubData(key, c);
+  renderNivel1();
+}
+
+const TEXTO_AVISO_ERROR = 'Cargado por error, no corresponde';
+let claveAvisoErrorPendiente = null;
+function pedirMarcarError(key, nombre){
+  claveAvisoErrorPendiente = key;
+  document.getElementById('modalAvisoErrorTexto').textContent =
+    `Úsalo cuando un alumno se cargó por equivocación y esta gestión nunca ocurrió de verdad. Se marcará con este aviso y a continuación se cerrará el caso (te pedirá confirmarlo en el siguiente paso).`;
+  document.getElementById('modalAvisoErrorCaso').textContent = `Caso: ${nombre}`;
+  document.getElementById('modalAvisoError').classList.add('show');
+}
+function cerrarModalAvisoError(){
+  document.getElementById('modalAvisoError').classList.remove('show');
+  claveAvisoErrorPendiente = null;
+}
+async function confirmarMarcarError(){
+  if(!claveAvisoErrorPendiente) return;
+  const key = claveAvisoErrorPendiente;
+  const c = casos.find(x => x.key === key);
+  if(!c) return;
+  c.avisoError = TEXTO_AVISO_ERROR;
+  await guardarHubData(key, c);
+  cerrarModalAvisoError();
+  renderNivel1();
+  // Encadena directo al cierre manual de siempre
+  await pedirCierre(key, nombreMostrado(c));
+}
+
+let claveEliminarPendiente = null;
+function pedirEliminar(key, nombre){
+  claveEliminarPendiente = key;
+  document.getElementById('modalEliminarTexto').textContent =
+    `Vas a eliminar por completo el caso de ${nombre}. Úsalo solo cuando el caso nunca debió crearse (por ejemplo, una etiqueta puesta por error).`;
+  document.getElementById('modalEliminarPass').value = '';
+  document.getElementById('modalEliminarError').style.display = 'none';
+  document.getElementById('modalEliminar').classList.add('show');
+}
+function cerrarModalEliminar(){
+  document.getElementById('modalEliminar').classList.remove('show');
+  claveEliminarPendiente = null;
+}
+async function confirmarEliminar(){
+  if(!claveEliminarPendiente) return;
+  const pass = document.getElementById('modalEliminarPass').value;
+  if(pass !== 'AdminHub'){
+    document.getElementById('modalEliminarError').style.display = 'block';
+    return;
+  }
+  const key = claveEliminarPendiente;
+  await fetch(`https://seguimiento-correos.adminhubplaneta.workers.dev/kv?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+  await fetch(`https://seguimiento-correos.adminhubplaneta.workers.dev/kv?key=${encodeURIComponent('hub_' + key)}`, { method: 'DELETE' });
+  casos = casos.filter(c => c.key !== key);
+  cerrarModalEliminar();
+  renderNivel1();
+  renderNivel2();
+}
+
+let claveCierrePendiente = null;
+let accionCierrePendiente = 'cierre'; // 'cierre' | 'devolucion'
+// ============================================================
+// ¿QUIEN ERES? — identificacion local (sin login), guardada en
+// este navegador/ordenador. No hay sistema de sesiones en el Hub,
+// asi que esto es lo mas cercano a saber quien cierra cada caso.
+// ============================================================
+let resolverUsuarioActual = null;
+function obtenerUsuarioActual(){
+  return new Promise(resolve => {
+    const guardado = localStorage.getItem('hubUsuarioActual');
+    if(guardado){ resolve(guardado); return; }
+    resolverUsuarioActual = resolve;
+    document.getElementById('modalQuienEres').classList.add('show');
+  });
+}
+function elegirUsuarioActual(nombre){
+  localStorage.setItem('hubUsuarioActual', nombre);
+  document.getElementById('modalQuienEres').classList.remove('show');
+  if(resolverUsuarioActual){ resolverUsuarioActual(nombre); resolverUsuarioActual = null; }
+}
+function cambiarUsuarioActual(){
+  resolverUsuarioActual = (nombre) => {
+    document.getElementById('modalCerrarNombre').textContent = nombre;
+  };
+  document.getElementById('modalQuienEres').classList.add('show');
+}
+
+async function pedirCierre(key, nombre){
+  claveCierrePendiente = key;
+  accionCierrePendiente = 'cierre';
+  document.getElementById('modalCerrarTexto').textContent =
+    `Vas a cerrar el expediente de ${nombre} sin la etiqueta OK.Gestionado en Outlook (por ejemplo, porque el correo ya está archivado). Esta acción quedará registrada.`;
+  const usuario = await obtenerUsuarioActual();
+  document.getElementById('modalCerrarNombre').textContent = usuario;
+  document.getElementById('modalCerrar').classList.add('show');
+}
+function cerrarModal(){ document.getElementById('modalCerrar').classList.remove('show'); claveCierrePendiente=null; accionCierrePendiente='cierre'; }
+async function confirmarCierre(){
+  if(!claveCierrePendiente) return;
+  const c = casos.find(x=>x.key===claveCierrePendiente);
+  const usuario = document.getElementById('modalCerrarNombre').textContent;
+  if(accionCierrePendiente === 'devolucion'){
+    c.devolucionResuelta = true;
+  } else {
+    c.cierreManual = true;
+    const hoy = new Date();
+    c.fechaCierreManual = `${String(hoy.getDate()).padStart(2,'0')}/${String(hoy.getMonth()+1).padStart(2,'0')}/${hoy.getFullYear()}`;
+  }
+  c.cerradoPor = usuario;
+  await guardarHubData(claveCierrePendiente, c);
+  cerrarModal();
+  renderNivel1();
+  renderNivel2();
+}
+
+// ============================================================
+// BUSCADOR GLOBAL (Nivel 1) — busca en TODOS los casos, pendientes
+// y cerrados, y te dice donde esta cada uno.
+// ============================================================
+function renderBuscadorGlobal(){
+  const cont = document.getElementById('buscadorGlobalResultados');
+  const q = normalizar(document.getElementById('buscadorGlobal').value);
+  if(q.length < 2){ cont.style.display = 'none'; cont.innerHTML = ''; return; }
+
+  const resultados = casos.filter(c =>
+    normalizar(idMostrado(c)).includes(q) || normalizar(nombreMostrado(c)).includes(q)
+  ).slice(0, 15);
+
+  if(resultados.length === 0){
+    cont.innerHTML = `<div style="padding:12px;font-size:11.5px;color:#9a8e82;">Sin resultados</div>`;
+    cont.style.display = 'block';
+    return;
+  }
+
+  cont.innerHTML = resultados.map(c => {
+    const pendiente = esPendiente(c);
+    const cats = categoriasDeCaso(c);
+    const catNombre = cats.length ? cats.map(cc => cc.nombre).join(' + ') : (c.tipoGestion || 'Sin clasificar');
+    const marca = nombreMarca(c.marca);
+    const badge = pendiente
+      ? `<span style="font-size:9px;font-weight:800;color:#0f6e56;background:#e1f5ee;padding:3px 9px;border-radius:8px;white-space:nowrap;">Pendiente · ${escHtml(catNombre)} · ${escHtml(marca)}</span>`
+      : `<span style="font-size:9px;font-weight:800;color:#5a6e80;background:#ede8df;padding:3px 9px;border-radius:8px;white-space:nowrap;">Cerrado · ${escHtml(catNombre)} · ${escHtml(fechaCierreDe(c)||'—')}</span>`;
+    return `
+      <div onclick="irAResultadoBuscador('${c.key}')" style="padding:10px 12px;border-bottom:1px solid #f0ece5;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;" onmouseenter="this.style.background='#faf8f4'" onmouseleave="this.style.background='#fff'">
+        <div style="min-width:0;">
+          <div style="font-size:12px;font-weight:600;color:#1a3a50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(nombreMostrado(c))}</div>
+          <div style="font-size:10px;color:#9a8e82;font-family:monospace;">${escHtml(idMostrado(c))}</div>
+        </div>
+        ${badge}
+      </div>`;
+  }).join('');
+  cont.style.display = 'block';
+}
+
+function irAResultadoBuscador(key){
+  const c = casos.find(x => x.key === key);
+  if(!c) return;
+  document.getElementById('buscadorGlobalResultados').style.display = 'none';
+  document.getElementById('buscadorGlobal').value = '';
+
+  if(esPendiente(c)){
+    const cat = categoriaDeCaso(c);
+    if(cat){
+      seleccionarCategoria(cat.id);
+      marcaActiva = nombreMarca(c.marca);
+      document.getElementById('n2Search').value = idMostrado(c);
+      renderNivel2();
+    }
+  } else {
+    abrirHistoricoGeneral();
+    document.getElementById('historicoSearch').value = idMostrado(c);
+    renderHistoricoGeneral();
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('buscadorGlobal');
+  const cont = document.getElementById('buscadorGlobalResultados');
+  if(wrap && cont && !wrap.contains(e.target) && !cont.contains(e.target)){
+    cont.style.display = 'none';
+  }
+});
+
+// ============================================================
+// BUSCADOR (con debounce simple)
+// ============================================================
+let buscarTimeout = null;
+document.getElementById('n2Search').addEventListener('input', () => {
+  clearTimeout(buscarTimeout);
+  buscarTimeout = setTimeout(renderNivel2, 200);
+});
+
+async function actualizarDatos(){
+  await cargarTodo();
+  renderNivel1();
+  if(catActiva) renderNivel2();
+}
+
+// ============================================================
+// ARRANQUE
+// ============================================================
+cargarTodo();
+</script>
+</body>
+</html>
