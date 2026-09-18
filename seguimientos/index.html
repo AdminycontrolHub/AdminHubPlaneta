@@ -298,7 +298,13 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 @keyframes mjBlink{0%,100%{opacity:1;}50%{opacity:.55;}}
 .mj-main{max-width:1080px;width:100%;margin:0 auto;padding:18px 24px 14px;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
 .mj-view{display:none;animation:mjFade .4s ease;flex-direction:column;min-height:0;overflow:hidden;flex:1;}
-#mj-view-historico{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.mj-hist-fixed-head{flex:0 0 auto;}
+.mj-hist-scroll-track{position:absolute;left:0;top:0;bottom:0;width:14px;pointer-events:none;}
+.mj-hist-scroll-track:before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:1.5px;background:var(--mj-line);}
+.mj-hist-scroll-thumb{position:absolute;left:0;top:0;width:14px;height:14px;border-radius:50%;background:var(--mj-cyan);box-shadow:0 0 10px rgba(0,230,255,.6);transition:top .08s linear;}
+.mj-hist-body{position:relative;flex:1;min-height:0;display:flex;}
+.mj-hist-scroll-area{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-left:20px;}
+.mj-hist-scroll-area::-webkit-scrollbar{display:none;}
 .mj-view.active{display:flex;}
 @keyframes mjFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 
@@ -1099,17 +1105,24 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 
       <!-- VISTA HISTÓRICO -->
       <section class="mj-view" id="mj-view-historico">
-        <div class="mj-section-head" style="margin-top:6px;"><h2>Histórico de jueves</h2><span class="mj-count">Últimas 4 semanas</span></div>
-        <div class="mj-hist-search"><span>🔍</span><input type="text" id="mjHistSearchInput" placeholder="Buscar por palabra clave o fecha (ej. «Paygold» o «27 ago»)…"></div>
-        <div class="mj-filter-bar" id="mjFilterBar">
-          <button class="mj-filter-chip active" data-mjf="todos">Todos</button>
-          <button class="mj-filter-chip" data-mjf="pendiente">Pendientes</button>
-          <button class="mj-filter-chip" data-mjf="en_tratamiento">En tratamiento</button>
-          <button class="mj-filter-chip" data-mjf="cerrado">Cerrados</button>
+        <div class="mj-hist-fixed-head">
+          <div class="mj-section-head" style="margin-top:6px;"><h2>Histórico de jueves</h2><span class="mj-count">Últimas 4 semanas</span></div>
+          <div class="mj-hist-search"><span>🔍</span><input type="text" id="mjHistSearchInput" placeholder="Buscar por palabra clave o fecha (ej. «Paygold» o «27 ago»)…"></div>
+          <div class="mj-filter-bar" id="mjFilterBar">
+            <button class="mj-filter-chip active" data-mjf="todos">Todos</button>
+            <button class="mj-filter-chip" data-mjf="pendiente">Pendientes</button>
+            <button class="mj-filter-chip" data-mjf="en_tratamiento">En tratamiento</button>
+            <button class="mj-filter-chip" data-mjf="cerrado">Cerrados</button>
+          </div>
         </div>
-        <div class="mj-timeline" id="mjTimeline"></div>
-        <div class="mj-section-head" style="margin-top:18px;"><h2>Resultados de votaciones</h2><span class="mj-count" id="mj-vote-hist-count">0 registros</span></div>
-        <div id="mjVoteHistList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div class="mj-hist-body">
+          <div class="mj-hist-scroll-track" id="mjHistScrollTrack"><div class="mj-hist-scroll-thumb" id="mjHistScrollThumb"></div></div>
+          <div class="mj-hist-scroll-area" id="mjHistScrollArea">
+            <div class="mj-timeline" id="mjTimeline"></div>
+            <div class="mj-section-head" style="margin-top:18px;"><h2>Resultados de votaciones</h2><span class="mj-count" id="mj-vote-hist-count">0 registros</span></div>
+            <div id="mjVoteHistList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -1224,11 +1237,18 @@ const KV_BASE='https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv';
 const KV_KEY_MAIN='adminhub_referidos_obs_v1';
 const KV_KEY_WA='adminhub_referidos_obs_writeaccess';
 
-async function kvGet(key){
-  const res = await fetch(`${KV_BASE}?key=${encodeURIComponent(key)}`);
-  if(!res.ok) throw new Error('kv get failed');
-  const d = await res.json();
-  return d.value ? JSON.parse(d.value) : null;
+async function kvGet(key, retries=3){
+  for(let i=0; i<retries; i++){
+    try{
+      const res = await fetch(`${KV_BASE}?key=${encodeURIComponent(key)}`);
+      if(!res.ok) throw new Error('kv get failed');
+      const d = await res.json();
+      return d.value ? JSON.parse(d.value) : null;
+    }catch(e){
+      if(i===retries-1) throw e;
+      await new Promise(r=>setTimeout(r, 400*(i+1)));
+    }
+  }
 }
 async function kvSet(key, value){
   const res = await fetch(KV_BASE, {
@@ -2371,7 +2391,7 @@ function mjIconFor(name){ const m=mjTeamMembers.find(p=>p.name===name); return m
 
 /* ---------------- EQUIPO: recuadro con personas, tareas pendientes y edición ---------------- */
 function mjPendingCountFor(name){
-  return mjTopics.filter(t=>!t.locked && t.assignee===name && t.status!=='cerrado').length;
+  return mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(name) && t.status!=='cerrado').length;
 }
 function mjRenderTeamGrid(){
   return `<div class="mj-team-row">
@@ -2420,7 +2440,12 @@ async function mjSaveTeamMember(){
       const oldName = p.name;
       p.name = name; p.icon = icon; p.color = mjTeamEditColor;
       if(oldName !== name){
-        mjTopics.forEach(t=>{ if(t.assignee===oldName) t.assignee=name; if(t.author===oldName) t.author=name; if(t.treatedBy===oldName) t.treatedBy=name; });
+        mjTopics.forEach(t=>{
+          const list = mjAssigneeList(t);
+          if(list.includes(oldName)) t.assignee = list.map(n=>n===oldName?name:n);
+          if(t.author===oldName) t.author=name;
+          if(t.treatedBy===oldName) t.treatedBy=name;
+        });
         mjPersistTopics();
       }
     }
@@ -2437,7 +2462,10 @@ async function mjDeleteTeamMemberConfirm(){
   if(!confirm('¿Eliminar a esta persona del equipo? Sus tareas asignadas quedarán sin dueño.')) return;
   const p = mjTeamMembers.find(x=>x.id===mjTeamEditId);
   if(p){
-    mjTopics.forEach(t=>{ if(t.assignee===p.name) t.assignee=null; });
+    mjTopics.forEach(t=>{
+      const list = mjAssigneeList(t);
+      if(list.includes(p.name)) t.assignee = list.filter(n=>n!==p.name);
+    });
     mjPersistTopics();
   }
   mjTeamMembers = mjTeamMembers.filter(x=>x.id!==mjTeamEditId);
@@ -2449,7 +2477,7 @@ function openOrgPersona(name){
   const area = document.getElementById('organizateSubArea');
   const p = mjTeamMembers.find(x=>x.name===name);
   const color = p ? p.color : '#00E6FF';
-  const items = mjTopics.filter(t=>!t.locked && t.assignee===name && t.status!=='cerrado');
+  const items = mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(name) && t.status!=='cerrado');
   area.innerHTML = `
     <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
       <button onclick="openOrgSub('equipo')" style="background:none;border:none;color:#2a7f8a;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;padding:0;">← Volver al equipo</button>
@@ -2462,8 +2490,8 @@ function openOrgPersona(name){
               <button onclick="mjOpenDetailFromPersona('${t.id}','${name.replace(/'/g,"\\'")}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;">Abrir ficha ✎</button>
             </div>
             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-              <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Reasignar:</span>
-              ${mjTeamMembers.map(m=>`<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${m.name===t.assignee?m.color:'#c0b8ae'};background:${m.name===t.assignee?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`).join('')}
+              <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Asignado a:</span>
+              ${mjTeamMembers.map(m=>{ const activo = mjAssigneeList(t).includes(m.name); return `<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${activo?m.color:'#c0b8ae'};background:${activo?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`; }).join('')}
             </div>
           </div>`).join('')}
       </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
@@ -2474,10 +2502,12 @@ function mjOpenDetailFromPersona(id, name){
   mjDetailOpenedFromPersona = name;
   mjOpenDetail(id);
 }
-function mjReassignTopic(id, newName, viewingName){
+function mjReassignTopic(id, name, viewingName){
   const t = mjTopics.find(x=>x.id===id);
   if(!t) return;
-  t.assignee = newName;
+  let list = mjAssigneeList(t);
+  list = list.includes(name) ? list.filter(n=>n!==name) : [...list, name];
+  t.assignee = list;
   mjPersistTopics();
   mjRenderOrbit(); mjRenderFallback();
   openOrgPersona(viewingName);
@@ -2488,6 +2518,10 @@ const MJ_STATUS_META = {
   en_tratamiento: {label:'En tratamiento', cls:'st-live'},
   cerrado:        {label:'Cerrado',        cls:'st-closed'},
 };
+function mjAssigneeList(t){
+  if(!t || !t.assignee) return [];
+  return Array.isArray(t.assignee) ? t.assignee : [t.assignee];
+}
 function mjMoveFollowup(status, moveTo, moveDate){
   if(status!=='pendiente' || !moveTo) return null;
   if(moveTo==='proximo') return 'Trasladado al próximo jueves';
@@ -2765,7 +2799,7 @@ function mjRenderOrbit(){
       stCls = 'st-live';
     } else {
       /* Pendiente: ámbar en cuanto se ha tocado algo (asignación, traslado, comentario, nota…); si no, aspecto por defecto */
-      const tocado = !!(t.assignee || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
+      const tocado = !!(mjAssigneeList(t).length || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
       stCls = tocado ? 'st-live' : MJ_STATUS_META[t.status].cls;
     }
     node.className = 'mj-node ' + stCls + (t.recurring ? ' mj-recurring' : '');
@@ -2938,12 +2972,14 @@ function mjOpenDetail(id){
   });
 
   const arow = document.getElementById('mjAssigneeRow');
-  arow.innerHTML = mjTeamMembers.map(p=>`<button class="mj-assignee-chip ${t.assignee===p.name?'active':''}" data-name="${p.name}" style="--pc:${p.color}">${p.icon} ${p.name}</button>`).join('') + `<span class="mj-org-tag" title="Próximamente: notificará directamente en Organízate">🔗 Organízate</span>`;
+  arow.innerHTML = mjTeamMembers.map(p=>`<button class="mj-assignee-chip ${mjAssigneeList(t).includes(p.name)?'active':''}" data-name="${p.name}" style="--pc:${p.color}">${p.icon} ${p.name}</button>`).join('') + `<span class="mj-org-tag" title="Próximamente: notificará directamente en Organízate">🔗 Organízate</span>`;
   arow.querySelectorAll('.mj-assignee-chip').forEach(b=>{
     b.addEventListener('click', ()=>{
-      t.assignee = (t.assignee === b.dataset.name) ? null : b.dataset.name;
+      let list = mjAssigneeList(t);
+      list = list.includes(b.dataset.name) ? list.filter(n=>n!==b.dataset.name) : [...list, b.dataset.name];
+      t.assignee = list;
       mjPersistTopics();
-      arow.querySelectorAll('.mj-assignee-chip').forEach(x=>x.classList.toggle('active', x.dataset.name===t.assignee));
+      b.classList.toggle('active', list.includes(b.dataset.name));
     });
   });
 
@@ -3159,6 +3195,24 @@ async function mjClearVote(){
 }
 
 /* ---------------- HISTÓRICO DE VOTACIONES (editable/borrable con contraseña) ---------------- */
+function mjSetupHistScrollThumb(){
+  const area = document.getElementById('mjHistScrollArea');
+  const track = document.getElementById('mjHistScrollTrack');
+  const thumb = document.getElementById('mjHistScrollThumb');
+  if(!area || !track || !thumb || area.dataset.thumbBound) return;
+  area.dataset.thumbBound = '1';
+  function update(){
+    const trackH = track.clientHeight;
+    const maxScroll = area.scrollHeight - area.clientHeight;
+    if(maxScroll <= 0){ thumb.style.display = 'none'; return; }
+    thumb.style.display = 'block';
+    const pct = area.scrollTop / maxScroll;
+    thumb.style.top = (pct * (trackH - 14)) + 'px';
+  }
+  area.addEventListener('scroll', update);
+  window.addEventListener('resize', update);
+  setTimeout(update, 60);
+}
 function mjRenderVoteHistoryList(){
   const wrap = document.getElementById('mjVoteHistList');
   const countEl = document.getElementById('mj-vote-hist-count');
@@ -3219,15 +3273,15 @@ document.getElementById('mjHistSearchInput').addEventListener('input', e=>{
 
 /* ---------------- CONFIGURACIÓN DE DÍA/HORA DE LA REUNIÓN (editable con contraseña) ---------------- */
 const MJ_CFG_KEY = 'adminhub_mesajueves_config_v1';
-let mjMeetingCfg = { weekday: 4, hour: 16 }; // por defecto: jueves a las 16:00
+let mjMeetingCfg = { weekday: 4, hour: 16, minute: 0 }; // por defecto: jueves a las 16:00
 async function mjLoadMeetingCfg(){
   try{
     const c = await kvGet(MJ_CFG_KEY);
-    if(c && typeof c.weekday==='number' && typeof c.hour==='number') mjMeetingCfg = c;
+    if(c && typeof c.weekday==='number' && typeof c.hour==='number') mjMeetingCfg = {weekday:c.weekday, hour:c.hour, minute: typeof c.minute==='number'?c.minute:0};
   }catch(e){}
 }
-async function mjSaveMeetingCfg(weekday, hour){
-  mjMeetingCfg = {weekday, hour};
+async function mjSaveMeetingCfg(weekday, hour, minute){
+  mjMeetingCfg = {weekday, hour, minute};
   try{ await kvSet(MJ_CFG_KEY, mjMeetingCfg); }catch(e){}
 }
 function mjGetRelevantThursday(){
@@ -3246,7 +3300,7 @@ function mjUpdateDates(){
   const d = mjGetRelevantThursday();
   const aitorEl = document.getElementById('mjAitorDate');
   if(aitorEl) aitorEl.textContent = mjFormatThursdayLong(d);
-  const horaTxt = String(mjMeetingCfg.hour).padStart(2,'0')+':00';
+  const horaTxt = String(mjMeetingCfg.hour).padStart(2,'0')+':'+String(mjMeetingCfg.minute).padStart(2,'0');
   const pillEl = document.getElementById('mjDatePill');
   if(pillEl) pillEl.innerHTML = `<span class="mj-dot-live"></span> ${mjFormatThursdayShort(d)} · ${horaTxt}`;
 }
@@ -3255,7 +3309,7 @@ function mjOpenMeetingCfgEditor(){
     const d = mjGetRelevantThursday();
     const isoDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     document.getElementById('mjCfgDateInput').value = isoDate;
-    document.getElementById('mjCfgTimeInput').value = String(mjMeetingCfg.hour).padStart(2,'0')+':00';
+    document.getElementById('mjCfgTimeInput').value = String(mjMeetingCfg.hour).padStart(2,'0')+':'+String(mjMeetingCfg.minute).padStart(2,'0');
     document.getElementById('mCfgEditor').classList.add('show');
   }, 'Introduce la contraseña para cambiar el día y la hora de la reunión.');
 }
@@ -3264,8 +3318,10 @@ async function mjConfirmMeetingCfg(){
   const timeVal = document.getElementById('mjCfgTimeInput').value;
   if(!dateVal || !timeVal) return;
   const weekday = new Date(dateVal+'T00:00:00').getDay();
-  const hour = parseInt(timeVal.split(':')[0],10);
-  await mjSaveMeetingCfg(weekday, hour);
+  const [hStr, mStr] = timeVal.split(':');
+  const hour = parseInt(hStr,10);
+  const minute = parseInt(mStr,10) || 0;
+  await mjSaveMeetingCfg(weekday, hour, minute);
   document.getElementById('mCfgEditor').classList.remove('show');
   mjUpdateDates();
   mjRenderHistorico();
@@ -3359,6 +3415,7 @@ function mjRenderHistorico(){
     });
   });
   mjRenderVoteHistoryList();
+  mjSetupHistScrollThumb();
 }
 function mjRenderHistTopic(tp){
   const meta = MJ_STATUS_META[tp.status];
