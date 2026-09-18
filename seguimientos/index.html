@@ -2135,7 +2135,7 @@ const BM_COLORS = ['#22D3EE','#F5A623','#34D399','#A78BFA','#4FC3CF','#FF2E9F','
 
 const BM_DEFAULT_BUBBLES = [
   { id:'organizate', name:'Organízate', color:'#22D3EE', icon:'inbox', action:{type:'builtin', value:'organizate'} },
-  { id:'bajas',       name:'Bajas y Cambios', color:'#F5A623', icon:'docarrow', action:{type:'url', value:'bajas%20y%20cambios/index.html'} },
+  { id:'bajas',       name:'Bajas y Cambios', color:'#F5A623', icon:'docarrow', action:{type:'url', value:'https://gplaneta.sharepoint.com/:x:/r/sites/AdministracinComercialyCobros-AdministracinComercial2.0/_layouts/15/Doc.aspx?sourcedoc=%7BDB9CB695-6DCC-423C-8DBB-0ED9CF40DDB9%7D&file=Seguimiento%20CC%2C%20Bajas%20y%20Devoluciones..xlsx&action=default&mobileredirect=true'} },
   { id:'bootcamps',   name:'Bootcamps', color:'#34D399', icon:'browserck', action:{type:'none'} },
   { id:'ucma',        name:'Ampliaciones y Renovaciones UCMA', color:'#A78BFA', icon:'refresh', action:{type:'none'} },
   { id:'referidos',   name:'Referidos OBS', color:'#4FC3CF', icon:'referral', action:{type:'builtin', value:'referidos'} }
@@ -2522,6 +2522,10 @@ function mjAssigneeList(t){
   if(!t || !t.assignee) return [];
   return Array.isArray(t.assignee) ? t.assignee : [t.assignee];
 }
+function mjIsHiddenThisWeek(t){
+  // Un tema trasladado a una semana futura no debe verse en Orden del día / En vivo hasta que llegue esa semana
+  return !!(t.moveTo && t.moveTargetWeekKey && mjCurrentWeekKey && t.moveTargetWeekKey > mjCurrentWeekKey);
+}
 function mjMoveFollowup(status, moveTo, moveDate){
   if(status!=='pendiente' || !moveTo) return null;
   if(moveTo==='proximo') return 'Trasladado al próximo jueves';
@@ -2692,7 +2696,7 @@ document.querySelectorAll('.mj-tab-btn').forEach(btn=>{
 function mjRenderAgenda(){
   const wrap = document.getElementById('mj-agenda-antes');
   wrap.innerHTML = '';
-  mjTopics.forEach(t=>{
+  mjTopics.filter(t=>t.locked || !mjIsHiddenThisWeek(t)).forEach(t=>{
     const row = document.createElement('div');
     row.className = 'mj-row' + (t.locked ? ' pinned' : '');
     if(t.locked){
@@ -2825,7 +2829,7 @@ function mjRenderOrbit(){
   }
   /* "Seguimiento de casos" siempre anclado arriba del todo de la circunferencia */
   const lockedTopics = mjTopics.filter(t=>t.locked);
-  const openTopics = mjTopics.filter(t=>!t.locked);
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
   const total = lockedTopics.length + openTopics.length;
   lockedTopics.forEach(t=>placeNode(t, -90, null, voteCls(0))); // -90° = arriba del todo
   openTopics.forEach((t,i)=>{
@@ -2838,7 +2842,7 @@ function mjShortTitle(str){ return str.length > 32 ? str.slice(0,30)+'…' : str
 function mjRenderFallback(){
   const wrap = document.getElementById('mjLiveFallback');
   wrap.innerHTML = '';
-  mjTopics.forEach(t=>{
+  mjTopics.filter(t=>t.locked || !mjIsHiddenThisWeek(t)).forEach(t=>{
     const row = document.createElement('div');
     row.className = 'mj-row' + (t.locked?' pinned':'');
     row.style.borderColor = t.status==='en_tratamiento' ? 'rgba(240,149,75,.5)' : t.status==='cerrado' ? 'rgba(0,255,180,.5)' : '';
@@ -2951,13 +2955,13 @@ function mjOpenDetail(id){
         t.moveTargetWeekKey = mjComputeMoveTargetWeekKey(t.moveTo, t.moveDate);
         document.getElementById('mjMoveDate').style.display = b.dataset.m==='fecha' ? 'inline-block' : 'none';
       }
-      mjPersistTopics(); mjRenderOrbit(); mjRenderFallback();
+      mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
     });
   });
   document.getElementById('mjMoveDate').addEventListener('change', e=>{
     t.moveDate = e.target.value;
     if(t.moveTo==='fecha') t.moveTargetWeekKey = mjComputeMoveTargetWeekKey('fecha', t.moveDate);
-    mjPersistTopics(); mjRenderOrbit(); mjRenderFallback();
+    mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
   });
 
   mjRenderPublished(t);
@@ -3085,7 +3089,7 @@ async function mjOpenVotePrompt(){
       return; // ya hay una votación en marcha — no se lanza otra encima
     }
   }catch(e){}
-  const openTopics = mjTopics.filter(t=>!t.locked);
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
   const select = document.getElementById('voteStartTopicSelect');
   const nums = ['0', ...openTopics.map((t,i)=>String(i+1))];
   select.innerHTML = nums.map(n=>{
@@ -3100,7 +3104,7 @@ function mjConfirmStartVote(){
   mjStartVote(num);
 }
 async function mjStartVote(topicNum){
-  const openTopics = mjTopics.filter(t=>!t.locked);
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
   const label = topicNum==='0' ? 'Tema 0 — Seguimiento de casos' : `Tema ${topicNum} — ${(openTopics[parseInt(topicNum,10)-1]||{}).title||''}`;
   const vote = { id:'v_'+Date.now(), question: topicNum, label, startedAt: Date.now(), duration: MJ_VOTE_DURATION, votes: {}, closed:false };
   await kvSet(MJ_VOTE_KEY, vote);
@@ -3148,7 +3152,7 @@ async function mjRecordVoteResult(vote){
   const total = si+no;
   const resultado = si===no ? 'empate' : (si>no ? 'favorable' : 'contra');
   const topicNum = vote.question;
-  const openTopics = mjTopics.filter(t=>!t.locked);
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
   const t = topicNum==='0' ? mjTopics.find(x=>x.locked) : openTopics[parseInt(topicNum,10)-1];
   await mjLoadVoteHistory();
   /* Si se repite la votación sobre el mismo tema, solo queda registrada la última */
