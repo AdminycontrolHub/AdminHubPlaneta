@@ -641,14 +641,16 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
 
   // ── Acceso directo Mesa del Jueves — parpadeo alineado con el día y hora configurados en la herramienta ──
   const MJ_CFG_KEY = 'adminhub_mesajueves_config_v1';
-  let mjMeetingCfg = { weekday: 4, hour: 16 }; // por defecto: jueves a las 16:00, hasta que se cargue la config real
+  let mjMeetingCfg = { weekday: 4, hour: 16, minute: 0 }; // por defecto: jueves a las 16:00, hasta que se cargue la config real
   async function loadMjMeetingCfg() {
     try {
       const res = await fetch(`${WORKER_URL}/kv?key=${MJ_CFG_KEY}`);
       const data = await res.json();
       if (data.value) {
         const c = JSON.parse(data.value);
-        if (c && typeof c.weekday === 'number' && typeof c.hour === 'number') mjMeetingCfg = c;
+        if (c && typeof c.weekday === 'number' && typeof c.hour === 'number') {
+          mjMeetingCfg = { weekday: c.weekday, hour: c.hour, minute: typeof c.minute === 'number' ? c.minute : 0 };
+        }
       }
     } catch(e) {}
   }
@@ -656,7 +658,9 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     const btn = document.getElementById('vivoBtn');
     if (!btn) return;
     const now = new Date();
-    const enDirecto = now.getDay() === mjMeetingCfg.weekday && now.getHours() >= mjMeetingCfg.hour && now.getHours() < mjMeetingCfg.hour + 1;
+    const start = new Date(now); start.setHours(mjMeetingCfg.hour, mjMeetingCfg.minute, 0, 0);
+    const end = new Date(start.getTime() + 60 * 60000);
+    const enDirecto = now.getDay() === mjMeetingCfg.weekday && now >= start && now < end;
     btn.classList.toggle('blink', enDirecto);
   }
   loadMjMeetingCfg().then(updateVivoBlink);
