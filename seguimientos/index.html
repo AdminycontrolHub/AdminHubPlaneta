@@ -2526,6 +2526,11 @@ function mjIsHiddenThisWeek(t){
   // Un tema trasladado a una semana futura no debe verse en Orden del día / En vivo hasta que llegue esa semana
   return !!(t.moveTo && t.moveTargetWeekKey && mjCurrentWeekKey && t.moveTargetWeekKey > mjCurrentWeekKey);
 }
+function mjShouldHideFromLive(t){
+  // Los cerrados solo se ven en Histórico; los pospuestos a semana futura tampoco se ven hasta que llegue su semana
+  if(t.status==='cerrado') return true;
+  return mjIsHiddenThisWeek(t);
+}
 function mjMoveFollowup(status, moveTo, moveDate){
   if(status!=='pendiente' || !moveTo) return null;
   if(moveTo==='proximo') return 'Trasladado al próximo jueves';
@@ -2696,7 +2701,7 @@ document.querySelectorAll('.mj-tab-btn').forEach(btn=>{
 function mjRenderAgenda(){
   const wrap = document.getElementById('mj-agenda-antes');
   wrap.innerHTML = '';
-  mjTopics.filter(t=>t.locked || !mjIsHiddenThisWeek(t)).forEach(t=>{
+  mjTopics.filter(t=>t.locked || !mjShouldHideFromLive(t)).forEach(t=>{
     const row = document.createElement('div');
     row.className = 'mj-row' + (t.locked ? ' pinned' : '');
     if(t.locked){
@@ -2829,7 +2834,7 @@ function mjRenderOrbit(){
   }
   /* "Seguimiento de casos" siempre anclado arriba del todo de la circunferencia */
   const lockedTopics = mjTopics.filter(t=>t.locked);
-  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
   const total = lockedTopics.length + openTopics.length;
   lockedTopics.forEach(t=>placeNode(t, -90, null, voteCls(0))); // -90° = arriba del todo
   openTopics.forEach((t,i)=>{
@@ -2842,7 +2847,7 @@ function mjShortTitle(str){ return str.length > 32 ? str.slice(0,30)+'…' : str
 function mjRenderFallback(){
   const wrap = document.getElementById('mjLiveFallback');
   wrap.innerHTML = '';
-  mjTopics.filter(t=>t.locked || !mjIsHiddenThisWeek(t)).forEach(t=>{
+  mjTopics.filter(t=>t.locked || !mjShouldHideFromLive(t)).forEach(t=>{
     const row = document.createElement('div');
     row.className = 'mj-row' + (t.locked?' pinned':'');
     row.style.borderColor = t.status==='en_tratamiento' ? 'rgba(240,149,75,.5)' : t.status==='cerrado' ? 'rgba(0,255,180,.5)' : '';
@@ -3089,7 +3094,7 @@ async function mjOpenVotePrompt(){
       return; // ya hay una votación en marcha — no se lanza otra encima
     }
   }catch(e){}
-  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
   const select = document.getElementById('voteStartTopicSelect');
   const nums = ['0', ...openTopics.map((t,i)=>String(i+1))];
   select.innerHTML = nums.map(n=>{
@@ -3104,7 +3109,7 @@ function mjConfirmStartVote(){
   mjStartVote(num);
 }
 async function mjStartVote(topicNum){
-  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
   const label = topicNum==='0' ? 'Tema 0 — Seguimiento de casos' : `Tema ${topicNum} — ${(openTopics[parseInt(topicNum,10)-1]||{}).title||''}`;
   const vote = { id:'v_'+Date.now(), question: topicNum, label, startedAt: Date.now(), duration: MJ_VOTE_DURATION, votes: {}, closed:false };
   await kvSet(MJ_VOTE_KEY, vote);
@@ -3152,7 +3157,7 @@ async function mjRecordVoteResult(vote){
   const total = si+no;
   const resultado = si===no ? 'empate' : (si>no ? 'favorable' : 'contra');
   const topicNum = vote.question;
-  const openTopics = mjTopics.filter(t=>!t.locked && !mjIsHiddenThisWeek(t));
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
   const t = topicNum==='0' ? mjTopics.find(x=>x.locked) : openTopics[parseInt(topicNum,10)-1];
   await mjLoadVoteHistory();
   /* Si se repite la votación sobre el mismo tema, solo queda registrada la última */
