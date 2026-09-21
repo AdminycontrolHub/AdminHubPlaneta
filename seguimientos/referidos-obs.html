@@ -148,6 +148,25 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 .btn-copy{flex-shrink:0;padding:4px 10px;border-radius:5px;background:#2a7f8a;color:#fff;border:none;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .btn-copy:hover{background:#1f6370;}
 
+
+/* ── Barra superior fuera del modal (igual que en Seguimientos) ── */
+:root{--topbar-h:77px;}
+.page-topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-h);z-index:20;padding:0 28px;display:flex;align-items:center;justify-content:space-between;background:#041C2E;border-bottom:1px solid rgba(0,212,240,0.08);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-sq{width:40px;height:40px;border-radius:11px;background:#003A5C;border:1px solid rgba(0,212,240,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.brand-name{color:#fff;font-size:17px;font-weight:500;letter-spacing:-0.02em;}
+.brand-dept{color:rgba(0,212,240,0.38);font-size:11px;margin-top:2px;letter-spacing:0.03em;}
+.back-btn{display:flex;align-items:center;gap:7px;background:rgba(0,90,130,0.15);border:1px solid rgba(0,212,240,0.25);border-radius:10px;padding:7px 14px;color:rgba(0,212,240,0.8);font-size:12px;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.back-btn:hover{background:rgba(0,212,240,0.1);border-color:rgba(0,212,240,0.6);color:#00D4F0;}
+.obs-overlay{top:var(--topbar-h);}
+.mj-overlay{top:var(--topbar-h);}
+.mj-shell{height:min(880px,calc(94vh - var(--topbar-h)));}
+.imodal-bg{padding-top:calc(var(--topbar-h) + 16px);}
+body.ext-mode .page-topbar{display:none;}
+body.ext-mode .obs-overlay,body.ext-mode .mj-overlay{top:0;}
+body.ext-mode .mj-shell{height:min(880px,94vh);}
+body.ext-mode .imodal-bg{padding-top:40px;}
+@media(max-width:700px){.page-topbar{padding:0 16px;}}
 </style>
 </head>
 <body>
@@ -155,6 +174,23 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
 <canvas id="bgc"></canvas>
 <div class="corner tl"></div><div class="corner tr"></div>
 <div class="corner bl"></div><div class="corner br"></div>
+<div class="page-topbar" id="pageTopbar">
+  <div class="brand">
+    <div class="brand-sq">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <rect x="2" y="2" width="7" height="7" rx="1.5" fill="#00D4F0"/>
+        <rect x="11" y="2" width="7" height="7" rx="1.5" fill="#00D4F0"/>
+        <rect x="2" y="11" width="7" height="7" rx="1.5" fill="#00D4F0"/>
+        <rect x="11" y="11" width="7" height="7" rx="1.5" fill="rgba(0,212,240,0.28)"/>
+      </svg>
+    </div>
+    <div><div class="brand-name">Admin Hub</div><div class="brand-dept">Gestión Cobros</div></div>
+  </div>
+  <a href="../index.html" class="back-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Volver al AdminHub
+  </a>
+</div>
 <!-- Contraseña -->
 <div class="imodal-bg" id="mPwd">
   <div class="imodal sm">
@@ -353,13 +389,12 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Admisiones · Administración Comercial · Marketing · Control de Gestión</div></div>
       </div>
       <div class="obs-close-bar-r">
-        <a class="hbtn" href="../index.html" style="text-decoration:none;color:#0d44a1;border-color:#90caf9;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Volver al AdminHub</a>
         <button class="hbtn" id="btnWriteAccess" style="display:none;color:#0d44a1;border-color:#90caf9;" onclick="openWriteAccess()">🔑 Acceso escritura</button>
         <button class="hbtn" id="btnJeDv" style="display:none;color:#5a2aaa;border-color:#a878f0;" onclick="openJeDv()">👥 Gestionar JE/DV</button>
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
         <button class="hbtn export" onclick="exportCSV()">📤 Exportar</button>
         <button class="hbtn help" onclick="openHelp()">?</button>
-        <button class="hbtn cerrar" onclick="closeObs()">✕ Cerrar</button>
+        <button class="hbtn cerrar" id="btnCerrarObs" style="display:none;" onclick="closeObs()">✕ Cerrar</button>
         <input type="file" id="fileInputObs" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)"/>
       </div>
     </div>
@@ -1278,6 +1313,9 @@ function detectAccessMode(){
   isFromHub = sessionStorage.getItem('viaHub')==='1' || !window.location.hash;
   document.getElementById('btnWriteAccess').style.display = isFromHub ? '' : 'none';
   document.getElementById('btnJeDv').style.display = isFromHub ? '' : 'none';
+  // Enlace externo: sin barra del AdminHub y con botón Cerrar; desde el Hub: barra con "Volver al AdminHub" y sin Cerrar
+  document.getElementById('btnCerrarObs').style.display = isFromHub ? 'none' : '';
+  document.body.classList.toggle('ext-mode', !isFromHub);
   if(isFromHub){
     isWriteUnlocked = true; // dentro del hub siempre se puede escribir (sujeto a contraseñas por burbuja ya existentes)
   } else {
@@ -1367,13 +1405,12 @@ function requireWrite(){
   return false;
 }
 
-// Esta página ES el modal de Referidos OBS: se abre al cargar y "Cerrar" vuelve al índice de Seguimientos
+// Esta página ES el modal de Referidos OBS: se abre al cargar (el Cerrar solo existe en el enlace externo)
 function openObs(){document.getElementById('obsOverlay').classList.add('show');document.body.style.overflow='hidden';}
 function closeObs(){
   document.getElementById('obsOverlay').classList.remove('show');
   document.body.style.overflow='';
   closeTable();
-  window.location.href = PAGE_INDEX;
 }
 
 // ── AYUDA: detecta si se accede vía Hub o link externo ──
