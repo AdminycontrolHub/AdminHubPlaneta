@@ -353,6 +353,7 @@ code{background:#e8f0f4;padding:2px 6px;border-radius:4px;font-size:11px;font-fa
         <div><div class="obs-title">Referidos OBS</div><div class="obs-sub">Admisiones · Administración Comercial · Marketing · Control de Gestión</div></div>
       </div>
       <div class="obs-close-bar-r">
+        <a class="hbtn" href="../index.html" style="text-decoration:none;color:#0d44a1;border-color:#90caf9;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg> Volver al AdminHub</a>
         <button class="hbtn" id="btnWriteAccess" style="display:none;color:#0d44a1;border-color:#90caf9;" onclick="openWriteAccess()">🔑 Acceso escritura</button>
         <button class="hbtn" id="btnJeDv" style="display:none;color:#5a2aaa;border-color:#a878f0;" onclick="openJeDv()">👥 Gestionar JE/DV</button>
         <button class="hbtn import" onclick="document.getElementById('fileInputObs').click()">⬆ Cargar listado <span class="lock-tag">🔒 Solo Admin</span></button>
@@ -649,9 +650,6 @@ async function loadKV(){
   }catch(e){}
   renderConvSel();updateCounts();
 }
-loadKV();
-loadWaCodes();
-loadJeDv();
 
 // ── IMPORTAR EXCEL ──
 function importExcel(input){
@@ -1395,6 +1393,9 @@ function copyHelpLink(){
 }
 
 // ahora que todo está declarado, detectamos el modo de acceso y abrimos el modal
+loadKV();
+loadWaCodes();
+loadJeDv();
 detectAccessMode();
 openObs();
 
