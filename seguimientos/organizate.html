@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organízate — Admin Hub</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#041C2E;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#E0F7FF;min-height:100vh;}
+.bg-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at center,rgba(0,60,110,0.45) 0%,rgba(4,28,46,0.85) 60%,#041C2E 100%);}
+canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
+.corner{position:fixed;width:28px;height:28px;z-index:5;pointer-events:none;}
+.corner.tl{top:14px;left:14px;border-top:1.5px solid rgba(0,212,240,0.35);border-left:1.5px solid rgba(0,212,240,0.35);}
+.corner.tr{top:14px;right:14px;border-top:1.5px solid rgba(0,212,240,0.35);border-right:1.5px solid rgba(0,212,240,0.35);}
+.corner.bl{bottom:14px;left:14px;border-bottom:1.5px solid rgba(0,212,240,0.35);border-left:1.5px solid rgba(0,212,240,0.35);}
+.corner.br{bottom:14px;right:14px;border-bottom:1.5px solid rgba(0,212,240,0.35);border-right:1.5px solid rgba(0,212,240,0.35);}
+
+.obs-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(4,28,46,0.92);backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0;align-items:center;justify-content:center;}
+.obs-overlay.show{display:flex;}
+.obs-modal{background:#F5F0E8;border-radius:16px;max-width:1300px;width:97%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.obs-close-bar{background:#2a7f8a;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;}
+.obs-close-bar-l{display:flex;align-items:center;gap:10px;}
+.obs-icon{width:30px;height:30px;background:#a8d8b0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.obs-title{color:#fff;font-size:14px;font-weight:700;}
+.obs-sub{color:#c8eef2;font-size:11px;margin-top:1px;}
+.obs-close-bar-r{display:flex;align-items:center;gap:8px;}
+.hbtn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;background:#fff;color:#1a3a50;border:2px solid #d0d0d0;}
+.hbtn:hover{background:#f0f0f0;}
+.hbtn.import{color:#1B5E20;border-color:#81c784;}
+.hbtn.export{color:#0d44a1;border-color:#90caf9;}
+.hbtn.help{width:30px;height:30px;padding:0;border-radius:50%;font-size:13px;font-weight:800;color:#8B6914;border-color:#ffe082;justify-content:center;}
+.hbtn.cerrar{color:#c62828;border-color:#f48fb1;background:#fce4ec;}
+.lock-tag{font-size:9px;background:rgba(46,125,50,0.12);color:#1B5E20;padding:1px 5px;border-radius:3px;border:1px solid #a5d6a7;}
+
+.imodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;}
+.imodal-bg.show{display:flex;}
+.imodal{background:#F5F0E8;border-radius:12px;border:1px solid #d8d0c4;padding:20px;width:500px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.25);margin-bottom:30px;}
+.imodal.sm{width:360px;}
+.imodal h3{color:#1a3a50;font-size:14px;font-weight:700;margin-bottom:5px;}
+.imodal p{color:#7a6e62;font-size:11px;margin-bottom:10px;}
+.imodal input[type=password],.imodal input[type=text],.imodal input[type=date],.imodal select{width:100%;padding:7px 10px;border-radius:6px;border:1px solid #c0b8ae;background:#fff;font-size:12px;color:#1a3a50;outline:none;margin-bottom:6px;}
+.imodal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;}
+.mbtn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;border:none;cursor:pointer;}
+.mbtn-cancel{background:#ede8df;color:#5a6e80;border:1px solid #c0b8ae;}
+.mbtn-ok{background:#2a7f8a;color:#fff;}
+.modal-err{color:#c62828;font-size:10px;font-weight:700;margin-bottom:6px;display:none;}
+.modal-ok{color:#1B5E20;font-size:10px;font-weight:700;margin-bottom:6px;display:none;}
+.conv-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.conv-tag{display:flex;align-items:center;gap:4px;background:#e8f5e9;color:#1B5E20;border:1px solid #81c784;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;}
+.conv-tag button{background:none;border:none;color:#c62828;cursor:pointer;font-size:13px;line-height:1;padding:0;}
+.add-conv-row{display:flex;gap:6px;margin-bottom:4px;}
+.add-conv-row input{flex:1;margin-bottom:0!important;}
+.add-conv-row button{padding:5px 11px;border-radius:6px;background:#2a7f8a;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;}
+
+/* burbuja mínima (botón "Mesa del Jueves" dentro de Equipo) */
+.obs-bubbles{padding:24px 20px 20px;background:#F5F0E8;}
+.bub-wrap{cursor:pointer;}
+.bub-circle{width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:14px;border:3px solid transparent;transition:transform 0.15s,box-shadow 0.15s;position:relative;}
+.bub-circle:hover{transform:scale(1.06);box-shadow:0 4px 18px rgba(0,0,0,0.12);}
+.bub-icon{font-size:22px;margin-bottom:5px;}
+.bub-name{font-size:12px;font-weight:800;line-height:1.3;}
+
+.mj-modal-bg{z-index:480;}
+
+/* ── MODAL ORGANÍZATE (Yo / Equipo) — estrella / luna, borde fino, texto fuera, neón ── */
+.org-stack{display:flex;flex-direction:column;align-items:center;}
+.org-flow-col{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.org-shape-wrap{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.18s;}
+.org-shape-wrap:hover{transform:scale(1.07);}
+.org-shape-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.org-icon-only{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.org-equipo .org-icon-only{transform:translate(-12px,18px);}
+.org-text-block{display:flex;flex-direction:column;align-items:center;text-align:center;}
+.org-text-name{font-size:16px;font-weight:800;line-height:1.2;}
+.org-text-sub{font-size:10px;font-weight:700;margin-top:4px;opacity:0.9;max-width:150px;line-height:1.35;text-transform:uppercase;letter-spacing:0.02em;}
+.org-yo .org-text-name,.org-yo .org-text-sub{color:#9333EA;}
+.org-equipo .org-text-name,.org-equipo .org-text-sub{color:#0D9488;}
+
+/* carga inicial */
+.carga-inicial{text-align:center;padding:40px 20px;color:#9a8e82;}
+.carga-inicial .ci-icon{font-size:40px;margin-bottom:12px;}
+.carga-inicial h4{font-size:14px;font-weight:700;color:#1a3a50;margin-bottom:6px;}
+.carga-inicial p{font-size:12px;color:#7a6e62;margin-bottom:16px;}
+.btn-cargar{padding:10px 20px;background:#2a7f8a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-cargar:hover{background:#1f6370;}
+
+/* ===================== MESA DEL JUEVES (namespaced mj-) ===================== */
+:root{
+  --mj-surface:#EFE9DD; --mj-surface-2:#F5F0E8; --mj-surface-3:#E3DCCB;
+  --mj-cyan:#00C2DE; --mj-cyan-dim:rgba(0,194,222,.14); --mj-cyan-text:#00778C;
+  --mj-amber:#F0954B; --mj-amber-dim:rgba(240,149,75,.16); --mj-amber-text:#A6591C;
+  --mj-mint:#00C896; --mj-mint-text:#0B7A5C; --mj-slate:#8FA0B8; --mj-slate-dim:rgba(143,160,184,.18); --mj-slate-text:#5A6B7C;
+  --mj-red:#E0525C; --mj-red-dim:rgba(224,82,92,.14); --mj-red-text:#B23139;
+  --mj-cream:#F5F0E8; --mj-ink:#241C14; --mj-ink-dim:#6B6154;
+  --mj-text:#1A3A50; --mj-text-dim:#6A7A8A;
+  --mj-line:rgba(26,58,80,.15);
+  --mj-radius-lg:22px; --mj-radius-md:14px; --mj-radius-sm:9px;
+}
+.mj-overlay{position:fixed;inset:0;z-index:450;background:rgba(0,5,15,0.94);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;}
+.mj-overlay.open{display:flex;}
+.mj-shell{width:min(1180px,99vw);height:min(880px,94vh);margin:auto;background:#F5F0E8;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,0.4);color:var(--mj-text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;display:flex;flex-direction:column;}
+.mj-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;border-bottom:1px solid var(--mj-line);flex-wrap:wrap;background:#EFE9DD;}
+.mj-brand{display:flex;align-items:center;gap:10px;}
+.mj-brand-mark{width:32px;height:32px;flex:none;}
+.mj-brand-text b{font-size:15.5px;letter-spacing:.2px;display:block;}
+.mj-brand-text span{font-size:11px;color:var(--mj-text-dim);}
+.mj-tabs{display:flex;gap:6px;background:var(--mj-surface);padding:4px;border-radius:100px;border:1px solid var(--mj-line);}
+.mj-tab-btn{border:none;background:transparent;color:var(--mj-text-dim);font-weight:600;font-size:13px;padding:8px 16px;border-radius:100px;cursor:pointer;transition:.25s;font-family:inherit;position:relative;}
+.mj-tab-alert-dot{display:none;position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--mj-red);box-shadow:0 0 0 rgba(224,82,92,.6);animation:mjTabAlertPulse 1.4s ease-in-out infinite;}
+.mj-tab-alert-dot.show{display:block;}
+@keyframes mjTabAlertPulse{0%{box-shadow:0 0 0 0 rgba(224,82,92,.6);}70%{box-shadow:0 0 0 6px rgba(224,82,92,0);}100%{box-shadow:0 0 0 0 rgba(224,82,92,0);}}
+.mj-tab-btn.active{background:var(--mj-cyan);color:#022;}
+.mj-tab-btn:not(.active):hover{color:var(--mj-text);}
+.mj-right-cluster{display:flex;align-items:center;gap:10px;}
+.mj-date-pill{font-family:'Courier New',monospace;font-size:11.5px;color:var(--mj-text-dim);display:flex;align-items:center;gap:7px;}
+.mj-dot-live{width:6px;height:6px;border-radius:50%;background:var(--mj-mint);box-shadow:0 0 8px var(--mj-mint);}
+.mj-timer-chip{display:none;align-items:center;gap:6px;font-family:'Courier New',monospace;font-size:12.5px;background:var(--mj-surface-2);border:1px solid var(--mj-line);color:var(--mj-cyan-text);padding:6px 12px;border-radius:100px;}
+.mj-timer-chip.warning{color:var(--mj-red-text);border-color:var(--mj-red);animation:mjBlink 1.4s ease-in-out infinite;}
+.mj-close-x{background:var(--mj-surface-2);border:1px solid var(--mj-line);color:var(--mj-text-dim);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;flex:none;}
+@keyframes mjBlink{0%,100%{opacity:1;}50%{opacity:.55;}}
+.mj-main{max-width:1080px;width:100%;margin:0 auto;padding:18px 24px 14px;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box;}
+.mj-view{display:none;animation:mjFade .4s ease;flex-direction:column;min-height:0;overflow:hidden;flex:1;}
+.mj-hist-fixed-head{flex:0 0 auto;}
+.mj-hist-scroll-track{position:absolute;left:0;top:0;bottom:0;width:14px;pointer-events:none;}
+.mj-hist-scroll-track:before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:1.5px;background:var(--mj-line);}
+.mj-hist-scroll-thumb{position:absolute;left:0;top:0;width:14px;height:14px;border-radius:50%;background:var(--mj-cyan);box-shadow:0 0 10px rgba(0,230,255,.6);transition:top .08s linear;}
+.mj-hist-body{position:relative;flex:1;min-height:0;display:flex;}
+.mj-hist-scroll-area{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-left:20px;}
+.mj-hist-scroll-area::-webkit-scrollbar{display:none;}
+.mj-view.active{display:flex;}
+@keyframes mjFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+.mj-aitor{position:relative;width:52px;height:52px;flex:none;}
+.mj-aitor .mj-core{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 32% 30%, #7FF5FF, var(--mj-cyan) 55%, #0093A8 100%);box-shadow:0 0 20px rgba(0,230,255,.5), inset 0 -4px 8px rgba(0,0,0,.25);position:relative;animation:mjFloat 4.5s ease-in-out infinite;}
+.mj-aitor .mj-af{position:absolute;top:50%;left:50%;transform:translate(-50%,-46%);display:flex;gap:6px;}
+.mj-aitor .mj-eye{width:5px;height:7px;border-radius:3px;background:#022733;}
+.mj-aitor .mj-tail{position:absolute;right:92%;top:60%;width:32px;height:3px;border-radius:2px;background:linear-gradient(90deg, transparent, rgba(0,230,255,.65));transform:translateY(-50%) rotate(8deg);}
+.mj-aitor .mj-spark{position:absolute;color:var(--mj-amber-text);font-size:10px;animation:mjSpark 2.2s ease-in-out infinite;}
+.mj-aitor .mj-spark.s1{top:-4px;right:70%;animation-delay:.2s;}
+.mj-aitor .mj-spark.s2{bottom:2px;right:82%;animation-delay:1s;}
+@keyframes mjFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+@keyframes mjSpark{0%,100%{opacity:.2;transform:scale(.7);}50%{opacity:1;transform:scale(1);}}
+.mj-aitor-line{display:flex;align-items:flex-start;gap:14px;flex:0 0 auto;}
+.mj-aitor-bubble{background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:var(--mj-radius-md);padding:10px 15px;font-size:13.5px;line-height:1.5;color:var(--mj-text);position:relative;max-width:600px;}
+.mj-aitor-bubble b{color:var(--mj-cyan-text);font-weight:600;}
+.mj-aitor-bubble:before{content:'';position:absolute;left:-7px;top:16px;width:14px;height:14px;background:var(--mj-surface);border-left:1px solid var(--mj-line);border-bottom:1px solid var(--mj-line);transform:rotate(45deg);}
+.mj-aitor-label{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-amber-text);letter-spacing:.4px;margin-bottom:4px;display:block;}
+
+.mj-section-head{display:flex;align-items:baseline;justify-content:space-between;margin:14px 0 10px;flex-wrap:wrap;gap:6px;flex:0 0 auto;}
+.mj-section-head h2{font-size:18px;margin:0;font-weight:600;letter-spacing:-.01em;}
+.mj-section-head .mj-count{font-family:'Courier New',monospace;font-size:11.5px;color:var(--mj-text-dim);}
+.mj-info-note{font-size:12px;color:var(--mj-text-dim);margin:-4px 0 10px;line-height:1.45;flex:0 0 auto;}
+.mj-agenda-list{display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:4px;}
+.mj-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--mj-surface);border:1px solid var(--mj-line);border-left:3px solid transparent;border-radius:var(--mj-radius-md);padding:14px 17px;}
+.mj-row.pinned{background:linear-gradient(90deg, rgba(0,255,180,.07), var(--mj-surface));border-style:dashed;border-color:rgba(0,255,180,.35);}
+.mj-row-title{flex:1;min-width:180px;font-size:14px;line-height:1.45;}
+.mj-carry-tag{display:block;margin-top:4px;font-family:'Courier New',monospace;font-size:10.5px;color:var(--mj-amber-text);}
+.mj-avatar{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:10.5px;font-weight:600;flex:none;}
+.mj-author-tag{display:inline-block;margin-top:7px;font-family:'Courier New',monospace;font-size:10.5px;padding:3px 10px;border-radius:100px;color:color-mix(in srgb, var(--pc) 60%, #08192a);background:color-mix(in srgb, var(--pc) 16%, transparent);border:1px solid color-mix(in srgb, var(--pc) 45%, transparent);}
+.mj-lock-tag{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-mint-text);background:rgba(0,255,180,.12);padding:4px 10px;border-radius:100px;flex:none;}
+.mj-icon-btn{background:none;border:none;cursor:pointer;color:var(--mj-text-dim);font-size:13px;padding:4px 6px;border-radius:6px;flex:none;opacity:.6;}
+.mj-icon-btn:hover{opacity:1;color:var(--mj-cyan-text);background:var(--mj-surface-2);}
+.mj-edit-input{width:100%;background:var(--mj-surface-2);border:1px solid var(--mj-cyan);border-radius:6px;padding:6px 9px;color:var(--mj-text);font-size:14px;font-family:inherit;outline:none;}
+.mj-add-topic{margin-top:10px;display:flex;gap:10px;background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:var(--mj-radius-md);padding:6px 6px 6px 17px;align-items:center;flex-wrap:wrap;flex:0 0 auto;}
+.mj-add-topic input{flex:1;min-width:160px;background:transparent;border:none;outline:none;color:var(--mj-text);font-size:14px;padding:10px 0;font-family:inherit;}
+.mj-add-topic input::placeholder{color:var(--mj-text-dim);}
+.mj-add-btn{background:var(--mj-cyan);color:#022;border:none;border-radius:var(--mj-radius-sm);font-weight:700;font-size:13px;padding:10px 18px;cursor:pointer;white-space:nowrap;font-family:inherit;}
+
+.mj-timer-panel{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:var(--mj-radius-md);padding:10px 20px;margin:10px 0 6px;flex:0 0 auto;}
+.mj-timer-panel.warning{border-color:var(--mj-red);background:linear-gradient(90deg, rgba(255,92,102,.08), var(--mj-surface));}
+.mj-timer-display{font-family:'Courier New',monospace;font-size:24px;font-weight:600;letter-spacing:1px;}
+.mj-timer-panel.warning .mj-timer-display{color:var(--mj-red-text);}
+.mj-warning-banner{display:none;align-items:center;gap:10px;background:var(--mj-red-dim);border:1px solid var(--mj-red);color:var(--mj-red-text);font-size:12.5px;padding:8px 14px;border-radius:var(--mj-radius-sm);margin-bottom:8px;flex:0 0 auto;}
+.mj-warning-banner.show{display:flex;}
+.mj-vote-launcher{position:absolute;top:2px;right:2px;z-index:20;display:flex;justify-content:center;}
+.mj-vote-launch-btn{background:var(--mj-cyan);color:#022;border:none;border-radius:100px;font-weight:700;font-size:12.5px;padding:9px 16px;cursor:pointer;white-space:nowrap;font-family:inherit;box-shadow:0 4px 14px rgba(0,194,222,.35);transition:transform .15s;}
+.mj-vote-launch-btn:hover{transform:scale(1.05);}
+.mj-vote-panel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;display:flex;flex-direction:column;align-items:center;gap:14px;background:var(--mj-surface);border:2.5px solid var(--mj-cyan);border-radius:var(--mj-radius-lg);padding:30px 38px;max-width:min(440px,90%);box-sizing:border-box;box-shadow:0 16px 50px rgba(0,0,0,.3);}
+.mj-vote-q{font-size:18px;font-weight:800;color:var(--mj-text);text-align:center;line-height:1.3;}
+.mj-vote-timer{font-family:'Courier New',monospace;font-size:34px;font-weight:700;color:var(--mj-cyan-text);}
+.mj-vote-btns{display:flex;gap:18px;}
+.mj-vote-btn{border:2px solid var(--mj-line);background:var(--mj-surface-2);border-radius:100px;padding:13px 30px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--mj-text);}
+.mj-vote-btn.si{border-color:var(--mj-mint);}
+.mj-vote-btn.si.chosen{background:var(--mj-mint);color:#04231a;}
+.mj-vote-btn.no{border-color:var(--mj-red);}
+.mj-vote-btn.no.chosen{background:var(--mj-red);color:#fff;}
+.mj-vote-btn:disabled{cursor:default;opacity:.7;}
+.mj-vote-tally{font-family:'Courier New',monospace;font-size:14px;color:var(--mj-text-dim);}
+.mj-vote-result{font-size:24px;font-weight:800;color:var(--mj-cyan-text);}
+
+.mj-live-frame{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 4px;flex:1;min-height:0;overflow:hidden;width:100%;}
+.mj-orbit-wrap{position:relative;aspect-ratio:1/1;margin:2px auto;flex:1 1 auto;min-height:0;max-width:620px;}
+.mj-orbit-ring{position:absolute;inset:6%;border:1px dashed rgba(124,147,168,.25);border-radius:50%;animation:mjSpin 130s linear infinite;}
+.mj-orbit-ring.r2{inset:22%;animation-duration:95s;animation-direction:reverse;border-color:rgba(0,230,255,.14);}
+@keyframes mjSpin{to{transform:rotate(360deg);}}
+.mj-aitor-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;width:63%;}
+.mj-aitor-center span{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px;font-family:'Courier New',monospace;font-size:11.5px;color:var(--mj-text-dim);letter-spacing:.03em;white-space:nowrap;}
+.mj-aitor-big-wrap{position:relative;width:100%;aspect-ratio:1/1;}
+.mj-aitor-big-ring{position:absolute;inset:-8%;border-radius:50%;border:2px solid var(--mj-cyan);opacity:.6;animation:mjRingPulse 1.7s ease-in-out infinite;pointer-events:none;}
+.mj-aitor-big-photo{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:center 12%;display:block;box-shadow:0 0 28px rgba(0,230,255,.5);}
+.mj-aitor-big-fallback{display:none;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 32% 30%, #7FF5FF, var(--mj-cyan) 55%, #0093A8 100%);box-shadow:0 0 28px rgba(0,230,255,.5);align-items:center;justify-content:center;}
+.mj-aitor-big-fallback .mj-af{display:flex;gap:9px;}
+.mj-aitor-big-fallback .mj-eye{width:9px;height:13px;border-radius:5px;background:#022733;}
+.mj-node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;z-index:4;}
+.mj-node-bubble{position:relative;width:52px;height:52px;border-radius:50%;background:var(--mj-surface-2);border:1.5px solid rgba(0,194,222,.5);display:flex;align-items:center;justify-content:center;transition:.25s;font-family:'Courier New',monospace;font-size:13px;color:var(--mj-cyan-text);font-weight:600;}
+.mj-node.mj-recurring .mj-node-bubble::after{content:'↻';position:absolute;top:-5px;right:-5px;width:17px;height:17px;border-radius:50%;background:var(--mj-cyan);color:#022;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--mj-surface-2);}
+.mj-node.locked .mj-node-bubble{border-color:rgba(0,255,180,.5);color:var(--mj-mint-text);border-style:dashed;}
+.mj-node.st-live .mj-node-bubble{border-color:var(--mj-amber);box-shadow:0 0 16px rgba(240,149,75,.4);animation:mjPulseLive 1.6s ease-in-out infinite;color:var(--mj-amber-text);}
+.mj-node.st-closed .mj-node-bubble{border-color:var(--mj-mint);color:var(--mj-mint-text);}
+.mj-node.st-vote-favor .mj-node-bubble{background:var(--mj-mint);border-color:var(--mj-mint);color:#04231a;box-shadow:0 0 16px rgba(0,200,150,.5);}
+.mj-node.st-vote-contra .mj-node-bubble{background:var(--mj-red);border-color:var(--mj-red);color:#fff;box-shadow:0 0 16px rgba(224,82,92,.5);}
+.mj-node.st-neutral .mj-node-bubble{background:#5A6472;border-color:#454E5A;color:#F2F4F7;box-shadow:none;animation:none;}
+.mj-node.has-move .mj-node-bubble{border-style:dashed;opacity:.75;}
+@keyframes mjPulseLive{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.mj-node:hover .mj-node-bubble{transform:scale(1.08);}
+.mj-node-label{font-size:12px;font-weight:600;text-align:center;max-width:92px;line-height:1.25;color:var(--mj-text);}
+.mj-node:hover .mj-node-label{color:var(--mj-text);}
+.mj-live-fallback{display:none;flex-direction:column;gap:9px;}
+@media (max-width: 720px){ .mj-orbit-wrap{display:none;} .mj-live-fallback{display:flex;} }
+
+.mj-detail-overlay{position:fixed;inset:0;background:rgba(2,10,18,.72);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:460;padding:1rem;}
+.mj-detail-overlay.open{display:flex;}
+@media (min-width:760px){.mj-detail-overlay{align-items:center;}}
+.mj-detail-card{width:100%;max-width:640px;max-height:88vh;overflow-y:auto;background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:22px 22px 0 0;padding:24px 24px 30px;animation:mjSlideUp .35s cubic-bezier(.2,.8,.2,1);color:var(--mj-text);}
+@media (min-width:760px){.mj-detail-card{border-radius:var(--mj-radius-lg);animation:mjPopIn .3s cubic-bezier(.2,.8,.2,1);}}
+@keyframes mjSlideUp{from{transform:translateY(30px);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes mjPopIn{from{transform:scale(.96);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes mjRingPulse{0%{transform:scale(1);opacity:.55;}100%{transform:scale(1.4);opacity:0;}}
+.mj-detail-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+.mj-detail-title{font-size:18px;font-weight:600;margin:12px 0 4px;line-height:1.3;letter-spacing:-.01em;}
+.mj-detail-sub{font-family:'Courier New',monospace;font-size:11px;color:var(--mj-text-dim);}
+.mj-divider{height:1px;background:var(--mj-line);margin:20px 0;}
+.mj-status-label{font-family:'Courier New',monospace;font-size:10.5px;color:var(--mj-text-dim);letter-spacing:.3px;margin-bottom:8px;}
+.mj-status-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.mj-status-chip-btn{border:1px solid var(--mj-line);background:var(--mj-surface-2);color:var(--mj-text-dim);font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:100px;cursor:pointer;font-family:inherit;}
+.mj-status-chip-btn.active.st-pend{border-color:var(--mj-slate);color:var(--mj-slate-text);background:var(--mj-slate-dim);}
+.mj-status-chip-btn.active.st-live{border-color:var(--mj-amber);color:var(--mj-amber-text);background:var(--mj-amber-dim);}
+.mj-status-chip-btn.active.st-closed{border-color:var(--mj-mint);color:var(--mj-mint-text);background:rgba(0,255,180,.12);}
+.mj-subpanel{margin-top:12px;padding:14px;background:var(--mj-surface-2);border:1px solid var(--mj-line);border-radius:var(--mj-radius-sm);display:none;}
+.mj-subpanel.show{display:block;}
+.mj-opt-btn{border:1px solid var(--mj-line);background:var(--mj-surface);color:var(--mj-text-dim);font-size:12px;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:inherit;}
+.mj-opt-btn.active{border-color:var(--mj-cyan);color:var(--mj-cyan-text);}
+.mj-subpanel input[type=date]{background:var(--mj-surface);border:1px solid var(--mj-line);color:var(--mj-text);border-radius:8px;padding:7px 10px;font-family:'Courier New',monospace;font-size:12.5px;}
+.mj-assignee-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.mj-assignee-chip{display:flex;align-items:center;gap:6px;border:1px solid var(--mj-line);background:var(--mj-surface);color:var(--mj-text-dim);font-size:12.5px;padding:6px 12px;border-radius:100px;cursor:pointer;font-family:inherit;}
+.mj-assignee-chip.active{border-color:var(--pc, var(--mj-cyan));color:color-mix(in srgb, var(--pc, var(--mj-cyan)) 60%, #08192a);background:color-mix(in srgb, var(--pc, var(--mj-cyan)) 16%, transparent);}
+.mj-org-tag{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-text-dim);border:1px dashed var(--mj-line);padding:4px 9px;border-radius:100px;margin-left:auto;cursor:help;}
+.mj-by-select{background:var(--mj-surface);border:1px solid var(--mj-amber);color:var(--mj-amber-text);font-weight:600;font-size:12.5px;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:inherit;}
+.mj-private-note{background:var(--mj-cream);border-radius:var(--mj-radius-md);padding:15px 17px;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:rotate(-.4deg);}
+.mj-private-note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.mj-private-note-head span{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-ink-dim);}
+.mj-private-note textarea{width:100%;min-height:64px;border:none;background:transparent;resize:vertical;font-family:inherit;font-size:13.5px;color:var(--mj-ink);outline:none;line-height:1.5;}
+.mj-private-note textarea::placeholder{color:var(--mj-ink-dim);}
+.mj-note-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px;}
+.mj-ghost-btn{background:transparent;border:1px solid rgba(36,28,20,.25);color:var(--mj-ink-dim);font-weight:600;font-size:12px;padding:7px 13px;border-radius:100px;cursor:pointer;font-family:inherit;}
+.mj-publish-btn{background:var(--mj-ink);color:var(--mj-cream);border:none;font-weight:700;font-size:12px;padding:7px 15px;border-radius:100px;cursor:pointer;font-family:inherit;}
+.mj-publish-btn:hover{filter:brightness(1.3);}
+.mj-published-list{display:flex;flex-direction:column;gap:11px;margin-top:12px;}
+.mj-published-item{display:flex;gap:10px;}
+.mj-published-body{background:var(--mj-surface-2);border:1px solid var(--mj-line);border-radius:var(--mj-radius-sm);padding:9px 13px;font-size:13px;line-height:1.5;flex:1;}
+.mj-published-meta{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-text-dim);margin-bottom:3px;}
+.mj-empty-note{font-size:12.5px;color:var(--mj-text-dim);font-style:italic;padding:4px 2px;}
+
+.mj-hist-search{display:flex;align-items:center;gap:8px;background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:100px;padding:9px 16px;margin:4px 0 14px;max-width:420px;}
+.mj-hist-search input{flex:1;background:transparent;border:none;outline:none;color:var(--mj-text);font-size:13.5px;font-family:inherit;}
+.mj-hist-search input::placeholder{color:var(--mj-text-dim);}
+.mj-filter-bar{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0 22px;padding-bottom:4px;scrollbar-width:thin;}
+.mj-filter-bar .mj-filter-chip{flex-shrink:0;}
+.mj-filter-chip{border:1px solid var(--mj-line);background:var(--mj-surface);color:var(--mj-text-dim);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:100px;cursor:pointer;font-family:inherit;}
+.mj-filter-chip.active{border-color:var(--mj-cyan);color:var(--mj-cyan-text);background:var(--mj-cyan-dim);}
+.mj-timeline{position:relative;padding-left:26px;}
+.mj-timeline:before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:1.5px;background:var(--mj-line);}
+.mj-tl-item{position:relative;margin-bottom:26px;}
+.mj-tl-dot{position:absolute;left:-26px;top:4px;width:15px;height:15px;border-radius:50%;background:var(--mj-surface);border:2px solid var(--mj-cyan);}
+.mj-tl-item.current .mj-tl-dot{background:var(--mj-cyan);box-shadow:0 0 10px rgba(0,230,255,.6);}
+.mj-tl-head{display:flex;align-items:baseline;gap:11px;margin-bottom:10px;flex-wrap:wrap;}
+.mj-tl-head b{font-size:15.5px;}
+.mj-tl-head .mj-tl-date{font-family:'Courier New',monospace;font-size:11px;color:var(--mj-text-dim);}
+.mj-tl-topics{display:flex;flex-direction:column;gap:7px;}
+.mj-tl-topic{background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:10px;padding:11px 14px;cursor:pointer;}
+.mj-tl-topic-top{display:flex;align-items:center;gap:9px;font-size:13px;flex-wrap:wrap;}
+.mj-tl-topic-top .mj-ttl{flex:1;min-width:140px;}
+.mj-tl-topic .mj-followup{font-family:'Courier New',monospace;font-size:10.5px;color:var(--mj-amber-text);display:block;margin-top:4px;}
+.mj-tl-note-panel{display:none;margin-top:11px;}
+.mj-tl-note-panel.show{display:block;}
+.mj-shared-tag{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-mint-text);background:rgba(0,255,180,.12);padding:3px 9px;border-radius:100px;}
+.mj-status-chip{font-family:'Courier New',monospace;font-size:10px;padding:3px 9px;border-radius:100px;}
+.mj-status-chip.st-pend{background:var(--mj-slate-dim);color:var(--mj-slate-text);}
+.mj-status-chip.st-live{background:var(--mj-amber-dim);color:var(--mj-amber-text);}
+.mj-status-chip.st-closed{background:rgba(0,255,180,.12);color:var(--mj-mint-text);}
+
+/* modal contraseña (reutiliza look lh-pwd-modal) */
+.mj-pwd-modal{background:#F5F0E8;border-radius:12px;border:1px solid #d8d0c4;padding:20px;width:340px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.3);color:#1a3a50;}
+.mj-pwd-modal h3{font-size:14px;font-weight:700;margin-bottom:5px;}
+.mj-pwd-modal p{color:#7a6e62;font-size:11.5px;margin-bottom:10px;}
+.mj-pwd-modal input[type=password]{width:100%;padding:8px 10px;border-radius:6px;border:1px solid #c0b8ae;background:#fff;font-size:12.5px;color:#1a3a50;outline:none;margin-bottom:6px;font-family:inherit;box-sizing:border-box;}
+.mj-pwd-err{color:#c62828;font-size:10.5px;font-weight:700;margin-bottom:6px;display:none;}
+.mj-pwd-err.show{display:block;}
+.mj-pwd-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+.mj-pwd-btn{padding:7px 14px;border-radius:7px;font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit;}
+.mj-pwd-btn.cancel{background:#ede8df;color:#5a6e80;border:1px solid #c0b8ae;}
+.mj-pwd-btn.ok{background:#a03030;color:#fff;}
+.mj-team-row{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;padding:6px 2px 10px;justify-content:center;}
+.mj-team-bubble{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
+.mj-team-circle{position:relative;width:74px;height:74px;border-radius:50%;background:var(--pc,#2a7f8a);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:inset 0 -6px 14px rgba(0,0,0,.15),0 3px 10px rgba(0,0,0,.12);border:2px solid rgba(255,255,255,.35);transition:transform .18s;}
+.mj-team-bubble:hover .mj-team-circle{transform:scale(1.07);}
+.mj-team-name{font-size:11.5px;font-weight:700;color:#1a3a50;text-align:center;max-width:88px;}
+.mj-team-badge{position:absolute;bottom:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:50%;background:#fff;border:2px solid var(--pc,#2a7f8a);color:#1a3a50;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.mj-team-edit{position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;border:1px solid #c0b8ae;background:#fff;color:#7a6e62;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.mj-team-edit:hover{border-color:#2a7f8a;color:#2a7f8a;}
+.mj-team-add .mj-team-circle{background:#f8f5ef;border:2px dashed #c0b8ae;color:#7a6e62;box-shadow:none;}
+.mj-team-add .mj-team-name{color:#7a6e62;}
+.mj-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;display:inline-block;}
+.mj-swatch.selected{border-color:#1a3a50;box-shadow:0 0 0 2px #fff, 0 0 0 3px #1a3a50;}
+
+</style>
+</head>
+<body>
+<div class="bg-overlay"></div>
+<canvas id="bgc"></canvas>
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+<!-- ═══ MODAL ORGANÍZATE (Yo / Equipo) ═══ -->
+<div class="obs-overlay" id="organizateOverlay">
+  <div class="obs-modal" style="max-width:500px;">
+    <div class="obs-close-bar" style="background:linear-gradient(120deg,#0A3B22 0%,#1F6B3A 60%,#C9972E 100%);">
+      <div class="obs-close-bar-l">
+        <div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD966" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px rgba(255,217,102,0.85));">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div><div class="obs-title" style="color:#FFD966;text-shadow:0 0 6px rgba(255,217,102,0.5);">Organízate</div><div class="obs-sub" style="color:rgba(245,239,217,0.75);">Tu espacio de tareas · Administración Comercial y Cobros</div></div>
+      </div>
+      <div class="obs-close-bar-r">
+        <button class="hbtn" style="color:#C2410C;border-color:#FB923C;background:#FFF7ED;" onclick="closeOrganizate()">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="obs-bubbles" style="padding:44px 20px 50px;">
+      <svg width="0" height="0" style="position:absolute;">
+        <defs>
+          <linearGradient id="gradYo" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#B026FF"/>
+            <stop offset="100%" stop-color="#FF2E9F"/>
+          </linearGradient>
+          <linearGradient id="gradEquipo" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00C2FF"/>
+            <stop offset="100%" stop-color="#00FFB2"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="org-stack" style="gap:18px;">
+        <div class="org-flow-col org-yo">
+          <div class="org-text-block">
+            <div class="org-text-name">Yo</div>
+            <div class="org-text-sub">Mis tareas pendientes</div>
+          </div>
+          <div class="org-shape-wrap" onclick="openOrgSub('yo')">
+            <svg class="org-shape-svg" viewBox="0 0 24 24" fill="none" stroke="url(#gradYo)" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <div class="org-icon-only">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#gradYo)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <path d="M22 4L12 14.01l-3-3"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="org-flow-col org-equipo">
+          <div class="org-shape-wrap" onclick="openOrgSub('equipo')">
+            <svg class="org-shape-svg" viewBox="0 0 24 24" fill="none" stroke="url(#gradEquipo)" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <div class="org-icon-only">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="url(#gradEquipo)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </div>
+          </div>
+          <div class="org-text-block">
+            <div class="org-text-name">Equipo</div>
+            <div class="org-text-sub">Tareas asignadas al equipo</div>
+          </div>
+        </div>
+      </div>
+      <div id="organizateSubArea" style="margin-top:14px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Editar / añadir persona del equipo (Mesa del Jueves) -->
+<div class="imodal-bg" id="mTeamEdit">
+  <div class="imodal sm">
+    <h3 id="teamEditTitle">✏️ Editar persona</h3>
+    <p>Nombre, icono (emoji) y color de la tarjeta.</p>
+    <input type="text" id="teamEditName" placeholder="Nombre" maxlength="24"/>
+    <input type="text" id="teamEditIcon" placeholder="Emoji, ej: 🌟" maxlength="4"/>
+    <div class="conv-tags" id="teamColorSwatches" style="gap:8px;"></div>
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" id="teamEditDeleteBtn" style="color:#c62828;display:none;" onclick="mjDeleteTeamMemberConfirm()">Eliminar</button>
+      <button class="mbtn mbtn-cancel" onclick="mjCloseTeamEdit()">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="mjSaveTeamMember()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HERRAMIENTA MESA DEL JUEVES (namespaced mj-) ===================== -->
+<div class="mj-overlay" id="mjOverlay">
+  <div class="mj-shell">
+    <div class="mj-topbar">
+      <div class="mj-brand">
+        <svg class="mj-brand-mark" viewBox="0 0 34 34"><circle cx="17" cy="17" r="16" fill="none" stroke="#00E6FF" stroke-width="1.4" opacity=".5"/><circle cx="17" cy="17" r="4" fill="#00E6FF"/><circle cx="27" cy="10" r="1.6" fill="#F0954B"/><circle cx="7" cy="24" r="1.2" fill="#F0954B"/></svg>
+        <div class="mj-brand-text"><b>Mesa del Jueves</b><span>Admin Hub · Gestión Cobros</span></div>
+      </div>
+      <div class="mj-tabs">
+        <button class="mj-tab-btn active" data-mjview="antes">Orden del día</button>
+        <button class="mj-tab-btn" data-mjview="vivo" id="mjTabVivoBtn">En vivo<span class="mj-tab-alert-dot" id="mjTabVivoAlert"></span></button>
+        <button class="mj-tab-btn" data-mjview="historico">Histórico</button>
+      </div>
+      <div class="mj-right-cluster">
+        <span class="mj-timer-chip" id="mjTimerChip">⏱ 60:00</span>
+        <div class="mj-date-pill" id="mjDatePill"><span class="mj-dot-live"></span> Jueves · 10 sept 2026 · 16:00</div>
+        <button class="mj-icon-btn" title="Cambiar día y hora de la reunión" onclick="mjOpenMeetingCfgEditor()" style="margin-left:-4px;">✎</button>
+        <button class="mj-close-x" id="mjCloseBtn">✕</button>
+      </div>
+    </div>
+
+    <div class="mj-main">
+      <!-- VISTA ANTES -->
+      <section class="mj-view active" id="mj-view-antes">
+        <div class="mj-aitor-line">
+          <div class="mj-aitor"><div class="mj-core"><div class="mj-af"><div class="mj-eye"></div><div class="mj-eye"></div></div></div><div class="mj-tail"></div><div class="mj-spark s1">✦</div><div class="mj-spark s2">✦</div></div>
+          <div class="mj-aitor-bubble"><span class="mj-aitor-label">AITOR</span>Esto es solo para que estéis al tanto de lo que se va a hablar en nuestra reunión de cada jueves. <b>No hay nada que hacer</b> — si os surge algo que queráis que tratemos, añadidlo abajo y listo.</div>
+        </div>
+        <div class="mj-section-head"><h2>Orden del día</h2><span class="mj-count" id="mj-count-antes">0 temas</span></div>
+        <div class="mj-info-note">Los temas se abren y comentan durante la reunión, no antes — aquí solo se informa y se pueden proponer nuevos.</div>
+        <div class="mj-agenda-list" id="mj-agenda-antes"></div>
+        <div class="mj-add-topic">
+          <input type="text" id="mjNewTopicInput" placeholder="Proponer un tema para el jueves…">
+          <button class="mj-add-btn" id="mjAddTopicBtn">+ Añadir</button>
+        </div>
+      </section>
+
+      <!-- VISTA EN VIVO -->
+      <section class="mj-view" id="mj-view-vivo">
+        <div class="mj-live-frame">
+          <div class="mj-aitor-line" style="align-self:flex-start;">
+            <div class="mj-aitor"><div class="mj-core"><div class="mj-af"><div class="mj-eye"></div><div class="mj-eye"></div></div></div><div class="mj-tail"></div><div class="mj-spark s1">✦</div><div class="mj-spark s2">✦</div></div>
+            <div class="mj-aitor-bubble" id="mjAitorVivoBubble"><span class="mj-aitor-label">AITOR · en directo</span>Toca cualquier tema para abrirlo. Los puntos se colorean según su estado: <b>ámbar</b> en tratamiento o con cambios (asignación, traslado, comentarios…), <b>gris</b> cerrados, y <b>verde/rojo</b> si se han votado.</div>
+          </div>
+          <div class="mj-timer-panel" id="mjTimerPanel">
+            <div style="text-align:center;"><div class="mj-timer-display" id="mjTimerDisplay">60:00</div></div>
+          </div>
+          <div class="mj-warning-banner" id="mjWarningBanner">⏱ Quedan 15 minutos — puede que toque repasar lo pendiente y cerrar temas abiertos.</div>
+          <div class="mj-vote-launcher" id="mjVoteLauncher">
+            <button class="mj-vote-launch-btn" onclick="mjOpenVotePrompt()">🙋 ¡A votar!</button>
+          </div>
+          <div class="mj-vote-panel" id="mjVotePanel" style="display:none;"></div>
+          <div class="mj-orbit-wrap" id="mjOrbitWrap">
+            <div class="mj-orbit-ring"></div>
+            <div class="mj-orbit-ring r2"></div>
+            <div class="mj-aitor-center">
+              <div class="mj-aitor-big-wrap">
+                <div class="mj-aitor-big-ring"></div>
+                <img id="mjAitorPhoto" class="mj-aitor-big-photo" src="Aitor.png" alt="Aitor" onerror="this.style.display='none';document.getElementById('mjAitorFallback').style.display='flex';">
+                <div id="mjAitorFallback" class="mj-aitor-big-fallback"><div class="mj-af"><div class="mj-eye"></div><div class="mj-eye"></div></div></div>
+              </div>
+              <span id="mjAitorDate">10 de septiembre</span>
+            </div>
+          </div>
+          <div class="mj-live-fallback" id="mjLiveFallback"></div>
+        </div>
+      </section>
+
+      <!-- VISTA HISTÓRICO -->
+      <section class="mj-view" id="mj-view-historico">
+        <div class="mj-hist-fixed-head">
+          <div class="mj-section-head" style="margin-top:6px;"><h2>Histórico de jueves</h2><span class="mj-count">Últimas 4 semanas</span></div>
+          <div class="mj-hist-search"><span>🔍</span><input type="text" id="mjHistSearchInput" placeholder="Buscar por palabra clave o fecha (ej. «Paygold» o «27 ago»)…"></div>
+          <div class="mj-filter-bar" id="mjFilterBar">
+            <button class="mj-filter-chip active" data-mjf="todos">Todos</button>
+            <button class="mj-filter-chip" data-mjf="pendiente">Pendientes</button>
+            <button class="mj-filter-chip" data-mjf="en_tratamiento">En tratamiento</button>
+            <button class="mj-filter-chip" data-mjf="cerrado">Cerrados</button>
+          </div>
+        </div>
+        <div class="mj-hist-body">
+          <div class="mj-hist-scroll-track" id="mjHistScrollTrack"><div class="mj-hist-scroll-thumb" id="mjHistScrollThumb"></div></div>
+          <div class="mj-hist-scroll-area" id="mjHistScrollArea">
+            <div class="mj-timeline" id="mjTimeline"></div>
+            <div class="mj-section-head" style="margin-top:18px;"><h2>Resultados de votaciones</h2><span class="mj-count" id="mj-vote-hist-count">0 registros</span></div>
+            <div id="mjVoteHistList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="mj-detail-overlay" id="mjDetailOverlay"><div class="mj-detail-card" id="mjDetailCard"></div></div>
+
+<!-- MODAL CONTRASEÑA — eliminar tema Mesa del Jueves -->
+<div class="imodal-bg mj-modal-bg" id="mjPwdOverlay">
+  <div class="mj-pwd-modal">
+    <h3>🔒 Acceso restringido</h3>
+    <p id="mjPwdMsg">Introduce la contraseña para eliminar este tema.</p>
+    <input type="password" id="mjPwdInput" placeholder="Contraseña…" onkeydown="if(event.key==='Enter')mjCheckPwd()">
+    <div class="mj-pwd-err" id="mjPwdErr">Contraseña incorrecta</div>
+    <div class="mj-pwd-btns">
+      <button class="mj-pwd-btn cancel" id="mjPwdCancel">Cancelar</button>
+      <button class="mj-pwd-btn ok" onclick="mjCheckPwd()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nueva votación — selección de tema por número -->
+<div class="imodal-bg mj-modal-bg" id="mVoteStart">
+  <div class="imodal sm">
+    <h3>🗳️ Nueva votación</h3>
+    <p>Selecciona sobre qué tema se vota.</p>
+    <select id="voteStartTopicSelect"></select>
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('mVoteStart').classList.remove('show')">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="mjConfirmStartVote()">Iniciar votación</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cambiar día y hora de la reunión -->
+<div class="imodal-bg mj-modal-bg" id="mCfgEditor">
+  <div class="imodal sm">
+    <h3>🗓️ Día y hora de la reunión</h3>
+    <p>Esta fecha marca el día de la semana y la hora de referencia de Mesa del Jueves en todo el Hub.</p>
+    <label style="font-size:12px;color:var(--mj-text-dim);display:block;margin:10px 0 4px;">Fecha (marca el día de la semana)</label>
+    <input type="date" id="mjCfgDateInput" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--mj-line);font-family:inherit;font-size:14px;">
+    <label style="font-size:12px;color:var(--mj-text-dim);display:block;margin:10px 0 4px;">Hora</label>
+    <input type="time" id="mjCfgTimeInput" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--mj-line);font-family:inherit;font-size:14px;">
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('mCfgEditor').classList.remove('show')">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="mjConfirmMeetingCfg()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── BG CANVAS ──
+const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');
+function drawBg(){
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+  for(let x=0;x<W;x+=36){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.strokeStyle='rgba(0,160,220,0.07)';ctx.lineWidth=.5;ctx.stroke();}
+  for(let y=0;y<H;y+=36){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.strokeStyle='rgba(0,160,220,0.07)';ctx.stroke();}
+  for(let x=0;x<W;x+=36)for(let y=0;y<H;y+=36){ctx.beginPath();ctx.arc(x,y,.9,0,Math.PI*2);ctx.fillStyle=Math.random()>.72?'rgba(0,212,240,0.22)':'rgba(255,255,255,0.04)';ctx.fill();}
+  for(let i=0;i<80;i++){const x=Math.random()*W,y=Math.random()*H,r=Math.random()*1.1+.15;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=Math.random()>.5?`rgba(0,212,240,${Math.random()*.25+.04})`:`rgba(255,255,255,${Math.random()*.1+.02})`;ctx.fill();}
+}
+drawBg();window.addEventListener('resize',drawBg);
+
+const KV_BASE='https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv';
+
+async function kvGet(key, retries=3){
+  for(let i=0; i<retries; i++){
+    try{
+      const res = await fetch(`${KV_BASE}?key=${encodeURIComponent(key)}`);
+      if(!res.ok) throw new Error('kv get failed');
+      const d = await res.json();
+      return d.value ? JSON.parse(d.value) : null;
+    }catch(e){
+      if(i===retries-1) throw e;
+      await new Promise(r=>setTimeout(r, 400*(i+1)));
+    }
+  }
+}
+async function kvSet(key, value){
+  const res = await fetch(KV_BASE, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ key, value })
+  });
+  return res.ok;
+}
+
+const PAGE_INDEX = 'indexseguimientos.html';
+const PAGE_HASH = window.location.hash;
+const MJ_ORDEN_ONLY = PAGE_HASH === '#mesa-jueves-orden'; // enlace externo: solo la Orden del día
+
+function bmEscapeHtml(s){ const d=document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+// ── URL de "Bajas y Cambios" (se lee de la config de burbujas del índice; si no hay red, valor por defecto) ──
+const BM_KV_KEY = 'adminhub_seguimientos_bubbles_v1';
+const BAJAS_URL_DEFAULT = 'https://gplaneta.sharepoint.com/:x:/r/sites/AdministracinComercialyCobros-AdministracinComercial2.0/_layouts/15/Doc.aspx?sourcedoc=%7BDB9CB695-6DCC-423C-8DBB-0ED9CF40DDB9%7D&file=Seguimiento%20CC%2C%20Bajas%20y%20Devoluciones..xlsx&action=default&mobileredirect=true';
+let bajasUrl = BAJAS_URL_DEFAULT;
+async function loadBajasUrl(){
+  try{
+    const data = await kvGet(BM_KV_KEY);
+    if(Array.isArray(data)){
+      const b = data.find(x=>x.id==='bajas');
+      if(b && b.action && b.action.value) bajasUrl = b.action.value;
+    }
+  }catch(e){}
+}
+loadBajasUrl();
+
+// ── ORGANÍZATE (Yo / Equipo) ──
+function openOrganizate(){
+  document.getElementById('organizateOverlay').classList.add('show');
+  document.body.style.overflow='hidden';
+  document.getElementById('organizateSubArea').innerHTML='';
+  const orgModal=document.querySelector('#organizateOverlay .obs-modal');
+  if(orgModal) orgModal.style.maxWidth='500px';
+}
+// Oculta el modal sin salir de la página (se usa al abrir Mesa del Jueves desde Equipo)
+function hideOrganizate(){
+  document.getElementById('organizateOverlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+// Cierra Organízate y vuelve al índice de Seguimientos
+function closeOrganizate(){
+  hideOrganizate();
+  window.location.href = PAGE_INDEX;
+}
+function openOrgSub(which){
+  const area=document.getElementById('organizateSubArea');
+  const orgModal=document.querySelector('#organizateOverlay .obs-modal');
+  if(orgModal) orgModal.style.maxWidth = which==='equipo' ? 'min(95vw, 920px)' : '500px';
+  if(which==='yo'){
+    area.innerHTML=`
+      <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
+        <div class="ci-icon">🎯</div>
+        <h4>Mis tareas</h4>
+        <p>Aquí construiremos tu lista personal de tareas: pendientes, en curso y hechas, con fechas y prioridad. En breve montamos la primera versión.</p>
+      </div>`;
+  } else {
+    area.innerHTML=`
+      <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
+        <h4>Espacio del equipo</h4>
+        <p>Pulsa un nombre para ver sus tareas pendientes o reasignarlas.</p>
+        ${mjRenderTeamGrid()}
+      </div>
+      <div style="margin-top:16px;display:flex;justify-content:center;">
+        <div class="bub-wrap" onclick="hideOrganizate();mjOpenTool('antes');">
+          <div class="bub-circle" style="width:126px;height:126px;background:#FFD966;border:3px solid #F0954B;">
+            <div class="bub-icon">👥</div>
+            <div class="bub-name" style="color:#A6591C;">Mesa del Jueves</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ===================== MESA DEL JUEVES (namespaced mj) ===================== */
+const MJ_TEAM_KV_KEY = 'adminhub_mesajueves_team_v1';
+const MJ_TEAM_DEFAULT = [
+  {id:'vero',   name:'Vero',   icon:'⭐', color:'#00E6FF'},
+  {id:'elsa',   name:'Elsa',   icon:'🌙', color:'#F0954B'},
+  {id:'noe',    name:'Noe',    icon:'🌿', color:'#00FFB4'},
+  {id:'silvia', name:'Silvia', icon:'🌸', color:'#FF6FA9'},
+  {id:'ana',    name:'Ana',    icon:'🔮', color:'#A78BFA'},
+  {id:'cris',   name:'Cris',   icon:'🍀', color:'#C9FF6E'}
+];
+const MJ_SWATCHES = ['#00E6FF','#F0954B','#00FFB4','#FF6FA9','#A78BFA','#C9FF6E','#FFD966','#FF7EB3'];
+let mjTeamMembers = JSON.parse(JSON.stringify(MJ_TEAM_DEFAULT));
+async function mjLoadTeam(){
+  try{
+    const data = await kvGet(MJ_TEAM_KV_KEY);
+    if(Array.isArray(data) && data.length){ mjTeamMembers = data; }
+    else{ mjTeamMembers = JSON.parse(JSON.stringify(MJ_TEAM_DEFAULT)); await kvSet(MJ_TEAM_KV_KEY, mjTeamMembers); }
+  }catch(e){ mjTeamMembers = JSON.parse(JSON.stringify(MJ_TEAM_DEFAULT)); }
+}
+async function mjSaveTeam(){ try{ await kvSet(MJ_TEAM_KV_KEY, mjTeamMembers); }catch(e){} }
+mjLoadTeam();
+function mjColorFor(name){ const m=mjTeamMembers.find(p=>p.name===name); return m ? m.color : '#00E6FF'; }
+function mjIconFor(name){ const m=mjTeamMembers.find(p=>p.name===name); return m ? m.icon : '⭐'; }
+
+/* ---------------- EQUIPO: recuadro con personas, tareas pendientes y edición ---------------- */
+function mjPendingCountFor(name){
+  return mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(name) && t.status!=='cerrado').length;
+}
+function mjRenderTeamGrid(){
+  return `<div class="mj-team-row">
+    ${mjTeamMembers.map(p=>{
+      const n = mjPendingCountFor(p.name);
+      return `<div class="mj-team-bubble" onclick="openOrgPersona('${p.name.replace(/'/g,"\\'")}')">
+        <div class="mj-team-circle" style="--pc:${p.color}">
+          <button class="mj-team-edit" onclick="event.stopPropagation();mjOpenTeamEdit('${p.id}')" title="Editar">✎</button>
+          <span>${p.icon}</span>
+          <span class="mj-team-badge">${n}</span>
+        </div>
+        <div class="mj-team-name">${bmEscapeHtml(p.name)}</div>
+      </div>`;
+    }).join('')}
+    <div class="mj-team-bubble mj-team-add" onclick="mjOpenTeamEdit(null)">
+      <div class="mj-team-circle">➕</div>
+      <div class="mj-team-name">Añadir</div>
+    </div>
+  </div>`;
+}
+let mjTeamEditId = null;
+function mjOpenTeamEdit(id){
+  mjTeamEditId = id;
+  const p = id ? mjTeamMembers.find(x=>x.id===id) : null;
+  document.getElementById('teamEditTitle').textContent = p ? '✏️ Editar persona' : '➕ Añadir persona';
+  document.getElementById('teamEditName').value = p ? p.name : '';
+  document.getElementById('teamEditIcon').value = p ? p.icon : '⭐';
+  document.getElementById('teamEditDeleteBtn').style.display = p ? 'inline-flex' : 'none';
+  mjTeamEditColor = p ? p.color : MJ_SWATCHES[0];
+  mjRenderTeamSwatches();
+  document.getElementById('mTeamEdit').classList.add('show');
+}
+let mjTeamEditColor = MJ_SWATCHES[0];
+function mjRenderTeamSwatches(){
+  document.getElementById('teamColorSwatches').innerHTML = MJ_SWATCHES.map(c=>`<div class="mj-swatch ${c.toUpperCase()===mjTeamEditColor.toUpperCase()?'selected':''}" style="background:${c};" onclick="mjPickTeamColor('${c}')"></div>`).join('');
+}
+function mjPickTeamColor(c){ mjTeamEditColor = c; mjRenderTeamSwatches(); }
+function mjCloseTeamEdit(){ document.getElementById('mTeamEdit').classList.remove('show'); }
+async function mjSaveTeamMember(){
+  const name = document.getElementById('teamEditName').value.trim();
+  if(!name){ alert('El nombre es obligatorio.'); return; }
+  const icon = document.getElementById('teamEditIcon').value.trim() || '⭐';
+  if(mjTeamEditId){
+    const p = mjTeamMembers.find(x=>x.id===mjTeamEditId);
+    if(p){
+      const oldName = p.name;
+      p.name = name; p.icon = icon; p.color = mjTeamEditColor;
+      if(oldName !== name){
+        mjTopics.forEach(t=>{
+          const list = mjAssigneeList(t);
+          if(list.includes(oldName)) t.assignee = list.map(n=>n===oldName?name:n);
+          if(t.author===oldName) t.author=name;
+          if(t.treatedBy===oldName) t.treatedBy=name;
+        });
+        mjPersistTopics();
+      }
+    }
+  } else {
+    mjTeamMembers.push({id:'p_'+Date.now(), name, icon, color:mjTeamEditColor});
+  }
+  await mjSaveTeam();
+  mjCloseTeamEdit();
+  openOrgSub('equipo');
+}
+async function mjDeleteTeamMemberConfirm(){
+  if(!mjTeamEditId) return;
+  if(mjTeamMembers.length<=1){ alert('Debe quedar al menos una persona en el equipo.'); return; }
+  if(!confirm('¿Eliminar a esta persona del equipo? Sus tareas asignadas quedarán sin dueño.')) return;
+  const p = mjTeamMembers.find(x=>x.id===mjTeamEditId);
+  if(p){
+    mjTopics.forEach(t=>{
+      const list = mjAssigneeList(t);
+      if(list.includes(p.name)) t.assignee = list.filter(n=>n!==p.name);
+    });
+    mjPersistTopics();
+  }
+  mjTeamMembers = mjTeamMembers.filter(x=>x.id!==mjTeamEditId);
+  await mjSaveTeam();
+  mjCloseTeamEdit();
+  openOrgSub('equipo');
+}
+function openOrgPersona(name){
+  const area = document.getElementById('organizateSubArea');
+  const p = mjTeamMembers.find(x=>x.name===name);
+  const color = p ? p.color : '#00E6FF';
+  const items = mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(name) && t.status!=='cerrado');
+  area.innerHTML = `
+    <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
+      <button onclick="openOrgSub('equipo')" style="background:none;border:none;color:#2a7f8a;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;padding:0;">← Volver al equipo</button>
+      <h4 style="display:flex;align-items:center;gap:8px;text-align:left;">${p?p.icon:'⭐'} Tareas de ${bmEscapeHtml(name)}</h4>
+      ${items.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+        ${items.map(t=>`
+          <div style="background:#f8f5ef;border:1px solid #d8d0c4;border-radius:8px;padding:10px 12px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px;">
+              <div style="font-size:13px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}</div>
+              <button onclick="mjOpenDetailFromPersona('${t.id}','${name.replace(/'/g,"\\'")}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;">Abrir ficha ✎</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+              <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Asignado a:</span>
+              ${mjTeamMembers.map(m=>{ const activo = mjAssigneeList(t).includes(m.name); return `<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${activo?m.color:'#c0b8ae'};background:${activo?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`; }).join('')}
+            </div>
+          </div>`).join('')}
+      </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
+    </div>`;
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function mjOpenDetailFromPersona(id, name){
+  mjDetailOpenedFromPersona = name;
+  mjOpenDetail(id);
+}
+function mjReassignTopic(id, name, viewingName){
+  const t = mjTopics.find(x=>x.id===id);
+  if(!t) return;
+  let list = mjAssigneeList(t);
+  list = list.includes(name) ? list.filter(n=>n!==name) : [...list, name];
+  t.assignee = list;
+  mjPersistTopics();
+  mjRenderOrbit(); mjRenderFallback();
+  openOrgPersona(viewingName);
+}
+
+const MJ_STATUS_META = {
+  pendiente:      {label:'Pendiente',      cls:'st-pend'},
+  en_tratamiento: {label:'En tratamiento', cls:'st-live'},
+  cerrado:        {label:'Cerrado',        cls:'st-closed'},
+};
+function mjAssigneeList(t){
+  if(!t || !t.assignee) return [];
+  return Array.isArray(t.assignee) ? t.assignee : [t.assignee];
+}
+function mjIsHiddenThisWeek(t){
+  // Un tema trasladado a una semana futura no debe verse en Orden del día / En vivo hasta que llegue esa semana
+  return !!(t.moveTo && t.moveTargetWeekKey && mjCurrentWeekKey && t.moveTargetWeekKey > mjCurrentWeekKey);
+}
+function mjShouldHideFromLive(t){
+  // Los cerrados solo se ven en Histórico; los pospuestos a semana futura tampoco se ven hasta que llegue su semana
+  if(t.status==='cerrado') return true;
+  return mjIsHiddenThisWeek(t);
+}
+function mjMoveFollowup(status, moveTo, moveDate){
+  if(status!=='pendiente' || !moveTo) return null;
+  if(moveTo==='proximo') return 'Trasladado al próximo jueves';
+  if(moveTo==='dos') return 'Trasladado a dentro de 2 jueves';
+  if(moveTo==='fecha') return moveDate ? ('Trasladado al ' + moveDate) : 'Trasladado — pendiente de fecha';
+  return null;
+}
+
+let mjTopics = [
+  {id:'seg', locked:true, title:'Seguimiento de casos', author:'Vero', status:'pendiente', comments:[]},
+];
+let mjHistoricoPast = [];
+let mjCurrentWeekKey = null;
+
+/* Los temas (agenda compartida) viven en KV, igual que el resto del Hub — así se ven
+   igual desde cualquier navegador o dispositivo, incluido un enlace compartido en Teams.
+   Las notas personales del Histórico ("solo tú la ves") sí se quedan en este navegador. */
+const MJ_TOPICS_KV_KEY = 'adminhub_mesajueves_topics_v1';
+const MJ_HIST_KV_KEY = 'adminhub_mesajueves_historico_semanas_v1';
+const MJ_LOCAL_KEY = 'mesa_jueves_notas_personales_v1';
+function mjLoadLocalStore(){ try{ return JSON.parse(localStorage.getItem(MJ_LOCAL_KEY)) || {}; }catch(e){ return {}; } }
+function mjSaveLocalStore(s){ localStorage.setItem(MJ_LOCAL_KEY, JSON.stringify(s)); }
+const mjLocalStore = mjLoadLocalStore();
+
+function mjWeekKeyFor(date){
+  const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function mjAddDays(date, days){ return new Date(date.getFullYear(), date.getMonth(), date.getDate()+days); }
+function mjComputeMoveTargetWeekKey(moveTo, moveDateStr){
+  const base = mjGetRelevantThursday();
+  if(moveTo==='proximo') return mjWeekKeyFor(mjAddDays(base,7));
+  if(moveTo==='dos') return mjWeekKeyFor(mjAddDays(base,14));
+  if(moveTo==='fecha' && moveDateStr){
+    let d = new Date(moveDateStr+'T00:00:00');
+    const wd = mjMeetingCfg.weekday;
+    const diff = (wd - d.getDay() + 7) % 7;
+    d = mjAddDays(d, diff);
+    return mjWeekKeyFor(d);
+  }
+  return null;
+}
+
+async function mjLoadHistoricoPast(){
+  try{ const saved = await kvGet(MJ_HIST_KV_KEY); if(Array.isArray(saved)) mjHistoricoPast = saved; }catch(e){}
+}
+async function mjSaveHistoricoPast(){ try{ await kvSet(MJ_HIST_KV_KEY, mjHistoricoPast); }catch(e){} }
+function mjArchiveWeek(weekKey, topics){
+  const openTopics = (topics||[]).filter(t=>!t.locked);
+  if(!openTopics.length) return;
+  mjHistoricoPast = [{
+    date: mjFormatThursdayShort(new Date(weekKey+'T00:00:00')),
+    weekKey,
+    topics: openTopics.map(t=>({
+      title:t.title, status:t.status, assignee:t.assignee||null,
+      flag: t.recurring ? t.recurring+'ª semana seguida' : null,
+      followup: mjMoveFollowup(t.status, t.moveTo, t.moveDate)
+    }))
+  }, ...mjHistoricoPast];
+}
+
+let mjTopicsReady = null;
+const MJ_OLD_LOCAL_KEY = 'mesa_jueves_mockup_v1'; // clave del sistema antiguo (solo local, previo a hoy)
+let mjTopicsLoadedOk = false; // seguro: no se persiste nada hasta haber cargado los datos reales del servidor
+async function mjLoadTopics(){
+  const currentWeekKey = mjWeekKeyFor(mjGetRelevantThursday());
+  let kvFetchOk = false, stored = null;
+  try{ stored = await kvGet(MJ_TOPICS_KV_KEY); kvFetchOk = true; }catch(e){ kvFetchOk = false; }
+
+  if(!kvFetchOk){
+    // Sin conexión al KV compartido: no tocamos nada, nos quedamos con el estado local
+    // por defecto solo para esta sesión — nunca sobrescribimos lo que ya hay guardado.
+    mjCurrentWeekKey = currentWeekKey;
+    return;
+  }
+
+  let storedWeekKey = null, storedTopics = null;
+  if(Array.isArray(stored)){ storedTopics = stored; storedWeekKey = currentWeekKey; } // formato antiguo, sin weekKey
+  else if(stored && Array.isArray(stored.topics)){ storedTopics = stored.topics; storedWeekKey = stored.weekKey; }
+
+  if(storedTopics && storedTopics.length){
+    if(storedWeekKey === currentWeekKey){
+      mjTopics = storedTopics;
+      mjCurrentWeekKey = currentWeekKey;
+    } else {
+      /* Ha llegado el jueves siguiente: archivamos la semana anterior en el histórico
+         y solo recuperan burbuja los temas que se pospusieron para esta semana (recurrentes). */
+      mjArchiveWeek(storedWeekKey, storedTopics);
+      const locked = storedTopics.find(t=>t.locked) || mjTopics[0];
+      const reactivar = storedTopics.filter(t=>!t.locked && t.status!=='cerrado' && t.moveTargetWeekKey && t.moveTargetWeekKey<=currentWeekKey);
+      mjTopics = [locked, ...reactivar.map(t=>({
+        id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+        title:t.title, status:'pendiente', assignee:t.assignee||null,
+        comments:[], recurring:(t.recurring||0)+1
+      }))];
+      mjCurrentWeekKey = currentWeekKey;
+      mjTopicsLoadedOk = true;
+      await mjSaveHistoricoPast();
+      await mjPersistTopics();
+      return;
+    }
+  } else if(!storedTopics){
+    /* Primera vez que se usa el KV compartido: si este navegador guardaba temas con el
+       sistema antiguo (local), los rescatamos y los subimos para que se vean en todas partes. */
+    mjCurrentWeekKey = currentWeekKey;
+    let migrado = false;
+    try{
+      const old = JSON.parse(localStorage.getItem(MJ_OLD_LOCAL_KEY));
+      if(old){
+        if(old.topics && old.topics['seg']){ Object.assign(mjTopics[0], old.topics['seg']); migrado = true; }
+        if(Array.isArray(old.extraTopics) && old.extraTopics.length){ old.extraTopics.forEach(t=>mjTopics.push(t)); migrado = true; }
+      }
+    }catch(e){}
+    mjTopicsLoadedOk = true;
+    await mjPersistTopics();
+    return;
+  } else {
+    mjCurrentWeekKey = currentWeekKey;
+  }
+  mjTopicsLoadedOk = true;
+}
+async function mjPersistTopics(){
+  if(!mjTopicsLoadedOk) return; // seguro: nunca guardar antes de haber cargado los datos reales del servidor
+  try{ await kvSet(MJ_TOPICS_KV_KEY, {weekKey: mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday()), topics: mjTopics}); }catch(e){}
+}
+function mjMoveTopic(id, dir){
+  const idx = mjTopics.findIndex(t=>t.id===id);
+  const swapIdx = idx + dir;
+  if(idx<0 || swapIdx<0 || swapIdx>=mjTopics.length) return;
+  if(mjTopics[idx].locked || mjTopics[swapIdx].locked) return;
+  [mjTopics[idx], mjTopics[swapIdx]] = [mjTopics[swapIdx], mjTopics[idx]];
+  mjPersistTopics();
+  mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+}
+function mjGetHistNote(hid){ mjLocalStore.histNotes = mjLocalStore.histNotes || {}; return mjLocalStore.histNotes[hid] || {text:'', shared:false}; }
+function mjSetHistNote(hid, data){ mjLocalStore.histNotes = mjLocalStore.histNotes || {}; mjLocalStore.histNotes[hid] = data; mjSaveLocalStore(mjLocalStore); }
+
+
+/* ---------------- NAVEGACIÓN: Equipo → herramienta ---------------- */
+function mjOpenTool(view){
+  document.getElementById('mjOverlay').classList.add('open');
+  document.querySelector(`.mj-tab-btn[data-mjview="${view}"]`).click();
+  mjWatchVote(); // escuchar la votación compartida desde el momento en que se abre la herramienta
+}
+document.getElementById('mjCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('mjOverlay').classList.remove('open');
+  clearInterval(mjVotePollInterval);
+  // Al cerrar Mesa del Jueves se vuelve al índice de Seguimientos (salvo en el enlace externo de solo agenda)
+  if(!MJ_ORDEN_ONLY) window.location.href = PAGE_INDEX;
+});
+
+/* ---------------- TABS ---------------- */
+document.querySelectorAll('.mj-tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.mj-tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.mj-view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('mj-view-'+btn.dataset.mjview).classList.add('active');
+    if(btn.dataset.mjview === 'vivo'){
+      mjStartTimer();
+      document.getElementById('mjTabVivoAlert').classList.remove('show');
+      mjLoadVoteHistory().then(()=>{ mjRenderOrbit(); mjRenderFallback(); });
+    } else if(btn.dataset.mjview === 'historico'){
+      mjLoadVoteHistory().then(mjRenderHistorico);
+    }
+  });
+});
+
+/* ---------------- RENDER: ANTES ---------------- */
+function mjRenderAgenda(){
+  const wrap = document.getElementById('mj-agenda-antes');
+  wrap.innerHTML = '';
+  mjTopics.filter(t=>t.locked || !mjShouldHideFromLive(t)).forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'mj-row' + (t.locked ? ' pinned' : '');
+    if(t.locked){
+      row.innerHTML = `
+        <div class="mj-row-title">📌 ${t.title}<span style="display:block;font-size:11.5px;color:var(--mj-text-dim);margin-top:3px;">Módulo en construcción — se integrará próximamente</span></div>
+        <span class="mj-lock-tag">Fijo cada semana</span>`;
+    } else {
+      const openIdx = mjTopics.filter(x=>!x.locked).findIndex(x=>x.id===t.id);
+      const openCount = mjTopics.filter(x=>!x.locked).length;
+      row.innerHTML = `
+        <div class="mj-row-title" data-id="${t.id}">${t.title}${t.carriedFrom ? `<span class="mj-carry-tag">↳ viene de ${t.carriedFrom}</span>` : ''}</div>
+        <div class="mj-avatar" title="${t.author}" style="background:color-mix(in srgb, ${mjColorFor(t.author)} 22%, var(--mj-surface-3));color:${mjColorFor(t.author)};border:1px solid color-mix(in srgb, ${mjColorFor(t.author)} 45%, transparent);">${t.author[0]}</div>
+        <button class="mj-icon-btn" title="Subir" data-mjact="up" data-id="${t.id}" ${openIdx===0?'disabled style="opacity:.25;cursor:default;"':''}>▲</button>
+        <button class="mj-icon-btn" title="Bajar" data-mjact="down" data-id="${t.id}" ${openIdx===openCount-1?'disabled style="opacity:.25;cursor:default;"':''}>▼</button>
+        <button class="mj-icon-btn" title="Editar" data-mjact="edit" data-id="${t.id}">✎</button>
+        <button class="mj-icon-btn" title="Eliminar" data-mjact="del" data-id="${t.id}">🗑</button>`;
+      row.style.borderLeftColor = mjColorFor(t.author);
+    }
+    wrap.appendChild(row);
+  });
+  document.getElementById('mj-count-antes').textContent = mjTopics.length + ' temas';
+
+  wrap.querySelectorAll('[data-mjact="up"]').forEach(b=>{
+    b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, -1));
+  });
+  wrap.querySelectorAll('[data-mjact="down"]').forEach(b=>{
+    b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, 1));
+  });
+  wrap.querySelectorAll('[data-mjact="del"]').forEach(b=>{
+    b.addEventListener('click', ()=> mjOpenPwdGate(()=>{
+      mjTopics = mjTopics.filter(t=>t.id!==b.dataset.id);
+      mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+    }, 'Introduce la contraseña para eliminar este tema.'));
+  });
+  wrap.querySelectorAll('[data-mjact="edit"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const titleEl = wrap.querySelector(`.mj-row-title[data-id="${b.dataset.id}"]`);
+      const t = mjTopics.find(x=>x.id===b.dataset.id);
+      if(!titleEl||!t) return;
+      titleEl.innerHTML = `<input class="mj-edit-input" type="text" value="${t.title.replace(/"/g,'&quot;')}">`;
+      const input = titleEl.querySelector('input');
+      input.focus(); input.select();
+      const save = ()=>{
+        const val = input.value.trim();
+        if(val) t.title = val;
+        mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+      };
+      input.addEventListener('keydown', e=>{ if(e.key==='Enter') save(); });
+      input.addEventListener('blur', save);
+    });
+  });
+}
+
+document.getElementById('mjAddTopicBtn').addEventListener('click', mjAddTopicFromInput);
+document.getElementById('mjNewTopicInput').addEventListener('keydown', e=>{ if(e.key==='Enter') mjAddTopicFromInput(); });
+function mjAddTopicFromInput(){
+  const input = document.getElementById('mjNewTopicInput');
+  const val = input.value.trim();
+  if(!val) return;
+  const id = 't' + Date.now();
+  mjTopics.push({id, title:val, author:'Vero', status:'pendiente', comments:[]});
+  mjPersistTopics();
+  input.value = '';
+  mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+  mjOpenDetail(id); // abre la ficha al momento para poder asignar y/o posponer (jueves, 2 jueves, fecha)
+}
+
+/* ---------------- CONTRASEÑA (temas, votaciones del histórico) ---------------- */
+const MJ_AGENDA_PWD = 'AdminHub';
+let mjPwdCallback = null;
+function mjOpenPwdGate(callback, mensaje){
+  mjPwdCallback = callback;
+  document.getElementById('mjPwdMsg').textContent = mensaje || 'Introduce la contraseña para continuar.';
+  document.getElementById('mjPwdInput').value = '';
+  document.getElementById('mjPwdErr').classList.remove('show');
+  document.getElementById('mjPwdOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('mjPwdInput').focus(), 100);
+}
+function mjClosePwdGate(){ document.getElementById('mjPwdOverlay').classList.remove('show'); mjPwdCallback=null; }
+function mjCheckPwd(){
+  const v = document.getElementById('mjPwdInput').value;
+  if(v===MJ_AGENDA_PWD){
+    const cb = mjPwdCallback;
+    mjClosePwdGate();
+    if(cb) cb();
+  } else {
+    document.getElementById('mjPwdErr').classList.add('show');
+  }
+}
+document.getElementById('mjPwdCancel').addEventListener('click', mjClosePwdGate);
+document.getElementById('mjPwdOverlay').addEventListener('click', e=>{ if(e.target.id==='mjPwdOverlay') mjClosePwdGate(); });
+
+/* ---------------- RENDER: EN VIVO ---------------- */
+function mjRenderOrbit(){
+  const wrap = document.getElementById('mjOrbitWrap');
+  wrap.querySelectorAll('.mj-node').forEach(n=>n.remove());
+  const cx=50, cy=50, radius=46;
+  function placeNode(t, angleDeg, orderNum, voteOverrideCls){
+    const angle = angleDeg * Math.PI/180;
+    const x = cx + radius*Math.cos(angle), y = cy + radius*Math.sin(angle);
+    const node = document.createElement('div');
+    let stCls;
+    if(voteOverrideCls){
+      /* El resultado de la votación manda siempre para esta burbuja concreta */
+      stCls = voteOverrideCls;
+    } else if(t.status==='cerrado'){
+      /* Cerrado y sin votar: gris */
+      stCls = 'st-neutral';
+    } else if(t.status==='en_tratamiento'){
+      /* En tratamiento: ámbar */
+      stCls = 'st-live';
+    } else {
+      /* Pendiente: ámbar en cuanto se ha tocado algo (asignación, traslado, comentario, nota…); si no, aspecto por defecto */
+      const tocado = !!(mjAssigneeList(t).length || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
+      stCls = tocado ? 'st-live' : MJ_STATUS_META[t.status].cls;
+    }
+    node.className = 'mj-node ' + stCls + (t.recurring ? ' mj-recurring' : '');
+    node.style.left = x+'%'; node.style.top = y+'%';
+    const icon = t.locked ? '📌' : orderNum;
+    node.innerHTML = `<div class="mj-node-bubble">${icon}</div><div class="mj-node-label">${mjShortTitle(t.title)}</div>`;
+    node.addEventListener('click', ()=>mjOpenDetail(t.id));
+    wrap.appendChild(node);
+  }
+  function voteCls(num){
+    const vr = mjVoteHistory[String(num)];
+    if(!vr) return null;
+    if(vr.resultado==='favorable') return 'st-vote-favor';
+    if(vr.resultado==='contra') return 'st-vote-contra';
+    return null;
+  }
+  /* "Seguimiento de casos" siempre anclado arriba del todo de la circunferencia */
+  const lockedTopics = mjTopics.filter(t=>t.locked);
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
+  const total = lockedTopics.length + openTopics.length;
+  lockedTopics.forEach(t=>placeNode(t, -90, null, voteCls(0))); // -90° = arriba del todo
+  openTopics.forEach((t,i)=>{
+    const num = i+1;
+    placeNode(t, -90 + ((num)/total)*360, num, voteCls(num));
+  });
+}
+function mjShortTitle(str){ return str.length > 32 ? str.slice(0,30)+'…' : str; }
+
+function mjRenderFallback(){
+  const wrap = document.getElementById('mjLiveFallback');
+  wrap.innerHTML = '';
+  mjTopics.filter(t=>t.locked || !mjShouldHideFromLive(t)).forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'mj-row' + (t.locked?' pinned':'');
+    row.style.borderColor = t.status==='en_tratamiento' ? 'rgba(240,149,75,.5)' : t.status==='cerrado' ? 'rgba(0,255,180,.5)' : '';
+    row.innerHTML = `<div class="mj-row-title">${t.locked?'📌 ':''}${t.title}</div><span class="mj-lock-tag" style="color:var(--mj-text-dim);background:transparent;border:1px solid var(--mj-line);">${MJ_STATUS_META[t.status].label}</span>`;
+    row.addEventListener('click', ()=>mjOpenDetail(t.id));
+    wrap.appendChild(row);
+  });
+}
+
+/* ---------------- DETALLE (Mesa de Aitor) ---------------- */
+function mjGoToBajasYCambios(){
+  mjCloseDetail();
+  document.getElementById('mjOverlay').classList.remove('open');
+  window.open(bajasUrl, '_blank');
+  window.location.href = PAGE_INDEX;
+}
+function mjOpenDetail(id){
+  const t = mjTopics.find(x=>x.id===id);
+  if(!t) return;
+  if(t.status === 'pendiente'){ t.status = 'en_tratamiento'; mjPersistTopics(); mjRenderOrbit(); mjRenderFallback(); }
+
+  const card = document.getElementById('mjDetailCard');
+  card.innerHTML = `
+    <div class="mj-detail-top">
+      <div>
+        <div class="mj-detail-sub">TEMA${t.recurring ? ' · recurrente' : ''}</div>
+        <div class="mj-detail-title">${t.title}</div>
+        <div class="mj-author-tag" style="--pc:${mjColorFor(t.author)}">${t.author}</div>
+      </div>
+      <button class="mj-close-x" id="mjCloseDetail">✕</button>
+    </div>
+
+    ${t.id==='seg' ? `<button class="mj-add-btn" style="margin-top:4px;" onclick="mjGoToBajasYCambios()">🔗 Ir a Bajas y Cambios</button>` : ''}
+
+    ${t.aitorNote ? `
+    <div class="mj-aitor-line" style="margin:18px 0;">
+      <div class="mj-aitor" style="width:42px;height:42px;"><div class="mj-core"><div class="mj-af"><div class="mj-eye"></div><div class="mj-eye"></div></div></div><div class="mj-tail"></div><div class="mj-spark s1">✦</div></div>
+      <div class="mj-aitor-bubble"><span class="mj-aitor-label">AITOR</span>${t.aitorNote}</div>
+    </div>` : ''}
+
+    <div class="mj-status-label">ESTADO DEL TEMA</div>
+    <div class="mj-status-chips" id="mjStatusChips">
+      <button class="mj-status-chip-btn st-pend" data-s="pendiente">Pendiente / Trasladar</button>
+      <button class="mj-status-chip-btn st-live" data-s="en_tratamiento">En tratamiento</button>
+      <button class="mj-status-chip-btn st-closed" data-s="cerrado">Cerrado</button>
+    </div>
+
+    <div class="mj-subpanel" id="mjMoveSubpanel">
+      <div class="mj-status-label" style="margin-bottom:9px;">¿SE TRASLADA?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="mjMoveOptions">
+        <button class="mj-opt-btn" data-m="proximo">Próximo jueves</button>
+        <button class="mj-opt-btn" data-m="dos">Dentro de 2 jueves</button>
+        <button class="mj-opt-btn" data-m="fecha">Fecha concreta</button>
+      </div>
+      <input type="date" id="mjMoveDate" style="display:none;">
+    </div>
+
+    <div class="mj-subpanel show" style="margin-top:10px;">
+      <div class="mj-status-label" style="margin-bottom:9px;">ASIGNAR SEGUIMIENTO A</div>
+      <div class="mj-assignee-row" id="mjAssigneeRow"></div>
+    </div>
+
+    <div class="mj-divider"></div>
+
+    <div class="mj-private-note">
+      <div class="mj-private-note-head"><span>NOTA PRIVADA · solo tú la ves</span></div>
+      <textarea id="mjNoteText" placeholder="Escribe aquí — nadie más lo ve hasta que publiques…">${t.privateNote||''}</textarea>
+      <div class="mj-note-actions">
+        <button class="mj-ghost-btn" id="mjSaveDraft">Guardar borrador</button>
+        <button class="mj-publish-btn" id="mjPublishNote">↗ Publicar</button>
+      </div>
+    </div>
+
+    <div class="mj-divider"></div>
+    <div class="mj-detail-sub" style="margin-bottom:8px;">COMENTARIOS PUBLICADOS</div>
+    <div class="mj-published-list" id="mjPublishedList"></div>
+  `;
+
+  function mjPaintStatus(){
+    card.querySelectorAll('.mj-status-chip-btn').forEach(b=>b.classList.remove('active'));
+    const btn = card.querySelector(`.mj-status-chip-btn[data-s="${t.status}"]`);
+    if(btn) btn.classList.add('active');
+    document.getElementById('mjMoveSubpanel').classList.toggle('show', t.status==='pendiente');
+  }
+  mjPaintStatus();
+  card.querySelectorAll('.mj-status-chip-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      t.status = b.dataset.s;
+      mjPersistTopics(); mjPaintStatus(); mjRenderOrbit(); mjRenderFallback();
+    });
+  });
+  if(t.moveTo){
+    const sel = document.querySelector(`#mjMoveOptions .mj-opt-btn[data-m="${t.moveTo}"]`);
+    if(sel) sel.classList.add('active');
+    document.getElementById('mjMoveDate').style.display = t.moveTo==='fecha' ? 'inline-block' : 'none';
+    if(t.moveDate) document.getElementById('mjMoveDate').value = t.moveDate;
+  }
+  document.getElementById('mjMoveOptions').querySelectorAll('.mj-opt-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const yaActiva = b.classList.contains('active');
+      document.querySelectorAll('#mjMoveOptions .mj-opt-btn').forEach(x=>x.classList.remove('active'));
+      if(yaActiva){
+        t.moveTo = null; t.moveDate = null; t.moveTargetWeekKey = null;
+        document.getElementById('mjMoveDate').style.display = 'none';
+        document.getElementById('mjMoveDate').value = '';
+      } else {
+        b.classList.add('active');
+        t.moveTo = b.dataset.m;
+        t.moveTargetWeekKey = mjComputeMoveTargetWeekKey(t.moveTo, t.moveDate);
+        document.getElementById('mjMoveDate').style.display = b.dataset.m==='fecha' ? 'inline-block' : 'none';
+      }
+      mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+    });
+  });
+  document.getElementById('mjMoveDate').addEventListener('change', e=>{
+    t.moveDate = e.target.value;
+    if(t.moveTo==='fecha') t.moveTargetWeekKey = mjComputeMoveTargetWeekKey('fecha', t.moveDate);
+    mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+  });
+
+  mjRenderPublished(t);
+
+  document.getElementById('mjSaveDraft').addEventListener('click', ()=>{
+    t.privateNote = document.getElementById('mjNoteText').value;
+    mjPersistTopics();
+    const btn = document.getElementById('mjSaveDraft');
+    btn.textContent = 'Guardado ✓'; setTimeout(()=>btn.textContent='Guardar borrador', 1200);
+  });
+  document.getElementById('mjPublishNote').addEventListener('click', ()=>{
+    const val = document.getElementById('mjNoteText').value.trim();
+    if(!val) return;
+    t.comments.push({author:'Vero', text:val, time:'ahora'});
+    t.privateNote = '';
+    document.getElementById('mjNoteText').value = '';
+    mjPersistTopics();
+    mjRenderPublished(t);
+  });
+
+  const arow = document.getElementById('mjAssigneeRow');
+  arow.innerHTML = mjTeamMembers.map(p=>`<button class="mj-assignee-chip ${mjAssigneeList(t).includes(p.name)?'active':''}" data-name="${p.name}" style="--pc:${p.color}">${p.icon} ${p.name}</button>`).join('') + `<span class="mj-org-tag" title="Próximamente: notificará directamente en Organízate">🔗 Organízate</span>`;
+  arow.querySelectorAll('.mj-assignee-chip').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      let list = mjAssigneeList(t);
+      list = list.includes(b.dataset.name) ? list.filter(n=>n!==b.dataset.name) : [...list, b.dataset.name];
+      t.assignee = list;
+      mjPersistTopics();
+      b.classList.toggle('active', list.includes(b.dataset.name));
+    });
+  });
+
+  document.getElementById('mjCloseDetail').addEventListener('click', mjCloseDetail);
+  document.getElementById('mjDetailOverlay').classList.add('open');
+}
+function mjRenderPublished(t){
+  const list = document.getElementById('mjPublishedList');
+  if(!t.comments || t.comments.length===0){ list.innerHTML = `<div class="mj-empty-note">Nada publicado todavía en este tema.</div>`; return; }
+  list.innerHTML = t.comments.map(c=>`
+    <div class="mj-published-item">
+      <div class="mj-avatar" style="background:color-mix(in srgb, ${mjColorFor(c.author)} 22%, var(--mj-surface-3));color:${mjColorFor(c.author)};border:1px solid color-mix(in srgb, ${mjColorFor(c.author)} 45%, transparent);">${c.author[0]}</div>
+      <div class="mj-published-body"><div class="mj-published-meta">${c.author} · ${c.time}</div>${c.text}</div>
+    </div>`).join('');
+}
+let mjDetailOpenedFromPersona = null;
+let mjDetailOpenedFromHistorico = false;
+function mjCloseDetail(){
+  document.getElementById('mjDetailOverlay').classList.remove('open');
+  if(mjDetailOpenedFromPersona){
+    const nombre = mjDetailOpenedFromPersona;
+    mjDetailOpenedFromPersona = null;
+    openOrgPersona(nombre);
+  }
+  if(mjDetailOpenedFromHistorico){
+    mjDetailOpenedFromHistorico = false;
+    mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback(); mjRenderHistorico();
+  }
+}
+document.getElementById('mjDetailOverlay').addEventListener('click', e=>{ if(e.target.id==='mjDetailOverlay') mjCloseDetail(); });
+
+/* ---------------- TIMER (fijo a 60 min) ---------------- */
+let mjTimerSeconds = 60*60, mjTimerInterval=null, mjTimerWarned=false, mjTimerAnchor=null;
+const MJ_TIMER_KEY = 'adminhub_mesajueves_timer_v1';
+function mjFmt(s){ const m=Math.floor(s/60), sec=s%60; return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
+function mjUpdateTimerUI(){
+  document.getElementById('mjTimerDisplay').textContent = mjFmt(mjTimerSeconds);
+  const chip = document.getElementById('mjTimerChip');
+  chip.textContent = '⏱ ' + mjFmt(mjTimerSeconds);
+  const isWarn = mjTimerSeconds <= 15*60 && mjTimerSeconds > 0;
+  document.getElementById('mjTimerPanel').classList.toggle('warning', isWarn);
+  chip.classList.toggle('warning', isWarn);
+}
+async function mjStartTimer(){
+  document.getElementById('mjTimerChip').style.display = 'flex';
+  if(mjTimerAnchor) return; // ya sincronizado en esta sesión
+  const weekKey = mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday());
+  let anchor = null;
+  try{
+    anchor = await kvGet(MJ_TIMER_KEY);
+    if(!anchor || anchor.weekKey !== weekKey){
+      anchor = { startedAt: Date.now(), weekKey };
+      await kvSet(MJ_TIMER_KEY, anchor);
+    }
+  }catch(e){
+    anchor = { startedAt: Date.now(), weekKey }; // sin red: seguimos con cuenta local de emergencia
+  }
+  mjTimerAnchor = anchor;
+  mjTimerTick();
+  clearInterval(mjTimerInterval);
+  mjTimerInterval = setInterval(mjTimerTick, 1000);
+}
+function mjTimerTick(){
+  if(!mjTimerAnchor) return;
+  const elapsed = Math.floor((Date.now() - mjTimerAnchor.startedAt)/1000);
+  mjTimerSeconds = Math.max(0, 60*60 - elapsed);
+  mjUpdateTimerUI();
+  if(mjTimerSeconds===0 && mjTimerInterval){ clearInterval(mjTimerInterval); mjTimerInterval=null; }
+  if(mjTimerSeconds <= 15*60 && mjTimerSeconds > 0 && !mjTimerWarned){ mjTimerWarned = true; mjShowWarning(); }
+}
+function mjShowWarning(){
+  document.getElementById('mjWarningBanner').classList.add('show');
+  document.getElementById('mjAitorVivoBubble').innerHTML = '<span class="mj-aitor-label">AITOR · en directo</span>Quedan <b>15 minutos</b>. Puede que valga la pena repasar lo que sigue abierto y decidir qué se traslada.';
+}
+mjUpdateTimerUI();
+
+/* ---------------- VOTACIÓN EN VIVO (compartida vía KV, anónima, 5s) ---------------- */
+const MJ_VOTE_KEY = 'adminhub_mesajueves_votacion_v1';
+const MJ_VOTE_HIST_KEY = 'adminhub_mesajueves_votos_historico_v1';
+const MJ_VOTE_DURATION = 5000;
+let mjVoterId = localStorage.getItem('mj_voter_id');
+if(!mjVoterId){ mjVoterId = 'v_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); localStorage.setItem('mj_voter_id', mjVoterId); }
+let mjVotePollInterval = null;
+let mjCurrentVote = null;
+let mjVoteHistory = {};
+
+async function mjLoadVoteHistory(){
+  try{ const d = await kvGet(MJ_VOTE_HIST_KEY); mjVoteHistory = (d && typeof d==='object' && !Array.isArray(d)) ? d : {}; }
+  catch(e){ mjVoteHistory = {}; }
+}
+async function mjSaveVoteHistory(){ try{ await kvSet(MJ_VOTE_HIST_KEY, mjVoteHistory); }catch(e){} }
+mjLoadVoteHistory().then(()=>{ mjRenderOrbit(); mjRenderFallback(); });
+
+async function mjOpenVotePrompt(){
+  try{
+    const activa = await kvGet(MJ_VOTE_KEY);
+    if(activa && !activa.closed){
+      mjCurrentVote = activa;
+      mjRenderVotePanel();
+      mjWatchVote();
+      return; // ya hay una votación en marcha — no se lanza otra encima
+    }
+  }catch(e){}
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
+  const select = document.getElementById('voteStartTopicSelect');
+  const nums = ['0', ...openTopics.map((t,i)=>String(i+1))];
+  select.innerHTML = nums.map(n=>{
+    const label = n==='0' ? '0 — Seguimiento de casos' : `${n} — ${mjShortTitle(openTopics[parseInt(n,10)-1].title)}`;
+    return `<option value="${n}">${label}</option>`;
+  }).join('');
+  document.getElementById('mVoteStart').classList.add('show');
+}
+function mjConfirmStartVote(){
+  const num = document.getElementById('voteStartTopicSelect').value;
+  document.getElementById('mVoteStart').classList.remove('show');
+  mjStartVote(num);
+}
+async function mjStartVote(topicNum){
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
+  const label = topicNum==='0' ? 'Tema 0 — Seguimiento de casos' : `Tema ${topicNum} — ${(openTopics[parseInt(topicNum,10)-1]||{}).title||''}`;
+  const vote = { id:'v_'+Date.now(), question: topicNum, label, startedAt: Date.now(), duration: MJ_VOTE_DURATION, votes: {}, closed:false };
+  await kvSet(MJ_VOTE_KEY, vote);
+  mjCurrentVote = vote;
+  mjRenderVotePanel();
+  mjWatchVote();
+}
+async function mjCastVote(choice){
+  if(!mjCurrentVote || mjCurrentVote.closed) return;
+  const fresh = await kvGet(MJ_VOTE_KEY);
+  if(!fresh || fresh.id !== mjCurrentVote.id || fresh.closed) return;
+  if(fresh.votes[mjVoterId]) return; // ya emitió su voto — no se acepta más de uno por usuario
+  fresh.votes[mjVoterId] = choice;
+  await kvSet(MJ_VOTE_KEY, fresh);
+  mjCurrentVote = fresh;
+  mjRenderVotePanel();
+}
+function mjWatchVote(){
+  clearInterval(mjVotePollInterval);
+  mjVotePollInterval = setInterval(mjPollVote, 600);
+  mjPollVote();
+}
+async function mjPollVote(){
+  const fresh = await kvGet(MJ_VOTE_KEY);
+  if(!fresh){ mjCurrentVote=null; clearInterval(mjVotePollInterval); mjRenderVotePanel(); return; }
+  const elapsed = Date.now() - fresh.startedAt;
+  if(elapsed >= fresh.duration && !fresh.closed){
+    fresh.closed = true;
+    await kvSet(MJ_VOTE_KEY, fresh);
+    await mjRecordVoteResult(fresh);
+  }
+  mjCurrentVote = fresh;
+  mjRenderVotePanel();
+  const enVivo = document.getElementById('mj-view-vivo').classList.contains('active');
+  document.getElementById('mjTabVivoAlert').classList.toggle('show', !fresh.closed && !enVivo);
+  if(fresh.closed){
+    clearInterval(mjVotePollInterval);
+    mjRenderOrbit(); mjRenderFallback();
+    if(document.getElementById('mj-view-historico').classList.contains('active')) mjRenderHistorico();
+  }
+}
+async function mjRecordVoteResult(vote){
+  const si = Object.values(vote.votes).filter(x=>x==='si').length;
+  const no = Object.values(vote.votes).filter(x=>x==='no').length;
+  const total = si+no;
+  const resultado = si===no ? 'empate' : (si>no ? 'favorable' : 'contra');
+  const topicNum = vote.question;
+  const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
+  const t = topicNum==='0' ? mjTopics.find(x=>x.locked) : openTopics[parseInt(topicNum,10)-1];
+  await mjLoadVoteHistory();
+  /* Si se repite la votación sobre el mismo tema, solo queda registrada la última */
+  mjVoteHistory[topicNum] = {
+    topicTitle: t ? t.title : ('Tema '+topicNum),
+    si, no, total, resultado,
+    fecha: new Date().toLocaleString('es-ES')
+  };
+  await mjSaveVoteHistory();
+}
+function mjRenderVotePanel(){
+  const wrap = document.getElementById('mjVotePanel');
+  const launcher = document.getElementById('mjVoteLauncher');
+  if(!wrap || !launcher) return;
+  const v = mjCurrentVote;
+  if(!v){
+    wrap.style.display='none'; wrap.innerHTML='';
+    launcher.style.display='flex';
+    return;
+  }
+  launcher.style.display = v.closed ? 'flex' : 'none';
+  wrap.style.display='flex';
+  const si = Object.values(v.votes).filter(x=>x==='si').length;
+  const no = Object.values(v.votes).filter(x=>x==='no').length;
+  const total = si+no;
+  const remaining = Math.max(0, Math.ceil((v.duration - (Date.now()-v.startedAt))/1000));
+  const myVote = v.votes[mjVoterId];
+  if(!v.closed){
+    wrap.innerHTML = `
+      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.label||v.question)}</div>
+      <div class="mj-vote-timer">${remaining}s</div>
+      <div class="mj-vote-btns">
+        <button class="mj-vote-btn si ${myVote==='si'?'chosen':''}" ${myVote?'disabled':''} onclick="mjCastVote('si')">✅ Sí</button>
+        <button class="mj-vote-btn no ${myVote==='no'?'chosen':''}" ${myVote?'disabled':''} onclick="mjCastVote('no')">❌ No</button>
+      </div>
+      <div class="mj-vote-tally">${total} voto${total!==1?'s':''} registrado${total!==1?'s':''} de momento</div>`;
+  } else {
+    const winner = si===no ? 'Empate' : (si>no ? '✅ Gana el SÍ' : '❌ Gana el NO');
+    wrap.innerHTML = `
+      <div class="mj-vote-q">🗳️ ${bmEscapeHtml(v.label||v.question)}</div>
+      <div class="mj-vote-result">${winner}</div>
+      <div class="mj-vote-tally">${total} voto${total!==1?'s':''} totales · Sí ${si} — No ${no}</div>
+      <button class="mj-ghost-btn" onclick="mjClearVote()">Cerrar</button>`;
+  }
+}
+async function mjClearVote(){
+  mjCurrentVote = null;
+  clearInterval(mjVotePollInterval);
+  await kvSet(MJ_VOTE_KEY, null);
+  mjRenderVotePanel();
+}
+
+/* ---------------- HISTÓRICO DE VOTACIONES (editable/borrable con contraseña) ---------------- */
+function mjSetupHistScrollThumb(){
+  const area = document.getElementById('mjHistScrollArea');
+  const track = document.getElementById('mjHistScrollTrack');
+  const thumb = document.getElementById('mjHistScrollThumb');
+  if(!area || !track || !thumb || area.dataset.thumbBound) return;
+  area.dataset.thumbBound = '1';
+  function update(){
+    const trackH = track.clientHeight;
+    const maxScroll = area.scrollHeight - area.clientHeight;
+    if(maxScroll <= 0){ thumb.style.display = 'none'; return; }
+    thumb.style.display = 'block';
+    const pct = area.scrollTop / maxScroll;
+    thumb.style.top = (pct * (trackH - 14)) + 'px';
+  }
+  area.addEventListener('scroll', update);
+  window.addEventListener('resize', update);
+  setTimeout(update, 60);
+}
+function mjRenderVoteHistoryList(){
+  const wrap = document.getElementById('mjVoteHistList');
+  const countEl = document.getElementById('mj-vote-hist-count');
+  if(!wrap) return;
+  const entries = Object.entries(mjVoteHistory).sort((a,b)=>parseInt(a[0],10)-parseInt(b[0],10));
+  if(countEl) countEl.textContent = entries.length + (entries.length===1?' registro':' registros');
+  if(!entries.length){ wrap.innerHTML = '<div class="mj-empty-note">Todavía no hay votaciones registradas.</div>'; return; }
+  wrap.innerHTML = entries.map(([num,rec])=>{
+    const color = rec.resultado==='favorable' ? 'var(--mj-mint)' : rec.resultado==='contra' ? 'var(--mj-red)' : 'var(--mj-slate)';
+    const label = rec.resultado==='favorable' ? '✅ Favorable' : rec.resultado==='contra' ? '❌ En contra' : '➖ Empate';
+    return `<div class="mj-row" style="border-left-color:${color};align-items:center;">
+      <div class="mj-row-title">Tema ${num} — ${bmEscapeHtml(rec.topicTitle)}<span class="mj-carry-tag" style="color:${color};">${label}</span></div>
+      <div style="font-family:'Courier New',monospace;font-size:11px;color:var(--mj-text-dim);white-space:nowrap;">Sí ${rec.si} · No ${rec.no} · ${rec.total} votos · ${bmEscapeHtml(rec.fecha)}</div>
+      <button class="mj-icon-btn" title="Editar" onclick="mjEditVoteRecordGate('${num}')">✎</button>
+      <button class="mj-icon-btn" title="Eliminar" onclick="mjDeleteVoteRecordGate('${num}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+function mjDeleteVoteRecordGate(num){
+  mjOpenPwdGate(async ()=>{
+    delete mjVoteHistory[num];
+    await mjSaveVoteHistory();
+    mjRenderVoteHistoryList();
+    mjRenderOrbit(); mjRenderFallback();
+  }, 'Introduce la contraseña para eliminar este resultado de votación.');
+}
+function mjEditVoteRecordGate(num){
+  mjOpenPwdGate(async ()=>{
+    const rec = mjVoteHistory[num];
+    if(!rec) return;
+    const nuevoSi = prompt('Votos a favor (Sí):', rec.si);
+    if(nuevoSi===null) return;
+    const nuevoNo = prompt('Votos en contra (No):', rec.no);
+    if(nuevoNo===null) return;
+    const si = Math.max(0, parseInt(nuevoSi,10)||0);
+    const no = Math.max(0, parseInt(nuevoNo,10)||0);
+    rec.si = si; rec.no = no; rec.total = si+no;
+    rec.resultado = si===no ? 'empate' : (si>no ? 'favorable' : 'contra');
+    await mjSaveVoteHistory();
+    mjRenderVoteHistoryList();
+    mjRenderOrbit(); mjRenderFallback();
+  }, 'Introduce la contraseña para editar este resultado de votación.');
+}
+/* ---------------- HISTÓRICO ---------------- */
+let mjHistFilter = 'todos';
+let mjHistQuery = '';
+document.getElementById('mjFilterBar').addEventListener('click', e=>{
+  if(!e.target.classList.contains('mj-filter-chip')) return;
+  document.querySelectorAll('.mj-filter-chip').forEach(c=>c.classList.remove('active'));
+  e.target.classList.add('active');
+  mjHistFilter = e.target.dataset.mjf;
+  mjRenderHistorico();
+});
+document.getElementById('mjHistSearchInput').addEventListener('input', e=>{
+  mjHistQuery = e.target.value.trim().toLowerCase();
+  mjRenderHistorico();
+});
+
+/* ---------------- CONFIGURACIÓN DE DÍA/HORA DE LA REUNIÓN (editable con contraseña) ---------------- */
+const MJ_CFG_KEY = 'adminhub_mesajueves_config_v1';
+let mjMeetingCfg = { weekday: 4, hour: 16, minute: 0 }; // por defecto: jueves a las 16:00
+async function mjLoadMeetingCfg(){
+  try{
+    const c = await kvGet(MJ_CFG_KEY);
+    if(c && typeof c.weekday==='number' && typeof c.hour==='number') mjMeetingCfg = {weekday:c.weekday, hour:c.hour, minute: typeof c.minute==='number'?c.minute:0};
+  }catch(e){}
+}
+async function mjSaveMeetingCfg(weekday, hour, minute){
+  mjMeetingCfg = {weekday, hour, minute};
+  try{ await kvSet(MJ_CFG_KEY, mjMeetingCfg); }catch(e){}
+}
+function mjGetRelevantThursday(){
+  const now = new Date();
+  const wd = mjMeetingCfg.weekday;
+  const diff = (wd - now.getDay() + 7) % 7; // 0 si hoy ya es el día de reunión
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  return d;
+}
+const MJ_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MJ_MESES_ABR = ['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
+const MJ_DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function mjFormatThursdayLong(d){ return `${d.getDate()} de ${MJ_MESES[d.getMonth()]}`; }
+function mjFormatThursdayShort(d){ const dia = MJ_DIAS[d.getDay()]; return `${dia.charAt(0).toUpperCase()+dia.slice(1)} · ${d.getDate()} ${MJ_MESES_ABR[d.getMonth()]} ${d.getFullYear()}`; }
+function mjUpdateDates(){
+  const d = mjGetRelevantThursday();
+  const aitorEl = document.getElementById('mjAitorDate');
+  if(aitorEl) aitorEl.textContent = mjFormatThursdayLong(d);
+  const horaTxt = String(mjMeetingCfg.hour).padStart(2,'0')+':'+String(mjMeetingCfg.minute).padStart(2,'0');
+  const pillEl = document.getElementById('mjDatePill');
+  if(pillEl) pillEl.innerHTML = `<span class="mj-dot-live"></span> ${mjFormatThursdayShort(d)} · ${horaTxt}`;
+}
+function mjOpenMeetingCfgEditor(){
+  mjOpenPwdGate(()=>{
+    const d = mjGetRelevantThursday();
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    document.getElementById('mjCfgDateInput').value = isoDate;
+    document.getElementById('mjCfgTimeInput').value = String(mjMeetingCfg.hour).padStart(2,'0')+':'+String(mjMeetingCfg.minute).padStart(2,'0');
+    document.getElementById('mCfgEditor').classList.add('show');
+  }, 'Introduce la contraseña para cambiar el día y la hora de la reunión.');
+}
+async function mjConfirmMeetingCfg(){
+  const dateVal = document.getElementById('mjCfgDateInput').value;
+  const timeVal = document.getElementById('mjCfgTimeInput').value;
+  if(!dateVal || !timeVal) return;
+  const weekday = new Date(dateVal+'T00:00:00').getDay();
+  const [hStr, mStr] = timeVal.split(':');
+  const hour = parseInt(hStr,10);
+  const minute = parseInt(mStr,10) || 0;
+  await mjSaveMeetingCfg(weekday, hour, minute);
+  document.getElementById('mCfgEditor').classList.remove('show');
+  mjUpdateDates();
+  mjRenderHistorico();
+}
+
+function mjBuildCurrentWeekEntry(){
+  return {
+    date: mjFormatThursdayShort(mjGetRelevantThursday()), current:true,
+    topics: mjTopics.filter(t=>!t.locked).map(t=>({
+      title:t.title, status:t.status,
+      flag: t.recurring ? t.recurring+'ª semana seguida' : null,
+      followup: mjMoveFollowup(t.status, t.moveTo, t.moveDate),
+      _id:'cur_'+t.id
+    }))
+  };
+}
+
+function mjRenderHistorico(){
+  const weeks = [mjBuildCurrentWeekEntry(), ...mjHistoricoPast.map((w,wi)=>({...w, topics: (w.topics||[]).map((tp,ti)=>({...tp, _id:'h'+wi+'_'+ti}))}))];
+  const wrap = document.getElementById('mjTimeline');
+  const weekMatches = w => !mjHistQuery || w.date.toLowerCase().includes(mjHistQuery);
+  const rendered = weeks.map(week=>{
+    let filtered = mjHistFilter==='todos' ? week.topics : week.topics.filter(t=>t.status===mjHistFilter);
+    if(mjHistQuery && !weekMatches(week)){
+      filtered = filtered.filter(t=>t.title.toLowerCase().includes(mjHistQuery));
+    }
+    if(filtered.length===0) return '';
+    return `
+    <div class="mj-tl-item ${week.current?'current':''}">
+      <div class="mj-tl-dot"></div>
+      <div class="mj-tl-head"><b>${week.date}</b>${week.current?'<span class="mj-tl-date">· en curso</span>':''}</div>
+      <div class="mj-tl-topics">
+        ${filtered.map(tp=>mjRenderHistTopic(tp)).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = rendered || `<div class="mj-empty-note">${mjTopics.filter(t=>!t.locked).length===0 && mjHistoricoPast.length===0 ? 'Todavía no hay histórico — se irá creando a partir de las reuniones que celebréis.' : 'No hay temas con ese filtro.'}</div>`;
+
+  wrap.querySelectorAll('.mj-tl-topic').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-mjact]')) return;
+      if(e.target.closest('.mj-tl-note-panel.show')) return; // no cerrar al escribir/pulsar dentro de la nota ya abierta
+      const panel = el.querySelector('.mj-tl-note-panel');
+      panel.classList.toggle('show');
+    });
+  });
+  wrap.querySelectorAll('[data-mjact="hopen"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      mjDetailOpenedFromHistorico = true;
+      mjOpenDetail(b.dataset.id);
+    });
+  });
+  wrap.querySelectorAll('[data-mjact="hdel"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      mjOpenPwdGate(()=>{
+        mjTopics = mjTopics.filter(t=>t.id!==b.dataset.id);
+        mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback(); mjRenderHistorico();
+      }, 'Introduce la contraseña para eliminar este tema.');
+    });
+  });
+  wrap.querySelectorAll('[data-mjact="hedit"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const titleEl = wrap.querySelector(`.mj-ttl[data-real-id="${b.dataset.id}"]`);
+      const t = mjTopics.find(x=>x.id===b.dataset.id);
+      if(!titleEl||!t) return;
+      titleEl.innerHTML = `<input class="mj-edit-input" type="text" value="${t.title.replace(/"/g,'&quot;')}">`;
+      const input = titleEl.querySelector('input');
+      input.focus(); input.select();
+      const save = ()=>{
+        const val = input.value.trim();
+        if(val) t.title = val;
+        mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback(); mjRenderHistorico();
+      };
+      input.addEventListener('keydown', ev=>{ if(ev.key==='Enter') save(); });
+      input.addEventListener('blur', save);
+    });
+  });
+  wrap.querySelectorAll('.mj-hist-save').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const id = b.dataset.id;
+      const ta = wrap.querySelector(`textarea[data-id="${id}"]`);
+      const cur = mjGetHistNote(id);
+      mjSetHistNote(id, {text:ta.value, shared:cur.shared});
+      b.textContent = 'Guardado ✓'; setTimeout(()=>b.textContent='Guardar nota', 1100);
+    });
+  });
+  wrap.querySelectorAll('.mj-hist-share').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const id = b.dataset.id;
+      const ta = wrap.querySelector(`textarea[data-id="${id}"]`);
+      mjSetHistNote(id, {text:ta.value, shared:true});
+      mjRenderHistorico();
+    });
+  });
+  mjRenderVoteHistoryList();
+  mjSetupHistScrollThumb();
+}
+function mjRenderHistTopic(tp){
+  const meta = MJ_STATUS_META[tp.status];
+  const note = mjGetHistNote(tp._id);
+  const realId = tp._id.startsWith('cur_') ? tp._id.slice(4) : null;
+  return `
+    <div class="mj-tl-topic">
+      <div class="mj-tl-topic-top">
+        <span class="mj-ttl" data-real-id="${realId||''}">${tp.title}${tp.flag ? `<span class="mj-carry-tag" style="display:inline;margin-left:6px;">↻ ${tp.flag}</span>`:''}</span>
+        ${note.shared ? '<span class="mj-shared-tag">🔓 Compartida</span>' : ''}
+        <span class="mj-status-chip ${meta.cls}">${meta.label}</span>
+        ${realId ? `<button class="mj-icon-btn" title="Abrir ficha" data-mjact="hopen" data-id="${realId}">🗂️</button><button class="mj-icon-btn" title="Editar título" data-mjact="hedit" data-id="${realId}">✎</button><button class="mj-icon-btn" title="Eliminar" data-mjact="hdel" data-id="${realId}">🗑</button>` : ''}
+      </div>
+      ${tp.followup ? `<span class="mj-followup">↳ ${tp.followup}</span>` : ''}
+      <div class="mj-tl-note-panel">
+        <div class="mj-private-note" style="margin-top:10px;">
+          <div class="mj-private-note-head"><span>NOTA PERSONAL</span></div>
+          <textarea data-id="${tp._id}" placeholder="Tu nota sobre este tema…">${note.text}</textarea>
+          <div class="mj-note-actions">
+            <button class="mj-ghost-btn mj-hist-save" data-id="${tp._id}">Guardar nota</button>
+            <button class="mj-publish-btn mj-hist-share" data-id="${tp._id}">${note.shared ? '✓ Compartida' : '↗ Compartir con el equipo'}</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---------------- INIT MESA DEL JUEVES ---------------- */
+mjTopicsReady = mjLoadMeetingCfg()
+  .then(()=>{ mjUpdateDates(); return mjLoadHistoricoPast(); })
+  .then(()=> mjLoadTopics())
+  .then(()=>{
+    mjUpdateDates();
+    mjRenderAgenda();
+    mjRenderOrbit();
+    mjRenderFallback();
+    mjRenderHistorico();
+  });
+
+/* ---------------- ENRUTADO DE LA PÁGINA (según el hash de entrada) ----------------
+   (sin hash)            → abre el modal Organízate
+   #organizate-yo        → abre Organízate directamente en "Yo"
+   #mesa-jueves-vivo     → abre Mesa del Jueves directamente en "En vivo"
+   #mesa-jueves-orden    → enlace externo: solo la Orden del día (sin En vivo / Histórico)      */
+window.addEventListener('load', function(){
+  if(PAGE_HASH === '#mesa-jueves-vivo'){
+    (mjTopicsReady || Promise.resolve()).then(()=>{ mjOpenTool('vivo'); });
+  } else if(MJ_ORDEN_ONLY){
+    (mjTopicsReady || Promise.resolve()).then(()=>{
+      mjOpenTool('antes');
+      mjRenderAgenda();
+      const vivoBtn = document.querySelector('.mj-tab-btn[data-mjview="vivo"]');
+      const histBtn = document.querySelector('.mj-tab-btn[data-mjview="historico"]');
+      if(vivoBtn) vivoBtn.style.display='none';
+      if(histBtn) histBtn.style.display='none';
+    });
+  } else {
+    openOrganizate();
+    if(PAGE_HASH === '#organizate-yo') openOrgSub('yo');
+  }
+});
+
+</script>
+</body>
+</html>
