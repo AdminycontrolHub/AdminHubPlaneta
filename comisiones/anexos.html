@@ -88,19 +88,18 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .bulk b{font-size:13px;letter-spacing:.08em;color:var(--c);margin-right:auto}
 .bulk .abtn.dng{background:transparent;color:#ffb4a3;border:1px solid rgba(255,180,163,0.5)}
 .twrap{overflow-x:auto;background:#fff;border:1px solid rgba(4,28,46,0.15);border-radius:14px}
-table.ppl{width:100%;border-collapse:collapse;font-size:15px;min-width:1780px}
+table.ppl{width:100%;border-collapse:collapse;font-size:15px;min-width:1640px}
 table.ppl th{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cd);text-align:left;padding:14px 12px;white-space:nowrap;background:var(--cbg);border-bottom:2px solid var(--c)}
 table.ppl td{padding:11px 12px;border-top:1px solid rgba(4,28,46,0.08);vertical-align:middle;color:#0B2A40}
 table.ppl tr.bad td{background:#FFF3D6}
 table.ppl td:nth-child(2){width:140px}
 table.ppl td:nth-child(4){width:100px}
 table.ppl td:nth-child(5){width:110px}
-table.ppl td:nth-child(6){width:160px}
-table.ppl td:nth-child(7){width:135px}
-table.ppl td:nth-child(8){width:100px}
-table.ppl td:nth-child(9){width:120px;text-align:center}
-table.ppl td:nth-child(10){width:135px}
-table.ppl td:nth-child(11){width:230px}
+table.ppl td:nth-child(6){width:140px}
+table.ppl td:nth-child(7){width:100px}
+table.ppl td:nth-child(8){width:120px;text-align:center}
+table.ppl td:nth-child(9){width:135px}
+table.ppl td:nth-child(10){width:230px}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 14px}
 .pill.yes{background:#0F6E44;color:#fff}
 .pill.no{background:#e4ddd0;color:#5d7486}
@@ -454,6 +453,13 @@ function parseInvite(raw){
 }
 //INVITE_END
 //MIN_START
+function toISODate(v){
+  var s=String(v||'').trim(), m;
+  if((m=s.match(/^(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{4})$/))) return m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);
+  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/))) return s;
+  return '';
+}
+function isoToDMY(v){var m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?m[3]+'.'+m[2]+'.'+m[1]:'';}
 function minGarantizado(incISO, refYM, base, dias, meses){
   var m=String(incISO||'').match(/^(\d{4})-(\d{2})-(\d{2})/), r=String(refYM||'').match(/^(\d{4})-(\d{2})/);
   if(!m||!r) return null;
@@ -660,7 +666,7 @@ function openModal(m){
   var allBox=el('input',{type:'checkbox',id:'selAll','aria-label':'Seleccionar todas'});
   allBox.onchange=function(){rows.filter(vis).forEach(function(r){sel[r.id]=allBox.checked;});renderRows();};
   var tbl=el('table',{class:'ppl',id:'tbl'},[
-    el('thead',null,[el('tr',null,[el('th',{style:'width:34px'},[allBox]),el('th',{text:'Marca'}),el('th',{text:'Nombre y apellidos'}),el('th',{text:'Cargo'}),el('th',{text:'Sede'}),el('th',{text:'Incorporación'}),el('th',{text:'Antigüedad'}),el('th',{text:'Sr./Sra.'}),el('th',{text:'Mínimo garantizado',title:'SÍ si el mes de cálculo está entre los 3 primeros meses desde la incorporación'}),el('th',{text:'Importe mínimo',title:'300 € meses 2 y 3; mes 1 proporcional por días (300 € por 30 días)'}),el('th',{text:'Estado'}),el('th')])]),
+    el('thead',null,[el('tr',null,[el('th',{style:'width:34px'},[allBox]),el('th',{text:'Marca'}),el('th',{text:'Nombre y apellidos'}),el('th',{text:'Cargo'}),el('th',{text:'Sede'}),el('th',{text:'Antigüedad',title:'Fecha de incorporación / antigüedad reconocida (sale de la BBDD; si no está, de la convocatoria)'}),el('th',{text:'Sr./Sra.'}),el('th',{text:'Mínimo garantizado',title:'SÍ si el mes de cálculo está entre los 3 primeros meses desde la antigüedad (incorporación)'}),el('th',{text:'Importe mínimo',title:'300 € meses 2 y 3; mes 1 proporcional por días (300 € por 30 días)'}),el('th',{text:'Estado'}),el('th')])]),
     el('tbody',{id:'tbody'})]);
   ab.appendChild(el('div',{class:'sec'},[el('div',{class:'sec-title',text:'Personas'}),tools,drop,bulk,
     el('div',{class:'twrap'},[tbl,el('div',{class:'empty',id:'empty',text:'Todavía no hay filas. Arrastra una convocatoria o añade una fila (la BBDD completa la antigüedad y el Sr./Sra.).'})])]));
@@ -717,8 +723,8 @@ function fmtEUR(n){return n.toLocaleString('es-ES',{minimumFractionDigits:0,maxi
 function paintMin(r){
   var a=$('mg_'+r.id),b=$('mi_'+r.id);if(!a||!b)return;
   a.innerHTML='';b.innerHTML='';
-  var c=minGarantizado(r.inc,refYM,MIN_BASE,MIN_DIAS,MIN_MESES);
-  if(!c){a.appendChild(el('span',{class:'bbdd-info',text:'—',title:'Falta la fecha de incorporación'}));return;}
+  var c=minGarantizado(toISODate(r.antig),refYM,MIN_BASE,MIN_DIAS,MIN_MESES);
+  if(!c){a.appendChild(el('span',{class:'bbdd-info',text:'—',title:'Falta la antigüedad (fecha de incorporación)'}));return;}
   a.appendChild(el('span',{class:'pill '+(c.si?'yes':'no'),text:c.si?'SÍ':'NO'}));
   if(c.si){
     b.appendChild(el('b',{text:fmtEUR(c.importe)}));
@@ -729,11 +735,14 @@ function matchRow(r){
   if(!bbdd.list.length||r.src==='manual')return;
   var f=findInBBDD(bbdd.list,bbdd.map,r.nombre);
   if(f){
-    r.antig=f.e.antig;r.trat=f.e.trat;r.src='bbdd';r.aprox=f.aprox;r.bbddName=f.e.nombre;
+    if(f.e.antig)r.antig=f.e.antig;
+    r.trat=f.e.trat;r.src='bbdd';r.aprox=f.aprox;r.bbddName=f.e.nombre;
     if(!r.cargo&&f.e.cargo){r.cargo=f.e.cargo;fixSede(r);}
-  }else if(r.src==='bbdd'){r.antig='';r.trat='';r.src='';r.aprox=false;r.bbddName='';}
+  }else if(r.src==='bbdd'){
+    r.antig=r.invDate||'';r.trat='';r.src=r.invDate?'invite':'';r.aprox=false;r.bbddName='';
+  }
 }
-function newRow(marca,nombre,cargo){return {id:++rid,marca:marca,nombre:nombre,cargo:cargo,sede:'',inc:'',antig:'',trat:'',src:'',aprox:false,bbddName:''};}
+function newRow(marca,nombre,cargo){return {id:++rid,marca:marca,nombre:nombre,cargo:cargo,sede:'',invDate:'',antig:'',trat:'',src:'',aprox:false,bbddName:''};}
 function renderBbddInfo(){
   var i=$('bbddInfo');if(!i)return;
   i.textContent=bbdd.list.length?('BBDD: '+bbdd.list.length+' personas · '+bbdd.name):'Sin BBDD cargada';
@@ -774,24 +783,20 @@ function renderRows(){
     fillSede();
     cs.onchange=function(){r.cargo=cs.value;fixSede(r);fillSede();paintStatus(r);};
     ss.onchange=function(){r.sede=ss.value;paintStatus(r);};
-    var ic=el('input',{type:'date',value:r.inc||''});
-    ic.oninput=function(){r.inc=ic.value;paintMin(r);};
-    ic.onchange=ic.oninput;
     var ai=el('input',{type:'text',value:r.antig||'',placeholder:'dd.mm.aaaa'});
-    ai.oninput=function(){r.antig=ai.value;r.src='manual';r.aprox=false;paintStatus(r);};
+    ai.oninput=function(){r.antig=ai.value;r.src='manual';r.aprox=false;paintStatus(r);paintMin(r);};
     var ts=el('select',null,tratOptions(r.trat));
     ts.onchange=function(){r.trat=ts.value;r.src='manual';r.aprox=false;paintStatus(r);};
     nm.oninput=function(){
       r.nombre=nm.value;matchRow(r);
       ai.value=r.antig||'';ts.innerHTML='';tratOptions(r.trat).forEach(function(o){ts.appendChild(o);});cs.value=r.cargo||'';fillSede();
-      paintStatus(r);
+      paintStatus(r);paintMin(r);
     };
     tr.appendChild(el('td',null,[cb]));
     tr.appendChild(el('td',null,[ms]));
     tr.appendChild(el('td',null,[nm]));
     tr.appendChild(el('td',null,[cs]));
     tr.appendChild(el('td',null,hasSedes(rm)?[ss]:[el('span',{class:'bbdd-info',text:'—'})]));
-    tr.appendChild(el('td',null,[ic]));
     tr.appendChild(el('td',null,[ai]));
     tr.appendChild(el('td',null,[ts]));
     tr.appendChild(el('td',{class:'mg',id:'mg_'+r.id}));
@@ -841,11 +846,11 @@ async function addFromInvites(files){
     }catch(e){notes.push('«'+f.name+'»: no se pudo leer');continue;}
     var nombre=p.people[0]||'', marca=p.marca||cur.m.id;
     if(nombre&&hasRow(marca,nombre,p.role||'')){dup++;continue;}
-    var nr=newRow(marca,nombre,p.role||'');nr.sede=p.sede||'';nr.inc=p.inc||'';matchRow(nr);fixSede(nr);rows.push(nr);made++;
+    var nr=newRow(marca,nombre,p.role||'');nr.sede=p.sede||'';nr.invDate=isoToDMY(p.inc);if(nr.invDate){nr.antig=nr.invDate;nr.src='invite';}matchRow(nr);fixSede(nr);rows.push(nr);made++;
     if(marca!==cur.m.id)other++;
     if(!nombre)notes.push('No he encontrado nombre en «'+f.name+'»; complétalo a mano.');
   }
-  if(msgSinFecha)notes.push('De un .msg no puedo leer la fecha de incorporación: escríbela en su fila o guarda la convocatoria como .ics');
+  if(msgSinFecha)notes.push('De un .msg no puedo leer la fecha: la antigüedad saldrá de la BBDD o escríbela en la fila (con .ics sí la leo)');
   if(other){cur.all=true;$('allBrands').checked=true;}
   renderRows();
   var msg=made?made+(made===1?' fila creada. ':' filas creadas. '):'';
