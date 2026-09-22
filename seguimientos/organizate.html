@@ -1146,6 +1146,7 @@ function mjRenderOrbit(){
   function voteCls(num){
     const vr = mjVoteHistory[String(num)];
     if(!vr) return null;
+    if(vr.weekKey && vr.weekKey !== mjCurrentWeekKey) return null; // votación de otra semana: no se aplica a esta burbuja
     if(vr.resultado==='favorable') return 'st-vote-favor';
     if(vr.resultado==='contra') return 'st-vote-contra';
     return null;
@@ -1485,7 +1486,8 @@ async function mjRecordVoteResult(vote){
   mjVoteHistory[topicNum] = {
     topicTitle: t ? t.title : ('Tema '+topicNum),
     si, no, total, resultado,
-    fecha: new Date().toLocaleString('es-ES')
+    fecha: new Date().toLocaleString('es-ES'),
+    weekKey: mjCurrentWeekKey
   };
   await mjSaveVoteHistory();
 }
