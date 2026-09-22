@@ -172,7 +172,8 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .mj-timer-panel.warning .mj-timer-display{color:var(--mj-red-text);}
 .mj-warning-banner{display:none;align-items:center;gap:10px;background:var(--mj-red-dim);border:1px solid var(--mj-red);color:var(--mj-red-text);font-size:12.5px;padding:8px 14px;border-radius:var(--mj-radius-sm);margin-bottom:8px;flex:0 0 auto;}
 .mj-warning-banner.show{display:flex;}
-.mj-color-legend{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;font-size:11px;color:var(--mj-text-dim);margin:2px 0 8px;flex:0 0 auto;}
+.mj-aitor-phrase{margin-bottom:6px;white-space:nowrap;}
+.mj-color-legend{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:10.5px;color:var(--mj-text-dim);}
 .mj-leg-item{display:flex;align-items:center;gap:5px;white-space:nowrap;}
 .mj-leg-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid;flex-shrink:0;box-sizing:border-box;}
 .mj-vote-launcher{position:absolute;top:2px;right:2px;z-index:20;display:flex;justify-content:center;}
@@ -487,15 +488,18 @@ body.ext-mode .imodal-bg{padding-top:40px;}
         <div class="mj-live-frame">
           <div class="mj-aitor-line" style="align-self:flex-start;">
             <div class="mj-aitor"><div class="mj-core"><div class="mj-af"><div class="mj-eye"></div><div class="mj-eye"></div></div></div><div class="mj-tail"></div><div class="mj-spark s1">✦</div><div class="mj-spark s2">✦</div></div>
-            <div class="mj-aitor-bubble" id="mjAitorVivoBubble"><span class="mj-aitor-label">AITOR · en directo</span>Toca cualquier tema para abrirlo. Los puntos se colorean según su estado — mira la leyenda de abajo.</div>
-          </div>
-          <div class="mj-color-legend" id="mjColorLegend">
-            <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-surface-2);border-color:rgba(0,194,222,.5);"></span>Pendiente</span>
-            <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-surface-2);border-color:#7C3AED;border-width:2.5px;"></span>Trasladado, sin tocar hoy</span>
-            <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-surface-2);border-color:var(--mj-amber);"></span>En tratamiento / con cambios</span>
-            <span class="mj-leg-item"><span class="mj-leg-dot" style="background:#5A6472;border-color:#454E5A;"></span>Cerrado</span>
-            <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-mint);border-color:var(--mj-mint);"></span>Votado a favor</span>
-            <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-red);border-color:var(--mj-red);"></span>Votado en contra</span>
+            <div class="mj-aitor-bubble" id="mjAitorVivoBubble">
+              <span class="mj-aitor-label">AITOR · en directo</span>
+              <div class="mj-aitor-phrase">Toca cualquier tema para abrirlo.</div>
+              <div class="mj-color-legend" id="mjColorLegend">
+                <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-surface-2);border-color:rgba(0,194,222,.5);"></span>Pendiente</span>
+                <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-surface-2);border-color:#7C3AED;border-width:2.5px;"></span>Trasladado, sin tocar hoy</span>
+                <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-surface-2);border-color:var(--mj-amber);"></span>En tratamiento / con cambios</span>
+                <span class="mj-leg-item"><span class="mj-leg-dot" style="background:#5A6472;border-color:#454E5A;"></span>Cerrado</span>
+                <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-mint);border-color:var(--mj-mint);"></span>Votado a favor</span>
+                <span class="mj-leg-item"><span class="mj-leg-dot" style="background:var(--mj-red);border-color:var(--mj-red);"></span>Votado en contra</span>
+              </div>
+            </div>
           </div>
           <div class="mj-timer-panel" id="mjTimerPanel">
             <div style="text-align:center;"><div class="mj-timer-display" id="mjTimerDisplay">60:00</div></div>
@@ -668,12 +672,7 @@ function openOrgSub(which){
   const orgModal=document.querySelector('#organizateOverlay .obs-modal');
   if(orgModal) orgModal.style.maxWidth = which==='equipo' ? 'min(95vw, 920px)' : '500px';
   if(which==='yo'){
-    area.innerHTML=`
-      <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
-        <div class="ci-icon">🎯</div>
-        <h4>Mis tareas</h4>
-        <p>Aquí construiremos tu lista personal de tareas: pendientes, en curso y hechas, con fechas y prioridad. En breve montamos la primera versión.</p>
-      </div>`;
+    renderYoView();
   } else {
     area.innerHTML=`
       <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
@@ -741,6 +740,66 @@ function mjRenderTeamGrid(){
   </div>`;
 }
 let mjTeamEditId = null;
+
+/* ---------------- "YO" — identidad guardada en este navegador ---------------- */
+const MJ_MY_IDENTITY_KEY = 'mj_mi_identidad';
+let mjMyName = localStorage.getItem(MJ_MY_IDENTITY_KEY) || null;
+function mjSetMyIdentity(name){
+  mjMyName = name;
+  localStorage.setItem(MJ_MY_IDENTITY_KEY, name);
+  renderYoView();
+}
+function mjChangeIdentity(){
+  mjMyName = null;
+  localStorage.removeItem(MJ_MY_IDENTITY_KEY);
+  renderYoView();
+}
+function renderYoView(){
+  const area = document.getElementById('organizateSubArea');
+  if(!area) return;
+  if(!mjMyName || !mjTeamMembers.find(p=>p.name===mjMyName)){
+    area.innerHTML = `
+      <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
+        <div class="ci-icon">🎯</div>
+        <h4>¿Quién eres?</h4>
+        <p>Se recuerda en este navegador para mostrarte directamente tus tareas cada vez.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+          ${mjTeamMembers.map(p=>`<button onclick="mjSetMyIdentity('${p.name.replace(/'/g,"\\'")}')" style="padding:8px 16px;border-radius:20px;border:1.5px solid ${p.color};background:#fff;color:#1a3a50;cursor:pointer;font-family:inherit;font-weight:600;">${p.icon} ${bmEscapeHtml(p.name)}</button>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+  const p = mjTeamMembers.find(x=>x.name===mjMyName);
+  const items = mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(mjMyName) && t.status!=='cerrado');
+  area.innerHTML = `
+    <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <h4 style="display:flex;align-items:center;gap:8px;text-align:left;margin:0;">${p?p.icon:'⭐'} Mis tareas — ${bmEscapeHtml(mjMyName)}</h4>
+        <button onclick="mjChangeIdentity()" style="background:none;border:none;color:#2a7f8a;font-size:11px;font-weight:700;cursor:pointer;">¿No eres tú? Cambiar</button>
+      </div>
+      ${items.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+        ${items.map(t=>mjTaskCard(t, '__yo__')).join('')}
+      </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
+      <div style="margin-top:14px;display:flex;gap:8px;">
+        <input type="text" id="mjYoNewTaskInput" placeholder="Añadir una tarea…" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #c0b8ae;font-family:inherit;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')mjAddYoTask()">
+        <button onclick="mjAddYoTask()" style="padding:8px 16px;border-radius:8px;background:#2a7f8a;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:inherit;">+ Añadir</button>
+      </div>
+    </div>`;
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function mjAddYoTask(){
+  const input = document.getElementById('mjYoNewTaskInput');
+  if(!input) return;
+  const val = input.value.trim();
+  if(!val || !mjMyName) return;
+  const id = 't' + Date.now();
+  mjTopics.push({id, title:val, author:mjMyName, status:'pendiente', comments:[], assignee:[mjMyName], dateCreated: mjTodayISO()});
+  mjPersistTopics();
+  input.value = '';
+  renderYoView();
+  mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+}
+
 function mjOpenTeamEdit(id){
   mjTeamEditId = id;
   const p = id ? mjTeamMembers.find(x=>x.id===id) : null;
@@ -801,27 +860,41 @@ async function mjDeleteTeamMemberConfirm(){
   mjCloseTeamEdit();
   openOrgSub('equipo');
 }
+function mjFieldsRow(t){
+  return `<div style="display:flex;gap:12px;flex-wrap:wrap;margin:5px 0 8px;font-size:10.5px;color:#5a6e80;">
+    <span><b style="color:#1a3a50;">Estado:</b> <span class="mj-status-chip ${MJ_STATUS_META[t.status].cls}">${MJ_STATUS_META[t.status].label}</span></span>
+    <span><b style="color:#1a3a50;">Nueva:</b> ${t.dateCreated||'—'}</span>
+    <span><b style="color:#1a3a50;">En tratamiento:</b> ${t.dateInTreatment||'—'}</span>
+    <span><b style="color:#1a3a50;">Cierre:</b> ${t.dateClosed||'—'}</span>
+  </div>`;
+}
+function mjTaskCard(t, openCtx, reassignRow){
+  return `
+    <div style="background:#f8f5ef;border:1px solid #d8d0c4;border-radius:8px;padding:10px 12px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="font-size:13px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}</div>
+        <button onclick="mjOpenDetailFromPersona('${t.id}','${openCtx.replace(/'/g,"\\'")}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;">Abrir ficha ✎</button>
+      </div>
+      ${mjFieldsRow(t)}
+      ${reassignRow||''}
+    </div>`;
+}
 function openOrgPersona(name){
   const area = document.getElementById('organizateSubArea');
   const p = mjTeamMembers.find(x=>x.name===name);
-  const color = p ? p.color : '#00E6FF';
   const items = mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(name) && t.status!=='cerrado');
   area.innerHTML = `
     <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
       <button onclick="openOrgSub('equipo')" style="background:none;border:none;color:#2a7f8a;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;padding:0;">← Volver al equipo</button>
       <h4 style="display:flex;align-items:center;gap:8px;text-align:left;">${p?p.icon:'⭐'} Tareas de ${bmEscapeHtml(name)}</h4>
       ${items.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
-        ${items.map(t=>`
-          <div style="background:#f8f5ef;border:1px solid #d8d0c4;border-radius:8px;padding:10px 12px;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px;">
-              <div style="font-size:13px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}</div>
-              <button onclick="mjOpenDetailFromPersona('${t.id}','${name.replace(/'/g,"\\'")}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;">Abrir ficha ✎</button>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-              <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Asignado a:</span>
-              ${mjTeamMembers.map(m=>{ const activo = mjAssigneeList(t).includes(m.name); return `<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${activo?m.color:'#c0b8ae'};background:${activo?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`; }).join('')}
-            </div>
-          </div>`).join('')}
+        ${items.map(t=>{
+          const reassignRow = `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+            <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Asignado a:</span>
+            ${mjTeamMembers.map(m=>{ const activo = mjAssigneeList(t).includes(m.name); return `<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${activo?m.color:'#c0b8ae'};background:${activo?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`; }).join('')}
+          </div>`;
+          return mjTaskCard(t, name, reassignRow);
+        }).join('')}
       </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
     </div>`;
   area.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -831,14 +904,16 @@ function mjOpenDetailFromPersona(id, name){
   mjOpenDetail(id);
 }
 function mjReassignTopic(id, name, viewingName){
-  const t = mjTopics.find(x=>x.id===id);
-  if(!t) return;
-  let list = mjAssigneeList(t);
-  list = list.includes(name) ? list.filter(n=>n!==name) : [...list, name];
-  t.assignee = list;
-  mjPersistTopics();
-  mjRenderOrbit(); mjRenderFallback();
-  openOrgPersona(viewingName);
+  mjOpenPwdGate(()=>{
+    const t = mjTopics.find(x=>x.id===id);
+    if(!t) return;
+    let list = mjAssigneeList(t);
+    list = list.includes(name) ? list.filter(n=>n!==name) : [...list, name];
+    t.assignee = list;
+    mjPersistTopics();
+    mjRenderOrbit(); mjRenderFallback();
+    openOrgPersona(viewingName);
+  }, 'Introduce la contraseña para cambiar la asignación de este tema.');
 }
 
 const MJ_STATUS_META = {
@@ -859,6 +934,7 @@ function mjShouldHideFromLive(t){
   if(t.status==='cerrado') return true;
   return mjIsHiddenThisWeek(t);
 }
+function mjTodayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function mjMoveFollowup(status, moveTo, moveDate){
   if(status!=='pendiente' || !moveTo) return null;
   if(moveTo==='proximo') return 'Trasladado al próximo jueves';
@@ -952,7 +1028,7 @@ async function mjLoadTopics(){
       mjTopics = [locked, ...reactivar.map(t=>({
         id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
         title:t.title, status:'pendiente', assignee:t.assignee||null,
-        comments:[], recurring:(t.recurring||0)+1
+        comments:[], recurring:(t.recurring||0)+1, dateCreated: mjTodayISO()
       }))];
       mjCurrentWeekKey = currentWeekKey;
       mjTopicsLoadedOk = true;
@@ -1046,6 +1122,7 @@ function mjRenderAgenda(){
         <div class="mj-avatar" title="${t.author}" style="background:color-mix(in srgb, ${mjColorFor(t.author)} 22%, var(--mj-surface-3));color:${mjColorFor(t.author)};border:1px solid color-mix(in srgb, ${mjColorFor(t.author)} 45%, transparent);">${t.author[0]}</div>
         <button class="mj-icon-btn" title="Subir" data-mjact="up" data-id="${t.id}" ${openIdx===0?'disabled style="opacity:.25;cursor:default;"':''}>▲</button>
         <button class="mj-icon-btn" title="Bajar" data-mjact="down" data-id="${t.id}" ${openIdx===openCount-1?'disabled style="opacity:.25;cursor:default;"':''}>▼</button>
+        <button class="mj-icon-btn" title="${t.recurring?'Quitar marca de recurrente':'Marcar como recurrente (violeta en el orbe)'}" data-mjact="rec" data-id="${t.id}" style="opacity:${t.recurring?1:.4};">🔁</button>
         <button class="mj-icon-btn" title="Editar" data-mjact="edit" data-id="${t.id}">✎</button>
         <button class="mj-icon-btn" title="Eliminar" data-mjact="del" data-id="${t.id}">🗑</button>`;
       row.style.borderLeftColor = mjColorFor(t.author);
@@ -1059,6 +1136,14 @@ function mjRenderAgenda(){
   });
   wrap.querySelectorAll('[data-mjact="down"]').forEach(b=>{
     b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, 1));
+  });
+  wrap.querySelectorAll('[data-mjact="rec"]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const t = mjTopics.find(x=>x.id===b.dataset.id);
+      if(!t) return;
+      t.recurring = t.recurring ? 0 : 1;
+      mjPersistTopics(); mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+    });
   });
   wrap.querySelectorAll('[data-mjact="del"]').forEach(b=>{
     b.addEventListener('click', ()=> mjOpenPwdGate(()=>{
@@ -1092,7 +1177,7 @@ function mjAddTopicFromInput(){
   const val = input.value.trim();
   if(!val) return;
   const id = 't' + Date.now();
-  mjTopics.push({id, title:val, author:'Vero', status:'pendiente', comments:[]});
+  mjTopics.push({id, title:val, author:'Vero', status:'pendiente', comments:[], dateCreated: mjTodayISO()});
   mjPersistTopics();
   input.value = '';
   mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
@@ -1199,7 +1284,7 @@ function mjGoToBajasYCambios(){
 function mjOpenDetail(id){
   const t = mjTopics.find(x=>x.id===id);
   if(!t) return;
-  if(t.status === 'pendiente'){ t.status = 'en_tratamiento'; mjPersistTopics(); mjRenderOrbit(); mjRenderFallback(); }
+  if(t.status === 'pendiente'){ t.status = 'en_tratamiento'; t.dateInTreatment = mjTodayISO(); mjPersistTopics(); mjRenderOrbit(); mjRenderFallback(); }
 
   const card = document.getElementById('mjDetailCard');
   card.innerHTML = `
@@ -1268,6 +1353,8 @@ function mjOpenDetail(id){
   card.querySelectorAll('.mj-status-chip-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
       t.status = b.dataset.s;
+      if(t.status==='en_tratamiento') t.dateInTreatment = mjTodayISO();
+      if(t.status==='cerrado') t.dateClosed = mjTodayISO();
       mjPersistTopics(); mjPaintStatus(); mjRenderOrbit(); mjRenderFallback();
     });
   });
@@ -1349,7 +1436,8 @@ function mjCloseDetail(){
   if(mjDetailOpenedFromPersona){
     const nombre = mjDetailOpenedFromPersona;
     mjDetailOpenedFromPersona = null;
-    openOrgPersona(nombre);
+    if(nombre === '__yo__') renderYoView();
+    else openOrgPersona(nombre);
   }
   if(mjDetailOpenedFromHistorico){
     mjDetailOpenedFromHistorico = false;
@@ -1399,7 +1487,8 @@ function mjTimerTick(){
 }
 function mjShowWarning(){
   document.getElementById('mjWarningBanner').classList.add('show');
-  document.getElementById('mjAitorVivoBubble').innerHTML = '<span class="mj-aitor-label">AITOR · en directo</span>Quedan <b>15 minutos</b>. Puede que valga la pena repasar lo que sigue abierto y decidir qué se traslada.';
+  const phraseEl = document.querySelector('#mjAitorVivoBubble .mj-aitor-phrase');
+  if(phraseEl) phraseEl.innerHTML = 'Quedan <b>15 minutos</b> — puede tocar repasar lo abierto.';
 }
 mjUpdateTimerUI();
 
