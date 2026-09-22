@@ -97,7 +97,7 @@ table.ppl td:nth-child(3){width:90px}
 table.ppl td:nth-child(5){width:90px}
 table.ppl td:nth-child(6){width:90px}
 table.ppl td:nth-child(7){width:120px}
-table.ppl td:nth-child(8){width:130px}
+table.ppl td:nth-child(8){width:160px}
 table.ppl td:nth-child(9){width:90px}
 table.ppl td:nth-child(10){width:130px;text-align:center}
 table.ppl td:nth-child(11){width:150px}
@@ -258,7 +258,7 @@ var idx={}, cur=null, unlocked=false, rows=[], sel={}, tplCache={}, bbdd={list:[
 var ROWS_KEY='adminhub_anexos_rows_v1', BBDD_KEY='adminhub_anexos_bbdd_v1', SYNC_MS=15000; // filas y BBDD compartidas para todos los usuarios (KV)
 var tomb={}, pendDel=[], opQueue=Promise.resolve(), flushTimer=null, syncing=false, pendingRender=false, syncState='';
 var MIN_BASE=300, MIN_DIAS=30, MIN_MESES=3; // mínimo garantizado: 300 € al mes durante 3 meses; el mes 1 es proporcional (300 € por 30 días)
-var TERM_TIPOS=['BV','BAJA','FIN','CESE']; // prefijos de asunto que se leen como fin de contrato, no como alta (BV=baja voluntaria, confirmado; el resto por si acaso)
+var TERM_TIPOS=['BV','BNV','BAJA','FIN','CESE']; // prefijos de asunto que se leen como fin de contrato, no como alta (BV/BNV confirmados; el resto por si acaso)
 function todayYM(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
 var MARGENES_NORMALES=true; // true = todos los anexos salen con márgenes normales de Word (A4): 2,5 cm arriba/abajo, 3 cm a los lados, cabecera y pie a 1,25 cm
 var MARGENES={top:1417,right:1701,bottom:1417,left:1701,header:709,footer:709}; // en twips (567 = 1 cm)
@@ -423,7 +423,7 @@ function parseAsunto(s){
   if(normMarca(parts[i])){marca=normMarca(parts[i]);i--;}
   if(i>=1&&/^(AC|JE|DV)$/i.test(parts[i])){cargo=parts[i].toUpperCase();i--;}
   if(!marca&&!cargo) return null;
-  var TIPOS_ASUNTO=['IC','BV','BAJA','FIN','CESE']; // prefijos de convocatoria reconocidos: IC=incorporación; BV=baja voluntaria; BAJA/FIN/CESE=otras fórmulas de fin de contrato
+  var TIPOS_ASUNTO=['IC','BV','BNV','BAJA','FIN','CESE']; // prefijos de convocatoria reconocidos: IC=incorporación; BV=baja voluntaria; BNV=baja no voluntaria; BAJA/FIN/CESE=por si acaso
   var tipo=(TIPOS_ASUNTO.indexOf(parts[0].toUpperCase())>=0)?parts[0].toUpperCase():'';
   var start=(tipo&&i>=1)?1:0;
   var name=parts.slice(start,i+1).join(' ').replace(/\s+/g,' ').trim();
@@ -726,8 +726,8 @@ function openModal(m){
     el('label',{class:'chk'},[allChk,document.createTextNode('Ver todas las marcas')])]);
   var bulk=el('div',{class:'bulk',id:'bulk'},[
     el('b',{id:'bulkN'}),
-    el('button',{class:'abtn sm',text:'Descargar',onclick:function(){downloadRows(selectedRows());}}),
-    el('button',{class:'abtn sm',text:'Imprimir',onclick:function(){printRows(selectedRows());}}),
+    el('button',{class:'abtn sm',text:'Descargar',onclick:function(){confirmRegen(selectedRows(),function(){downloadRows(selectedRows());});}}),
+    el('button',{class:'abtn sm',text:'Imprimir',onclick:function(){confirmRegen(selectedRows(),function(){printRows(selectedRows());});}}),
     el('button',{class:'abtn sm dng',text:'Quitar',onclick:function(){askPass(removeSelected);}})]);
   var allBox=el('input',{type:'checkbox',id:'selAll','aria-label':'Seleccionar todas'});
   allBox.onchange=function(){rows.filter(vis).forEach(function(r){sel[r.id]=allBox.checked;});renderRows();};
@@ -791,9 +791,9 @@ async function kvReadStrict(key){
   }catch(e){return {ok:false};}
 }
 function newId(){return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
-var ROW_FIELDS=['marca','nombre','cargo','sede','antig','fin','trat','src','invDate','aprox','bbddName','t0','codigo','genHash','genAt'];
+var ROW_FIELDS=['marca','nombre','cargo','sede','antig','fin','finTipo','trat','src','invDate','aprox','bbddName','t0','codigo','codManual','genHash','genAt'];
 function rowToStore(r){var d={id:r.id};ROW_FIELDS.forEach(function(k){d[k]=r[k];});return d;}
-function fromStore(d){var r={id:d.id,_dirty:false,_v:0};ROW_FIELDS.forEach(function(k){r[k]=(d[k]===undefined?(k==='aprox'?false:((k==='t0'||k==='genAt')?0:'')):d[k]);});return r;}
+function fromStore(d){var r={id:d.id,_dirty:false,_v:0};ROW_FIELDS.forEach(function(k){r[k]=(d[k]===undefined?((k==='aprox'||k==='codManual')?false:((k==='t0'||k==='genAt')?0:'')):d[k]);});return r;}
 function sortRows(){rows.sort(function(a,b){return (a.t0||0)-(b.t0||0);});}
 function setSync(st){
   syncState=st;var i=$('syncInfo');if(!i)return;
@@ -922,7 +922,7 @@ function tplState(r){
   if(!(r.trat||'').trim()) return {ok:false,txt:'Falta Sr./Sra.'};
   return {ok:true,txt:'Lista'};
 }
-function genHashOf(r){return [r.marca,r.nombre.trim(),r.cargo,r.sede,r.antig,r.trat,r.fin||''].join('|');}
+function genHashOf(r){return [r.marca,r.nombre.trim(),r.cargo,r.sede,r.antig,r.trat].join('|');} // el fin de contrato y el código no se escriben en el documento: no deben invalidar «Generado»
 function estadoAnexo(r){
   var s=tplState(r);
   if(!s.ok) return {estado:'pendiente',detalle:s.txt};
@@ -938,6 +938,20 @@ function paintEstado(r){
   td.innerHTML='';
   td.appendChild(el('span',{class:'pill est-'+e.estado,text:lbl,title:e.detalle}));
   if(td.parentNode)td.parentNode.className=e.estado==='pendiente'?'bad':'';
+  var gb=$('gen_'+r.id);
+  if(gb){
+    if(e.estado==='generado'){
+      gb.textContent='🔒 Volver a generar';
+      gb.title='Ya está generado. Pide la contraseña porque volver a generarlo cambia la fecha de la firma.';
+    }else{
+      gb.textContent='Generar y descargar';
+      gb.title='';
+    }
+  }
+}
+function confirmRegen(list,cb){
+  var yaGenerados=list.filter(function(r){return estadoAnexo(r).estado==='generado';});
+  if(yaGenerados.length) askPass(cb); else cb();
 }
 function fmtEUR(n){return n.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2})+' €';}
 function paintMin(r){
@@ -965,13 +979,13 @@ function matchRowCore(r){
   if(f){
     if(f.e.antig)r.antig=f.e.antig;
     r.trat=f.e.trat;r.src='bbdd';r.aprox=f.aprox;r.bbddName=f.e.nombre;
-    r.codigo=f.e.codigo||r.codigo||'';
+    if(!r.codManual) r.codigo=f.e.codigo||r.codigo||'';
     if(!r.cargo&&f.e.cargo){r.cargo=f.e.cargo;fixSede(r);}
   }else if(r.src==='bbdd'){
-    r.antig=r.invDate||'';r.trat='';r.src=r.invDate?'invite':'';r.aprox=false;r.bbddName='';r.codigo='';
+    r.antig=r.invDate||'';r.trat='';r.src=r.invDate?'invite':'';r.aprox=false;r.bbddName='';if(!r.codManual)r.codigo='';
   }
 }
-function newRow(marca,nombre,cargo){return {id:newId(),t0:Date.now(),_dirty:false,_v:0,marca:marca,nombre:nombre,cargo:cargo,sede:'',invDate:'',antig:'',fin:'',trat:'',src:'',aprox:false,bbddName:'',codigo:'',genHash:'',genAt:0};}
+function newRow(marca,nombre,cargo){return {id:newId(),t0:Date.now(),_dirty:false,_v:0,marca:marca,nombre:nombre,cargo:cargo,sede:'',invDate:'',antig:'',fin:'',finTipo:'',trat:'',src:'',aprox:false,bbddName:'',codigo:'',codManual:false,genHash:'',genAt:0};}
 function renderBbddInfo(){
   var i=$('bbddInfo');if(!i)return;
   i.textContent=bbdd.list.length?('BBDD: '+bbdd.list.length+' personas · '+bbdd.name):'Sin BBDD cargada';
@@ -1001,7 +1015,8 @@ function renderRows(){
       if(!vis(r)) toast('La fila pasa a '+marcaById(r.marca).n+'. Activa «Ver todas las marcas» para verla.');
       renderRows();
     };
-    var cod=el('span',{class:'bbdd-info',text:r.codigo||'—'});
+    var cod=el('input',{type:'text',value:r.codigo||'',placeholder:'—'});
+    cod.oninput=function(){r.codigo=cod.value;r.codManual=true;touch(r);};
     var nm=el('input',{type:'text',value:r.nombre,placeholder:'Nombre y apellidos'});
     var cs=el('select',null,optionList(ROLES.map(function(x){return [x,x];}),r.cargo,'Cargo…'));
     var rm=marcaById(r.marca),ss=el('select');
@@ -1015,16 +1030,19 @@ function renderRows(){
     ss.onchange=function(){r.sede=ss.value;touch(r);paintEstado(r);};
     var ai=el('input',{type:'text',value:r.antig||'',placeholder:'dd.mm.aaaa'});
     ai.oninput=function(){r.antig=ai.value;r.src='manual';r.aprox=false;touch(r);paintEstado(r);paintMin(r);};
-    var fi=el('input',{type:'text',value:r.fin||'',placeholder:'dd.mm.aaaa (si aplica)'});
-    fi.oninput=function(){r.fin=fi.value;touch(r);paintEstado(r);paintMin(r);};
+    var fi=el('input',{type:'text',value:r.fin||'',placeholder:'dd.mm.aaaa (si aplica)',style:'margin-bottom:4px'});
+    fi.oninput=function(){r.fin=fi.value;touch(r);paintMin(r);};
+    var ft=el('select',null,optionList([['BV','BV · baja voluntaria'],['BNV','BNV · baja no voluntaria']],r.finTipo,'Tipo…'));
+    ft.onchange=function(){r.finTipo=ft.value;touch(r);};
     var ts=el('select',null,tratOptions(r.trat));
     ts.onchange=function(){r.trat=ts.value;r.src='manual';r.aprox=false;touch(r);paintEstado(r);};
     nm.oninput=function(){
       r.nombre=nm.value;matchRow(r);touch(r);
       ai.value=r.antig||'';ts.innerHTML='';tratOptions(r.trat).forEach(function(o){ts.appendChild(o);});cs.value=r.cargo||'';fillSede();
-      cod.textContent=r.codigo||'—';
+      cod.value=r.codigo||'';
       paintEstado(r);paintMin(r);
     };
+    var genBtn=el('button',{id:'gen_'+r.id,class:'abtn sm',onclick:function(){confirmRegen([r],function(){downloadRows([r]);});}});
     tr.appendChild(el('td',null,[cb]));
     tr.appendChild(el('td',null,[ms]));
     tr.appendChild(el('td',null,[cod]));
@@ -1032,13 +1050,13 @@ function renderRows(){
     tr.appendChild(el('td',null,[cs]));
     tr.appendChild(el('td',null,hasSedes(rm)?[ss]:[el('span',{class:'bbdd-info',text:'—'})]));
     tr.appendChild(el('td',null,[ai]));
-    tr.appendChild(el('td',null,[fi]));
+    tr.appendChild(el('td',null,[fi,ft]));
     tr.appendChild(el('td',null,[ts]));
     tr.appendChild(el('td',{class:'mg',id:'mg_'+r.id}));
     tr.appendChild(el('td',{class:'mg',id:'mi_'+r.id}));
     tr.appendChild(el('td',{class:'st',id:'stt_'+r.id}));
     tr.appendChild(el('td',{style:'white-space:nowrap;text-align:right'},[
-      el('button',{class:'abtn sm',text:'Generar y descargar',onclick:function(){downloadRows([r]);}}),
+      genBtn,
       document.createTextNode(' '),
       el('button',{class:'abtn sm dng','aria-label':'Quitar fila',text:'✕',onclick:function(){askPass(function(){removeRows([r]);});}})]));
     tb.appendChild(tr);
@@ -1094,7 +1112,7 @@ async function addFromInvites(files){
     if(nombre&&p.tipo&&TERM_TIPOS.indexOf(p.tipo)>=0){
       var hits=findRowsByName(nombre);
       if(hits.length){
-        hits.forEach(function(rr){rr.fin=isoToDMY(p.inc);touch(rr);paintMin(rr);paintEstado(rr);});
+        hits.forEach(function(rr){rr.fin=isoToDMY(p.inc);if(p.tipo==='BV'||p.tipo==='BNV')rr.finTipo=p.tipo;touch(rr);paintMin(rr);paintEstado(rr);});
         finUpd+=hits.length;
       }else{
         notes.push('No encuentro ninguna fila de «'+nombre+'» para ponerle la fecha de fin; créala primero o escríbela a mano.');
@@ -1207,6 +1225,15 @@ async function buildMany(list){
   }
   return {ok:ok,errs:errs};
 }
+function openSharePointFolders(list){
+  // no hay forma de subir el archivo solo a SharePoint desde aquí (haría falta iniciar sesión con Microsoft
+  // y dar permiso a la herramienta): abrimos la carpeta de la marca para que solo falte arrastrar el archivo.
+  var seen={};
+  list.forEach(function(r){
+    var m=marcaById(r.marca);
+    if(m&&m.sp&&!seen[m.id]){seen[m.id]=1;try{window.open(m.sp,'_blank');}catch(e){}}
+  });
+}
 async function downloadRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
   var res=await buildMany(list);
@@ -1216,23 +1243,62 @@ async function downloadRows(list){
     var zip=new JSZip();res.ok.forEach(function(d){zip.file(d.name,d.buf);});
     saveBlob(await zip.generateAsync({type:'blob'}),'Anexos_'+new Date().toISOString().slice(0,10)+'.zip');
   }
+  if(res.ok.length) openSharePointFolders(list);
   var odd=res.ok.filter(function(d){return d.odd;}).length;
   var msg=res.ok.length?(res.ok.length+(res.ok.length===1?' anexo generado. ':' anexos generados (ZIP). ')):'';
+  if(res.ok.length)msg+='Se ha abierto la carpeta de SharePoint para que arrastres el archivo. ';
   if(odd)msg+='Revisa '+odd+': a la plantilla le falta algún campo (nombre, antigüedad, Sr./Sra. o XXXFECHA). ';
   if(res.errs.length)msg+='No se han podido generar: '+res.errs.join(' · ');
   toast(msg,res.errs.length?9000:5000);
 }
 function nextFrame(){return new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r);});});}
-async function settleTextboxes(container){
-  // los cuadros de texto (firmas) son SVG cuyo tamaño lo calcula docx-preview en un requestAnimationFrame
-  // posterior a renderAsync; lo recalculamos aquí mismo, ya, para que no falten ni se desplace nada al imprimir
+function ptToPx(pt){return pt*96/72;}
+async function extractShapeSizes(buf){
+  // tamaño que Word guardó para cada cuadro de texto (style="...width:XXXpt;height:YYYpt..."),
+  // leído directamente del .docx y en el mismo orden en que aparecen — es la fuente más fiable,
+  // no depende de que docx-preview conserve ese estilo igual para todos los cuadros.
+  try{
+    var z=await JSZip.loadAsync(buf);
+    var f=z.file('word/document.xml'); if(!f) return [];
+    var xml=await f.async('string');
+    var out=[], re=/<v:shape\b[^>]*\bstyle="([^"]*)"/g, m;
+    while((m=re.exec(xml))){
+      var mw=m[1].match(/width:\s*([\d.]+)pt/i), mh=m[1].match(/height:\s*([\d.]+)pt/i);
+      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1])});
+    }
+    return out;
+  }catch(e){return [];}
+}
+async function settleTextboxes(container,sizes){
+  // los cuadros de texto (firmas) son SVG cuyo tamaño, si se deja en manos de docx-preview, se calcula
+  // con getBBox() en un requestAnimationFrame posterior a renderAsync — depende de que el contenido
+  // (fuentes incluidas) ya esté pintado, y al imprimir no siempre ha dado tiempo: por eso desaparecían
+  // o se desplazaban. Aplicamos primero el tamaño real leído del propio archivo (extractShapeSizes);
+  // solo si falta para algún cuadro, se recurre al cálculo dinámico como red de seguridad.
+  if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
   await nextFrame();
-  container.querySelectorAll('svg').forEach(function(svg){
+  container.querySelectorAll('svg').forEach(function(svg,i){
     try{
+      var sz=sizes&&sizes[i];
+      if(sz){
+        svg.setAttribute('width',Math.ceil(ptToPx(sz.w)));
+        svg.setAttribute('height',Math.ceil(ptToPx(sz.h)));
+        return;
+      }
+      var styled=svg.querySelector('[style*="width:"][style*="height:"]')||svg.firstElementChild;
+      var st=(styled&&styled.getAttribute('style'))||'';
+      var mw=st.match(/width:\s*([\d.]+)pt/i), mh=st.match(/height:\s*([\d.]+)pt/i);
+      if(mw&&mh){
+        svg.setAttribute('width',Math.ceil(ptToPx(parseFloat(mw[1]))));
+        svg.setAttribute('height',Math.ceil(ptToPx(parseFloat(mh[1]))));
+        return;
+      }
       var first=svg.firstElementChild; if(!first) return;
       var bb=first.getBBox();
-      svg.setAttribute('width',Math.max(1,Math.ceil(bb.x+bb.width)));
-      svg.setAttribute('height',Math.max(1,Math.ceil(bb.y+bb.height)));
+      if(bb.width>0&&bb.height>0){
+        svg.setAttribute('width',Math.max(1,Math.ceil(bb.x+bb.width)));
+        svg.setAttribute('height',Math.max(1,Math.ceil(bb.y+bb.height)));
+      }
     }catch(e){}
   });
   await nextFrame();
@@ -1246,8 +1312,9 @@ async function printRows(list){
   var lastSection=null;
   for(var i=0;i<res.ok.length;i++){
     var box=el('div');root.appendChild(box);
+    var sizes=await extractShapeSizes(res.ok[i].buf);
     await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
-    await settleTextboxes(box);
+    await settleTextboxes(box,sizes);
     var secs=box.querySelectorAll('section');
     if(secs.length) lastSection=secs[secs.length-1];
   }
