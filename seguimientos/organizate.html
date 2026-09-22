@@ -777,9 +777,7 @@ function renderYoView(){
         <h4 style="display:flex;align-items:center;gap:8px;text-align:left;margin:0;">${p?p.icon:'⭐'} Mis tareas — ${bmEscapeHtml(mjMyName)}</h4>
         <button onclick="mjChangeIdentity()" style="background:none;border:none;color:#2a7f8a;font-size:11px;font-weight:700;cursor:pointer;">¿No eres tú? Cambiar</button>
       </div>
-      ${items.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
-        ${items.map(t=>mjTaskCard(t, '__yo__')).join('')}
-      </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
+      ${mjRenderTaskTable(items, '__yo__', null)}
       <div style="margin-top:14px;display:flex;gap:8px;">
         <input type="text" id="mjYoNewTaskInput" placeholder="Añadir una tarea…" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #c0b8ae;font-family:inherit;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')mjAddYoTask()">
         <button onclick="mjAddYoTask()" style="padding:8px 16px;border-radius:8px;background:#2a7f8a;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:inherit;">+ Añadir</button>
@@ -860,24 +858,40 @@ async function mjDeleteTeamMemberConfirm(){
   mjCloseTeamEdit();
   openOrgSub('equipo');
 }
-function mjFieldsRow(t){
-  return `<div style="display:flex;gap:12px;flex-wrap:wrap;margin:5px 0 8px;font-size:10.5px;color:#5a6e80;">
-    <span><b style="color:#1a3a50;">Estado:</b> <span class="mj-status-chip ${MJ_STATUS_META[t.status].cls}">${MJ_STATUS_META[t.status].label}</span></span>
-    <span><b style="color:#1a3a50;">Nueva:</b> ${t.dateCreated||'—'}</span>
-    <span><b style="color:#1a3a50;">En tratamiento:</b> ${t.dateInTreatment||'—'}</span>
-    <span><b style="color:#1a3a50;">Cierre:</b> ${t.dateClosed||'—'}</span>
+function mjRenderTaskTable(items, openCtx, reassignFor){
+  if(!items.length) return `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`;
+  return `<div style="overflow-x:auto;margin-top:10px;border:1px solid #d8d0c4;border-radius:8px;">
+  <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+    <thead>
+      <tr style="background:#2a7f8a;color:#e0f4f7;">
+        <th rowspan="2" style="padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.3px;">TAREA</th>
+        <th rowspan="2" style="padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.3px;">ESTADO</th>
+        <th colspan="3" style="padding:4px 10px 3px;text-align:center;font-size:10px;letter-spacing:.3px;border-bottom:1px solid rgba(255,255,255,.35);">FECHA</th>
+        <th rowspan="2" style="padding:7px 10px;"></th>
+      </tr>
+      <tr style="background:#2a7f8a;color:#e0f4f7;">
+        <th style="padding:3px 10px 6px;font-size:9px;font-weight:600;text-align:left;white-space:nowrap;">Creación</th>
+        <th style="padding:3px 10px 6px;font-size:9px;font-weight:600;text-align:left;white-space:nowrap;">Resolución prevista</th>
+        <th style="padding:3px 10px 6px;font-size:9px;font-weight:600;text-align:left;white-space:nowrap;">Cierre</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${items.map(t=>{
+        const reassign = reassignFor ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">
+          ${mjTeamMembers.map(m=>{ const activo=mjAssigneeList(t).includes(m.name); return `<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${reassignFor.replace(/'/g,"\\'")}')" title="${bmEscapeHtml(m.name)}" style="font-size:10px;padding:2px 7px;border-radius:12px;border:1.3px solid ${activo?m.color:'#c0b8ae'};background:${activo?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon}</button>`; }).join('')}
+        </div>` : '';
+        return `<tr style="border-top:1px solid #e8e2da;vertical-align:top;">
+          <td style="padding:8px 10px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}${reassign}</td>
+          <td style="padding:8px 10px;"><span class="mj-status-chip ${MJ_STATUS_META[t.status].cls}">${MJ_STATUS_META[t.status].label}</span></td>
+          <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.dateCreated||'—'}</td>
+          <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.dateInTreatment||'—'}</td>
+          <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.dateClosed||'—'}</td>
+          <td style="padding:8px 10px;"><button onclick="mjOpenDetailFromPersona('${t.id}','${openCtx.replace(/'/g,"\\'")}')" style="font-size:10.5px;padding:4px 9px;border-radius:16px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;">Ficha ✎</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>
   </div>`;
-}
-function mjTaskCard(t, openCtx, reassignRow){
-  return `
-    <div style="background:#f8f5ef;border:1px solid #d8d0c4;border-radius:8px;padding:10px 12px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div style="font-size:13px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}</div>
-        <button onclick="mjOpenDetailFromPersona('${t.id}','${openCtx.replace(/'/g,"\\'")}')" style="flex-shrink:0;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;">Abrir ficha ✎</button>
-      </div>
-      ${mjFieldsRow(t)}
-      ${reassignRow||''}
-    </div>`;
 }
 function openOrgPersona(name){
   const area = document.getElementById('organizateSubArea');
@@ -887,15 +901,7 @@ function openOrgPersona(name){
     <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
       <button onclick="openOrgSub('equipo')" style="background:none;border:none;color:#2a7f8a;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;padding:0;">← Volver al equipo</button>
       <h4 style="display:flex;align-items:center;gap:8px;text-align:left;">${p?p.icon:'⭐'} Tareas de ${bmEscapeHtml(name)}</h4>
-      ${items.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
-        ${items.map(t=>{
-          const reassignRow = `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-            <span style="font-size:10.5px;color:#7a6e62;margin-right:2px;">Asignado a:</span>
-            ${mjTeamMembers.map(m=>{ const activo = mjAssigneeList(t).includes(m.name); return `<button onclick="mjReassignTopic('${t.id}','${m.name.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}')" style="font-size:11.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${activo?m.color:'#c0b8ae'};background:${activo?m.color+'26':'#fff'};color:#1a3a50;cursor:pointer;font-family:inherit;">${m.icon} ${bmEscapeHtml(m.name)}</button>`; }).join('')}
-          </div>`;
-          return mjTaskCard(t, name, reassignRow);
-        }).join('')}
-      </div>` : `<p style="font-size:12px;color:#7a6e62;margin-top:10px;">Sin tareas pendientes asignadas.</p>`}
+      ${mjRenderTaskTable(items, name, name)}
     </div>`;
   area.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
