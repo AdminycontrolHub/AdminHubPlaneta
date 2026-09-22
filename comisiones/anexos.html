@@ -728,7 +728,7 @@ function openModal(m){
     el('b',{id:'bulkN'}),
     el('button',{class:'abtn sm',text:'Descargar',onclick:function(){downloadRows(selectedRows());}}),
     el('button',{class:'abtn sm',text:'Imprimir',onclick:function(){printRows(selectedRows());}}),
-    el('button',{class:'abtn sm dng',text:'Quitar',onclick:removeSelected})]);
+    el('button',{class:'abtn sm dng',text:'Quitar',onclick:function(){askPass(removeSelected);}})]);
   var allBox=el('input',{type:'checkbox',id:'selAll','aria-label':'Seleccionar todas'});
   allBox.onchange=function(){rows.filter(vis).forEach(function(r){sel[r.id]=allBox.checked;});renderRows();};
   var tbl=el('table',{class:'ppl',id:'tbl'},[
@@ -1040,7 +1040,7 @@ function renderRows(){
     tr.appendChild(el('td',{style:'white-space:nowrap;text-align:right'},[
       el('button',{class:'abtn sm',text:'Generar y descargar',onclick:function(){downloadRows([r]);}}),
       document.createTextNode(' '),
-      el('button',{class:'abtn sm dng','aria-label':'Quitar fila',text:'✕',onclick:function(){removeRows([r]);}})]));
+      el('button',{class:'abtn sm dng','aria-label':'Quitar fila',text:'✕',onclick:function(){askPass(function(){removeRows([r]);});}})]));
     tb.appendChild(tr);
     paintEstado(r);paintMin(r);
   });
