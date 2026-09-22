@@ -305,11 +305,11 @@ body { background: #0a2540; margin: 0; padding: 0; }
 
     <div class="topbar-center">
       <!-- Acceso directo a Organízate (Yo) dentro de Tareas -->
-      <button class="organizate-star-btn" id="organizateStarBtn" title="Organízate — Mis tareas" aria-label="Organízate" onclick="window.location.href='seguimientos/index.html#organizate-yo'">
+      <button class="organizate-star-btn" id="organizateStarBtn" title="Organízate — Mis tareas" aria-label="Organízate" onclick="window.location.href='seguimientos/organizate.html#organizate-yo'">
         <img src="Organizate.png" alt="Organízate">
       </button>
       <!-- Acceso directo a Mesa del Jueves — pestaña En vivo -->
-      <button class="vivo-btn" id="vivoBtn" title="Mesa del Jueves — En vivo" aria-label="En vivo" onclick="window.location.href='seguimientos/index.html#mesa-jueves-vivo'">
+      <button class="vivo-btn" id="vivoBtn" title="Mesa del Jueves — En vivo" aria-label="En vivo" onclick="window.location.href='seguimientos/organizate.html#mesa-jueves-vivo'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3A3A3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -609,17 +609,17 @@ MÓDULOS DISPONIBLES:
 - Becas (Becas l'Hospitalet) → reportes/index.html#becas-lh (dentro del módulo Reportes)
 - Cobros y Morosidad → cobros/index.html
 - Tareas / Seguimientos → seguimientos/index.html
-- Mesa del Jueves (En vivo) → seguimientos/index.html#mesa-jueves-vivo
+- Mesa del Jueves (En vivo) → seguimientos/organizate.html#mesa-jueves-vivo
 - Convo '27 → convo/index.html (incluye "Fechas clave por marca" y la "Herramienta de cruce de datos", ambas son funciones dentro de esta misma página, no páginas aparte)
 - Manuales → manuales/index.html
 - Comisiones → comisiones/index.html
 - Control de Gestión → acceso restringido con contraseña, solo personal autorizado.
-- Referidos OBS → seguimientos/index.html#referidos-obs (gestión de recompensas de alumnos referidos, dentro de Tareas/Seguimientos)
+- Referidos OBS → seguimientos/referidos.html#referidos-obs (gestión de recompensas de alumnos referidos, dentro de Tareas/Seguimientos)
 
-Si el usuario pregunta por "referidos", "recompensas de referidos", "alumnos referidos" o similar, enlaza siempre a seguimientos/index.html#referidos-obs explicando que es el módulo de Referidos OBS dentro de Tareas/Seguimientos.
+Si el usuario pregunta por "referidos", "recompensas de referidos", "alumnos referidos" o similar, enlaza siempre a seguimientos/referidos.html#referidos-obs explicando que es el módulo de Referidos OBS dentro de Tareas/Seguimientos.
 Si el usuario pregunta por "becas" o "Becas l'Hospitalet", enlaza siempre a reportes/index.html#becas-lh explicando que está dentro del módulo Reportes.
 Si el usuario pregunta por "fechas clave", "cruce de datos" o "convo 27", enlaza siempre a convo/index.html.
-Si el usuario pregunta por "Mesa del Jueves", "en vivo" o "reunión de los jueves", enlaza siempre a seguimientos/index.html#mesa-jueves-vivo.
+Si el usuario pregunta por "Mesa del Jueves", "en vivo" o "reunión de los jueves", enlaza siempre a seguimientos/organizate.html#mesa-jueves-vivo.
 
 ACCESOS RÁPIDOS: El panel lateral derecho (icono rayo ⚡) contiene accesos directos a herramientas externas. Cuando el usuario pida cualquiera de estos elementos, dile que pulse el icono ⚡ en el lateral derecho para abrirlo: Sudoku OBS, Bloqueo Campus, Hermes, PayComet, Paygold, Referidos, Planner, Calendario Comisiones, Puntuación Master.
 
@@ -906,8 +906,8 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     { icon:'📊', label:'Nº matrículas por marca y convocatoria', color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes', url:'reportes/index.html' },
     { icon:'📉', label:'Datos de morosidad',                     color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros', url:'cobros/index.html' },
     { icon:'🔵', label:'Power BI Activa',                        color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Cobros', url:'cobros/index.html' },
-    { icon:'🎓', label:'Referidos OBS',                          color:'#2a7f8a', bg:'rgba(42,127,138,0.1)', tagBg:'rgba(42,127,138,0.12)', tagColor:'#1a5560', tag:'Tareas', url:'seguimientos/index.html#referidos-obs' },
-    { icon:'🎙️', label:'Mesa del Jueves — En vivo',              color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:'Tareas', url:'seguimientos/index.html#mesa-jueves-vivo' },
+    { icon:'🎓', label:'Referidos OBS',                          color:'#2a7f8a', bg:'rgba(42,127,138,0.1)', tagBg:'rgba(42,127,138,0.12)', tagColor:'#1a5560', tag:'Tareas', url:'seguimientos/referidos.html#referidos-obs' },
+    { icon:'🎙️', label:'Mesa del Jueves — En vivo',              color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:'Tareas', url:'seguimientos/organizate.html#mesa-jueves-vivo' },
     { icon:'🔗', label:'SXDataHUB',                              color:'#00E6FF', bg:'rgba(0,230,255,0.1)', tagBg:'rgba(0,230,255,0.12)', tagColor:'#007a99', tag:'Reportes', url:'reportes/index.html' },
     { icon:'⚡', label:'Sudoku OBS',                             color:'#f0a830', bg:'rgba(240,168,48,0.1)', tagBg:'rgba(240,168,48,0.12)', tagColor:'#8a5a00', tag:'Accesos rápidos', openAccesos:true },
     { icon:'📅', label:'Fechas clave por marca',                 color:'#3aabf0', bg:'rgba(58,171,240,0.1)', tagBg:'rgba(58,171,240,0.12)', tagColor:'#0a5a8a', tag:"Convo '27", url:'convo/index.html' },
