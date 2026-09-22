@@ -1147,7 +1147,7 @@ function mjRenderOrbit(){
       /* Pendiente: ámbar en cuanto se ha tocado algo hoy (asignación, traslado, comentario, nota…);
          si es recurrente (viene de otra reunión) y todavía nadie lo ha tocado hoy, violeta;
          si no, aspecto por defecto. */
-      const tocado = !!(mjAssigneeList(t).length || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
+      const tocado = !!((!t.recurring && mjAssigneeList(t).length) || t.treatedBy || t.moveTo || t.privateNote || (t.comments && t.comments.length));
       stCls = tocado ? 'st-live' : (t.recurring ? 'st-recurring' : MJ_STATUS_META[t.status].cls);
     }
     node.className = 'mj-node ' + stCls + (t.recurring ? ' mj-recurring' : '');
