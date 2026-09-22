@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#e8e2d5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a3a50;min-height:100vh;padding:40px 16px 60px;display:flex;justify-content:center;}
+body{background:#010814;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a3a50;min-height:100vh;padding:40px 16px 60px;display:flex;justify-content:center;}
 .page-box{background:#F5F0E8;border-radius:16px;padding:1.5rem;width:100%;max-width:1040px;box-shadow:0 4px 24px rgba(0,0,0,0.08);align-self:flex-start;}
 .wrap{max-width:100%;margin:0 auto;}
 .sub{font-size:12px;color:#9a8e82;margin-bottom:20px;}
@@ -169,10 +169,15 @@ body{background:#e8e2d5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .btn-general .badge-mini{background:#a4293f;color:#fff;font-size:9px;font-weight:800;border-radius:8px;padding:1px 6px;}
 
 /* Tabla de solo lectura para Buscar Historico */
-.tabla-historico-wrap{border:1px solid #e5ded2;border-radius:14px;overflow:hidden;}
+.tabla-historico-wrap{border:1px solid #e5ded2;border-radius:14px;}
 .tabla-historico{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:10.5px;table-layout:fixed;padding:0 6px 6px;}
-.tabla-historico th{background:#faf7f0;color:#7a6e62;padding:9px 12px;text-align:left;font-weight:700;text-transform:uppercase;font-size:8.5px;letter-spacing:0.03em;position:sticky;top:0;}
+.tabla-historico th{background:#faf7f0;color:#7a6e62;padding:9px 12px;text-align:left;font-weight:700;text-transform:uppercase;font-size:8.5px;letter-spacing:0.03em;position:sticky;top:0;z-index:2;user-select:none;}
+.tabla-historico th:first-child{border-radius:14px 0 0 0;}
+.tabla-historico th:last-child{border-radius:0 14px 0 0;}
+.tabla-historico th.th-filtrable{cursor:pointer;}
+.tabla-historico th.th-filtrable:hover{color:#0f6e56;}
 .tabla-historico th .th-ico{color:#c0b8ae;font-weight:400;margin-left:2px;}
+.tabla-historico th.th-activo{color:#0f6e56;}
 .tabla-historico th.th-activo .th-ico{color:#0f6e56;}
 .tabla-historico td{padding:8px 12px;color:#1a3a50;background:#faf8f4;}
 .tabla-historico tr:hover td{background:#f2ede4;}
@@ -219,7 +224,7 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Revisar NACS <span class="badge-mini" id="badgeNacsGeneral" style="display:none;"></span>
     </button>
-    <button class="btn-general" onclick="document.getElementById('inputCruceNacs').click()" style="border-radius:20px;">
+    <button class="btn-general" onclick="if(confirm('Vas a subir un Excel con las columnas \'Opportunity ID\' y el ID de GANET, para rellenar los ID NACS que est\u00e9n vac\u00edos.\n\n\u00bfContinuar?')) document.getElementById('inputCruceNacs').click()" style="border-radius:20px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
       Cargar Excel NACS
     </button>
@@ -227,10 +232,12 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
     <input type="file" id="inputHistorico" accept=".xlsx,.xls" style="display:none;" onchange="cargarExcelHistorico(this.files[0])">
   </div>
 
-  <div class="n1-eyebrow">módulo · seguimiento</div>
-  <div class="n1-title-row">
-    <div class="n1-title-line"></div>
-    <span class="n1-title-text">Bajas y Cambios</span>
+  <div style="background:#2a7f8a;margin:0 -1.5rem 20px;padding:14px 1.5rem;display:flex;align-items:center;gap:10px;">
+    <div style="width:3px;height:20px;background:rgba(255,255,255,0.5);border-radius:2px;"></div>
+    <div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.65);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">módulo · seguimiento</div>
+      <div style="font-size:17px;font-weight:600;color:#fff;">Bajas y Cambios</div>
+    </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin-left:13px;">
     <div class="n1-count" id="subHeader" style="margin:0;">Cargando casos...</div>
@@ -325,9 +332,7 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
           <button class="btn-limpiar-filtros" onclick="limpiarFiltrosHistorico()">Limpiar</button>
         </div>
         <div class="tabla-historico-wrap">
-          <div style="overflow-x:auto;">
-            <table class="tabla-historico" id="tablaHistorico"></table>
-          </div>
+          <table class="tabla-historico" id="tablaHistorico"></table>
         </div>
         <div style="font-size:9.5px;color:#9a8e82;padding:6px 2px 0;">—* : caso del histórico importado, sin motivo por separado (solo el texto genérico del Excel).</div>
       </div>
@@ -375,88 +380,122 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 </div>
 
 <div class="big-overlay" id="ayudaOverlay">
-  <div style="background:#F5F0E8;border-radius:18px;padding:22px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;">
+  <div style="background:#F5F0E8;border-radius:18px;padding:22px;width:600px;max-width:100%;max-height:90vh;overflow-y:auto;">
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <h3 style="font-size:16px;font-weight:700;color:#1a3a50;margin:0;">Cómo usar el Hub</h3>
       <button class="btn-x" style="width:22px;height:22px;border-radius:6px;font-size:10px;" onclick="cerrarAyuda()">✕</button>
     </div>
-    <p style="font-size:11px;color:#7a6e62;margin:0 0 16px;">Guía rápida del día a día.</p>
+    <p style="font-size:11px;color:#7a6e62;margin:0 0 14px;">Guía rápida del día a día.</p>
 
-    <div style="display:flex;flex-direction:column;gap:10px;">
+    <div style="background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:13px;">🏷️</div>
+          <div style="font-size:8.5px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.2;">Etiquetas el correo en Outlook</div>
+        </div>
+        <div style="color:#c0b8ae;font-size:12px;margin-bottom:14px;">→</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:13px;">✨</div>
+          <div style="font-size:8.5px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.2;">El caso se crea solo</div>
+        </div>
+        <div style="color:#c0b8ae;font-size:12px;margin-bottom:14px;">→</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:13px;">📋</div>
+          <div style="font-size:8.5px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.2;">Aparece en su tarjeta</div>
+        </div>
+        <div style="color:#c0b8ae;font-size:12px;margin-bottom:14px;">→</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:13px;">🔎</div>
+          <div style="font-size:8.5px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.2;">O lo buscas por ID/nombre</div>
+        </div>
+      </div>
+    </div>
 
-      <div style="background:#fff;border-radius:16px;padding:16px;">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
-            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">🏷️</div>
-            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">Etiquetas el correo en Outlook</div>
-          </div>
-          <div style="color:#c0b8ae;font-size:13px;margin-bottom:16px;">→</div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
-            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">✨</div>
-            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">El caso se crea solo</div>
-          </div>
-          <div style="color:#c0b8ae;font-size:13px;margin-bottom:16px;">→</div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
-            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">📋</div>
-            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">Aparece en su tarjeta</div>
-          </div>
-          <div style="color:#c0b8ae;font-size:13px;margin-bottom:16px;">→</div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;">
-            <div style="width:32px;height:32px;border-radius:50%;background:#F5F0E8;border:1px solid #d8d0c4;display:flex;align-items:center;justify-content:center;font-size:14px;">🔎</div>
-            <div style="font-size:9px;color:#1a3a50;font-weight:700;text-align:center;line-height:1.25;">O lo buscas por ID/nombre</div>
-          </div>
+    <div style="display:flex;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:140px;flex-shrink:0;">
+        <div class="ayuda-tema-link" data-color="#2a7f8a" onclick="mostrarTemaAyuda('cerrar', this)"
+          style="border-left:3px solid #2a7f8a;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;background:#eef6f8;cursor:pointer;">
+          <span style="font-size:12px;">✔</span><span style="font-size:10.5px;font-weight:700;color:#1a3a50;">Cerrar un caso</span>
+        </div>
+        <div class="ayuda-tema-link" data-color="#0f6e56" onclick="mostrarTemaAyuda('devolucion', this)"
+          style="border-left:3px solid transparent;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.7;">
+          <span style="font-size:12px;">💶</span><span style="font-size:10.5px;font-weight:600;color:#5a6e80;">Devolución</span>
+        </div>
+        <div class="ayuda-tema-link" data-color="#a4293f" onclick="mostrarTemaAyuda('incidencia', this)"
+          style="border-left:3px solid transparent;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.7;">
+          <span style="font-size:12px;">⚠</span><span style="font-size:10.5px;font-weight:600;color:#5a6e80;">Marcar una incidencia</span>
+        </div>
+        <div class="ayuda-tema-link" data-color="#8a5a10" onclick="mostrarTemaAyuda('nacs', this)"
+          style="border-left:3px solid transparent;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.7;">
+          <span style="font-size:12px;">🗒️</span><span style="font-size:10.5px;font-weight:600;color:#5a6e80;">Revisar NACS</span>
+        </div>
+        <div class="ayuda-tema-link" data-color="#5a6e80" onclick="mostrarTemaAyuda('error', this)"
+          style="border-left:3px solid transparent;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.7;">
+          <span style="font-size:12px;">🚫</span><span style="font-size:10.5px;font-weight:600;color:#5a6e80;">Cargado por error</span>
+          <span style="background:#5a6e80;color:#fff;font-size:7px;font-weight:800;padding:1px 6px;border-radius:7px;text-transform:uppercase;margin-left:auto;">Nuevo</span>
+        </div>
+        <div class="ayuda-tema-link" data-color="#5a6e80" onclick="mostrarTemaAyuda('historico', this)"
+          style="border-left:3px solid transparent;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.7;">
+          <span style="font-size:12px;">📖</span><span style="font-size:10.5px;font-weight:600;color:#5a6e80;">Buscar Histórico</span>
+        </div>
+        <div class="ayuda-tema-link" data-color="#5a2aaa" onclick="mostrarTemaAyuda('resumen', this)"
+          style="border-left:3px solid transparent;border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;opacity:0.7;">
+          <span style="font-size:12px;">🪄</span><span style="font-size:10.5px;font-weight:600;color:#5a6e80;">Resumen semanal</span>
         </div>
       </div>
 
-      <div style="background:#eef6f8;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #2a7f8a;">
-        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">✔ Cerrar un caso</div>
-        <div style="font-size:11px;color:#3a5560;line-height:1.6;">El cierre se hace mediante la etiqueta <b>"OK. Gestionado"</b> en Outlook — con eso, se cierra solo, sin tener que hacer nada en el Hub.</div>
-        <div style="margin-top:10px;background:#fdf0dc;border-radius:10px;padding:9px 11px;">
-          <div style="display:inline-block;background:#8a5a10;color:#fff;font-size:8.5px;font-weight:800;text-transform:uppercase;padding:2px 8px;border-radius:10px;margin-bottom:6px;">Caso excepcional</div>
-          <div style="font-size:11px;color:#6e4a0d;line-height:1.6;">Si hace falta cerrarlo a mano desde el Hub, pulsa <b>"Cerrar expediente"</b> (o "Devolución completada" en esa categoría).<br>La <b>primera vez</b> que uses este botón <b>en este ordenador</b>, te pedirá elegir tu nombre. Después de esa primera vez, ya no te lo vuelve a preguntar — lo recuerda automáticamente cada vez que lo uses desde ese mismo ordenador.</div>
+      <div style="flex:1;min-width:0;">
+
+        <div id="ayudaTema-cerrar" class="ayuda-tema-contenido" style="display:block;background:#eef6f8;border-radius:12px;padding:16px;">
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">✔ Cerrar un caso</div>
+          <div style="font-size:11px;color:#3a5560;line-height:1.6;">El cierre se hace mediante la etiqueta <b>"OK. Gestionado"</b> en Outlook — con eso, se cierra solo, sin tener que hacer nada en el Hub.</div>
+          <div style="margin-top:10px;background:#fdf0dc;border-radius:10px;padding:9px 11px;">
+            <div style="display:inline-block;background:#8a5a10;color:#fff;font-size:8.5px;font-weight:800;text-transform:uppercase;padding:2px 8px;border-radius:10px;margin-bottom:6px;">Caso excepcional</div>
+            <div style="font-size:11px;color:#6e4a0d;line-height:1.6;">Si hace falta cerrarlo a mano desde el Hub, pulsa <b>"Cerrar expediente"</b> (o "Devolución completada" en esa categoría).<br>La <b>primera vez</b> que uses este botón <b>en este ordenador</b>, te pedirá elegir tu nombre. Después de esa primera vez, ya no te lo vuelve a preguntar — lo recuerda automáticamente cada vez que lo uses desde ese mismo ordenador.</div>
+          </div>
         </div>
-      </div>
 
-      <div style="background:#e1f5ee;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #0f6e56;">
-        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">💶 Devolución — cómo se crea el caso</div>
-        <div style="font-size:11px;color:#0f5443;line-height:1.6;">
-          Se crea directamente cuando el correo se etiqueta como <b>"Devolución"</b>.<br><br>
-          Una <b>Baja con Devolución</b> también pasa a tratarse como Devolución, pero solo si se cumplen <b>las dos cosas a la vez</b>:
-          <div style="margin:6px 0 6px 4px;">① el correo lleva además la etiqueta <b>"Pte Devolución"</b> (no basta con "Baja con Devolución" sola)<br>② dentro del caso se elige <b>Transferencia</b> o <b>Flywire</b> como medio, en el desplegable de seguimiento</div>
-          Si falta cualquiera de las dos, el caso se queda solo como Baja con Devolución — no aparece en Devolución.
+        <div id="ayudaTema-devolucion" class="ayuda-tema-contenido" style="display:none;background:#e1f5ee;border-radius:12px;padding:16px;">
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">💶 Devolución — cómo se crea el caso</div>
+          <div style="font-size:11px;color:#0f5443;line-height:1.6;">
+            Se crea directamente cuando el correo se etiqueta como <b>"Devolución"</b>.<br><br>
+            Una <b>Baja con Devolución</b> también pasa a tratarse como Devolución, pero solo si se cumplen <b>las dos cosas a la vez</b>:
+            <div style="margin:6px 0 6px 4px;">① el correo lleva además la etiqueta <b>"Pte Devolución"</b> (no basta con "Baja con Devolución" sola)<br>② dentro del caso se elige <b>Transferencia</b> o <b>Flywire</b> como medio, en el desplegable de seguimiento</div>
+            Si falta cualquiera de las dos, el caso se queda solo como Baja con Devolución — no aparece en Devolución.
+          </div>
         </div>
-      </div>
 
-      <div style="background:#fdeceb;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #a4293f;">
-        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">⚠ Marcar una incidencia</div>
-        <div style="font-size:11px;color:#6b2530;line-height:1.5;">
-          Etiquetando en Outlook con una categoría que contenga "incidencia", o con la casilla manual dentro del caso.<br><br>
-          En cualquiera de los dos casos, hay que rellenar el campo <b>"Observación"</b> con el motivo de la incidencia — sin eso, queda marcada pero sin explicar el porqué.
+        <div id="ayudaTema-incidencia" class="ayuda-tema-contenido" style="display:none;background:#fdeceb;border-radius:12px;padding:16px;">
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">⚠ Marcar una incidencia</div>
+          <div style="font-size:11px;color:#6b2530;line-height:1.5;">
+            Etiquetando en Outlook con una categoría que contenga "incidencia", o con la casilla manual dentro del caso.<br><br>
+            En cualquiera de los dos casos, hay que rellenar el campo <b>"Observación"</b> con el motivo de la incidencia — sin eso, queda marcada pero sin explicar el porqué.
+          </div>
         </div>
-      </div>
 
-      <div style="background:#fdf0dc;border-radius:16px;padding:14px 16px 14px 18px;border-left:5px solid #8a5a10;">
-        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">🗒️ Revisar NACS</div>
-        <div style="font-size:11px;color:#6e4a0d;line-height:1.5;">Lista los casos ya cerrados en los que, una vez revisado que en NACS está gestionado, hay que ponerle OK o indicar la incidencia. El OK queda para siempre, no hay que repetirlo cada mes.</div>
-      </div>
+        <div id="ayudaTema-nacs" class="ayuda-tema-contenido" style="display:none;background:#fdf0dc;border-radius:12px;padding:16px;">
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">🗒️ Revisar NACS</div>
+          <div style="font-size:11px;color:#6e4a0d;line-height:1.5;">Lista los casos ya cerrados en los que, una vez revisado que en NACS está gestionado, hay que ponerle OK o indicar la incidencia. El OK queda para siempre, no hay que repetirlo cada mes.</div>
+        </div>
 
-      <div style="background:#ede8df;border-radius:16px;padding:12px 16px 12px 18px;border-left:5px solid #5a6e80;position:relative;">
-        <div style="position:absolute;top:8px;right:10px;background:#5a6e80;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;text-transform:uppercase;">Nuevo</div>
-        <div style="font-weight:700;font-size:12px;color:#1a3a50;margin-bottom:3px;">🚫 Caso cargado por error</div>
-        <div style="font-size:10.5px;color:#3a4550;line-height:1.5;">Si un alumno se cargó por equivocación y la gestión nunca fue real, usa el botón ⚠ de su ficha (junto al de eliminar). Marca el caso con ese aviso y lo cierra en el mismo paso — queda visible en el Histórico como caso no válido, sin necesidad de tocar nada en Outlook.</div>
-      </div>
+        <div id="ayudaTema-error" class="ayuda-tema-contenido" style="display:none;background:#ede8df;border-radius:12px;padding:16px;position:relative;">
+          <div style="position:absolute;top:12px;right:14px;background:#5a6e80;color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;text-transform:uppercase;">Nuevo</div>
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">🚫 Caso cargado por error</div>
+          <div style="font-size:11px;color:#3a4550;line-height:1.5;">Si un alumno se cargó por equivocación y la gestión nunca fue real, usa el botón ⚠ de su ficha (junto al de eliminar). Marca el caso con ese aviso y lo cierra en el mismo paso — queda visible en el Histórico como caso no válido, sin necesidad de tocar nada en Outlook.</div>
+        </div>
 
-      <div style="background:#fff;border-radius:16px;padding:14px 16px;">
-        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">📖 Buscar Histórico</div>
-        <div style="font-size:11px;color:#5a6e80;line-height:1.5;">Todos los casos cerrados, con filtros por marca/categoría/fecha y buscador propio. Se ve el motivo, el medio de devolución, quién lo cerró y cuándo.</div>
-      </div>
+        <div id="ayudaTema-historico" class="ayuda-tema-contenido" style="display:none;background:#fff;border:1px solid #e5ded2;border-radius:12px;padding:16px;">
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">📖 Buscar Histórico</div>
+          <div style="font-size:11px;color:#5a6e80;line-height:1.5;">Todos los casos cerrados, con filtros por marca/categoría/fecha y buscador propio. Se ve el motivo, el medio de devolución, quién lo cerró y cuándo.</div>
+        </div>
 
-      <div style="background:#fff;border-radius:16px;padding:14px 16px;">
-        <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:4px;">🪄 Resumen semanal</div>
-        <div style="font-size:11px;color:#5a6e80;line-height:1.5;">Resumen de todos los pendientes agrupado por marca y categoría, con botón para copiar como texto.</div>
-      </div>
+        <div id="ayudaTema-resumen" class="ayuda-tema-contenido" style="display:none;background:#fff;border:1px solid #e5ded2;border-radius:12px;padding:16px;">
+          <div style="font-weight:700;font-size:12.5px;color:#1a3a50;margin-bottom:8px;">🪄 Resumen semanal</div>
+          <div style="font-size:11px;color:#5a6e80;line-height:1.5;">Resumen de todos los pendientes agrupado por marca y categoría, con botón para copiar como texto.</div>
+        </div>
 
+      </div>
     </div>
 
     <div style="margin-top:12px;font-size:10px;color:#b0a89c;">Cargar Excel NACS y Cargar Histórico son cargas puntuales — casi nunca hace falta tocarlas.</div>
@@ -905,6 +944,7 @@ function perteneceANivel1(c){
 function idMostrado(c){ return c.idOportunidadManual || c.idOportunidad || c.key; }
 function nombreMostrado(c){ return c.alumnoManual || c.alumno || c.asunto || '(sin nombre)'; }
 function escHtml(s){ const d=document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+function escAttr(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ============================================================
 // NIVEL 1
@@ -1156,6 +1196,23 @@ function abrirAyuda(){
   document.getElementById('ayudaOverlay').classList.add('show');
   document.body.style.overflow = 'hidden';
 }
+function mostrarTemaAyuda(id, el){
+  document.querySelectorAll('.ayuda-tema-contenido').forEach(d => d.style.display = 'none');
+  document.getElementById('ayudaTema-' + id).style.display = 'block';
+  document.querySelectorAll('.ayuda-tema-link').forEach(a => {
+    a.style.borderLeftColor = 'transparent';
+    a.style.opacity = '0.7';
+    a.style.background = 'transparent';
+    const span = a.querySelector('span:nth-child(2)');
+    if(span){ span.style.fontWeight = '600'; span.style.color = '#5a6e80'; }
+  });
+  el.style.borderLeftColor = el.dataset.color;
+  el.style.opacity = '1';
+  el.style.background = el.dataset.color + '14';
+  const span = el.querySelector('span:nth-child(2)');
+  if(span){ span.style.fontWeight = '700'; span.style.color = '#1a3a50'; }
+}
+
 function cerrarAyuda(){
   document.getElementById('ayudaOverlay').classList.remove('show');
   document.body.style.overflow = '';
@@ -1187,12 +1244,18 @@ function renderAitorPopover(){
   const intro = `Hay ${pendientes.length} pendiente${pendientes.length===1?'':'s'} de gestión` +
     (masAntiguoCaso ? `, de los cuales el más antiguo lleva ${masAntiguoDias} días (${masAntiguoCat}, ${masAntiguoMarca}).` : '.');
 
-  // Agrupar: Marca -> Categoria -> lista de casos
+  // Agrupar: Marca -> Categoria -> lista de casos (Devolución se trata aparte, ver mas abajo)
   const porMarca = {};
+  const devolucionPorMarca = {};
   pendientes.forEach(c => {
     const marca = nombreMarca(c.marca) || 'Sin marca';
     const cat = categoriaDeCaso(c);
     const catId = cat ? cat.id : 'otro';
+    if(catId === 'devolucion'){
+      devolucionPorMarca[marca] = devolucionPorMarca[marca] || [];
+      devolucionPorMarca[marca].push(c);
+      return;
+    }
     porMarca[marca] = porMarca[marca] || {};
     porMarca[marca][catId] = porMarca[marca][catId] || [];
     porMarca[marca][catId].push(c);
@@ -1261,6 +1324,44 @@ function renderAitorPopover(){
 
   const htmlSinTareas = sinTareas.length ? `<div style="font-size:10px;color:#9a8e82;font-weight:600;">${escHtml(sinTareas.join(', '))} — sin pendientes</div>` : '';
 
+  // --- Bloque separado: Devolución por marca (todas las marcas fijas, con o sin pendientes) ---
+  const marcasParaDevolucion = nombresFijos.slice().sort((a,b) => (devolucionPorMarca[b]?devolucionPorMarca[b].length:0) - (devolucionPorMarca[a]?devolucionPorMarca[a].length:0));
+  const filasDevolucion = marcasParaDevolucion.map(nombre => {
+    const lista = devolucionPorMarca[nombre] || [];
+    const mCol = MARCA_COLORES[nombre] || { fg:'#5a6e80' };
+    if(!lista.length){
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:${mCol.fg};font-weight:700;">${escHtml(nombre)}</span>
+        <span style="font-size:10.5px;color:#9a8e82;">sin pendientes</span>
+      </div>`;
+    }
+    const masAntiguoFecha = masAntiguoDeLista(lista);
+    const conIncidencia = lista.filter(c => tieneIncidencia(c));
+    let incidenciaHtml = '';
+    if(conIncidencia.length){
+      incContador++;
+      const idInc = `aitorInc${incContador}`;
+      incidenciaHtml = `
+      <div style="margin-top:3px;">
+        <span onclick="document.getElementById('${idInc}').classList.toggle('show')" style="font-size:10px;color:#a4293f;font-weight:700;cursor:pointer;text-decoration:underline dotted;">⚠ ${conIncidencia.length} con incidencia${conIncidencia.length>1?'s':''}</span>
+        <div id="${idInc}" style="font-size:10px;color:#a4293f;margin-top:3px;line-height:1.4;" class="aitor-inc-detalle">${escHtml(conIncidencia[0].observacion && conIncidencia[0].observacion.trim() ? conIncidencia[0].observacion.trim() : 'Sin detalle de motivo.')}</div>
+      </div>`;
+    }
+    return `
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:${mCol.fg};font-weight:700;">${escHtml(nombre)}</span>
+          <span style="font-size:10.5px;color:#5a6e80;">${lista.length} pendiente${lista.length===1?'':'s'}${masAntiguoFecha ? ` · más antiguo ${masAntiguoFecha}` : ''}</span>
+        </div>
+        ${incidenciaHtml}
+      </div>`;
+  }).join('');
+  const htmlDevolucion = `
+    <div style="border-top:1px dashed #d8d0c4;margin:16px 0 14px;"></div>
+    <div style="font-size:11.5px;font-weight:800;color:#0f6e56;margin-bottom:9px;">Devolución · por marca</div>
+    <div style="display:flex;flex-direction:column;gap:9px;">${filasDevolucion}</div>`;
+
   // --- Version texto plano (la que se copia con el boton) ---
   const bloquesTexto = conTareas.map(nombre => {
     const catsDeMarca = porMarca[nombre];
@@ -1280,7 +1381,21 @@ function renderAitorPopover(){
     return `${nombre} — ${total} pendiente${total===1?'':'s'}\n${lineas}`;
   });
   const bloqueSinTareasTexto = sinTareas.length ? `\n${sinTareas.join(', ')}: sin pendientes` : '';
-  const textoPlano = intro + '\n\n' + bloquesTexto.join('\n\n') + bloqueSinTareasTexto;
+
+  const lineasDevolucionTexto = marcasParaDevolucion.map(nombre => {
+    const lista = devolucionPorMarca[nombre] || [];
+    if(!lista.length) return `  ${nombre}: sin pendientes`;
+    const masAntiguoFecha = masAntiguoDeLista(lista);
+    const conIncidencia = lista.filter(c => tieneIncidencia(c));
+    let linea = `  ${nombre}: ${lista.length} pendiente${lista.length===1?'':'s'}${masAntiguoFecha ? ` · más antiguo: ${masAntiguoFecha}` : ''}`;
+    if(conIncidencia.length){
+      linea += `\n    ⚠ ${conIncidencia.length} con incidencia${conIncidencia.length>1?'s':''}${conIncidencia[0].observacion && conIncidencia[0].observacion.trim() ? ` ("${conIncidencia[0].observacion.trim()}")` : ''}`;
+    }
+    return linea;
+  }).join('\n');
+  const bloqueDevolucionTexto = `\n\nDevolución · por marca\n${lineasDevolucionTexto}`;
+
+  const textoPlano = intro + '\n\n' + bloquesTexto.join('\n\n') + bloqueSinTareasTexto + bloqueDevolucionTexto;
 
   document.getElementById('aitorPopover').innerHTML = `
     <div class="atenea-head">
@@ -1290,6 +1405,7 @@ function renderAitorPopover(){
     <div style="font-size:11px;color:#5a6e80;margin:10px 0 14px;">${escHtml(intro)}</div>
     ${htmlBloques}
     ${htmlSinTareas}
+    ${htmlDevolucion}
     <div class="atenea-texto" style="display:none;">${escHtml(textoPlano)}</div>
     <div style="display:flex;justify-content:flex-end;margin-top:8px;">
       <button class="copy-btn" onclick="copiarTextoAitor(this)" title="Copiar texto">
@@ -1721,6 +1837,7 @@ function limpiarFiltrosHistorico(){
   document.getElementById('filtroHistCategoria').value = '';
   document.getElementById('filtroHistDesde').value = '';
   document.getElementById('filtroHistHasta').value = '';
+  Object.keys(filtrosColHistorico).forEach(k => filtrosColHistorico[k] = null);
   renderHistoricoGeneral();
 }
 
@@ -1733,6 +1850,137 @@ function fechaISOaComparar(ddmmyyyy){
   const dd = p[0].padStart(2,'0');
   const mm = p[1].padStart(2,'0');
   return `${p[2]}-${mm}-${dd}`;
+}
+
+// Filtros por columna de la tabla de Histórico: null = sin restringir (se ven todos los valores).
+// Si el usuario desmarca algo, pasa a ser un Set con los valores que SÍ quiere ver.
+let filtrosColHistorico = { motivo: null, medio: null, responsable: null, cerradoPor: null };
+
+function valorColumnaHistorico(c, col){
+  if(col === 'motivo'){
+    const cats = categoriasDeCaso(c);
+    let variantePorDefecto = '';
+    for(const cc of cats){ if(TEXTOS[cc.id] && TEXTOS[cc.id].variantes){ variantePorDefecto = TEXTOS[cc.id].variantes[0]; break; } }
+    return (c.textoMotivo && c.textoMotivo.trim()) ? c.textoMotivo.trim() : (c.origen === 'historico' ? '—*' : (c.textoVariante || variantePorDefecto || '—'));
+  }
+  if(col === 'medio') return c.textoMetodo || '—';
+  if(col === 'responsable') return c.responsableManual || c.responsable || '—';
+  if(col === 'cerradoPor') return c.cerradoPor || '—';
+  return '';
+}
+
+function enfocarFiltroPanel(campo){
+  const panel = document.getElementById('filtrosPanelHistorico');
+  if(!panel.classList.contains('show')) panel.classList.add('show');
+  const el = document.getElementById(campo === 'marca' ? 'filtroHistMarca' : 'filtroHistCategoria');
+  if(el){ el.focus(); el.scrollIntoView({block:'nearest'}); }
+}
+
+function cerrarColFiltroDropdown(e){
+  const dd = document.getElementById('colFiltroDropdown');
+  if(!dd) { document.removeEventListener('click', cerrarColFiltroDropdown); return; }
+  if(!dd.contains(e.target)){
+    dd.remove();
+    document.removeEventListener('click', cerrarColFiltroDropdown);
+  }
+}
+
+// Para "motivo": normaliza quitando mayúsculas, tildes y una "s" final simple, para que
+// variantes como "Económico"/"económicos"/"Económicos" cuenten como el mismo valor al filtrar.
+// El resto de columnas no se normaliza (valores ya son cortos y cerrados: Marca, Responsable...).
+function normalizarMotivo(v){
+  return String(v || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/s$/, '');
+}
+
+function claveFiltroValor(col, v){
+  return col === 'motivo' ? normalizarMotivo(v) : v;
+}
+
+// Devuelve [{key, display}], una entrada por cada valor distinto (agrupando variantes en
+// "motivo"). "display" es la forma más usada entre los casos reales de ese grupo.
+// Orden: primero los valores "normales" (alfabético), y al final los especiales
+// (—, —*, o cualquier texto muy largo tipo histórico sin motivo corto).
+function valoresColumnaDisponibles(col){
+  let base = casos.filter(c => !esPendiente(c) && perteneceANivel1(c));
+  const grupos = {};
+  base.forEach(c => {
+    const v = valorColumnaHistorico(c, col);
+    const key = claveFiltroValor(col, v);
+    grupos[key] = grupos[key] || {};
+    grupos[key][v] = (grupos[key][v] || 0) + 1;
+  });
+  const items = Object.keys(grupos).map(key => {
+    const variantes = grupos[key];
+    let mejor = null, mejorConteo = -1;
+    for(const texto in variantes){ if(variantes[texto] > mejorConteo){ mejor = texto; mejorConteo = variantes[texto]; } }
+    return { key, display: mejor };
+  });
+  items.sort((a, b) => {
+    const esEspecial = d => (d.trim() === '—' || d.trim() === '—*' || d.length > 30) ? 1 : 0;
+    const aEsp = esEspecial(a.display), bEsp = esEspecial(b.display);
+    if(aEsp !== bEsp) return aEsp - bEsp;
+    return a.display.localeCompare(b.display, 'es');
+  });
+  return items;
+}
+
+function renderColFiltroContenido(col){
+  const dd = document.getElementById('colFiltroDropdown');
+  if(!dd || dd.dataset.col !== col) return;
+  const lista = valoresColumnaDisponibles(col);
+  const activos = filtrosColHistorico[col];
+  dd.innerHTML = `
+    <div style="display:flex;justify-content:center;gap:6px;margin-bottom:9px;">
+      <span style="font-size:9.5px;color:#0f6e56;font-weight:700;cursor:pointer;" onclick="filtrosColHistorico['${col}']=null;renderHistoricoGeneral();renderColFiltroContenido('${col}');">Todos</span>
+      <span style="font-size:9.5px;color:#c0b8ae;">·</span>
+      <span style="font-size:9.5px;color:#a4293f;font-weight:700;cursor:pointer;" onclick="filtrosColHistorico['${col}']=new Set();renderHistoricoGeneral();renderColFiltroContenido('${col}');">Ninguno</span>
+    </div>
+    ${lista.map((item, i) => {
+      const marcado = activos === null || activos.has(item.key);
+      const esLargo = item.display.length > 30;
+      const textoCorto = esLargo ? item.display.slice(0, 30) + '…' : item.display;
+      return `
+      <label onclick="toggleValorColHistorico('${col}', this)" data-clave="${escAttr(item.key)}"
+        style="display:flex;align-items:center;gap:7px;font-size:10.5px;color:${marcado?'#1a3a50':'#9a8e82'};padding:5px 0;${i<lista.length-1?'border-bottom:1px solid #f0ece2;':''}cursor:pointer;">
+        <span style="width:11px;height:11px;border-radius:50%;border:1.5px solid ${marcado?'#0f6e56':'#d8d0c4'};background:${marcado?'#0f6e56':'#fff'};flex-shrink:0;display:flex;align-items:center;justify-content:center;">${marcado?'<span style="width:4px;height:4px;border-radius:50%;background:#fff;"></span>':''}</span>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" ${esLargo?`title="${escAttr(item.display)}"`:''}>${escHtml(textoCorto)}</span>
+      </label>`;
+    }).join('')}
+  `;
+}
+
+function toggleColHistorico(col, ev){
+  ev.stopPropagation();
+  const existente = document.getElementById('colFiltroDropdown');
+  if(existente){
+    const mismo = existente.dataset.col === col;
+    existente.remove();
+    document.removeEventListener('click', cerrarColFiltroDropdown);
+    if(mismo) return;
+  }
+
+  const th = ev.currentTarget;
+  const rect = th.getBoundingClientRect();
+  const dd = document.createElement('div');
+  dd.id = 'colFiltroDropdown';
+  dd.dataset.col = col;
+  dd.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;background:#fff;border:1px solid #d8d0c4;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.15);padding:12px;width:220px;max-height:280px;overflow-y:auto;z-index:200;font-size:11px;`;
+  document.body.appendChild(dd);
+  renderColFiltroContenido(col);
+  setTimeout(() => document.addEventListener('click', cerrarColFiltroDropdown), 0);
+}
+
+function toggleValorColHistorico(col, el){
+  const clave = el.getAttribute('data-clave');
+  if(filtrosColHistorico[col] === null){
+    filtrosColHistorico[col] = new Set(valoresColumnaDisponibles(col).map(item => item.key));
+  }
+  if(filtrosColHistorico[col].has(clave)) filtrosColHistorico[col].delete(clave);
+  else filtrosColHistorico[col].add(clave);
+  renderHistoricoGeneral();
+  renderColFiltroContenido(col);
 }
 
 function renderHistoricoGeneral(){
@@ -1758,6 +2006,11 @@ function renderHistoricoGeneral(){
   if(fCat) cerrados = cerrados.filter(c => categoriasDeCaso(c).some(cat => cat.id === fCat));
   if(fDesde) cerrados = cerrados.filter(c => { const f = fechaISOaComparar(fechaCierreDe(c)); return f && f >= fDesde; });
   if(fHasta) cerrados = cerrados.filter(c => { const f = fechaISOaComparar(fechaCierreDe(c)); return f && f <= fHasta; });
+
+  Object.keys(filtrosColHistorico).forEach(col => {
+    const set = filtrosColHistorico[col];
+    if(set !== null && set.size > 0) cerrados = cerrados.filter(c => set.has(valorColumnaHistorico(c, col)));
+  });
 
   cerrados.sort((a,b) => fechaISOaComparar(fechaCierreDe(b)).localeCompare(fechaISOaComparar(fechaCierreDe(a))));
 
@@ -1796,9 +2049,10 @@ function renderHistoricoGeneral(){
     </tr>`;
   }).join('');
 
+  const thCls = col => (filtrosColHistorico[col] !== null && filtrosColHistorico[col].size > 0) ? 'th-filtrable th-activo' : 'th-filtrable';
   tabla.innerHTML = `
     <thead><tr>
-      <th style="width:10%;">Marca <span class="th-ico">⇅</span></th><th style="width:13%;">ID Oportunidad</th><th style="width:16%;">Nombre <span class="th-ico">⇅</span></th><th style="width:9%;">ID NACS</th><th style="width:12%;">Tipo de gestión <span class="th-ico">⇅</span></th><th style="width:12%;">Motivo</th><th style="width:10%;">Medio devolución</th><th style="width:10%;" class="th-activo">Fecha de cierre <span class="th-ico">▼</span></th><th style="width:8%;">Responsable</th><th style="width:8%;">Cerrado por</th><th style="width:8%;color:#a4293f;">⚠ Aviso</th>
+      <th style="width:10%;" class="${fMarca?'th-filtrable th-activo':'th-filtrable'}" onclick="enfocarFiltroPanel('marca')">Marca&nbsp;<span class="th-ico">▾</span></th><th style="width:13%;">ID Oportunidad</th><th style="width:16%;">Nombre</th><th style="width:9%;">ID NACS</th><th style="width:12%;" class="${fCat?'th-filtrable th-activo':'th-filtrable'}" onclick="enfocarFiltroPanel('categoria')">Tipo de gestión&nbsp;<span class="th-ico">▾</span></th><th style="width:12%;" class="${thCls('motivo')}" onclick="toggleColHistorico('motivo', event)">Motivo&nbsp;<span class="th-ico">▾</span></th><th style="width:10%;" class="${thCls('medio')}" onclick="toggleColHistorico('medio', event)">Medio devolución&nbsp;<span class="th-ico">▾</span></th><th style="width:10%;">Fecha de cierre</th><th style="width:8%;" class="${thCls('responsable')}" onclick="toggleColHistorico('responsable', event)">Responsable&nbsp;<span class="th-ico">▾</span></th><th style="width:8%;" class="${thCls('cerradoPor')}" onclick="toggleColHistorico('cerradoPor', event)">Cerrado por&nbsp;<span class="th-ico">▾</span></th><th style="width:8%;color:#a4293f;">⚠ Aviso</th>
     </tr></thead>
     <tbody>${filas}</tbody>`;
 }
