@@ -684,7 +684,7 @@ function hideOrganizate(){
 function openOrgSub(which){
   const area=document.getElementById('organizateSubArea');
   const orgModal=document.querySelector('#organizateOverlay .obs-modal');
-  if(orgModal) orgModal.style.maxWidth = which==='equipo' ? 'min(95vw, 920px)' : '500px';
+  if(orgModal) orgModal.style.maxWidth = (which==='equipo' || which==='yo') ? 'min(95vw, 1000px)' : '500px';
   if(which==='yo'){
     renderYoView();
   } else {
@@ -1980,7 +1980,9 @@ window.addEventListener('load', function(){
     });
   } else {
     openOrganizate();
-    if(PAGE_HASH === '#organizate-yo') openOrgSub('yo');
+    if(PAGE_HASH === '#organizate-yo'){
+      (mjTopicsReady || Promise.resolve()).then(()=>{ openOrgSub('yo'); });
+    }
   }
 });
 
