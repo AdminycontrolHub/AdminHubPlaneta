@@ -193,7 +193,7 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .mj-vote-result{font-size:24px;font-weight:800;color:var(--mj-cyan-text);}
 
 .mj-live-frame{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 4px;flex:1;min-height:0;overflow:hidden;width:100%;}
-.mj-orbit-wrap{position:relative;aspect-ratio:1/1;margin:2px auto;flex:1 1 auto;min-height:0;max-width:620px;}
+.mj-orbit-wrap{position:relative;aspect-ratio:1/1;margin:2px auto 20px;flex:1 1 auto;min-height:0;max-width:620px;}
 .mj-orbit-ring{position:absolute;inset:6%;border:1px dashed rgba(124,147,168,.25);border-radius:50%;animation:mjSpin 130s linear infinite;}
 .mj-orbit-ring.r2{inset:22%;animation-duration:95s;animation-direction:reverse;border-color:rgba(0,230,255,.14);}
 @keyframes mjSpin{to{transform:rotate(360deg);}}
@@ -218,7 +218,7 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .mj-node.has-move .mj-node-bubble{border-style:dashed;opacity:.75;}
 @keyframes mjPulseLive{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 .mj-node:hover .mj-node-bubble{transform:scale(1.08);}
-.mj-node-label{font-size:12px;font-weight:600;text-align:center;max-width:92px;line-height:1.25;color:var(--mj-text);}
+.mj-node-label{font-size:11px;font-weight:600;text-align:center;max-width:108px;line-height:1.2;color:var(--mj-text);}
 .mj-node:hover .mj-node-label{color:var(--mj-text);}
 .mj-live-fallback{display:none;flex-direction:column;gap:9px;}
 @media (max-width: 720px){ .mj-orbit-wrap{display:none;} .mj-live-fallback{display:flex;} }
@@ -1014,8 +1014,8 @@ function mjIsHiddenThisWeek(t){
   return !!(t.moveTo && t.moveTargetWeekKey && mjCurrentWeekKey && t.moveTargetWeekKey > mjCurrentWeekKey);
 }
 function mjShouldHideFromLive(t){
-  // Los cerrados solo se ven en Histórico; los pospuestos a semana futura tampoco se ven hasta que llegue su semana
-  if(t.status==='cerrado') return true;
+  // Los cerrados se quedan visibles en gris esta semana (según la leyenda); al cambiar de semana pasan solos a Histórico.
+  // Los pospuestos a semana futura sí se ocultan hasta que llegue su semana.
   return mjIsHiddenThisWeek(t);
 }
 function mjTodayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -1042,6 +1042,7 @@ function mjConfirmResDate(){
   if(t){
     t.status = 'en_tratamiento';
     t.resolutionDate = val;
+    t.dateClosed = null; // si venía de cerrado, la fecha de cierre desaparece al reabrirse
     mjPersistTopics();
     mjRenderOrbit(); mjRenderFallback(); mjRenderAgenda();
     if(document.getElementById('mjDetailOverlay').classList.contains('open')) mjOpenDetail(t.id);
@@ -1334,7 +1335,7 @@ document.getElementById('mjPwdOverlay').addEventListener('click', e=>{ if(e.targ
 function mjRenderOrbit(){
   const wrap = document.getElementById('mjOrbitWrap');
   wrap.querySelectorAll('.mj-node').forEach(n=>n.remove());
-  const cx=50, cy=50, radius=46;
+  const cx=50, cy=50, radius=41;
   function placeNode(t, angleDeg, orderNum, voteOverrideCls){
     const angle = angleDeg * Math.PI/180;
     const x = cx + radius*Math.cos(angle), y = cy + radius*Math.sin(angle);
@@ -1397,10 +1398,11 @@ function mjRenderFallback(){
 }
 
 /* ---------------- DETALLE (Mesa de Aitor) ---------------- */
+const BAJAS_CAMBIOS_RESUMEN_URL = 'https://adminycontrolhub.github.io/AdminHubPlaneta/seguimientos/bajas-cambios.html#resumen-semanal';
 function mjGoToBajasYCambios(){
   mjCloseDetail();
   document.getElementById('mjOverlay').classList.remove('open');
-  window.open(bajasUrl, '_blank');
+  window.open(BAJAS_CAMBIOS_RESUMEN_URL, '_blank');
 }
 function mjOpenDetail(id){
   const t = mjTopics.find(x=>x.id===id);
@@ -1478,6 +1480,7 @@ function mjOpenDetail(id){
       }
       t.status = b.dataset.s;
       if(t.status==='cerrado') t.dateClosed = mjTodayISO();
+      else t.dateClosed = null; // se reabre: la fecha de cierre desaparece
       mjPersistTopics(); mjPaintStatus(); mjRenderOrbit(); mjRenderFallback();
     });
   });
@@ -1521,11 +1524,13 @@ function mjOpenDetail(id){
   document.getElementById('mjPublishNote').addEventListener('click', ()=>{
     const val = document.getElementById('mjNoteText').value.trim();
     if(!val) return;
-    t.comments.push({author:'Vero', text:val, time:'ahora'});
-    t.privateNote = '';
-    document.getElementById('mjNoteText').value = '';
-    mjPersistTopics();
-    mjRenderPublished(t);
+    mjRequireIdentity((who)=>{
+      t.comments.push({author:who, text:val, time:'ahora'});
+      t.privateNote = '';
+      document.getElementById('mjNoteText').value = '';
+      mjPersistTopics();
+      mjRenderPublished(t);
+    });
   });
 
   const arow = document.getElementById('mjAssigneeRow');
@@ -1590,7 +1595,8 @@ async function mjStartTimer(){
   let anchor = null;
   try{
     anchor = await kvGet(MJ_TIMER_KEY);
-    if(!anchor || anchor.weekKey !== weekKey){
+    const caducado = anchor && (Date.now() - anchor.startedAt) >= 60*60*1000;
+    if(!anchor || anchor.weekKey !== weekKey || caducado){
       anchor = { startedAt: Date.now(), weekKey };
       await kvSet(MJ_TIMER_KEY, anchor);
     }
