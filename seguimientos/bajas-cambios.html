@@ -657,7 +657,7 @@ const TEXTOS = {
 };
 
 // Texto general "para Atenea" (no por caso): un bloque de plantilla fija por
-// categoria, con el mes de convocatoria compartido insertado donde corresponda.
+// categoria, con el mes de convocatoria compartido insertado donde corresponde.
 const TEXTOS_ATENEA = {
   ce: (mes) => `Cambio de Edición - ${mes}
 Cambio de convocatoria a: 
@@ -2521,7 +2521,13 @@ async function actualizarDatos(){
 // ============================================================
 // ARRANQUE
 // ============================================================
-cargarTodo();
+cargarTodo().then(()=>{
+  // Enlace directo: seguimientos/bajas-cambios.html#resumen-semanal
+  // abre automáticamente el Resumen semanal (Aitor) ya con los datos cargados.
+  if(window.location.hash === '#resumen-semanal'){
+    toggleAitor();
+  }
+});
 </script>
 </body>
 </html>
