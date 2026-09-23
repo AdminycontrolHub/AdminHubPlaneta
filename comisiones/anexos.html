@@ -45,7 +45,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
 /* ===== PANEL DE LA MARCA (se abre debajo de las burbujas) ===== */
 @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-.tool-panel { --c:#00D4F0; --cd:#0B2A40; --cbg:rgba(0,212,240,0.14); --cg:rgba(0,212,240,0.28); position:relative; z-index:10; display:none; width:min(1480px,96vw); margin:0 auto 90px; background:#F5F0E8; color:#0B2A40; border:1.5px solid var(--c); border-top:6px solid var(--c); border-radius:20px; box-shadow:0 0 40px var(--cg); animation:fadeUp 0.28s ease; }
+.tool-panel { --c:#00D4F0; --cd:#0B2A40; --cbg:rgba(0,212,240,0.14); --cg:rgba(0,212,240,0.28); position:relative; z-index:10; display:none; width:min(1820px,98vw); margin:0 auto 90px; background:#F5F0E8; color:#0B2A40; border:1.5px solid var(--c); border-top:6px solid var(--c); border-radius:20px; box-shadow:0 0 40px var(--cg); animation:fadeUp 0.28s ease; }
 .tool-panel.open { display:block; }
 .anexos-header { border-bottom:1px solid rgba(4,28,46,0.14); padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
 .anexos-header-left { display:flex; align-items:center; gap:14px; }
@@ -88,21 +88,22 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .bulk b{font-size:13px;letter-spacing:.08em;color:var(--c);margin-right:auto}
 .bulk .abtn.dng{background:transparent;color:#ffb4a3;border:1px solid rgba(255,180,163,0.5)}
 .twrap{overflow-x:auto;background:#fff;border:1px solid rgba(4,28,46,0.15);border-radius:14px}
-table.ppl{width:100%;border-collapse:collapse;font-size:15px;min-width:2040px}
+table.ppl{width:100%;border-collapse:collapse;font-size:15px;min-width:1400px;table-layout:fixed}
 table.ppl th{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cd);text-align:left;padding:14px 12px;white-space:nowrap;background:var(--cbg);border-bottom:2px solid var(--c)}
 table.ppl td{padding:11px 12px;border-top:1px solid rgba(4,28,46,0.08);vertical-align:middle;color:#0B2A40}
 table.ppl tr.bad td{background:#FFF3D6}
-table.ppl td:nth-child(2){width:110px}
-table.ppl td:nth-child(3){width:90px}
-table.ppl td:nth-child(5){width:90px}
-table.ppl td:nth-child(6){width:90px}
-table.ppl td:nth-child(7){width:120px}
-table.ppl td:nth-child(8){width:160px}
-table.ppl td:nth-child(9){width:90px}
-table.ppl td:nth-child(10){width:130px;text-align:center}
-table.ppl td:nth-child(11){width:150px}
-table.ppl td:nth-child(12){width:140px}
-table.ppl td:nth-child(13){width:230px}
+table.ppl td:nth-child(2){width:85px}
+table.ppl td:nth-child(3){width:80px}
+table.ppl td:nth-child(4){width:150px}
+table.ppl td:nth-child(5){width:120px}
+table.ppl td:nth-child(6){width:105px}
+table.ppl td:nth-child(7){width:150px}
+table.ppl td:nth-child(8){width:75px}
+table.ppl td:nth-child(9){width:110px;text-align:center}
+table.ppl td:nth-child(10){width:125px}
+table.ppl td:nth-child(11){width:120px}
+table.ppl td:nth-child(12){width:210px}
+table.ppl td,table.ppl th{overflow:hidden;text-overflow:ellipsis}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 14px}
 .pill.yes{background:#0F6E44;color:#fff}
 .pill.no{background:#e4ddd0;color:#5d7486}
@@ -680,7 +681,7 @@ function askPass(cb){
 }
 
 function openModal(m){
-  cur={m:m,all:false};
+  cur={m:m};
   sel={};
   var body=$('modalBody');body.innerHTML='';
   $('modal').style.setProperty('--c',m.c);$('modal').style.setProperty('--cd',m.cd);$('modal').style.setProperty('--cbg',m.t);$('modal').style.setProperty('--cg',m.g);
@@ -714,20 +715,18 @@ function openModal(m){
 
   var xin=el('input',{type:'file',accept:'.xlsx,.xls,.csv',style:'display:none'});
   xin.onchange=function(){if(xin.files[0])importBBDD(xin.files[0]);xin.value='';};
-  var allChk=el('input',{type:'checkbox',id:'allBrands'});
-  allChk.onchange=function(){cur.all=allChk.checked;renderRows();};
   var minChk=el('input',{type:'checkbox',id:'soloMin'});
   minChk.onchange=function(){cur.soloMin=minChk.checked;renderRows();};
   var tools=el('div',{class:'tools'},[
     el('button',{class:'abtn',text:'+ Añadir fila',onclick:addRow}),
     el('button',{class:'abtn alt',text:'Subir BBDD',onclick:function(){xin.click();}}),xin,el('span',{class:'bbdd-info',id:'bbddInfo'}),el('span',{class:'bbdd-info',id:'syncInfo',style:'margin-left:14px'}),
     el('span',{class:'grow'}),
-    el('label',{class:'chk'},[minChk,document.createTextNode('Solo con mínimo garantizado (SÍ)')]),
-    el('label',{class:'chk'},[allChk,document.createTextNode('Ver todas las marcas')])]);
+    el('label',{class:'chk'},[minChk,document.createTextNode('Solo con mínimo garantizado (SÍ)')])]);
   var bulk=el('div',{class:'bulk',id:'bulk'},[
     el('b',{id:'bulkN'}),
     el('button',{class:'abtn sm',text:'Descargar',onclick:function(){confirmRegen(selectedRows(),function(){downloadRows(selectedRows());});}}),
     el('button',{class:'abtn sm',text:'Imprimir',onclick:function(){confirmRegen(selectedRows(),function(){printRows(selectedRows());});}}),
+    el('button',{class:'abtn sm',text:'Exportar',onclick:function(){exportRows(selectedRows());}}),
     el('button',{class:'abtn sm dng',text:'Quitar',onclick:function(){askPass(removeSelected);}})]);
   var allBox=el('input',{type:'checkbox',id:'selAll','aria-label':'Seleccionar todas'});
   allBox.onchange=function(){rows.filter(vis).forEach(function(r){sel[r.id]=allBox.checked;});renderRows();};
@@ -738,7 +737,6 @@ function openModal(m){
       el('th',{text:'Código',title:'Código de alumno/empleado. Opcional: solo se rellena si viene en la BBDD.'}),
       el('th',{text:'Nombre y apellidos'}),
       el('th',{text:'Cargo'}),
-      el('th',{text:'Sede'}),
       el('th',{text:'Antigüedad',title:'Fecha de incorporación / antigüedad reconocida (sale de la BBDD; si no está, de la convocatoria)'}),
       el('th',{text:'Fin de contrato',title:'Opcional. Si se rellena, el mínimo garantizado se recalcula hasta ese día (incluido).'}),
       el('th',{text:'Sr./Sra.'}),
@@ -900,8 +898,7 @@ async function loadAll(){
 }
 
 function vis(r){
-  var okMarca=!cur||cur.all||!r.marca||r.marca===cur.m.id;
-  if(!okMarca) return false;
+  if(cur&&r.marca!==cur.m.id) return false;
   if(cur&&cur.soloMin){
     var c=minGarantizado(toISODate(r.antig),todayYM(),MIN_BASE,MIN_DIAS,MIN_MESES,toISODate(r.fin));
     if(!c||!c.si) return false;
@@ -995,6 +992,12 @@ function tratOptions(cur2){
   if(cur2&&cur2!=='Sr.'&&cur2!=='Sra.')v.push([cur2,cur2]);
   return optionList(v,cur2,'—');
 }
+function cargoOptions(marca,r){
+  var slots=marca?slotsOf(marca):SLOTS_STD;
+  var curKey='';
+  slots.forEach(function(sl){if(sl.role===r.cargo&&sl.sede===r.sede)curKey=sl.key;});
+  return optionList(slots.map(function(sl){return [sl.key,sl.label];}),curKey,'Cargo…');
+}
 function optionList(values,cur2,blank){
   var out=[el('option',{value:'',text:blank})];
   values.forEach(function(v){var o=el('option',{value:v[0],text:v[1]});if(v[0]===cur2)o.selected=true;out.push(o);});
@@ -1009,49 +1012,49 @@ function renderRows(){
     var tr=el('tr');
     var cb=el('input',{type:'checkbox'});cb.checked=!!sel[r.id];
     cb.onchange=function(){sel[r.id]=cb.checked;updateBulk();};
-    var ms=el('select',null,optionList(MARCAS.map(function(m){return [m.id,m.n];}),r.marca,'Marca…'));
-    ms.onchange=function(){
-      r.marca=ms.value;fixSede(r);touch(r);
-      if(!vis(r)) toast('La fila pasa a '+marcaById(r.marca).n+'. Activa «Ver todas las marcas» para verla.');
-      renderRows();
-    };
+    var rm=marcaById(r.marca);
     var cod=el('input',{type:'text',value:r.codigo||'',placeholder:'—'});
     cod.oninput=function(){r.codigo=cod.value;r.codManual=true;touch(r);};
     var nm=el('input',{type:'text',value:r.nombre,placeholder:'Nombre y apellidos'});
-    var cs=el('select',null,optionList(ROLES.map(function(x){return [x,x];}),r.cargo,'Cargo…'));
-    var rm=marcaById(r.marca),ss=el('select');
-    function fillSede(){
-      ss.innerHTML='';
-      optionList(rm?sedesFor(rm,r.cargo).map(function(x){return [x,x];}):[],r.sede,'Sede…').forEach(function(o){ss.appendChild(o);});
-      ss.disabled=!r.cargo;
-    }
-    fillSede();
-    cs.onchange=function(){r.cargo=cs.value;fixSede(r);fillSede();touch(r);paintEstado(r);};
-    ss.onchange=function(){r.sede=ss.value;touch(r);paintEstado(r);};
+    var cs=el('select',null,cargoOptions(rm,r));
+    cs.onchange=function(){
+      var sl=slotsOf(rm).filter(function(s){return s.key===cs.value;})[0];
+      if(sl){r.cargo=sl.role;r.sede=sl.sede;}else{r.cargo='';r.sede='';}
+      touch(r);paintEstado(r);paintMin(r);
+    };
     var ai=el('input',{type:'text',value:r.antig||'',placeholder:'dd.mm.aaaa'});
     ai.oninput=function(){r.antig=ai.value;r.src='manual';r.aprox=false;touch(r);paintEstado(r);paintMin(r);};
     var fi=el('input',{type:'text',value:r.fin||'',placeholder:'dd.mm.aaaa (si aplica)',style:'margin-bottom:4px'});
     fi.oninput=function(){r.fin=fi.value;touch(r);paintMin(r);};
     var ft=el('select',null,optionList([['BV','BV · baja voluntaria'],['BNV','BNV · baja no voluntaria']],r.finTipo,'Tipo…'));
     ft.onchange=function(){r.finTipo=ft.value;touch(r);};
-    var ts=el('select',null,tratOptions(r.trat));
-    ts.onchange=function(){r.trat=ts.value;r.src='manual';r.aprox=false;touch(r);paintEstado(r);};
+    var tratCell=el('td');
+    function paintTrat(){
+      tratCell.innerHTML='';
+      if(r.trat){
+        tratCell.appendChild(el('span',{class:'bbdd-info',text:r.trat}));
+      }else{
+        var ts=el('select',null,tratOptions(r.trat));
+        ts.onchange=function(){r.trat=ts.value;r.src='manual';r.aprox=false;touch(r);paintEstado(r);paintTrat();};
+        tratCell.appendChild(ts);
+      }
+    }
+    paintTrat();
     nm.oninput=function(){
       r.nombre=nm.value;matchRow(r);touch(r);
-      ai.value=r.antig||'';ts.innerHTML='';tratOptions(r.trat).forEach(function(o){ts.appendChild(o);});cs.value=r.cargo||'';fillSede();
+      ai.value=r.antig||'';cs.innerHTML='';cargoOptions(rm,r).forEach(function(o){cs.appendChild(o);});
       cod.value=r.codigo||'';
-      paintEstado(r);paintMin(r);
+      paintTrat();paintEstado(r);paintMin(r);
     };
     var genBtn=el('button',{id:'gen_'+r.id,class:'abtn sm',onclick:function(){confirmRegen([r],function(){downloadRows([r]);});}});
     tr.appendChild(el('td',null,[cb]));
-    tr.appendChild(el('td',null,[ms]));
+    tr.appendChild(el('td',null,[el('span',{class:'bbdd-info',text:rm?rm.n:'—'})]));
     tr.appendChild(el('td',null,[cod]));
     tr.appendChild(el('td',null,[nm]));
     tr.appendChild(el('td',null,[cs]));
-    tr.appendChild(el('td',null,hasSedes(rm)?[ss]:[el('span',{class:'bbdd-info',text:'—'})]));
     tr.appendChild(el('td',null,[ai]));
     tr.appendChild(el('td',null,[fi,ft]));
-    tr.appendChild(el('td',null,[ts]));
+    tr.appendChild(tratCell);
     tr.appendChild(el('td',{class:'mg',id:'mg_'+r.id}));
     tr.appendChild(el('td',{class:'mg',id:'mi_'+r.id}));
     tr.appendChild(el('td',{class:'st',id:'stt_'+r.id}));
@@ -1095,7 +1098,7 @@ function findRowsByName(nombre){
   });
 }
 async function addFromInvites(files){
-  var made=0,dup=0,other=0,finUpd=0,notes=[],msgSinFecha=false;
+  var made=0,dup=0,finUpd=0,notes=[],msgSinFecha=false;
   for(var i=0;i<files.length;i++){
     var f=files[i], buf, p;
     try{
@@ -1119,18 +1122,16 @@ async function addFromInvites(files){
       }
       continue;
     }
-    var marca=p.marca||cur.m.id;
+    var marca=cur.m.id, avisoMarca=(p.marca&&p.marca!==cur.m.id);
     if(nombre&&hasRow(marca,nombre,p.role||'')){dup++;continue;}
     var nr=newRow(marca,nombre,p.role||'');nr.sede=p.sede||'';nr.invDate=isoToDMY(p.inc);if(nr.invDate){nr.antig=nr.invDate;nr.src='invite';}matchRow(nr);fixSede(nr);rows.push(nr);touch(nr);made++;
-    if(marca!==cur.m.id)other++;
+    if(avisoMarca)notes.push('«'+f.name+'» parece de '+p.marca+', pero se ha añadido en '+cur.m.n+' (el panel donde la has soltado).');
     if(!nombre)notes.push('No he encontrado nombre en «'+f.name+'»; complétalo a mano.');
   }
   if(msgSinFecha)notes.push('De un .msg no puedo leer la fecha: la antigüedad saldrá de la BBDD o escríbela en la fila (con .ics sí la leo)');
-  if(other){cur.all=true;$('allBrands').checked=true;}
   renderRows();
   var msg=made?made+(made===1?' fila creada. ':' filas creadas. '):'';
   if(finUpd)msg+=finUpd+(finUpd===1?' fecha de fin actualizada. ':' fechas de fin actualizadas. ');
-  if(other)msg+=other+' son de otras marcas (mostrando todas). ';
   if(dup)msg+=dup+' ya estaban en la lista. ';
   if(msg||notes.length)toast(msg+notes.join(' · '),7000);
 }
@@ -1233,6 +1234,24 @@ function openSharePointFolders(list){
     var m=marcaById(r.marca);
     if(m&&m.sp&&!seen[m.id]){seen[m.id]=1;try{window.open(m.sp,'_blank');}catch(e){}}
   });
+}
+function exportRows(list){
+  if(!list.length){toast('Selecciona al menos una fila');return;}
+  var head=['Marca','Código','Nombre y apellidos','Cargo','Sede','Antigüedad','Fin de contrato','Tipo de baja','Sr./Sra.','Mínimo garantizado','Importe mínimo','Estado del anexo'];
+  var rowsOut=[head];
+  list.forEach(function(r){
+    var mm=marcaById(r.marca);
+    var c=minGarantizado(toISODate(r.antig),todayYM(),MIN_BASE,MIN_DIAS,MIN_MESES,toISODate(r.fin));
+    rowsOut.push([
+      mm?mm.n:r.marca, r.codigo||'', r.nombre, r.cargo, r.sede||'', r.antig||'', r.fin||'', r.finTipo||'',
+      r.trat||'', c?(c.si?'SÍ':'NO'):'', (c&&c.si)?c.importe:'', {pendiente:'Pendiente',revision:'En revisión',generado:'Generado'}[estadoAnexo(r).estado]
+    ]);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(rowsOut);
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Anexos');
+  var buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+  saveBlob(new Blob([buf],{type:'application/octet-stream'}),'Anexos_'+(cur?cur.m.id+'_':'')+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast(list.length+(list.length===1?' fila exportada.':' filas exportadas.'));
 }
 async function downloadRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
