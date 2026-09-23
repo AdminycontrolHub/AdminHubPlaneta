@@ -595,6 +595,20 @@ body.ext-mode .imodal-bg{padding-top:40px;}
   </div>
 </div>
 
+<!-- Fecha prevista de resolución/traspaso — obligatoria al pasar a En tratamiento -->
+<div class="imodal-bg mj-modal-bg" id="mResDate">
+  <div class="imodal sm">
+    <h3>🗓️ Fecha prevista de resolución / traspaso</h3>
+    <p>Obligatoria para pasar este tema a "En tratamiento".</p>
+    <input type="date" id="mjResDateInput" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--mj-line);font-family:inherit;font-size:14px;box-sizing:border-box;">
+    <div class="modal-err" id="mjResDateErr" style="display:none;">Selecciona una fecha para continuar</div>
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="mjCancelResDate()">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="mjConfirmResDate()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── BG CANVAS ──
 const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');
@@ -884,7 +898,7 @@ function mjRenderTaskTable(items, openCtx, reassignFor){
           <td style="padding:8px 10px;color:#1a3a50;font-weight:600;">${bmEscapeHtml(t.title)}${reassign}</td>
           <td style="padding:8px 10px;"><span class="mj-status-chip ${MJ_STATUS_META[t.status].cls}">${MJ_STATUS_META[t.status].label}</span></td>
           <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.dateCreated||'—'}</td>
-          <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.dateInTreatment||'—'}</td>
+          <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.resolutionDate||t.moveDate||'—'}</td>
           <td style="padding:8px 10px;color:#7a6e62;font-family:'Courier New',monospace;font-size:10.5px;white-space:nowrap;">${t.dateClosed||'—'}</td>
           <td style="padding:8px 10px;"><button onclick="mjOpenDetailFromPersona('${t.id}','${openCtx.replace(/'/g,"\\'")}')" style="font-size:10.5px;padding:4px 9px;border-radius:16px;border:1px solid #2a7f8a;background:#fff;color:#2a7f8a;cursor:pointer;font-family:inherit;font-weight:600;white-space:nowrap;">Ficha ✎</button></td>
         </tr>`;
@@ -941,6 +955,35 @@ function mjShouldHideFromLive(t){
   return mjIsHiddenThisWeek(t);
 }
 function mjTodayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* ---------------- FECHA PREVISTA DE RESOLUCIÓN/TRASPASO — obligatoria al pasar a "En tratamiento" ---------------- */
+let mjResDateTargetId = null;
+function mjOpenResDateModal(id){
+  mjResDateTargetId = id;
+  const t = mjTopics.find(x=>x.id===id);
+  document.getElementById('mjResDateInput').value = (t && t.resolutionDate) || '';
+  document.getElementById('mjResDateErr').style.display = 'none';
+  document.getElementById('mResDate').classList.add('show');
+  setTimeout(()=>document.getElementById('mjResDateInput').focus(), 100);
+}
+function mjCancelResDate(){
+  document.getElementById('mResDate').classList.remove('show');
+  mjResDateTargetId = null;
+}
+function mjConfirmResDate(){
+  const val = document.getElementById('mjResDateInput').value;
+  if(!val){ document.getElementById('mjResDateErr').style.display = ''; return; }
+  const t = mjTopics.find(x=>x.id===mjResDateTargetId);
+  document.getElementById('mResDate').classList.remove('show');
+  if(t){
+    t.status = 'en_tratamiento';
+    t.resolutionDate = val;
+    mjPersistTopics();
+    mjRenderOrbit(); mjRenderFallback(); mjRenderAgenda();
+    if(document.getElementById('mjDetailOverlay').classList.contains('open')) mjOpenDetail(t.id);
+  }
+  mjResDateTargetId = null;
+}
 function mjMoveFollowup(status, moveTo, moveDate){
   if(status!=='pendiente' || !moveTo) return null;
   if(moveTo==='proximo') return 'Trasladado al próximo jueves';
@@ -1290,7 +1333,6 @@ function mjGoToBajasYCambios(){
 function mjOpenDetail(id){
   const t = mjTopics.find(x=>x.id===id);
   if(!t) return;
-  if(t.status === 'pendiente'){ t.status = 'en_tratamiento'; t.dateInTreatment = mjTodayISO(); mjPersistTopics(); mjRenderOrbit(); mjRenderFallback(); }
 
   const card = document.getElementById('mjDetailCard');
   card.innerHTML = `
@@ -1358,8 +1400,11 @@ function mjOpenDetail(id){
   mjPaintStatus();
   card.querySelectorAll('.mj-status-chip-btn').forEach(b=>{
     b.addEventListener('click', ()=>{
+      if(b.dataset.s === 'en_tratamiento'){
+        mjOpenResDateModal(t.id); // el cambio de estado se aplica al confirmar la fecha obligatoria
+        return;
+      }
       t.status = b.dataset.s;
-      if(t.status==='en_tratamiento') t.dateInTreatment = mjTodayISO();
       if(t.status==='cerrado') t.dateClosed = mjTodayISO();
       mjPersistTopics(); mjPaintStatus(); mjRenderOrbit(); mjRenderFallback();
     });
