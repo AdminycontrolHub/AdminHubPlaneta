@@ -106,7 +106,7 @@ body{background:#010814;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .atenea-texto{background:#faf8f4;border:1px dashed #d8d0c4;border-radius:6px;padding:9px 10px;font-size:10px;color:#5a6e80;line-height:1.6;white-space:pre-line;}
 .aitor-inc-detalle{display:none;}
 .aitor-inc-detalle.show{display:block;}
-.row-nacs-badge{background:#eef6f8;color:#2a7f8a;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;}
+.row-nacs-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;}
 .row-nacs-vacio{font-size:9px;color:#c0b8ae;font-style:italic;}
 .row-mail-label{font-size:8px;color:#9a8e82;text-transform:uppercase;font-weight:700;letter-spacing:0.03em;text-align:right;}
 
@@ -1471,9 +1471,19 @@ function renderNivel2(){
 
   // chips de marca
   const marcas = [...new Set(fuente.map(c => nombreMarca(c.marca))), 'todas'];
-  document.getElementById('n2Chips').innerHTML = marcas.map(m => `
-    <div class="chip ${marcaActiva===m?'active':''}" onclick="filtrarMarca('${m}')">${m==='todas'?'Todas':m}</div>
-  `).join('');
+  document.getElementById('n2Chips').innerHTML = marcas.map(m => {
+    const activo = marcaActiva === m;
+    let estiloActivo = '';
+    if(activo){
+      if(m === 'todas'){
+        estiloActivo = 'background:#1a3a50;color:#fff;border-color:#1a3a50;';
+      } else {
+        const mc = MARCA_COLORES[m] || { bg:'#ede8df', fg:'#5a6e80' };
+        estiloActivo = `background:${mc.bg};color:${mc.fg};border-color:${mc.fg}55;font-weight:800;`;
+      }
+    }
+    return `<div class="chip${activo ? ' active' : ''}" style="${estiloActivo}" onclick="filtrarMarca('${m}')">${m==='todas'?'Todas':m}</div>`;
+  }).join('');
   if(marcaActiva !== 'todas'){
     fuente = fuente.filter(c => nombreMarca(c.marca) === marcaActiva);
   } else {
@@ -2082,7 +2092,7 @@ function renderFila(c, cat){
         ${esPteDevolucionCruzada(c, cat) ? '<span style="display:block;background:#fdeee0;color:#8a5a10;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px;width:fit-content;margin-top:2px;">también en Devolución</span>' : ''}
       </span>
       ${incidencia ? '<span style="background:#a4293f;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:6px;">⚠ INCIDENCIA</span>' : ''}
-      ${c.idNacs ? `<span class="row-nacs-badge">NACS ${escHtml(idNacsMostrado(c))}</span>` : '<span class="row-nacs-vacio">sin NACS todavía</span>'}
+      ${c.idNacs ? `<span class="row-nacs-badge" style="background:${marcaCol.bg};color:${marcaCol.fg};">NACS ${escHtml(idNacsMostrado(c))}</span>` : '<span class="row-nacs-vacio">sin NACS todavía</span>'}
       ${c.estadoDevolucion ? `<span style="background:${c.estadoDevolucion==='Gestionado'?'#e1f5ee':'#fdf0dc'};color:${c.estadoDevolucion==='Gestionado'?'#0f6e56':'#8a5a10'};font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;">${escHtml(c.estadoDevolucion)}</span>` : ''}
       ${c.avisoError ? `<span style="background:#fdf0ec;color:#a4293f;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;">⚠ ${escHtml(c.avisoError)}</span>` : ''}
       <span style="margin-left:auto;text-align:right;">
