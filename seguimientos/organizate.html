@@ -140,8 +140,8 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .mj-aitor .mj-spark.s2{bottom:2px;right:82%;animation-delay:1s;}
 @keyframes mjFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
 @keyframes mjSpark{0%,100%{opacity:.2;transform:scale(.7);}50%{opacity:1;transform:scale(1);}}
-.mj-aitor-line{display:flex;align-items:flex-start;gap:14px;flex:0 0 auto;}
-.mj-aitor-bubble{background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:var(--mj-radius-md);padding:10px 15px;font-size:13.5px;line-height:1.5;color:var(--mj-text);position:relative;max-width:600px;}
+.mj-aitor-line{display:flex;align-items:flex-start;gap:14px;flex:0 0 auto;width:100%;}
+.mj-aitor-bubble{background:var(--mj-surface);border:1px solid var(--mj-line);border-radius:var(--mj-radius-md);padding:10px 15px;font-size:13.5px;line-height:1.5;color:var(--mj-text);position:relative;max-width:none;flex:1;min-width:0;}
 .mj-aitor-bubble b{color:var(--mj-cyan-text);font-weight:600;}
 .mj-aitor-bubble:before{content:'';position:absolute;left:-7px;top:16px;width:14px;height:14px;background:var(--mj-surface);border-left:1px solid var(--mj-line);border-bottom:1px solid var(--mj-line);transform:rotate(45deg);}
 .mj-aitor-label{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-amber-text);letter-spacing:.4px;margin-bottom:4px;display:block;}
@@ -173,7 +173,7 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .mj-warning-banner{display:none;align-items:center;gap:10px;background:var(--mj-red-dim);border:1px solid var(--mj-red);color:var(--mj-red-text);font-size:12.5px;padding:8px 14px;border-radius:var(--mj-radius-sm);margin-bottom:8px;flex:0 0 auto;}
 .mj-warning-banner.show{display:flex;}
 .mj-aitor-phrase{margin-bottom:6px;white-space:nowrap;}
-.mj-color-legend{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:10.5px;color:var(--mj-text-dim);}
+.mj-color-legend{display:flex;flex-wrap:nowrap;gap:8px 14px;align-items:center;font-size:10.5px;color:var(--mj-text-dim);overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .mj-leg-item{display:flex;align-items:center;gap:5px;white-space:nowrap;}
 .mj-leg-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid;flex-shrink:0;box-sizing:border-box;}
 .mj-vote-launcher{position:absolute;top:2px;right:2px;z-index:20;display:flex;justify-content:center;}
@@ -1068,6 +1068,12 @@ async function mjLoadTopics(){
     if(storedWeekKey === currentWeekKey){
       mjTopics = storedTopics;
       mjCurrentWeekKey = currentWeekKey;
+      mjTopicsLoadedOk = true;
+      let backfilled = false;
+      mjTopics.forEach(t=>{
+        if(!t.locked && !t.dateCreated){ t.dateCreated = mjTodayISO(); backfilled = true; }
+      });
+      if(backfilled) await mjPersistTopics();
     } else {
       /* Ha llegado el jueves siguiente: archivamos la semana anterior en el histórico
          y solo recuperan burbuja los temas que se pospusieron para esta semana (recurrentes). */
