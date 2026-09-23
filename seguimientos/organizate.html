@@ -609,6 +609,18 @@ body.ext-mode .imodal-bg{padding-top:40px;}
   </div>
 </div>
 
+<!-- Selección rápida de persona (identidad o cambio de autor) -->
+<div class="imodal-bg mj-modal-bg" id="mQuickWho">
+  <div class="imodal sm">
+    <h3 id="mjQuickWhoTitle">¿Quién eres?</h3>
+    <p id="mjQuickWhoDesc">Se recuerda en este navegador para futuras acciones.</p>
+    <div id="mjQuickWhoBtns" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <div class="imodal-btns">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('mQuickWho').classList.remove('show')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── BG CANVAS ──
 const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');
@@ -690,7 +702,10 @@ function openOrgSub(which){
   } else {
     area.innerHTML=`
       <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
-        <h4>Espacio del equipo</h4>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+          <h4 style="margin:0;">Espacio del equipo</h4>
+          <button onclick="mjOpenClosedCases('equipo')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid #c0b8ae;background:#f8f5ef;color:#5a6e80;cursor:pointer;font-family:inherit;font-weight:600;">📁 Casos cerrados</button>
+        </div>
         <p>Pulsa un nombre para ver sus tareas pendientes o reasignarlas.</p>
         ${mjRenderTeamGrid()}
       </div>
@@ -768,6 +783,32 @@ function mjChangeIdentity(){
   localStorage.removeItem(MJ_MY_IDENTITY_KEY);
   renderYoView();
 }
+let mjQuickWhoCallback = null;
+let mjQuickWhoSetsIdentity = false;
+function mjOpenQuickWhoPicker(title, desc, setsIdentity, callback){
+  mjQuickWhoCallback = callback;
+  mjQuickWhoSetsIdentity = setsIdentity;
+  document.getElementById('mjQuickWhoTitle').textContent = title;
+  document.getElementById('mjQuickWhoDesc').textContent = desc;
+  document.getElementById('mjQuickWhoBtns').innerHTML = mjTeamMembers.map(p=>`<button onclick="mjQuickWhoPick('${p.name.replace(/'/g,"\\'")}')" style="padding:8px 16px;border-radius:20px;border:1.5px solid ${p.color};background:#fff;color:#1a3a50;cursor:pointer;font-family:inherit;font-weight:600;">${p.icon} ${bmEscapeHtml(p.name)}</button>`).join('');
+  document.getElementById('mQuickWho').classList.add('show');
+}
+function mjQuickWhoPick(name){
+  if(mjQuickWhoSetsIdentity){ mjMyName = name; localStorage.setItem(MJ_MY_IDENTITY_KEY, name); }
+  document.getElementById('mQuickWho').classList.remove('show');
+  const cb = mjQuickWhoCallback; mjQuickWhoCallback = null; mjQuickWhoSetsIdentity = false;
+  if(cb) cb(name);
+}
+function mjRequireIdentity(callback){
+  if(mjMyName && mjTeamMembers.find(p=>p.name===mjMyName)){ callback(mjMyName); return; }
+  mjOpenQuickWhoPicker('¿Quién eres?', 'Se recuerda en este navegador para futuras acciones.', true, callback);
+}
+function mjOpenAuthorPicker(topicId){
+  mjOpenQuickWhoPicker('¿Quién propuso este tema?', 'Corrige a quién aparece como autor.', false, (name)=>{
+    const t = mjTopics.find(x=>x.id===topicId);
+    if(t){ t.author = name; mjPersistTopics(); mjRenderAgenda(); }
+  });
+}
 function renderYoView(){
   const area = document.getElementById('organizateSubArea');
   if(!area) return;
@@ -791,6 +832,9 @@ function renderYoView(){
         <h4 style="display:flex;align-items:center;gap:8px;text-align:left;margin:0;">${p?p.icon:'⭐'} Mis tareas — ${bmEscapeHtml(mjMyName)}</h4>
         <button onclick="mjChangeIdentity()" style="background:none;border:none;color:#2a7f8a;font-size:11px;font-weight:700;cursor:pointer;">¿No eres tú? Cambiar</button>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <button onclick="mjOpenClosedCases('yo')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid #c0b8ae;background:#f8f5ef;color:#5a6e80;cursor:pointer;font-family:inherit;font-weight:600;">📁 Casos cerrados</button>
+      </div>
       ${mjRenderTaskTable(items, '__yo__', null)}
       <div style="margin-top:14px;display:flex;gap:8px;">
         <input type="text" id="mjYoNewTaskInput" placeholder="Añadir una tarea…" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #c0b8ae;font-family:inherit;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')mjAddYoTask()">
@@ -810,6 +854,26 @@ function mjAddYoTask(){
   input.value = '';
   renderYoView();
   mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+}
+function mjOpenClosedCases(scope){
+  const area = document.getElementById('organizateSubArea');
+  let items, title, backLabel, backFn, openCtx;
+  if(scope==='yo'){
+    items = mjTopics.filter(t=>!t.locked && mjAssigneeList(t).includes(mjMyName) && t.status==='cerrado');
+    title = `📁 Casos cerrados — ${bmEscapeHtml(mjMyName||'')}`;
+    backLabel = '← Volver a mis tareas'; backFn = "renderYoView()"; openCtx = '__yo_closed__';
+  } else {
+    items = mjTopics.filter(t=>!t.locked && t.status==='cerrado');
+    title = '📁 Casos cerrados — Equipo';
+    backLabel = '← Volver al equipo'; backFn = "openOrgSub('equipo')"; openCtx = '__equipo_closed__';
+  }
+  area.innerHTML = `
+    <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
+      <button onclick="${backFn}" style="background:none;border:none;color:#2a7f8a;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;padding:0;">${backLabel}</button>
+      <h4 style="margin:0 0 4px;">${title}</h4>
+      ${mjRenderTaskTable(items, openCtx, null)}
+    </div>`;
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 function mjOpenTeamEdit(id){
@@ -1174,7 +1238,7 @@ function mjRenderAgenda(){
       const openCount = mjTopics.filter(x=>!x.locked).length;
       row.innerHTML = `
         <div class="mj-row-title" data-id="${t.id}">${t.title}${t.carriedFrom ? `<span class="mj-carry-tag">↳ viene de ${t.carriedFrom}</span>` : ''}</div>
-        <div class="mj-avatar" title="${t.author}" style="background:color-mix(in srgb, ${mjColorFor(t.author)} 22%, var(--mj-surface-3));color:${mjColorFor(t.author)};border:1px solid color-mix(in srgb, ${mjColorFor(t.author)} 45%, transparent);">${t.author[0]}</div>
+        <div class="mj-avatar" title="Autor: ${t.author} — toca para corregir" onclick="mjOpenAuthorPicker('${t.id}')" style="cursor:pointer;background:color-mix(in srgb, ${mjColorFor(t.author)} 22%, var(--mj-surface-3));color:${mjColorFor(t.author)};border:1px solid color-mix(in srgb, ${mjColorFor(t.author)} 45%, transparent);">${t.author[0]}</div>
         <button class="mj-icon-btn" title="Subir" data-mjact="up" data-id="${t.id}" ${openIdx===0?'disabled style="opacity:.25;cursor:default;"':''}>▲</button>
         <button class="mj-icon-btn" title="Bajar" data-mjact="down" data-id="${t.id}" ${openIdx===openCount-1?'disabled style="opacity:.25;cursor:default;"':''}>▼</button>
         <button class="mj-icon-btn" title="${t.recurring?'Quitar marca de recurrente':'Marcar como recurrente (violeta en el orbe)'}" data-mjact="rec" data-id="${t.id}" style="opacity:${t.recurring?1:.4};">🔁</button>
@@ -1231,12 +1295,14 @@ function mjAddTopicFromInput(){
   const input = document.getElementById('mjNewTopicInput');
   const val = input.value.trim();
   if(!val) return;
-  const id = 't' + Date.now();
-  mjTopics.push({id, title:val, author:'Vero', status:'pendiente', comments:[], dateCreated: mjTodayISO()});
-  mjPersistTopics();
-  input.value = '';
-  mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
-  mjOpenDetail(id); // abre la ficha al momento para poder asignar y/o posponer (jueves, 2 jueves, fecha)
+  mjRequireIdentity((who)=>{
+    const id = 't' + Date.now();
+    mjTopics.push({id, title:val, author:who, status:'pendiente', comments:[], dateCreated: mjTodayISO()});
+    mjPersistTopics();
+    input.value = '';
+    mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback();
+    mjOpenDetail(id); // abre la ficha al momento para poder asignar y/o posponer (jueves, 2 jueves, fecha)
+  });
 }
 
 /* ---------------- CONTRASEÑA (temas, votaciones del histórico) ---------------- */
@@ -1494,6 +1560,8 @@ function mjCloseDetail(){
     const nombre = mjDetailOpenedFromPersona;
     mjDetailOpenedFromPersona = null;
     if(nombre === '__yo__') renderYoView();
+    else if(nombre === '__yo_closed__') mjOpenClosedCases('yo');
+    else if(nombre === '__equipo_closed__') mjOpenClosedCases('equipo');
     else openOrgPersona(nombre);
   }
   if(mjDetailOpenedFromHistorico){
