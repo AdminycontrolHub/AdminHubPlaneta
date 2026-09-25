@@ -103,13 +103,15 @@ table.ppl td:nth-child(4){width:150px}
 table.ppl td:nth-child(5){width:120px}
 table.ppl td:nth-child(6){width:105px}
 table.ppl td:nth-child(7){width:150px}
-table.ppl td:nth-child(8){width:50px}
-table.ppl td:nth-child(9){width:65px;text-align:center}
-table.ppl td:nth-child(10){width:100px;text-align:center}
+table.ppl td:nth-child(8){width:38px;padding-left:6px;padding-right:6px}
+table.ppl td:nth-child(9){width:46px;text-align:center;padding-left:4px;padding-right:4px}
+table.ppl td:nth-child(10){width:72px;text-align:center;padding-left:4px;padding-right:6px}
 table.ppl td:nth-child(11){width:140px}
 table.ppl td:nth-child(12){width:115px}
-table.ppl td:nth-child(13){width:200px}
+table.ppl td:nth-child(13){width:270px}
+table.ppl th:nth-child(8),table.ppl th:nth-child(9),table.ppl th:nth-child(10){padding-left:6px;padding-right:6px}
 table.ppl td,table.ppl th{overflow:hidden;text-overflow:ellipsis}
+table.ppl td:nth-child(13){overflow:visible;white-space:normal}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 14px}
 .pill.yes{background:#0F6E44;color:#fff}
 .pill.no{background:#e4ddd0;color:#5d7486}
@@ -1136,7 +1138,7 @@ function renderRows(){
     tr.appendChild(el('td',{class:'mg',id:'mg_'+r.id}));
     tr.appendChild(el('td',{class:'mg',id:'mi_'+r.id}));
     tr.appendChild(el('td',{class:'st',id:'stt_'+r.id}));
-    tr.appendChild(el('td',{style:'white-space:nowrap;text-align:right'},[
+    tr.appendChild(el('td',{style:'text-align:right'},[
       genBtn,
       document.createTextNode(' '),
       el('button',{class:'abtn sm dng','aria-label':'Quitar fila',text:'✕',onclick:function(){askPass(function(){removeRows([r]);});}})]));
