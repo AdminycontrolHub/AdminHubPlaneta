@@ -1144,11 +1144,11 @@ async function mjLoadTopics(){
          y solo recuperan burbuja los temas que se pospusieron para esta semana (recurrentes). */
       mjArchiveWeek(storedWeekKey, storedTopics);
       const locked = storedTopics.find(t=>t.locked) || mjTopics[0];
-      const reactivar = storedTopics.filter(t=>!t.locked && t.status!=='cerrado' && t.moveTargetWeekKey && t.moveTargetWeekKey<=currentWeekKey);
+      const reactivar = storedTopics.filter(t=>!t.locked && t.status!=='cerrado' && !(t.moveTo && t.moveTargetWeekKey && t.moveTargetWeekKey>currentWeekKey));
       mjTopics = [locked, ...reactivar.map(t=>({
         id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
         title:t.title, status:'pendiente', assignee:t.assignee||null,
-        comments:[], recurring:(t.recurring||0)+1, dateCreated: mjTodayISO()
+        comments:[], recurring:(t.recurring||0)+1, dateCreated: t.dateCreated || mjTodayISO()
       }))];
       mjCurrentWeekKey = currentWeekKey;
       mjTopicsLoadedOk = true;
