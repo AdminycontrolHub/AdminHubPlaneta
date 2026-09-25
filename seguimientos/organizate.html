@@ -1941,6 +1941,26 @@ function mjRenderHistorico(){
       panel.classList.toggle('show');
     });
   });
+  wrap.querySelectorAll('[data-mjact="hrecover"]').forEach(b=>{
+    b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const m = b.dataset.hid.match(/^h(\d+)_(\d+)$/);
+      if(!m) return;
+      const wi = parseInt(m[1],10), ti = parseInt(m[2],10);
+      const src = mjHistoricoPast[wi] && mjHistoricoPast[wi].topics[ti];
+      if(!src) return;
+      mjRequireIdentity((who)=>{
+        const id = 't_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+        mjTopics.push({
+          id, title: src.title, status:'pendiente',
+          assignee: src.assignee || null, comments:[],
+          author: who, recurring: 1, dateCreated: mjTodayISO()
+        });
+        mjPersistTopics();
+        mjRenderAgenda(); mjRenderOrbit(); mjRenderFallback(); mjRenderHistorico();
+      });
+    });
+  });
   wrap.querySelectorAll('[data-mjact="hopen"]').forEach(b=>{
     b.addEventListener('click', e=>{
       e.stopPropagation();
@@ -2007,7 +2027,7 @@ function mjRenderHistTopic(tp){
         <span class="mj-ttl" data-real-id="${realId||''}">${tp.title}${tp.flag ? `<span class="mj-carry-tag" style="display:inline;margin-left:6px;">↻ ${tp.flag}</span>`:''}</span>
         ${note.shared ? '<span class="mj-shared-tag">🔓 Compartida</span>' : ''}
         <span class="mj-status-chip ${meta.cls}">${meta.label}</span>
-        ${realId ? `<button class="mj-icon-btn" title="Abrir ficha" data-mjact="hopen" data-id="${realId}">🗂️</button><button class="mj-icon-btn" title="Editar título" data-mjact="hedit" data-id="${realId}">✎</button><button class="mj-icon-btn" title="Eliminar" data-mjact="hdel" data-id="${realId}">🗑</button>` : ''}
+        ${realId ? `<button class="mj-icon-btn" title="Abrir ficha" data-mjact="hopen" data-id="${realId}">🗂️</button><button class="mj-icon-btn" title="Editar título" data-mjact="hedit" data-id="${realId}">✎</button><button class="mj-icon-btn" title="Eliminar" data-mjact="hdel" data-id="${realId}">🗑</button>` : `<button class="mj-icon-btn" title="Recuperar como tema activo" data-mjact="hrecover" data-hid="${tp._id}" style="color:var(--mj-cyan-text);">↺ Recuperar</button>`}
       </div>
       ${tp.followup ? `<span class="mj-followup">↳ ${tp.followup}</span>` : ''}
       <div class="mj-tl-note-panel">
