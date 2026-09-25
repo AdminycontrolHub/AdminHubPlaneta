@@ -1034,15 +1034,15 @@ function paintMin(r){
   var a=$('mg_'+r.id),b=$('mi_'+r.id);if(!a||!b)return;
   a.innerHTML='';b.innerHTML='';
   var c=minGarantizado(toISODate(r.antig),todayYM(),MIN_BASE,MIN_DIAS,MIN_MESES,toISODate(r.fin));
-  if(!c){a.appendChild(el('span',{class:'bbdd-info',text:'—',title:'Falta la antigüedad (fecha de incorporación)'}));}
-  else{a.appendChild(el('span',{class:'pill '+(c.si?'yes':'no'),text:c.si?'SÍ':'NO'}));}
+  if(!c){a.appendChild(el('span',{class:'bbdd-info',text:'—',title:'Falta la antigüedad (fecha de incorporación)'}));return;}
+  a.appendChild(el('span',{class:'pill '+(c.si?'yes':'no'),text:c.si?'SÍ':'NO'}));
+  if(!c.si) return; // si hoy no tiene derecho a mínimo garantizado, la cantidad se deja en blanco
   var mm=montoMes(toISODate(r.antig),IMPORTE_MES,MIN_BASE,MIN_DIAS,toISODate(r.fin));
-  if(!mm){b.appendChild(el('span',{class:'bbdd-info',text:'—',title:'Falta la antigüedad (fecha de incorporación)'}));}
-  else if(mm.si){
+  if(mm&&mm.si){
     b.appendChild(el('b',{text:fmtEUR(mm.importe)}));
     var suf=(mm.mes===1||mm.truncado)?(' · '+mm.dias+' días'+(mm.truncado?' (hasta fin de contrato)':'')):'';
     b.appendChild(el('div',{class:'sub',text:'Mes '+mm.mes+suf}));
-  }else if(mm.terminado){
+  }else if(mm&&mm.terminado){
     b.appendChild(el('div',{class:'sub',text:'Contrato ya finalizado'}));
   }
 }
