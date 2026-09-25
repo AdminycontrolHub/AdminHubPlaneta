@@ -97,21 +97,23 @@ table.ppl{width:100%;border-collapse:collapse;font-size:15px;min-width:1400px;ta
 table.ppl th{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cd);text-align:left;padding:14px 12px;white-space:nowrap;background:var(--cbg);border-bottom:2px solid var(--c)}
 table.ppl td{padding:11px 12px;border-top:1px solid rgba(4,28,46,0.08);vertical-align:middle;color:#0B2A40}
 table.ppl tr.bad td{background:#FFF3D6}
-table.ppl td:nth-child(2){width:55px}
-table.ppl td:nth-child(3){width:80px}
-table.ppl td:nth-child(4){width:150px}
-table.ppl td:nth-child(5){width:120px}
-table.ppl td:nth-child(6){width:105px}
-table.ppl td:nth-child(7){width:150px}
-table.ppl td:nth-child(8){width:38px;padding-left:6px;padding-right:6px}
-table.ppl td:nth-child(9){width:46px;text-align:center;padding-left:4px;padding-right:4px}
-table.ppl td:nth-child(10){width:72px;text-align:center;padding-left:4px;padding-right:6px}
-table.ppl td:nth-child(11){width:140px}
-table.ppl td:nth-child(12){width:115px}
-table.ppl td:nth-child(13){width:270px}
-table.ppl th:nth-child(8),table.ppl th:nth-child(9),table.ppl th:nth-child(10){padding-left:6px;padding-right:6px}
+table.ppl td:nth-child(2),table.ppl th:nth-child(2){width:55px}
+table.ppl td:nth-child(3),table.ppl th:nth-child(3){width:80px}
+table.ppl td:nth-child(4),table.ppl th:nth-child(4){width:150px}
+table.ppl td:nth-child(5),table.ppl th:nth-child(5){width:120px}
+table.ppl td:nth-child(6),table.ppl th:nth-child(6){width:105px}
+table.ppl td:nth-child(7),table.ppl th:nth-child(7){width:150px}
+table.ppl td:nth-child(8),table.ppl th:nth-child(8){width:38px;padding-left:6px;padding-right:6px}
+table.ppl td:nth-child(9),table.ppl th:nth-child(9){width:46px;padding-left:4px;padding-right:4px}
+table.ppl td:nth-child(9){text-align:center}
+table.ppl td:nth-child(10),table.ppl th:nth-child(10){width:72px;padding-left:4px;padding-right:6px}
+table.ppl td:nth-child(10){text-align:center}
+table.ppl td:nth-child(11),table.ppl th:nth-child(11){width:140px}
+table.ppl th:nth-child(11){white-space:normal;overflow:visible}
+table.ppl td:nth-child(12),table.ppl th:nth-child(12){width:115px}
+table.ppl td:nth-child(13),table.ppl th:nth-child(13){width:270px}
 table.ppl td,table.ppl th{overflow:hidden;text-overflow:ellipsis}
-table.ppl td:nth-child(13){overflow:visible;white-space:normal}
+table.ppl td:nth-child(13){white-space:nowrap}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 14px}
 .pill.yes{background:#0F6E44;color:#fff}
 .pill.no{background:#e4ddd0;color:#5d7486}
@@ -770,7 +772,7 @@ function openModal(m){
     el('button',{class:'abtn sm dng',text:'Quitar',onclick:function(){askPass(removeSelected);}})]);
   var allBox=el('input',{type:'checkbox',id:'selAll','aria-label':'Seleccionar todas'});
   allBox.onchange=function(){rows.filter(vis).forEach(function(r){sel[r.id]=allBox.checked;});renderRows();};
-  var mesSel=el('select',{style:'width:auto;display:inline-block;margin-left:6px;font-size:11px;padding:2px 5px;text-transform:none;letter-spacing:normal;font-weight:400;vertical-align:middle'},
+  var mesSel=el('select',{style:'width:auto;display:inline-block;font-size:11px;padding:2px 5px;text-transform:none;letter-spacing:normal;font-weight:400;vertical-align:middle'},
     optionList([['1','Mes 1'],['2','Mes 2'],['3','Mes 3']],String(IMPORTE_MES),''));
   mesSel.onchange=function(){IMPORTE_MES=+mesSel.value||1;rows.filter(vis).forEach(paintMin);};
   var marcaBar=null;
@@ -794,7 +796,7 @@ function openModal(m){
       el('th',{text:'Sr./Sra.'}),
       el('th',{text:'Activo',title:'Automático: NO en cuanto la fila tiene fecha de fin de contrato.'}),
       el('th',{text:'Mín. garant.',title:'SÍ si hoy está entre los 3 primeros meses desde la antigüedad y no hay un fin de contrato anterior. Se actualiza cada día.'}),
-      el('th',{title:'300 € en los meses completos; proporcional (300 € por 30 días) en el mes de inicio y en el mes de fin de contrato. Elige el mes a mostrar.'},[document.createTextNode('Importe mín.'),mesSel]),
+      el('th',{title:'300 € en los meses completos; proporcional (300 € por 30 días) en el mes de inicio y en el mes de fin de contrato. Elige el mes a mostrar.'},[el('div',{text:'Importe mín.',style:'margin-bottom:4px'}),mesSel]),
       el('th',{text:'Estado del anexo'}),
       el('th')
     ])]),
