@@ -751,6 +751,8 @@ function openModal(m){
 
   var xin=el('input',{type:'file',accept:'.xlsx,.xls,.csv',style:'display:none'});
   xin.onchange=function(){if(xin.files[0])importBBDD(xin.files[0]);xin.value='';};
+  var inactivosChk=el('input',{type:'checkbox',id:'soloInactivos'});
+  inactivosChk.onchange=function(){cur.soloInactivos=inactivosChk.checked;renderRows();};
   var activoChk=el('input',{type:'checkbox',id:'soloActivo'});
   activoChk.onchange=function(){cur.soloActivo=activoChk.checked;renderRows();};
   var minChk=el('input',{type:'checkbox',id:'soloMin'});
@@ -762,6 +764,7 @@ function openModal(m){
     el('span',{class:'bbdd-info',id:'bbddInfo'}),el('span',{class:'bbdd-info',id:'syncInfo',style:'margin-left:14px'}),
     el('span',{class:'grow'}),
     el('div',{class:'filtros'},[
+      el('label',{class:'chk'},[inactivosChk,document.createTextNode('Inactivos')]),
       el('label',{class:'chk'},[activoChk,document.createTextNode('Solo activos (SÍ)')]),
       el('label',{class:'chk'},[minChk,document.createTextNode('Solo con mínimo garantizado (SÍ)')])])]);
   var bulk=el('div',{class:'bulk',id:'bulk'},[
@@ -972,6 +975,7 @@ function activoDe(r){return r.fin&&r.fin.trim()?'NO':'SI';}
 function vis(r){
   if(cur&&r.marca!==cur.m.id) return false;
   if(cur&&cur.soloActivo&&activoDe(r)!=='SI') return false;
+  if(cur&&cur.soloInactivos&&activoDe(r)!=='NO') return false;
   if(cur&&cur.soloMin){
     var c=minGarantizado(toISODate(r.antig),todayYM(),MIN_BASE,MIN_DIAS,MIN_MESES,toISODate(r.fin));
     if(!c||!c.si) return false;
@@ -1010,12 +1014,17 @@ function paintEstado(r){
   if(td.parentNode)td.parentNode.className=e.estado==='pendiente'?'bad':'';
   var gb=$('gen_'+r.id);
   if(gb){
-    if(e.estado==='generado'){
-      gb.textContent='🔒 Volver a generar';
-      gb.title='Ya está generado. Pide la contraseña porque volver a generarlo cambia la fecha de la firma.';
+    if(r.fin&&r.fin.trim()){
+      gb.style.display='none'; // con fecha de fin de contrato no se puede (re)generar el anexo
     }else{
-      gb.textContent='Generar y descargar';
-      gb.title='';
+      gb.style.display='';
+      if(e.estado==='generado'){
+        gb.textContent='🔒 Volver a generar';
+        gb.title='Ya está generado. Pide la contraseña porque volver a generarlo cambia la fecha de la firma.';
+      }else{
+        gb.textContent='Generar y descargar';
+        gb.title='';
+      }
     }
   }
 }
@@ -1106,7 +1115,7 @@ function renderRows(){
     var ai=el('input',{type:'text',value:r.antig||'',placeholder:'dd.mm.aaaa'});
     ai.oninput=function(){r.antig=ai.value;r.src='manual';r.aprox=false;touch(r);paintEstado(r);paintMin(r);};
     var fi=el('input',{type:'text',value:r.fin||'',placeholder:'dd.mm.aaaa (si aplica)',style:'margin-bottom:4px'});
-    fi.oninput=function(){r.fin=fi.value;touch(r);paintActivo(r);paintMin(r);};
+    fi.oninput=function(){r.fin=fi.value;touch(r);paintActivo(r);paintEstado(r);paintMin(r);};
     var ft=el('select',null,optionList([['BV','BV · baja voluntaria'],['BNV','BNV · baja no voluntaria']],r.finTipo,'Tipo…'));
     ft.onchange=function(){r.finTipo=ft.value;touch(r);};
     var tratCell=el('td');
