@@ -263,15 +263,46 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .dropzone:hover, .dropzone.dragover{ border-color:#FF7FE0; box-shadow:0 4px 14px rgba(224,30,180,0.35); }
 .dropzone.receipt:hover, .dropzone.receipt.dragover{ border-color:#E07FD0; box-shadow:0 4px 14px rgba(122,20,112,0.4); }
 .dz-head{ display:flex; align-items:center; gap:9px; }
-.dz-icon{ width:28px; height:28px; flex:none; border-radius:7px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.2); color:#fff; font-size:14px; }
-.dz-title{ font-size:11.5px; font-weight:800; color:#fff; }
-.dz-sub{ font-size:9.5px; color:#F6C9EE; margin-top:1px; }
+.dz-icon{ width:auto; min-width:46px; height:24px; padding:0 8px; flex:none; border-radius:6px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.2); color:#fff; font-size:10.5px; font-weight:800; letter-spacing:0.4px; }
+.dz-title{ font-size:13.5px; font-weight:800; color:#fff; line-height:1.3; }
+.dz-sub{ font-size:11.5px; color:#F6C9EE; margin-top:2px; }
 .dropzone.receipt .dz-sub{ color:#E8C3E0; }
 .dz-input{ display:none; }
-.dz-paste{ width:100%; resize:none; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.35); border-radius:6px; padding:6px 8px; font-size:10.5px; color:#fff; font-family:inherit; }
+.dz-paste{ width:100%; resize:none; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.35); border-radius:6px; padding:7px 9px; font-size:12.5px; color:#fff; font-family:inherit; }
 .dz-paste::placeholder{ color:#EFBBE2; }
-.detail-btn.merge{ background:#5CFF9E; border-color:#5CFF9E; color:#02320F; font-weight:800; box-shadow:0 3px 12px rgba(92,255,158,0.4); }
+.detail-btn.merge{ background:#5CFF9E; border-color:#5CFF9E; color:#02320F; font-weight:800; font-size:13.5px; box-shadow:0 3px 12px rgba(92,255,158,0.4); }
 .detail-btn.merge:hover{ background:#7AFFB2; }
+
+/* ===== Legibilidad general del módulo — tamaños de letra aumentados ===== */
+body{ font-size:14px; }
+.detail-table{ font-size:14px; }
+.detail-table thead th{ font-size:11.5px; }
+.detail-title{ font-size:14px; }
+.detail-sub{ font-size:11.5px; }
+.detail-btn{ font-size:13px; }
+.detail-search{ font-size:13px; }
+.mc-name{ font-size:17px; }
+.mc-subtitle{ font-size:10.5px; }
+.mc-stat-lbl{ font-size:10.5px; }
+.mc-stat-val{ font-size:21px; }
+.mc-stat-hint{ font-size:9px; }
+.period-label{ font-size:10.5px; }
+.week-chip .wk-title{ font-size:13.5px; }
+.week-chip .wk-range{ font-size:10.5px; }
+.period-hint{ font-size:11px; }
+.cm-name{ font-size:19px; }
+.cm-year{ font-size:10px; }
+.cm-hint{ font-size:10.5px; }
+.summary-label{ font-size:10.5px; }
+.sum-name{ font-size:13.5px; }
+.sum-num-lbl{ font-size:9.5px; }
+.sum-num-val{ font-size:16px; }
+.page-sub{ font-size:13px; }
+.page-eyebrow{ font-size:11px; }
+.page-title{ font-size:28px; }
+.th-select, .th-input{ font-size:12.5px; }
+.je-pill, .pi-pct, .fact-cell, .id-muted, .conv-tag{ font-size:12px; }
+.comment-cell{ font-size:12.5px; }
 
 .imac-popup{ position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(20px); width:420px; max-width:92vw; background:#1B2B38; border-radius:12px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06); opacity:0; pointer-events:none; transition:all .22s ease; z-index:900; font-family:-apple-system,'Segoe UI',Inter,Arial,sans-serif; max-height:80vh; overflow-y:auto; }
 .imac-popup.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
@@ -410,7 +441,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
     <div class="dropzone" id="dzLeft">
       <div class="dz-head">
-        <div class="dz-icon">&#128203;</div>
+        <div class="dz-icon">DOC</div>
         <div>
           <div class="dz-title">Arrastra o pega: PF / HM / Baja / CC / CE / CP</div>
           <div class="dz-sub">Detecto el tipo automáticamente</div>
@@ -427,7 +458,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
     <div class="dropzone receipt" id="dzRight">
       <div class="dz-head">
-        <div class="dz-icon">&#128179;</div>
+        <div class="dz-icon">PAGO</div>
         <div>
           <div class="dz-title">Arrastra aquí Comprobante de pago</div>
           <div class="dz-sub">Opcional — se vincula por ID Oportunidad</div>
