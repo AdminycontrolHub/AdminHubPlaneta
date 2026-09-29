@@ -106,7 +106,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-panel.open { display:block; animation:fadeUp .25s ease; }
 .detail-panel.fiel { margin-left:32px; margin-right:32px; background:#EAF4FB; }
 .detail-panel.excepciones { margin-left:12px; margin-right:12px; background:#F1E9FB; }
-.detail-merge-bar { display:flex; align-items:center; justify-content:center; margin:12px 32px 0; padding:10px 16px; background:#EAF3EC; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+.detail-merge-bar { position:relative; z-index:10; display:flex; align-items:center; justify-content:center; margin:12px 32px 0; padding:12px 16px; background:#EAF3EC; border-radius:12px; border:2px solid #FF4FE0; box-shadow:0 0 24px rgba(255,79,224,0.35), 0 4px 16px rgba(0,0,0,0.3); }
 .detail-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid rgba(0,100,140,0.12); flex-wrap:wrap; gap:10px; }
 .detail-head-left { display:flex; align-items:center; gap:10px; }
 .detail-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
