@@ -1707,6 +1707,19 @@ function dzParseAmount(str){
   return isNaN(n) ? null : Math.round(n);
 }
 
+/* De "Octubre/2026 → Abril/2027", "Abril 2027", "Octubre/2026"... separa mes y año para
+   precargar el formulario sin que haya que teclearlos — se queda con el destino si hay cambio */
+function dzParseConvocatoria(conv){
+  if(!conv) return {mes:'', anio:''};
+  const part = conv.includes('→') ? conv.split('→')[1] : conv;
+  const mesMatch = part.match(/Abril|Octubre/i);
+  const anioMatch = part.match(/\b(20\d{2})\b/);
+  return {
+    mes: mesMatch ? (mesMatch[0][0].toUpperCase()+mesMatch[0].slice(1).toLowerCase()) : '',
+    anio: anioMatch ? anioMatch[1] : ''
+  };
+}
+
 /* De "Octubre/2026 → Abril/2027" o "Abril 2027" se queda solo con el mes de convocatoria
    objetivo (destino si hay cambio, si no el único que aparezca) */
 function dzConvForRow(conv){
@@ -1746,6 +1759,13 @@ function dzExtractFields(type, text){
 let dzMode = 'detect'; // 'detect' | 'fix' | 'receipt'
 let dzPendingFields = null, dzPendingType = null;
 
+/* Si hay una ficha de marca abierta (siempre es el caso: las zonas de arrastre solo se ven dentro
+   de una ficha abierta), esa marca es la asunción por defecto — el documento no tiene por qué
+   traerla, y si la trae y no coincide, el usuario la corrige a mano con el círculo rojo. */
+function dzAssumedBrand(fields){
+  return (openDetail && openDetail.brandKey) || (fields&&fields.marca) || '';
+}
+
 function dzOpenDetected(type, fields){
   dzMode='detect'; dzPendingFields=fields; dzPendingType=type;
   document.getElementById('dzViewDetected').style.display='block';
@@ -1754,7 +1774,8 @@ function dzOpenDetected(type, fields){
   document.getElementById('dzTitlebarLabel').textContent='Validación';
   document.getElementById('dzDetectedTag').innerHTML = 'Detectado: <span class="tag">'+type+'</span>';
   const rows = [];
-  if(fields.marca) rows.push('<b>Marca:</b> '+(MT_BRANDS.find(b=>b.key===fields.marca)||{}).name);
+  const brandKey = dzAssumedBrand(fields);
+  if(brandKey) rows.push('<b>Marca:</b> '+(MT_BRANDS.find(b=>b.key===brandKey)||{}).name+(fields.marca && fields.marca!==brandKey ? ' <span style="color:#FFB4B4">(el documento parece decir otra)</span>':''));
   if(fields.nombre) rows.push('<b>Alumno:</b> '+fields.nombre);
   if(fields.id) rows.push('<b>ID Oportunidad:</b> '+fields.id);
   if(fields.programa) rows.push('<b>Programa:</b> '+fields.programa);
@@ -1776,15 +1797,16 @@ function dzOpenFix(opts){
   if(opts.auto && opts.bannerText){ banner.style.display='flex'; document.getElementById('dzAutoBannerText').textContent=opts.bannerText; }
   else { banner.style.display='none'; }
   const f = opts.fields||{};
+  const cv = dzParseConvocatoria(f.convocatoria);
   document.getElementById('dzFixDetectado').value = opts.detectadoGuess||'';
-  document.getElementById('dzFixMarca').value = f.marca||'';
+  document.getElementById('dzFixMarca').value = dzAssumedBrand(f);
   document.getElementById('dzFixTipo').value = f.tipo||'';
   document.getElementById('dzFixMotivo').value = f.motivo||'';
   document.getElementById('dzFixNombre').value = f.nombre||'';
   document.getElementById('dzFixId').value = f.id||'';
   document.getElementById('dzFixPrograma').value = f.programa||'';
-  document.getElementById('dzFixMes').value = '';
-  document.getElementById('dzFixAnio').value = '';
+  document.getElementById('dzFixMes').value = cv.mes;
+  document.getElementById('dzFixAnio').value = cv.anio;
   document.getElementById('dzFixFeedback').className='fix-feedback';
   document.getElementById('dzFixFeedback').textContent='';
   dzToggleTipoField();
@@ -1876,7 +1898,8 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
       } else if(btn.classList.contains('green')){
         const fields = dzPendingFields, type = dzPendingType;
         const dfb = document.getElementById('dzDetectedFeedback');
-        if(!fields.marca){
+        const brandKey = dzAssumedBrand(fields);
+        if(!brandKey){
           dzOpenFix({auto:false, fields, detectadoGuess:type+' NUEVA'});
         } else {
           const row = {
@@ -1890,10 +1913,10 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
             facturacion: fields.facturacion,
             comentario: 'Añadido desde arrastre ('+type+' NUEVA) — pendiente de completar PI%/JE/ID NACS.'
           };
-          dzAddManualRow(fields.marca, 'altas', row);
+          dzAddManualRow(brandKey, 'altas', row);
           mtRenderGrid(); renderPanels(); renderSummary();
           dfb.className='fix-feedback ok';
-          dfb.textContent='Fila añadida a "PF y Otras Excepciones" ('+MT_BRANDS.find(b=>b.key===fields.marca).name+' · Altas).';
+          dfb.textContent='Fila añadida a "PF y Otras Excepciones" ('+MT_BRANDS.find(b=>b.key===brandKey).name+' · Altas).';
           setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
         }
       } else {
