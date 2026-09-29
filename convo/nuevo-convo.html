@@ -640,7 +640,7 @@ body{ font-size:14px; }
           <option value="SIN DEVOLUCIÓN">Sin devolución</option>
         </select>
       </div>
-      <div class="fix-field"><label class="fix-label">Motivo</label>
+      <div class="fix-field" id="dzFixMotivoField"><label class="fix-label">Motivo</label>
         <select id="dzFixMotivo">
           <option value="">— Selecciona —</option>
           <option>Titulación</option><option>Salud</option><option>No quiere argumentarlo</option>
@@ -1649,7 +1649,17 @@ async function dzReadPdfText(file){
     for(let i=1;i<=pdf.numPages;i++){
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      text += content.items.map(it=>it.str).join(' ') + '\n';
+      let lastY = null, line = '';
+      content.items.forEach(it=>{
+        const y = it.transform[5];
+        if(lastY!==null && Math.abs(y-lastY) > 2){
+          text += line.trim() + '\n';
+          line = '';
+        }
+        line += it.str + ' ';
+        lastY = y;
+      });
+      if(line.trim()) text += line.trim() + '\n';
     }
     return text;
   }catch(e){
@@ -1783,7 +1793,13 @@ function dzOpenFix(opts){
 
 function dzToggleTipoField(){
   const v = document.getElementById('dzFixDetectado').value;
-  document.getElementById('dzFixTipoField').style.display = v.startsWith('BAJA') ? 'block' : 'none';
+  const esBaja = v.startsWith('BAJA');
+  document.getElementById('dzFixTipoField').style.display = esBaja ? 'block' : 'none';
+  document.getElementById('dzFixMotivoField').style.display = esBaja ? 'block' : 'none';
+  if(!esBaja){
+    document.getElementById('dzFixTipo').value = '';
+    document.getElementById('dzFixMotivo').value = '';
+  }
 }
 document.getElementById('dzFixDetectado').addEventListener('change', dzToggleTipoField);
 
@@ -1861,7 +1877,7 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const fields = dzPendingFields, type = dzPendingType;
         const dfb = document.getElementById('dzDetectedFeedback');
         if(!fields.marca){
-          dzOpenFix({auto:true, bannerText:'No se ha podido determinar la marca (OBS/INESDI/ESDesign/UCMA) automáticamente.', fields, detectadoGuess:type+' NUEVA'});
+          dzOpenFix({auto:false, fields, detectadoGuess:type+' NUEVA'});
         } else {
           const row = {
             nombre: fields.nombre || '(sin nombre)',
