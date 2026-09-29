@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Seguimiento de Matrículas — Convo '27</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #041C2E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #E0F7FF; min-height: 100vh; }
@@ -253,6 +254,53 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .topbar,.page-head,.period-wrap,.marca-grid,.summary-strip{padding-left:16px;padding-right:16px;}
 .detail-panel.fiel,.detail-panel.excepciones{margin-left:16px;margin-right:16px;}
 }
+
+/* ===== Zonas de arrastre: HM/PF/Baja/CC/CE/CP + Comprobante ===== */
+.dz-row{ display:flex; align-items:stretch; gap:14px; flex-wrap:wrap; width:100%; }
+.dropzone{ flex:1; min-width:220px; border:2px dashed rgba(0,100,160,0.35); border-radius:10px; padding:12px 14px; background:rgba(255,255,255,0.5); display:flex; flex-direction:column; gap:7px; transition:all .18s ease; cursor:pointer; }
+.dropzone.receipt{ border-color:rgba(200,130,20,0.4); }
+.dropzone:hover, .dropzone.dragover{ border-style:solid; background:rgba(255,255,255,0.85); box-shadow:0 4px 14px rgba(0,80,130,0.14); }
+.dropzone.receipt:hover, .dropzone.receipt.dragover{ box-shadow:0 4px 14px rgba(180,110,10,0.16); }
+.dz-head{ display:flex; align-items:center; gap:9px; }
+.dz-icon{ width:28px; height:28px; flex:none; border-radius:7px; display:flex; align-items:center; justify-content:center; background:rgba(0,100,160,0.12); color:#005080; font-size:14px; }
+.dropzone.receipt .dz-icon{ background:rgba(200,130,20,0.14); color:#9a6600; }
+.dz-title{ font-size:11.5px; font-weight:700; color:#1a3a50; }
+.dz-sub{ font-size:9.5px; color:#5a7a8a; margin-top:1px; }
+.dz-input{ display:none; }
+.dz-paste{ width:100%; resize:none; background:rgba(255,255,255,0.75); border:1px solid rgba(0,100,140,0.18); border-radius:6px; padding:6px 8px; font-size:10.5px; color:#1a3a50; font-family:inherit; }
+.dz-paste::placeholder{ color:#8a97a0; }
+
+.imac-popup{ position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(20px); width:420px; max-width:92vw; background:#1B2B38; border-radius:12px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06); opacity:0; pointer-events:none; transition:all .22s ease; z-index:900; font-family:-apple-system,'Segoe UI',Inter,Arial,sans-serif; max-height:80vh; overflow-y:auto; }
+.imac-popup.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+.imac-titlebar{ display:flex; align-items:center; gap:9px; padding:11px 14px; background:linear-gradient(180deg,#2E4152,#26374400); border-bottom:1px solid rgba(255,255,255,0.06); position:sticky; top:0; z-index:2; }
+.traffic{ width:13px; height:13px; border-radius:50%; cursor:pointer; position:relative; border:none; padding:0; }
+.traffic.red{ background:#FF5C5C; }
+.traffic.yellow{ background:#FFD24D; }
+.traffic.green{ background:#3DDC97; }
+.traffic:hover::after{ content:attr(data-label); position:absolute; top:19px; left:50%; transform:translateX(-50%); font-size:10px; white-space:nowrap; background:#000c; padding:3px 7px; border-radius:4px; color:#fff; }
+.titlebar-label{ font-size:12px; color:#7FA0B0; margin-left:4px; letter-spacing:0.3px; }
+.imac-body{ padding:16px 18px 18px; color:#CFE3EC; }
+.imac-detected{ font-size:16px; font-weight:700; color:#00E6FF; margin-bottom:10px; }
+.imac-detected .tag{ display:inline-block; font-size:11px; padding:3px 9px; border-radius:5px; background:rgba(0,230,255,0.15); margin-right:6px; color:#00E6FF; }
+.imac-fields{ font-size:14px; line-height:1.9; }
+.imac-fields b{ color:#E8F2F6; font-weight:700; }
+.imac-hint{ margin-top:12px; font-size:11px; color:#7FA0B0; display:flex; gap:14px; }
+.imac-hint span{ display:flex; align-items:center; gap:5px; }
+.imac-hint i{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+.auto-banner{ display:flex; gap:10px; align-items:flex-start; background:rgba(255,92,92,0.1); border:1px solid rgba(255,92,92,0.35); border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:13px; color:#FFB4B4; }
+.fix-title{ font-size:14px; font-weight:700; color:#E8F2F6; margin-bottom:12px; }
+.fix-field{ margin-bottom:12px; }
+.fix-label{ font-size:11.5px; color:#7FA0B0; margin-bottom:5px; display:block; }
+.fix-row{ display:flex; gap:8px; }
+.imac-body select, .imac-body input[type=text], .imac-body input[type=number]{ width:100%; background:#16232E; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#E8F2F6; font-size:13px; padding:8px 10px; font-family:inherit; }
+.imac-body select:focus, .imac-body input:focus{ outline:none; border-color:rgba(0,230,255,0.35); }
+.fix-actions{ display:flex; align-items:center; gap:14px; margin-top:16px; }
+.btn-retry{ background:rgba(61,220,151,0.15); border:1px solid #3DDC97; color:#3DDC97; font-size:12.5px; font-weight:700; padding:9px 16px; border-radius:7px; cursor:pointer; }
+.btn-retry:hover{ background:rgba(61,220,151,0.25); }
+.link-delete{ font-size:11.5px; color:#FF9B9B; cursor:pointer; text-decoration:underline; }
+.fix-feedback{ margin-top:12px; font-size:12.5px; padding:8px 10px; border-radius:6px; display:none; }
+.fix-feedback.ok{ display:block; background:rgba(61,220,151,0.12); color:#3DDC97; border:1px solid rgba(61,220,151,0.35); }
+.fix-feedback.fail{ display:block; background:rgba(255,92,92,0.12); color:#FF9B9B; border:1px solid rgba(255,92,92,0.35); }
 </style>
 </head>
 <body>
@@ -355,10 +403,37 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 </div>
 
 <div class="detail-merge-bar" id="mergeBar" style="display:none">
-  <button class="detail-btn merge" onclick="exportPanel('ambos')">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Extraer conjunto (Fiel + PF)
-  </button>
+  <div class="dz-row">
+
+    <div class="dropzone" id="dzLeft">
+      <div class="dz-head">
+        <div class="dz-icon">&#128203;</div>
+        <div>
+          <div class="dz-title">Arrastra o pega: PF / HM / Baja / CC / CE / CP</div>
+          <div class="dz-sub">Detecto el tipo automáticamente</div>
+        </div>
+      </div>
+      <textarea class="dz-paste" id="dzLeftPaste" rows="1" placeholder="…o pega aquí el texto del correo"></textarea>
+      <input type="file" class="dz-input" id="dzLeftInput" accept="application/pdf,image/*" multiple>
+    </div>
+
+    <button class="detail-btn merge" onclick="exportPanel('ambos')" style="flex:none; align-self:center;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Extraer conjunto (Fiel + PF)
+    </button>
+
+    <div class="dropzone receipt" id="dzRight">
+      <div class="dz-head">
+        <div class="dz-icon">&#128179;</div>
+        <div>
+          <div class="dz-title">Arrastra aquí Comprobante de pago</div>
+          <div class="dz-sub">Opcional — se vincula por ID Oportunidad</div>
+        </div>
+      </div>
+      <input type="file" class="dz-input" id="dzRightInput" accept="image/*,application/pdf" multiple>
+    </div>
+
+  </div>
 </div>
 
 <div class="detail-panel excepciones" id="panelExc">
@@ -455,6 +530,89 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
       <button class="pwd-btn cancel" onclick="bmCancelPassword()">Cancelar</button>
       <button class="pwd-btn ok" onclick="bmConfirmPassword()">Confirmar</button>
     </div>
+  </div>
+</div>
+
+<div class="imac-popup" id="dzPopup">
+  <div class="imac-titlebar">
+    <button class="traffic red" data-label="Corregir"></button>
+    <button class="traffic yellow" data-label="Revisar más tarde"></button>
+    <button class="traffic green" data-label="OK"></button>
+    <span class="titlebar-label" id="dzTitlebarLabel">Validación</span>
+  </div>
+  <div class="imac-body">
+
+    <div id="dzViewDetected">
+      <div class="imac-detected" id="dzDetectedTag"></div>
+      <div class="imac-fields" id="dzDetectedFields"></div>
+      <div class="imac-hint">
+        <span><i style="background:#3DDC97"></i>OK</span>
+        <span><i style="background:#FFD24D"></i>Aplazar</span>
+        <span><i style="background:#FF5C5C"></i>Corregir</span>
+      </div>
+    </div>
+
+    <div id="dzViewFix" style="display:none;">
+      <div class="auto-banner" id="dzAutoBanner" style="display:none;"><span>&#9888;</span><span id="dzAutoBannerText"></span></div>
+      <div class="fix-title" id="dzFixTitle">Corrige los datos y reintenta</div>
+      <div class="fix-field"><label class="fix-label">Detectado</label>
+        <select id="dzFixDetectado">
+          <option value="">— Selecciona —</option>
+          <option value="PF NUEVA">PF NUEVA</option>
+          <option value="HM NUEVA">HM NUEVA</option>
+          <option value="BAJA · PF">BAJA · PF</option>
+          <option value="BAJA · FINALIZADA">BAJA · FINALIZADA</option>
+          <option value="CC · PF">CC · PF</option>
+          <option value="CC · FINALIZADA">CC · FINALIZADA</option>
+          <option value="CE · PF">CE · PF</option>
+          <option value="CE · FINALIZADA">CE · FINALIZADA</option>
+          <option value="CP · PF">CP · PF</option>
+          <option value="CP · FINALIZADA">CP · FINALIZADA</option>
+        </select>
+      </div>
+      <div class="fix-field" id="dzFixTipoField">
+        <label class="fix-label">Tipo (solo aplica a Baja)</label>
+        <select id="dzFixTipo">
+          <option value="">— No aplica —</option>
+          <option value="CON DEVOLUCIÓN">Con devolución</option>
+          <option value="SIN DEVOLUCIÓN">Sin devolución</option>
+        </select>
+      </div>
+      <div class="fix-field"><label class="fix-label">Motivo</label>
+        <select id="dzFixMotivo">
+          <option value="">— Selecciona —</option>
+          <option>Titulación</option><option>Salud</option><option>No quiere argumentarlo</option>
+          <option>No cumple expectativas</option><option>Ilocalizado</option><option>Familiares</option>
+          <option>Falta de tiempo</option><option>Económico</option><option>Documentación</option>
+          <option>Descatalogado</option><option>Cambio de Edición Pactado</option>
+        </select>
+      </div>
+      <div class="fix-field"><label class="fix-label">Nombre</label><input type="text" id="dzFixNombre"></div>
+      <div class="fix-field"><label class="fix-label">ID Oportunidad</label><input type="text" id="dzFixId"></div>
+      <div class="fix-field"><label class="fix-label">Convocatoria</label>
+        <div class="fix-row">
+          <select id="dzFixMes" style="flex:1;"><option value="">Mes</option><option>Abril</option><option>Octubre</option></select>
+          <input type="number" id="dzFixAnio" placeholder="Año" style="flex:1;" min="2024" max="2030">
+        </div>
+      </div>
+      <div class="fix-actions">
+        <button class="btn-retry" id="dzBtnRetry">Reintentar</button>
+        <span class="link-delete" id="dzLinkDelete">Borrar registro</span>
+      </div>
+      <div class="fix-feedback" id="dzFixFeedback"></div>
+    </div>
+
+    <div id="dzViewReceipt" style="display:none;">
+      <div class="fix-title">Comprobante recibido</div>
+      <div class="fix-field"><label class="fix-label">Archivo</label><div id="dzReceiptFilename" style="font-size:12.5px;color:#CFE3EC;"></div></div>
+      <div class="fix-field"><label class="fix-label">Vincular a ID Oportunidad</label><input type="text" id="dzReceiptId" placeholder="Ej. 2021-003064690"></div>
+      <div class="imac-hint" style="margin-top:4px;">
+        <span><i style="background:#3DDC97"></i>Vincular</span>
+        <span><i style="background:#FF5C5C"></i>Descartar</span>
+      </div>
+      <div class="fix-feedback" id="dzReceiptFeedback"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1404,7 +1562,243 @@ function loadCalendarFile(evt){
   reader.readAsArrayBuffer(file);
 }
 
+/* ===================== ZONAS DE ARRASTRE: HM/PF/Baja/CC/CE/CP + Comprobante ===================== */
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function dzReadPdfText(file){
+  try{
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    let text = '';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it=>it.str).join(' ') + '\n';
+    }
+    return text;
+  }catch(e){
+    console.error('Error leyendo PDF:', e);
+    return '';
+  }
+}
+
+/* Detección por contenido — PF y HM son documentos de matrícula nueva; Baja/CC/CE/CP modifican
+   una fila ya existente. La lista de motivos de baja y el criterio CC vs CE están pendientes de
+   que VRO los confirme, así que aquí se extrae tal cual aparezca en el texto. */
+function dzClassify(text){
+  if(/PENDIENTE DE FINALIZAR EN ATENEA/i.test(text)) return 'PF';
+  if(/Detalle de Conceptos/i.test(text) || /RGPD (Grupo|Terceros)/i.test(text)) return 'HM';
+  if(/se le resuelve la incidencia como\s+Baja/i.test(text) || /\bBaja (sin|con) Devoluci[oó]n\b/i.test(text)) return 'BAJA';
+  if(/Adjunto\s+CE\b/i.test(text) || /\bCambio de Edici[oó]n\b/i.test(text)) return 'CE';
+  if(/Adjunto\s+CP\b/i.test(text) || /\bCambio de Programa\b/i.test(text)) return 'CP';
+  if(/Adjunto\s+CC\b/i.test(text) || /convocatoria de[^.]+a\s+Convocatoria/i.test(text)) return 'CC';
+  return null;
+}
+
+function dzLine(text,label){
+  const re = new RegExp(label+"\\s*:?\\s*(.+)","i");
+  const m = text.match(re);
+  return m ? m[1].trim() : '';
+}
+
+function dzExtractFields(type, text){
+  const f = {nombre:'', id:'', programa:'', convocatoria:'', motivo:'', tipo:''};
+  const idMatch = text.match(/\b(\d{4}-\d{6,})\b/);
+  if(idMatch) f.id = idMatch[1];
+
+  if(type==='PF'){
+    f.nombre = dzLine(text,'Alumno');
+    f.programa = dzLine(text,'Programa');
+    f.convocatoria = dzLine(text,'Convocatoria');
+  } else if(type==='HM'){
+    const nom = dzLine(text,'Nombre'); const ape = dzLine(text,'Apellidos');
+    f.nombre = [nom,ape].filter(Boolean).join(' ');
+    f.programa = dzLine(text,'Programa');
+    f.convocatoria = dzLine(text,'Convocatoria');
+  } else if(type==='BAJA'){
+    const m = text.match(/[Aa]l alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+se le resuelve la incidencia como\s+(Baja[^.\n]+?)\s+por\s+(?:Motivos?)\s+([^.\n]+)/i);
+    if(m){ f.nombre=m[1].trim(); f.id=m[2].trim(); f.tipo=/con devoluci/i.test(m[3])?'CON DEVOLUCIÓN':'SIN DEVOLUCIÓN'; f.motivo=m[4].trim(); }
+    f.convocatoria = dzLine(text,'Convocatoria');
+  } else if(type==='CC' || type==='CE' || type==='CP'){
+    const m = text.match(/[Aa]djunto\s+(?:CC|CE|CP)\s+del alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+de la convocatoria de\s+([^\s]+)\s+a\s+Convocatoria\s+([^\s.]+)(?:\s+por\s+(?:Motivos?):?\s*([^.\n]+))?/i);
+    if(m){ f.nombre=m[1].trim(); f.id=m[2].trim(); f.convocatoria=m[3].trim()+' → '+m[4].trim(); f.motivo=(m[5]||'').trim(); }
+  }
+  return f;
+}
+
+let dzMode = 'detect'; // 'detect' | 'fix' | 'receipt'
+let dzPendingFields = null, dzPendingType = null;
+
+function dzOpenDetected(type, fields){
+  dzMode='detect'; dzPendingFields=fields; dzPendingType=type;
+  document.getElementById('dzViewDetected').style.display='block';
+  document.getElementById('dzViewFix').style.display='none';
+  document.getElementById('dzViewReceipt').style.display='none';
+  document.getElementById('dzTitlebarLabel').textContent='Validación';
+  document.getElementById('dzDetectedTag').innerHTML = 'Detectado: <span class="tag">'+type+'</span>';
+  const rows = [];
+  if(fields.nombre) rows.push('<b>Alumno:</b> '+fields.nombre);
+  if(fields.id) rows.push('<b>ID Oportunidad:</b> '+fields.id);
+  if(fields.programa) rows.push('<b>Programa:</b> '+fields.programa);
+  if(fields.convocatoria) rows.push('<b>Convocatoria:</b> '+fields.convocatoria);
+  document.getElementById('dzDetectedFields').innerHTML = rows.join('<br>') || '<span style="color:#7FA0B0">Sin más datos extraídos.</span>';
+  document.getElementById('dzPopup').classList.add('show');
+}
+
+function dzOpenFix(opts){
+  dzMode='fix';
+  document.getElementById('dzViewDetected').style.display='none';
+  document.getElementById('dzViewFix').style.display='block';
+  document.getElementById('dzViewReceipt').style.display='none';
+  document.getElementById('dzTitlebarLabel').textContent = opts.auto ? 'Corrección requerida' : 'Confirma los datos';
+  document.getElementById('dzFixTitle').textContent = opts.auto ? 'Corrige los datos y reintenta' : 'Revisa y confirma el tipo y los datos';
+  const banner = document.getElementById('dzAutoBanner');
+  if(opts.auto && opts.bannerText){ banner.style.display='flex'; document.getElementById('dzAutoBannerText').textContent=opts.bannerText; }
+  else { banner.style.display='none'; }
+  const f = opts.fields||{};
+  document.getElementById('dzFixDetectado').value = opts.detectadoGuess||'';
+  document.getElementById('dzFixTipo').value = f.tipo||'';
+  document.getElementById('dzFixMotivo').value = f.motivo||'';
+  document.getElementById('dzFixNombre').value = f.nombre||'';
+  document.getElementById('dzFixId').value = f.id||'';
+  document.getElementById('dzFixMes').value = '';
+  document.getElementById('dzFixAnio').value = '';
+  document.getElementById('dzFixFeedback').className='fix-feedback';
+  document.getElementById('dzFixFeedback').textContent='';
+  dzToggleTipoField();
+  document.getElementById('dzPopup').classList.add('show');
+}
+
+function dzToggleTipoField(){
+  const v = document.getElementById('dzFixDetectado').value;
+  document.getElementById('dzFixTipoField').style.display = v.startsWith('BAJA') ? 'block' : 'none';
+}
+document.getElementById('dzFixDetectado').addEventListener('change', dzToggleTipoField);
+
+document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
+  const detectado = document.getElementById('dzFixDetectado').value;
+  const mes = document.getElementById('dzFixMes').value;
+  const anio = document.getElementById('dzFixAnio').value;
+  const id = document.getElementById('dzFixId').value.trim();
+  const fb = document.getElementById('dzFixFeedback');
+  if(detectado && mes && anio && id){
+    fb.className='fix-feedback ok';
+    fb.textContent='Datos confirmados. (Pendiente de conectar la escritura real a KV — de momento no se persiste.)';
+    setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
+  } else {
+    fb.className='fix-feedback fail';
+    fb.textContent='Revisa los campos obligatorios: Detectado, ID Oportunidad y Convocatoria.';
+  }
+});
+
+document.getElementById('dzLinkDelete').addEventListener('click', ()=>{
+  bmRequestPassword(()=>{ document.getElementById('dzPopup').classList.remove('show'); }, 'Introduce la contraseña para borrar este registro.');
+});
+
+function dzOpenReceipt(filename){
+  dzMode='receipt';
+  document.getElementById('dzViewDetected').style.display='none';
+  document.getElementById('dzViewFix').style.display='none';
+  document.getElementById('dzViewReceipt').style.display='block';
+  document.getElementById('dzTitlebarLabel').textContent='Comprobante';
+  document.getElementById('dzReceiptFilename').textContent = filename;
+  document.getElementById('dzReceiptId').value = '';
+  document.getElementById('dzReceiptFeedback').className='fix-feedback';
+  document.getElementById('dzReceiptFeedback').textContent='';
+  document.getElementById('dzPopup').classList.add('show');
+}
+
+document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(dzMode==='detect'){
+      if(btn.classList.contains('red')){
+        dzOpenFix({auto:false, fields:dzPendingFields, detectadoGuess: dzPendingType==='PF'?'PF NUEVA':(dzPendingType==='HM'?'HM NUEVA':'')});
+      } else {
+        document.getElementById('dzPopup').classList.remove('show');
+      }
+    } else if(dzMode==='fix'){
+      if(!btn.classList.contains('red')) document.getElementById('dzPopup').classList.remove('show');
+    } else if(dzMode==='receipt'){
+      if(btn.classList.contains('green')){
+        const id = document.getElementById('dzReceiptId').value.trim();
+        const fb = document.getElementById('dzReceiptFeedback');
+        if(id){ fb.className='fix-feedback ok'; fb.textContent='Comprobante vinculado a '+id+'. (Pendiente de conectar la extracción automática de la imagen.)'; setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1800); }
+        else { fb.className='fix-feedback fail'; fb.textContent='Indica el ID Oportunidad al que corresponde.'; }
+      } else {
+        document.getElementById('dzPopup').classList.remove('show');
+      }
+    }
+  });
+});
+
+function dzProcessLeftText(text){
+  const type = dzClassify(text);
+  if(!type){
+    dzOpenFix({auto:true, bannerText:'No se ha reconocido el tipo de documento automáticamente.', fields:{}});
+    return;
+  }
+  const fields = dzExtractFields(type, text);
+  if((type==='PF'||type==='HM') && fields.id){
+    dzOpenDetected(type, fields);
+  } else if(type==='PF'||type==='HM'){
+    dzOpenFix({auto:true, bannerText:'No se ha podido extraer el ID Oportunidad — dato obligatorio ausente.', fields, detectadoGuess:type+' NUEVA'});
+  } else {
+    /* Baja/CC/CE/CP siempre pasan por aquí: necesitan que confirmes el estado (PF o Finalizada) */
+    dzOpenFix({auto:false, fields});
+  }
+}
+
+async function dzProcessLeftFile(file){
+  if(file.type==='application/pdf' || /\.pdf$/i.test(file.name)){
+    const text = await dzReadPdfText(file);
+    if(!text.trim()){
+      dzOpenFix({auto:true, bannerText:'El archivo no contiene texto legible (posible PDF escaneado). Si tienes el texto del correo, pégalo en el recuadro en vez de arrastrar el archivo.', fields:{}});
+      return;
+    }
+    dzProcessLeftText(text);
+  } else {
+    dzOpenFix({auto:true, bannerText:'No se ha podido leer el archivo automáticamente (imagen sin texto extraíble). Si tienes el texto del correo, pégalo en el recuadro en vez de la captura.', fields:{}});
+  }
+}
+
+function dzWireLeft(){
+  const zone = document.getElementById('dzLeft');
+  const input = document.getElementById('dzLeftInput');
+  const paste = document.getElementById('dzLeftPaste');
+  zone.addEventListener('click', (e)=>{ if(e.target!==paste) input.click(); });
+  zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e=>{
+    e.preventDefault(); zone.classList.remove('dragover');
+    [...e.dataTransfer.files].forEach(dzProcessLeftFile);
+  });
+  input.addEventListener('change', e=>{ [...e.target.files].forEach(dzProcessLeftFile); input.value=''; });
+  paste.addEventListener('paste', ()=>{
+    setTimeout(()=>{
+      const text = paste.value.trim();
+      if(text){ dzProcessLeftText(text); paste.value=''; }
+    }, 30);
+  });
+}
+
+function dzWireRight(){
+  const zone = document.getElementById('dzRight');
+  const input = document.getElementById('dzRightInput');
+  zone.addEventListener('click', ()=> input.click());
+  zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e=>{
+    e.preventDefault(); zone.classList.remove('dragover');
+    [...e.dataTransfer.files].forEach(f=>dzOpenReceipt(f.name));
+  });
+  input.addEventListener('change', e=>{ [...e.target.files].forEach(f=>dzOpenReceipt(f.name)); input.value=''; });
+}
+
+function initDropzones(){ dzWireLeft(); dzWireRight(); }
+
 /* Inicialización directa — esta página ya ES el módulo, no hay overlay que abrir */
+initDropzones();
 refreshAll();
 </script>
 
