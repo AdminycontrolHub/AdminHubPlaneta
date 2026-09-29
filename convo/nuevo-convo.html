@@ -434,9 +434,9 @@ body{ font-size:14px; }
         <th><div class="th-head-row"><span>ID Oportunidad</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielOppPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielOppPop"><input type="text" class="th-input" id="fielOppFilter" placeholder="Buscar…" oninput="renderPanels()"></div></th>
         <th><div class="th-head-row"><span>Convocatoria</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielConvPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielConvPop"><select class="th-select" id="fielConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select></div></th>
         <th><div class="th-head-row"><span>Programa</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielProgPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielProgPop"><select class="th-select" id="fielProgFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>PI %</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielPIPop"><select class="th-select" id="fielPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>JE</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielJEPop"><select class="th-select" id="fielJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th>Facturación</th>
+        <th><div class="th-head-row"><span>PI</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielPIPop"><select class="th-select" id="fielPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th><div class="th-head-row"><span>Asesor (Atenea)</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielJEPop"><select class="th-select" id="fielJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th>Facturación Neta</th>
       </tr></thead>
       <tbody id="fielBody"></tbody>
     </table>
@@ -506,9 +506,9 @@ body{ font-size:14px; }
         <th><div class="th-head-row"><span>ID Oportunidad</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excOppPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excOppPop"><input type="text" class="th-input" id="excOppFilter" placeholder="Buscar…" oninput="renderPanels()"></div></th>
         <th><div class="th-head-row"><span>Convocatoria</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excConvPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excConvPop"><select class="th-select" id="excConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select></div></th>
         <th><div class="th-head-row"><span>Programa</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excProgPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excProgPop"><select class="th-select" id="excProgFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>PI %</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excPIPop"><select class="th-select" id="excPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>JE</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excJEPop"><select class="th-select" id="excJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th>Facturación</th>
+        <th><div class="th-head-row"><span>PI</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excPIPop"><select class="th-select" id="excPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th><div class="th-head-row"><span>Asesor (Atenea)</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excJEPop"><select class="th-select" id="excJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
+        <th>Facturación Neta</th>
         <th>Comentarios</th>
       </tr></thead>
       <tbody id="excBody"></tbody>
@@ -652,6 +652,10 @@ body{ font-size:14px; }
       <div class="fix-field"><label class="fix-label">Nombre</label><input type="text" id="dzFixNombre"></div>
       <div class="fix-field"><label class="fix-label">ID Oportunidad</label><input type="text" id="dzFixId"></div>
       <div class="fix-field"><label class="fix-label">Programa</label><input type="text" id="dzFixPrograma"></div>
+      <div class="fix-row">
+        <div class="fix-field" style="flex:1;"><label class="fix-label">Asesor (Atenea)</label><input type="text" id="dzFixAsesor"></div>
+        <div class="fix-field" style="flex:1;"><label class="fix-label">PI</label><input type="number" id="dzFixPi"></div>
+      </div>
       <div class="fix-field"><label class="fix-label">Convocatoria</label>
         <div class="fix-row">
           <select id="dzFixMes" style="flex:1;"><option value="">Mes</option><option>Abril</option><option>Octubre</option></select>
@@ -663,6 +667,20 @@ body{ font-size:14px; }
         <span class="link-delete" id="dzLinkDelete">Borrar registro</span>
       </div>
       <div class="fix-feedback" id="dzFixFeedback"></div>
+    </div>
+
+    <div id="dzViewMatch" style="display:none;">
+      <div class="fix-title">Ya existe una fila con este ID</div>
+      <div class="imac-fields" id="dzMatchExisting"></div>
+      <div style="margin:14px 0; border-top:1px solid rgba(255,255,255,0.12);"></div>
+      <div class="fix-title" style="font-size:13px;">Cambios a aplicar</div>
+      <div class="imac-fields" id="dzMatchChanges"></div>
+      <div class="imac-hint" style="margin-top:12px;">
+        <span><i style="background:#3DDC97"></i>Confirmar y mover</span>
+        <span><i style="background:#FFD24D"></i>Aplazar</span>
+        <span><i style="background:#FF5C5C"></i>Cancelar</span>
+      </div>
+      <div class="fix-feedback" id="dzMatchFeedback"></div>
     </div>
 
     <div id="dzViewReceipt" style="display:none;">
@@ -883,6 +901,19 @@ function dzAddManualRow(brandKey,statKey,row){
   if(!dzManualRows[k]) dzManualRows[k]=[];
   dzManualRows[k].push(row);
 }
+/* Busca una fila ya añadida en esta sesión por ID Oportunidad, en cualquier marca/estadística */
+function dzFindManualRowById(id){
+  if(!id) return null;
+  for(const key in dzManualRows){
+    const rows = dzManualRows[key];
+    const idx = rows.findIndex(r=>r.idOportunidad===id);
+    if(idx!==-1){
+      const [brandKey,statKey] = key.split('|');
+      return {brandKey, statKey, key, row:rows[idx]};
+    }
+  }
+  return null;
+}
 
 function euro(n){return n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
 
@@ -1041,7 +1072,7 @@ function rowHtmlFiel(r){
     <td class="id-muted">${r.idOportunidad}</td>
     <td>${convTagHtml(r.convocatoria)}</td>
     <td>${r.programa}</td>
-    <td class="pi-pct">${r.pi}%</td>
+    <td class="pi-pct">${r.pi}</td>
     <td><span class="je-pill">${r.je}</span></td>
     <td class="fact-cell">${euro(r.facturacion)}</td>
   </tr>`;
@@ -1053,7 +1084,7 @@ function rowHtmlExc(r){
     <td class="id-muted">${r.idOportunidad}</td>
     <td>${convTagHtml(r.convocatoria)}</td>
     <td>${r.programa}</td>
-    <td class="pi-pct">${r.pi!=null?r.pi+'%':'—'}</td>
+    <td class="pi-pct">${r.pi!=null?r.pi:'—'}</td>
     <td><span class="je-pill">${r.je}</span></td>
     <td class="fact-cell">${r.facturacion!=null?euro(r.facturacion):'—'}</td>
     <td class="comment-cell">${r.comentario||''}</td>
@@ -1730,11 +1761,13 @@ function dzConvForRow(conv){
 }
 
 function dzExtractFields(type, text){
-  const f = {nombre:'', id:'', programa:'', convocatoria:'', motivo:'', tipo:'', marca:'', facturacion:null};
+  const f = {nombre:'', id:'', programa:'', convocatoria:'', motivo:'', tipo:'', marca:'', facturacion:null, asesor:'', pi:null};
   const idMatch = text.match(/\b(\d{4}-\d{6,})\b/);
   if(idMatch) f.id = idMatch[1];
   f.marca = dzResolveBrandKey(text);
   f.facturacion = dzParseAmount(dzLine(text,'Facturaci[oó]n Neta') || dzLine(text,'Importe Total Final a Pagar') || dzLine(text,'Importe programa'));
+  f.asesor = dzLine(text,'Asesor \\(Atenea\\)') || dzLine(text,'Asesora?');
+  f.pi = dzParseAmount(dzLine(text,'\\bPI\\b') || dzLine(text,'Importe Inscripci[oó]n'));
 
   if(type==='PF'){
     f.nombre = dzLine(text,'Alumno');
@@ -1757,7 +1790,7 @@ function dzExtractFields(type, text){
 }
 
 let dzMode = 'detect'; // 'detect' | 'fix' | 'receipt'
-let dzPendingFields = null, dzPendingType = null;
+let dzPendingFields = null, dzPendingType = null, dzFixParsedFields = {};
 
 /* Si hay una ficha de marca abierta (siempre es el caso: las zonas de arrastre solo se ven dentro
    de una ficha abierta), esa marca es la asunción por defecto — el documento no tiene por qué
@@ -1779,6 +1812,8 @@ function dzOpenDetected(type, fields){
   if(fields.nombre) rows.push('<b>Alumno:</b> '+fields.nombre);
   if(fields.id) rows.push('<b>ID Oportunidad:</b> '+fields.id);
   if(fields.programa) rows.push('<b>Programa:</b> '+fields.programa);
+  if(fields.asesor) rows.push('<b>Asesor (Atenea):</b> '+fields.asesor);
+  if(fields.pi!=null) rows.push('<b>PI:</b> '+fields.pi);
   if(fields.convocatoria) rows.push('<b>Convocatoria:</b> '+fields.convocatoria);
   document.getElementById('dzDetectedFields').innerHTML = rows.join('<br>') || '<span style="color:#7FA0B0">Sin más datos extraídos.</span>';
   const dfb = document.getElementById('dzDetectedFeedback');
@@ -1797,6 +1832,7 @@ function dzOpenFix(opts){
   if(opts.auto && opts.bannerText){ banner.style.display='flex'; document.getElementById('dzAutoBannerText').textContent=opts.bannerText; }
   else { banner.style.display='none'; }
   const f = opts.fields||{};
+  dzFixParsedFields = f;
   const cv = dzParseConvocatoria(f.convocatoria);
   document.getElementById('dzFixDetectado').value = opts.detectadoGuess||'';
   document.getElementById('dzFixMarca').value = dzAssumedBrand(f);
@@ -1805,6 +1841,8 @@ function dzOpenFix(opts){
   document.getElementById('dzFixNombre').value = f.nombre||'';
   document.getElementById('dzFixId').value = f.id||'';
   document.getElementById('dzFixPrograma').value = f.programa||'';
+  document.getElementById('dzFixAsesor').value = f.asesor||'';
+  document.getElementById('dzFixPi').value = f.pi!=null ? f.pi : '';
   document.getElementById('dzFixMes').value = cv.mes;
   document.getElementById('dzFixAnio').value = cv.anio;
   document.getElementById('dzFixFeedback').className='fix-feedback';
@@ -1833,19 +1871,36 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
   const id = document.getElementById('dzFixId').value.trim();
   const nombre = document.getElementById('dzFixNombre').value.trim();
   const programa = document.getElementById('dzFixPrograma').value.trim();
+  const asesor = document.getElementById('dzFixAsesor').value.trim();
+  const piVal = document.getElementById('dzFixPi').value;
+  const motivo = document.getElementById('dzFixMotivo').value;
+  const tipo = document.getElementById('dzFixTipo').value;
   const fb = document.getElementById('dzFixFeedback');
-  if(detectado && marca && mes && anio && id){
-    const statKey = detectado.startsWith('BAJA') ? 'bajas' : (detectado.startsWith('PF')||detectado.startsWith('HM')) ? 'altas' : 'ccce';
+  if(!(detectado && marca && mes && anio && id)){
+    fb.className='fix-feedback fail';
+    fb.textContent='Revisa los campos obligatorios: Detectado, Marca, ID Oportunidad y Convocatoria.';
+    return;
+  }
+  const esNuevaMatricula = detectado.startsWith('PF')||detectado.startsWith('HM');
+  const statKey = detectado.startsWith('BAJA') ? 'bajas' : esNuevaMatricula ? 'altas' : 'ccce';
+  const existing = dzFindManualRowById(id);
+
+  if(esNuevaMatricula){
+    if(existing){
+      fb.className='fix-feedback fail';
+      fb.textContent='Ya existe una fila con ID '+id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+'). No se añade duplicada.';
+      return;
+    }
     const row = {
       nombre: nombre || '(sin nombre)',
       idNacs: '—',
       idOportunidad: id,
       convocatoria: mes,
       programa: programa || '—',
-      pi: null,
-      je: '—',
-      facturacion: null,
-      comentario: 'Añadido desde arrastre ('+detectado+') — pendiente de completar PI%/JE/Facturación/ID NACS.'
+      pi: piVal!=='' ? Number(piVal) : null,
+      je: asesor || '—',
+      facturacion: dzFixParsedFields.facturacion!=null ? dzFixParsedFields.facturacion : null,
+      comentario: 'Añadido desde arrastre ('+detectado+') — pendiente de completar ID NACS.'
     };
     dzAddManualRow(marca, statKey, row);
     mtRenderGrid(); renderPanels(); renderSummary();
@@ -1853,14 +1908,47 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
     fb.textContent='Fila añadida a "PF y Otras Excepciones" ('+MT_BRANDS.find(b=>b.key===marca).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[statKey])+').';
     setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
   } else {
-    fb.className='fix-feedback fail';
-    fb.textContent='Revisa los campos obligatorios: Detectado, Marca, ID Oportunidad y Convocatoria.';
+    /* Baja / CC / CE / CP: modifican una fila existente — nunca se crea una nueva suelta */
+    if(!existing){
+      fb.className='fix-feedback fail';
+      fb.textContent='No se ha encontrado ninguna fila con ID '+id+' entre lo añadido en esta sesión. Añade primero la matrícula original o revisa el ID.';
+      return;
+    }
+    dzShowMatchPopup(existing, {detectado, marca, mes, anio, motivo, tipo, statKey});
   }
 });
 
 document.getElementById('dzLinkDelete').addEventListener('click', ()=>{
   bmRequestPassword(()=>{ document.getElementById('dzPopup').classList.remove('show'); }, 'Introduce la contraseña para borrar este registro.');
 });
+
+let dzMatchContext = null;
+
+function dzShowMatchPopup(existing, changes){
+  dzMode='match'; dzMatchContext = {existing, changes};
+  document.getElementById('dzViewDetected').style.display='none';
+  document.getElementById('dzViewFix').style.display='none';
+  document.getElementById('dzViewReceipt').style.display='none';
+  document.getElementById('dzViewMatch').style.display='block';
+  document.getElementById('dzTitlebarLabel').textContent='Fila encontrada';
+  const r = existing.row;
+  const brandName = (MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name || existing.brandKey;
+  const statLabel = {altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey];
+  document.getElementById('dzMatchExisting').innerHTML =
+    '<b>Marca:</b> '+brandName+' · '+statLabel+'<br>'+
+    '<b>Nombre:</b> '+r.nombre+'<br>'+
+    '<b>ID Oportunidad:</b> '+r.idOportunidad+'<br>'+
+    '<b>Programa:</b> '+r.programa+'<br>'+
+    '<b>Convocatoria:</b> '+r.convocatoria;
+  document.getElementById('dzMatchChanges').innerHTML =
+    '<b>Nuevo estado:</b> '+changes.detectado+'<br>'+
+    (changes.tipo?('<b>Tipo:</b> '+changes.tipo+'<br>'):'')+
+    (changes.motivo?('<b>Motivo:</b> '+changes.motivo+'<br>'):'')+
+    '<b>Convocatoria destino:</b> '+(changes.mes||'—')+' '+(changes.anio||'');
+  const fb = document.getElementById('dzMatchFeedback');
+  fb.className='fix-feedback'; fb.textContent='';
+  document.getElementById('dzPopup').classList.add('show');
+}
 
 function dzOpenReceipt(filename, wrongType){
   dzMode='receipt';
@@ -1899,8 +1987,12 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const fields = dzPendingFields, type = dzPendingType;
         const dfb = document.getElementById('dzDetectedFeedback');
         const brandKey = dzAssumedBrand(fields);
+        const existing = dzFindManualRowById(fields.id);
         if(!brandKey){
           dzOpenFix({auto:false, fields, detectadoGuess:type+' NUEVA'});
+        } else if(existing){
+          dfb.className='fix-feedback fail';
+          dfb.textContent='Ya existe una fila con ID '+fields.id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+'). No se añade duplicada.';
         } else {
           const row = {
             nombre: fields.nombre || '(sin nombre)',
@@ -1908,8 +2000,8 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
             idOportunidad: fields.id || '—',
             convocatoria: dzConvForRow(fields.convocatoria) || '—',
             programa: fields.programa || '—',
-            pi: null,
-            je: '—',
+            pi: fields.pi,
+            je: fields.asesor || '—',
             facturacion: fields.facturacion,
             comentario: 'Añadido desde arrastre ('+type+' NUEVA) — pendiente de completar PI%/JE/ID NACS.'
           };
@@ -1927,6 +2019,25 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
       }
     } else if(dzMode==='fix'){
       if(!btn.classList.contains('red')) document.getElementById('dzPopup').classList.remove('show');
+    } else if(dzMode==='match'){
+      if(btn.classList.contains('green')){
+        const {existing, changes} = dzMatchContext;
+        const arr = dzManualRows[existing.key];
+        const idx = arr ? arr.indexOf(existing.row) : -1;
+        if(idx!==-1) arr.splice(idx,1);
+        const updatedRow = Object.assign({}, existing.row, {
+          convocatoria: changes.mes || existing.row.convocatoria,
+          comentario: (existing.row.comentario?existing.row.comentario+' — ':'') + 'Actualizado por '+changes.detectado+(changes.motivo?(' ('+changes.motivo+')'):'')
+        });
+        dzAddManualRow(existing.brandKey, changes.statKey, updatedRow);
+        mtRenderGrid(); renderPanels(); renderSummary();
+        const fb = document.getElementById('dzMatchFeedback');
+        fb.className='fix-feedback ok';
+        fb.textContent='Fila movida a '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[changes.statKey])+'.';
+        setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
+      } else {
+        document.getElementById('dzPopup').classList.remove('show');
+      }
     } else if(dzMode==='receipt'){
       const wrongZone = document.getElementById('dzReceiptBanner').style.display !== 'none';
       if(wrongZone){
