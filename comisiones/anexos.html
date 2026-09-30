@@ -79,6 +79,10 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .abtn.dng{background:rgba(190,60,40,0.1);color:#a63a26}
 .abtn.dng:hover{background:rgba(190,60,40,0.2);filter:none}
 .abtn.sm{padding:9px 14px;font-size:12.5px}
+.gen-group{display:inline-flex;gap:6px;vertical-align:middle}
+.abtn.icon-btn{padding:9px 13px;font-size:22px;line-height:1;border-radius:10px}
+.gen-group.locked .abtn.icon-btn{background:#F0A830;color:#3a2600}
+.gen-group.locked .abtn.icon-btn:hover{filter:brightness(1.08)}
 .tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
 .tools .grow{flex:1}
 .bbdd-info{font-size:13px;color:#4c6578}
@@ -1018,13 +1022,8 @@ function paintEstado(r){
       gb.style.display='none'; // con fecha de fin de contrato no se puede (re)generar el anexo
     }else{
       gb.style.display='';
-      if(e.estado==='generado'){
-        gb.textContent='🔒 Volver a generar';
-        gb.title='Ya está generado. Pide la contraseña porque volver a generarlo cambia la fecha de la firma.';
-      }else{
-        gb.textContent='Generar y descargar';
-        gb.title='';
-      }
+      gb.classList.toggle('locked',e.estado==='generado');
+      gb.title=e.estado==='generado'?'Ya está generado. Pide la contraseña porque volver a generarlo cambia la fecha de la firma.':'';
     }
   }
 }
@@ -1136,7 +1135,13 @@ function renderRows(){
       cod.value=r.codigo||'';
       paintTrat();paintEstado(r);paintMin(r);
     };
-    var genBtn=el('button',{id:'gen_'+r.id,class:'abtn sm',onclick:function(){confirmRegen([r],function(){downloadRows([r]);});}});
+    var dlBtn=el('button',{class:'abtn sm icon-btn','aria-label':'Generar y descargar',title:'Generar y descargar',text:'📥'});
+    dlBtn.onclick=function(){confirmRegen([r],function(){downloadRows([r]);});};
+    var prBtn=el('button',{class:'abtn sm icon-btn','aria-label':'Generar e imprimir',title:'Generar e imprimir',text:'🖨️'});
+    prBtn.onclick=function(){confirmRegen([r],function(){printRows([r]);});};
+    var mlBtn=el('button',{class:'abtn sm icon-btn','aria-label':'Generar y enviar por correo',title:'Generar, descargar y abrir un correo con la plantilla',text:'📧'});
+    mlBtn.onclick=function(){confirmRegen([r],function(){sendMailFor(r);});};
+    var genGrp=el('span',{id:'gen_'+r.id,class:'gen-group'},[dlBtn,prBtn,mlBtn]);
     tr.appendChild(el('td',null,[cb]));
     tr.appendChild(el('td',null,[el('span',{class:'bbdd-info',text:rm?marcaLabel(rm):'—'})]));
     tr.appendChild(el('td',null,[cod]));
@@ -1150,7 +1155,7 @@ function renderRows(){
     tr.appendChild(el('td',{class:'mg',id:'mi_'+r.id}));
     tr.appendChild(el('td',{class:'st',id:'stt_'+r.id}));
     tr.appendChild(el('td',{style:'text-align:right'},[
-      genBtn,
+      genGrp,
       document.createTextNode(' '),
       el('button',{class:'abtn sm dng','aria-label':'Quitar fila',text:'✕',onclick:function(){askPass(function(){removeRows([r]);});}})]));
     tb.appendChild(tr);
@@ -1463,6 +1468,19 @@ async function downloadRows(list){
   if(odd)msg+='Revisa '+odd+': a la plantilla le falta algún campo (nombre, antigüedad, Sr./Sra. o XXXFECHA). ';
   if(res.errs.length)msg+='No se han podido generar: '+res.errs.join(' · ');
   toast(msg,res.errs.length?9000:5000);
+}
+// Plantilla del correo de "Generar y enviar". Cámbiala aquí cuando VRO la afine.
+var MAIL_ASUNTO='Tu nuevo Anexo de Comisiones';
+var MAIL_CUERPO='Querido colaborador,\n\nAquí tienes tu nuevo Anexo de Comisiones actualizado. En el mismo documento podrás ver la vigencia del mismo y todos los detalles acordados.\n\nNecesitamos que, por favor, lo devuelvas firmado y escaneado a tu JE en el plazo de 24h.\n\nSi tienes dudas puedes consultarlas con tu Jefe de equipo.\n\nUn saludo.';
+async function sendMailFor(r){
+  var res=await buildMany([r]);
+  if(!res.ok.length){toast('No se ha podido generar: '+res.errs.join(' · '),9000);return;}
+  saveBlob(new Blob([res.ok[0].buf],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),res.ok[0].name);
+  openSharePointFolders([r]);
+  var a=document.createElement('a');
+  a.href='mailto:?subject='+encodeURIComponent(MAIL_ASUNTO)+'&body='+encodeURIComponent(MAIL_CUERPO);
+  document.body.appendChild(a);a.click();a.remove();
+  toast('Anexo descargado y correo abierto con la plantilla. Los enlaces de correo no permiten adjuntar solos: adjunta el archivo que se acaba de descargar antes de enviarlo.',9000);
 }
 function nextFrame(){return new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r);});});}
 function ptToPx(pt){return pt*96/72;}
