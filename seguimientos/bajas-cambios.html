@@ -323,6 +323,7 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
             <input type="text" id="historicoSearch" placeholder="Buscar por ID de oportunidad, ID NACS o nombre...">
           </div>
           <button class="btn-filtros" id="btnFiltrosHistorico" onclick="toggleFiltrosHistorico()">⚙ Filtros</button>
+          <button class="btn-filtros" onclick="exportarHistoricoExcel()" title="Descarga en Excel lo que se ve ahora en la tabla (con los filtros y la búsqueda aplicados)">⬇ Exportar Excel</button>
         </div>
         <div class="filtros-panel" id="filtrosPanelHistorico">
           <select id="filtroHistMarca" onchange="renderHistoricoGeneral()"><option value="">Todas las marcas</option></select>
@@ -563,7 +564,7 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 </div>
 
 <script>
-console.log('%cHub Bajas y Cambios — versión 2026-09-17-d', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
+console.log('%cHub Bajas y Cambios — versión 2026-10-01-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
 // ============================================================
 // CONFIGURACION
 // ============================================================
@@ -657,7 +658,7 @@ const TEXTOS = {
 };
 
 // Texto general "para Atenea" (no por caso): un bloque de plantilla fija por
-// categoria, con el mes de convocatoria compartido insertado donde corresponde.
+// categoria, con el mes de convocatoria compartido insertado donde corresponda.
 const TEXTOS_ATENEA = {
   ce: (mes) => `Cambio de Edición - ${mes}
 Cambio de convocatoria a: 
@@ -775,6 +776,12 @@ async function cargarTodo(){
 
   const idsClaves = keys.filter(k => k !== KV_KEY_CONFIG && k !== KV_KEY_PLAZO_NACS && k !== KV_KEY_CRUCE_NACS && !k.startsWith('hub_'));
 
+  // AHORRO DE LECTURAS: la lista ya trae tambien las claves "hub_", asi que
+  // sabemos de antemano que casos tienen datos propios del Hub. Solo se leen
+  // esos; para el resto no se hace la lectura (antes se leia igualmente y
+  // volvia vacia, pero Cloudflare la contaba contra el limite diario).
+  const clavesExistentes = new Set(keys);
+
   // Se piden en tandas (no todos a la vez) para evitar que el navegador
   // sature de conexiones simultaneas cuando hay muchos casos (por ejemplo,
   // tras cargar un historico grande) — cada tanda espera a la anterior, con
@@ -784,7 +791,8 @@ async function cargarTodo(){
   for(let i = 0; i < idsClaves.length; i += TAMANO_TANDA){
     const tanda = idsClaves.slice(i, i + TAMANO_TANDA);
     const parcial = await Promise.all(tanda.map(async key => {
-      const [macroData, hubData] = await Promise.all([kvGet(key), kvGet('hub_' + key)]);
+      const tieneHub = clavesExistentes.has('hub_' + key);
+      const [macroData, hubData] = await Promise.all([kvGet(key), tieneHub ? kvGet('hub_' + key) : Promise.resolve(null)]);
       if(!macroData) return null;
       return Object.assign({ key }, macroData, hubData || {});
     }));
@@ -2023,6 +2031,7 @@ function renderHistoricoGeneral(){
   });
 
   cerrados.sort((a,b) => fechaISOaComparar(fechaCierreDe(b)).localeCompare(fechaISOaComparar(fechaCierreDe(a))));
+  historicoVisible = cerrados; // lo que se ve ahora: es lo que exporta el boton "Exportar Excel"
 
   const tabla = document.getElementById('tablaHistorico');
   if(cerrados.length === 0){
@@ -2065,6 +2074,68 @@ function renderHistoricoGeneral(){
       <th style="width:10%;" class="${fMarca?'th-filtrable th-activo':'th-filtrable'}" onclick="enfocarFiltroPanel('marca')">Marca&nbsp;<span class="th-ico">▾</span></th><th style="width:13%;">ID Oportunidad</th><th style="width:16%;">Nombre</th><th style="width:9%;">ID NACS</th><th style="width:12%;" class="${fCat?'th-filtrable th-activo':'th-filtrable'}" onclick="enfocarFiltroPanel('categoria')">Tipo de gestión&nbsp;<span class="th-ico">▾</span></th><th style="width:12%;" class="${thCls('motivo')}" onclick="toggleColHistorico('motivo', event)">Motivo&nbsp;<span class="th-ico">▾</span></th><th style="width:10%;" class="${thCls('medio')}" onclick="toggleColHistorico('medio', event)">Medio devolución&nbsp;<span class="th-ico">▾</span></th><th style="width:10%;">Fecha de cierre</th><th style="width:8%;" class="${thCls('responsable')}" onclick="toggleColHistorico('responsable', event)">Responsable&nbsp;<span class="th-ico">▾</span></th><th style="width:8%;" class="${thCls('cerradoPor')}" onclick="toggleColHistorico('cerradoPor', event)">Cerrado por&nbsp;<span class="th-ico">▾</span></th><th style="width:8%;color:#a4293f;">⚠ Aviso</th>
     </tr></thead>
     <tbody>${filas}</tbody>`;
+}
+
+// ============================================================
+// EXPORTAR HISTORICO A EXCEL — solo lectura: descarga exactamente lo
+// que se ve en la tabla (busqueda y filtros incluidos). No guarda ni
+// lee nada del Worker.
+// ============================================================
+let historicoVisible = [];
+function exportarHistoricoExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('No se pudo cargar la librería de Excel. Revisa tu conexión e inténtalo de nuevo.');
+    return;
+  }
+  if(!historicoVisible.length){
+    alert('No hay resultados para exportar con la búsqueda y los filtros actuales.');
+    return;
+  }
+  const cabecera = ['Marca','ID Oportunidad','Nombre','ID NACS','Tipo de gestión','Motivo','Medio devolución','Fecha de cierre','Responsable','Cerrado por','Aviso'];
+  // Fecha como numero de Excel (sin desfases por zona horaria) para que se
+  // pueda ordenar y filtrar como fecha real; si no se entiende, va como texto.
+  const aFecha = s => {
+    const p = (s || '').split('/');
+    if(p.length !== 3) return s || '';
+    const serial = (Date.UTC(+p[2], +p[1]-1, +p[0]) - Date.UTC(1899, 11, 30)) / 86400000;
+    return isNaN(serial) ? (s || '') : serial;
+  };
+  const filas = historicoVisible.map(c => {
+    const cats = categoriasDeCaso(c);
+    const tipoTexto = cats.length ? cats.map(cc => cc.nombre).join(' + ') : (c.tipoGestion || '');
+    let variantePorDefecto = '';
+    for(const cc of cats){
+      if(TEXTOS[cc.id] && TEXTOS[cc.id].variantes){ variantePorDefecto = TEXTOS[cc.id].variantes[0]; break; }
+    }
+    const motivo = (c.textoMotivo && c.textoMotivo.trim())
+      ? c.textoMotivo.trim()
+      : (c.origen === 'historico' ? '—*' : (c.textoVariante || variantePorDefecto || ''));
+    return [
+      nombreMarca(c.marca),
+      idMostrado(c),
+      nombreMostrado(c),
+      idNacsMostrado(c) || '',
+      tipoTexto,
+      motivo,
+      c.textoMetodo || '',
+      aFecha(fechaCierreDe(c)),
+      c.responsableManual || c.responsable || '',
+      c.cerradoPor || '',
+      c.avisoError || ''
+    ];
+  });
+  const hoja = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
+  for(let r = 1; r <= filas.length; r++){
+    const celda = hoja[XLSX.utils.encode_cell({ r, c: 7 })]; // columna "Fecha de cierre"
+    if(celda && celda.t === 'n') celda.z = 'dd/mm/yyyy';
+  }
+  hoja['!cols'] = [10,18,28,14,22,28,18,14,14,14,30].map(w => ({ wch: w }));
+  hoja['!autofilter'] = { ref: hoja['!ref'] };
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, 'Histórico');
+  const hoy = new Date();
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(libro, `Historico_Bajas_y_Cambios_${fecha}.xlsx`);
 }
 
 let historicoSearchTimeout = null;
