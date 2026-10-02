@@ -1696,7 +1696,7 @@ async function downloadRows(list){
 }
 // Plantilla del correo de "Reclamar firma". Cámbiala aquí cuando VRO la afine.
 var RECLAMA_ASUNTO='Pendiente de firma: Anexo de Comisiones';
-var RECLAMA_CUERPO='Hola,\n\nTodavía estamos pendientes de recibir la firma de los siguientes AC de tu equipo:\n\n{LISTA}\n\nPor favor, recuérdales que lo firmen para que lo recibamos en la mayor brevedad.\n\nGracias y un saludo.';
+var RECLAMA_CUERPO='Buenos días,\n\nTodavía estamos pendientes de recibir la firma de los siguientes AC de tu equipo:\n\n{LISTA}\n\nPor favor, recuérdales que lo firmen para que lo recibamos en la mayor brevedad.\n\nGracias y un saludo.';
 async function reclamarFirma(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
   var yaFirmados=list.filter(function(r){return r.cargo==='AC'&&r.firmado;}).length;
