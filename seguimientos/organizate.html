@@ -2061,10 +2061,13 @@ mjTopicsReady = mjLoadMeetingCfg()
    #mesa-jueves-vivo     → abre Mesa del Jueves directamente en "En vivo"
    #mesa-jueves-orden    → enlace externo: solo la Orden del día (sin En vivo / Histórico)      */
 window.addEventListener('load', function(){
+  // .catch() de seguridad: si la carga de datos falla por cualquier motivo (red, KV, etc.),
+  // la herramienta se abre igualmente en vez de quedarse en blanco sin avisar.
+  const mjReady = (mjTopicsReady || Promise.resolve()).catch(e=>{ console.error('Mesa del Jueves: fallo al cargar datos', e); });
   if(PAGE_HASH === '#mesa-jueves-vivo'){
-    (mjTopicsReady || Promise.resolve()).then(()=>{ mjOpenTool('vivo'); });
+    mjReady.then(()=>{ mjOpenTool('vivo'); });
   } else if(MJ_ORDEN_ONLY){
-    (mjTopicsReady || Promise.resolve()).then(()=>{
+    mjReady.then(()=>{
       mjOpenTool('antes');
       mjRenderAgenda();
       const vivoBtn = document.querySelector('.mj-tab-btn[data-mjview="vivo"]');
@@ -2075,7 +2078,7 @@ window.addEventListener('load', function(){
   } else {
     openOrganizate();
     if(PAGE_HASH === '#organizate-yo'){
-      (mjTopicsReady || Promise.resolve()).then(()=>{ openOrgSub('yo'); });
+      mjReady.then(()=>{ openOrgSub('yo'); });
     }
   }
 });
