@@ -1005,13 +1005,31 @@ const MJ_STATUS_META = {
   en_tratamiento: {label:'En tratamiento', cls:'st-live'},
   cerrado:        {label:'Cerrado',        cls:'st-closed'},
 };
+function mjAuthorOf(t){ return (t && (t.author || mjAssigneeList(t)[0])) || '—'; }
 function mjAssigneeList(t){
   if(!t || !t.assignee) return [];
   return Array.isArray(t.assignee) ? t.assignee : [t.assignee];
 }
+function mjSnapToMeetingWeekKey(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr+'T00:00:00');
+  if(isNaN(d)) return null;
+  return mjWeekKeyFor(mjAddDays(d, (mjMeetingCfg.weekday - d.getDay() + 7) % 7));
+}
+// Semana de reunión en la que le toca volver a un tema (trasladado, o en tratamiento con fecha prevista futura)
+function mjDueWeekKey(t){
+  if(t.moveTo){
+    if(t.moveTo==='fecha') return mjSnapToMeetingWeekKey(t.moveDate) || t.moveTargetWeekKey || null;
+    return t.moveTargetWeekKey || null;
+  }
+  if(t.status==='en_tratamiento' && t.resolutionDate) return mjSnapToMeetingWeekKey(t.resolutionDate);
+  return null;
+}
 function mjIsHiddenThisWeek(t){
-  // Un tema trasladado a una semana futura no debe verse en Orden del día / En vivo hasta que llegue esa semana
-  return !!(t.moveTo && t.moveTargetWeekKey && mjCurrentWeekKey && t.moveTargetWeekKey > mjCurrentWeekKey);
+  // Un tema aplazado a una semana futura no debe verse en Orden del día / En vivo hasta que llegue esa semana
+  const due = mjDueWeekKey(t);
+  const cur = mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday());
+  return !!(due && due > cur);
 }
 function mjShouldHideFromLive(t){
   // Los cerrados se quedan visibles en gris esta semana (según la leyenda); al cambiar de semana pasan solos a Histórico.
@@ -1079,9 +1097,12 @@ function mjWeekKeyFor(date){
 }
 function mjAddDays(date, days){ return new Date(date.getFullYear(), date.getMonth(), date.getDate()+days); }
 function mjComputeMoveTargetWeekKey(moveTo, moveDateStr){
-  const base = mjGetRelevantThursday();
-  if(moveTo==='proximo') return mjWeekKeyFor(mjAddDays(base,7));
-  if(moveTo==='dos') return mjWeekKeyFor(mjAddDays(base,14));
+  // Siguiente reunión estrictamente posterior a hoy (si hoy es día de reunión, la de la semana que viene)
+  const hoy = new Date(); const hoy0 = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  let dif = (mjMeetingCfg.weekday - hoy0.getDay() + 7) % 7; if(dif===0) dif = 7;
+  const base = mjAddDays(hoy0, dif);
+  if(moveTo==='proximo') return mjWeekKeyFor(base);
+  if(moveTo==='dos') return mjWeekKeyFor(mjAddDays(base,7));
   if(moveTo==='fecha' && moveDateStr){
     let d = new Date(moveDateStr+'T00:00:00');
     const wd = mjMeetingCfg.weekday;
@@ -1144,12 +1165,14 @@ async function mjLoadTopics(){
          y solo recuperan burbuja los temas que se pospusieron para esta semana (recurrentes). */
       mjArchiveWeek(storedWeekKey, storedTopics);
       const locked = storedTopics.find(t=>t.locked) || mjTopics[0];
-      const reactivar = storedTopics.filter(t=>!t.locked && t.status!=='cerrado' && !(t.moveTo && t.moveTargetWeekKey && t.moveTargetWeekKey>currentWeekKey));
+      const abiertos = storedTopics.filter(t=>!t.locked && t.status!=='cerrado');
+      const futuros = abiertos.filter(t=>{ const due = mjDueWeekKey(t); return due && due > currentWeekKey; });
+      const reactivar = abiertos.filter(t=>!futuros.includes(t));
       mjTopics = [locked, ...reactivar.map(t=>({
         id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
-        title:t.title, status:'pendiente', assignee:t.assignee||null,
+        title:t.title, status:'pendiente', assignee:t.assignee||null, author: mjAuthorOf(t),
         comments:[], recurring:(t.recurring||0)+1, dateCreated: t.dateCreated || mjTodayISO()
-      }))];
+      })), ...futuros];
       mjCurrentWeekKey = currentWeekKey;
       mjTopicsLoadedOk = true;
       await mjSaveHistoricoPast();
@@ -1239,17 +1262,17 @@ function mjRenderAgenda(){
       const openCount = mjTopics.filter(x=>!x.locked).length;
       row.innerHTML = `
         <div class="mj-row-title" data-id="${t.id}">${t.title}${t.carriedFrom ? `<span class="mj-carry-tag">↳ viene de ${t.carriedFrom}</span>` : ''}</div>
-        <div class="mj-avatar" title="Autor: ${t.author} — toca para corregir" onclick="mjOpenAuthorPicker('${t.id}')" style="cursor:pointer;background:color-mix(in srgb, ${mjColorFor(t.author)} 22%, var(--mj-surface-3));color:${mjColorFor(t.author)};border:1px solid color-mix(in srgb, ${mjColorFor(t.author)} 45%, transparent);">${t.author[0]}</div>
+        <div class="mj-avatar" title="Autor: ${mjAuthorOf(t)} — toca para corregir" onclick="mjOpenAuthorPicker('${t.id}')" style="cursor:pointer;background:color-mix(in srgb, ${mjColorFor(mjAuthorOf(t))} 22%, var(--mj-surface-3));color:${mjColorFor(mjAuthorOf(t))};border:1px solid color-mix(in srgb, ${mjColorFor(mjAuthorOf(t))} 45%, transparent);">${mjAuthorOf(t)[0]}</div>
         <button class="mj-icon-btn" title="Subir" data-mjact="up" data-id="${t.id}" ${openIdx===0?'disabled style="opacity:.25;cursor:default;"':''}>▲</button>
         <button class="mj-icon-btn" title="Bajar" data-mjact="down" data-id="${t.id}" ${openIdx===openCount-1?'disabled style="opacity:.25;cursor:default;"':''}>▼</button>
         <button class="mj-icon-btn" title="${t.recurring?'Quitar marca de recurrente':'Marcar como recurrente (violeta en el orbe)'}" data-mjact="rec" data-id="${t.id}" style="opacity:${t.recurring?1:.4};">🔁</button>
         <button class="mj-icon-btn" title="Editar" data-mjact="edit" data-id="${t.id}">✎</button>
         <button class="mj-icon-btn" title="Eliminar" data-mjact="del" data-id="${t.id}">🗑</button>`;
-      row.style.borderLeftColor = mjColorFor(t.author);
+      row.style.borderLeftColor = mjColorFor(mjAuthorOf(t));
     }
     wrap.appendChild(row);
   });
-  document.getElementById('mj-count-antes').textContent = mjTopics.length + ' temas';
+  document.getElementById('mj-count-antes').textContent = mjTopics.filter(t=>t.locked || !mjShouldHideFromLive(t)).length + ' temas';
 
   wrap.querySelectorAll('[data-mjact="up"]').forEach(b=>{
     b.addEventListener('click', ()=> mjMoveTopic(b.dataset.id, -1));
@@ -1414,7 +1437,7 @@ function mjOpenDetail(id){
       <div>
         <div class="mj-detail-sub">TEMA${t.recurring ? ' · recurrente' : ''}</div>
         <div class="mj-detail-title">${t.title}</div>
-        <div class="mj-author-tag" style="--pc:${mjColorFor(t.author)}">${t.author}</div>
+        <div class="mj-author-tag" style="--pc:${mjColorFor(mjAuthorOf(t))}">${mjAuthorOf(t)}</div>
       </div>
       <button class="mj-close-x" id="mjCloseDetail">✕</button>
     </div>
