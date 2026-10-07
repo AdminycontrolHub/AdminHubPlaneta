@@ -1000,7 +1000,9 @@ function cmContarMesesNoEnviar(idNacs){
   return meses.size;
 }
 // Fila que sigue marcada como "No enviar ×2" (si el comentario se edita a otra cosa, deja de contar)
-function cmEsNE2Activo(r){ return !!r.noEnviar2 && cmEsNoEnviar(r.comentarios); }
+// Se calcula siempre a partir del historial (no depende de ninguna marca guardada), así también
+// funciona con listados que se cargaron antes de existir esta función.
+function cmEsNE2Activo(r){ return cmEsNoEnviar(r.comentarios) && cmContarMesesNoEnviar(r.idNacs) >= 2; }
 // Fila que no hay que gestionar: oculta a mano o "No enviar ×2" vigente
 function cmEsNoGestionable(r){ return !!r.oculto || cmEsNE2Activo(r); }
 
@@ -2118,7 +2120,7 @@ function cmExportExcel(){
     'Fecha último cambio': r.ultimaFecha || '',
     'Email enviado a marca': r.marcaEnviada ? 'Sí' : 'No',
     'Comentarios': r.comentarios || '',
-    'No enviar ×2': r.noEnviar2 ? 'Sí' : 'No',
+    'No enviar ×2': cmEsNE2Activo(r) ? 'Sí' : 'No',
     'Oculto': r.oculto ? 'Sí' : 'No',
     'Usuario': r.ultimoUsuario || ''
   }));
