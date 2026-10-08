@@ -1176,38 +1176,50 @@ function renderPanels(){
   mergeBar.style.display='flex';
   panelFiel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-const EXPORT_COLS=['STATUS','SEGUIMIENTO','ID OPORTUNIDAD','DÍA CERO','TIPOLOGÍA MATRÍCULA','TIPOLOGÍA ALUMNO','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','ID PROGRAMA','PROGRAMA','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JE','DV','FECHA BAJA','MOTIVO DE BAJA','LÍNEA COMPLETA'];
+const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA'];
+/* dd/mm/aaaa -> Date (Excel lo guarda como fecha real, igual que el archivo Convo 27) */
+function dzToDate(str){
+  const m=String(str||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m?new Date(Date.UTC(+m[3],+m[2]-1,+m[1])):'';
+}
+/* "Abril 2027" -> 2704 ; "Octubre 2026" -> 2610 (código AAMM como en la columna CONVOCATORIA) */
+function dzConvCode(conv){
+  const m=String(conv||'').match(/(Abril|Octubre)\D*(20\d{2})/i);
+  if(!m) return '';
+  return Number(m[2].slice(2)+(/abril/i.test(m[1])?'04':'10'));
+}
 function exportRecord(r,statKey,seguimiento){
   const d=r.datos||{};
   const asesor=(r.je&&r.je!=='—')?r.je:'';
-  const conv=d.convocatoriaFull||r.convocatoria||'';
+  const eq=dzLookupEquipo(asesor);
+  const idProg=d.idPrograma&&/^\d+$/.test(String(d.idPrograma).trim())?Number(d.idPrograma):(d.idPrograma||'');
   const rec={
     'STATUS': statKey==='bajas'?'BAJAS arranque curso':(statKey==='altas'?'ALTA':''),
     'SEGUIMIENTO': seguimiento,
+    'TIPOLOGIA MATRICULA': statKey==='bajas'?'BAJA':'ALTA',
+    'TIPOLOGIA ALUMNO': d.tipoAlumno||(statKey==='altas'?'NM':''),
     'ID OPORTUNIDAD': r.idOportunidad&&r.idOportunidad!=='—'?r.idOportunidad:'',
-    'DÍA CERO': '',
-    'TIPOLOGÍA MATRÍCULA': statKey==='bajas'?'BAJA':(statKey==='altas'?'ALTA':'CAMBIO'),
-    'TIPOLOGÍA ALUMNO': statKey==='ccce'?(d.tipoDoc||''):'',
-    'NOMBRES APELLIDOS': r.nombre&&r.nombre!=='(sin nombre)'?r.nombre:'',
-    'PAÍS DE RESIDENCIA': d.pais||'',
-    'CONVOCATORIA': conv,
-    'ID PROGRAMA': d.idPrograma||'',
+    'DIA CERO': '',
+    'FECHA PRODUCCIÓN': dzToDate(d.fechaProduccion),
+    'FECHA INSCRIPCIÓN': dzToDate(d.fechaInscripcion),
+    'CONVOCATORIA': dzConvCode(d.convocatoriaFull),
     'PROGRAMA': r.programa&&r.programa!=='—'?r.programa:'',
-    'FECHA PRODUCCIÓN': d.fechaProduccion||'',
-    'FECHA INSCRIPCIÓN': d.fechaInscripcion||'',
+    'ID PROGRAMA': idProg,
+    'NOMBRES APELLIDOS': r.nombre&&r.nombre!=='(sin nombre)'?r.nombre.toUpperCase():'',
+    'PAÍS DE RESIDENCIA': d.pais||'',
     'FACTURACIÓN NETA': r.facturacion!=null?r.facturacion:'',
     'IMPORTE INSCRIPCIÓN': r.pi!=null?r.pi:'',
     'FORMA DE PAGO': d.formaPago||'',
     'ASESOR': asesor,
-    'JE': dzLookupEquipo(asesor).je,
-    'DV': dzLookupEquipo(asesor).dv,
-    'FECHA BAJA': d.fechaBaja||'',
+    'JEFE EQUIPO': eq.je,
+    'DIRECTOR VENTAS': eq.dv,
+    'FECHA BAJA': dzToDate(d.fechaBaja),
     'MOTIVO DE BAJA': statKey==='bajas'?(d.motivo||'').toUpperCase():'',
-    'LÍNEA COMPLETA': ''
+    'LINEA COMPLETA': ''
   };
   const req=['ID OPORTUNIDAD','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','PROGRAMA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR'];
   if(statKey==='bajas'){req.push('FECHA BAJA','MOTIVO DE BAJA');}
-  rec['LÍNEA COMPLETA']=req.every(k=>rec[k]!==''&&rec[k]!=null)?'SI':'NO';
+  rec['LINEA COMPLETA']=req.every(k=>rec[k]!==''&&rec[k]!=null)?'SI':'NO';
   return rec;
 }
 function exportPanel(which){
@@ -1223,12 +1235,13 @@ function exportPanel(which){
   if(which==='exc'||which==='ambos'){
     exceptionRows(b.key,stat).forEach(r=>recs.push(exportRecord(r,stat,'PF y Otras Excepciones')));
   }
-  const ws=XLSX.utils.json_to_sheet(recs,{header:EXPORT_COLS});
+  const ws=XLSX.utils.json_to_sheet(recs,{header:EXPORT_COLS,cellDates:true});
+  Object.keys(ws).forEach(a=>{ if(a[0]!=='!' && ws[a].t==='d') ws[a].z='dd/mm/yyyy'; });
   ws['!cols']=EXPORT_COLS.map(c=>({wch:Math.max(c.length+2,14)}));
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,('CONVOCATORIO '+b.name).slice(0,31));
+  XLSX.utils.book_append_sheet(wb,ws,'Convo 27 - Columnas Pedidas');
   const tag=which==='fiel'?'Fiel':which==='exc'?'PF-Excepciones':'Conjunto';
-  XLSX.writeFile(wb,`Convo27_${b.name}_${STAT_LABEL[stat].replace(/[^\w]+/g,'-')}_${tag}.xlsx`);
+  XLSX.writeFile(wb,`Convo27_${b.name}_${STAT_LABEL[stat].replace(/[^\w]+/g,'-')}_${tag}.xlsx`,{cellDates:true});
 }
 function addExceptionMock(){
   alert('Aquí se abriría el formulario para añadir manualmente un caso a "PF y otras excepciones a contar" (nombre, ID NACS, ID Oportunidad, convocatoria, programa, PI%, JE y facturación). Acción de ejemplo.');
@@ -1819,7 +1832,7 @@ function dzDate(str){
 function dzToday(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
 function dzDatos(type, f, convFull){
   return {tipoDoc:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:f.fechaInscripcion||'',
-    formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
+    tipoAlumno:'NM', formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
 }
 
 function dzExtractFields(type, text){
@@ -2099,6 +2112,7 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const idx = arr ? arr.indexOf(existing.row) : -1;
         if(idx!==-1) arr.splice(idx,1);
         const newDatos = Object.assign({}, existing.row.datos||{}, {tipoDoc: changes.detectado.split(' ')[0]});
+        if(/^(CC|CE|CP)/.test(changes.detectado)) newDatos.tipoAlumno = changes.detectado.split(' ')[0];
         if(changes.mes) newDatos.convocatoriaFull = changes.mes+' '+(changes.anio||'');
         if(changes.statKey==='bajas'){ newDatos.fechaBaja = dzToday(); newDatos.motivo = changes.motivo||''; newDatos.tipoBaja = changes.tipo||''; }
         else if(changes.motivo){ newDatos.motivo = changes.motivo; }
@@ -2268,7 +2282,7 @@ function handleEquiposFile(evt){
       if(hi===-1) throw new Error('Sin columna Asesor');
       const h = rows[hi].map(c=>dzNorm(c));
       const iA = h.findIndex(c=>/asesor|comercial/.test(c));
-      const iJ = h.findIndex(c=>c==='je'||/\bje\b|jefe de equipo/.test(c));
+      const iJ = h.findIndex(c=>c==='je'||/\bje\b|jefe/.test(c));
       const iD = h.findIndex(c=>c==='dv'||/\bdv\b|director/.test(c));
       if(iJ===-1 && iD===-1) throw new Error('Sin columnas JE / DV');
       const map={};
