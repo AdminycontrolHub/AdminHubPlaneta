@@ -366,6 +366,11 @@ body{ font-size:14px; }
       Cargar plantilla
     </button>
     <input type="file" id="templateFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleTemplateFile(event)">
+    <button class="back-btn" style="cursor:pointer;" onclick="bmRequestPassword(function(){document.getElementById('equiposFileInput').click();}, 'Introduce la contraseña para cargar los equipos del mes.')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Cargar equipos <span id="equiposBadge" style="opacity:.7;font-weight:600;"></span>
+    </button>
+    <input type="file" id="equiposFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleEquiposFile(event)">
     <a href="index.html" class="back-btn">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       Volver a Convo '27
@@ -1171,17 +1176,59 @@ function renderPanels(){
   mergeBar.style.display='flex';
   panelFiel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+const EXPORT_COLS=['STATUS','SEGUIMIENTO','ID OPORTUNIDAD','DÍA CERO','TIPOLOGÍA MATRÍCULA','TIPOLOGÍA ALUMNO','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','ID PROGRAMA','PROGRAMA','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JE','DV','FECHA BAJA','MOTIVO DE BAJA','LÍNEA COMPLETA'];
+function exportRecord(r,statKey,seguimiento){
+  const d=r.datos||{};
+  const asesor=(r.je&&r.je!=='—')?r.je:'';
+  const conv=d.convocatoriaFull||r.convocatoria||'';
+  const rec={
+    'STATUS': statKey==='bajas'?'BAJAS arranque curso':(statKey==='altas'?'ALTA':''),
+    'SEGUIMIENTO': seguimiento,
+    'ID OPORTUNIDAD': r.idOportunidad&&r.idOportunidad!=='—'?r.idOportunidad:'',
+    'DÍA CERO': '',
+    'TIPOLOGÍA MATRÍCULA': statKey==='bajas'?'BAJA':(statKey==='altas'?'ALTA':'CAMBIO'),
+    'TIPOLOGÍA ALUMNO': statKey==='ccce'?(d.tipoDoc||''):'',
+    'NOMBRES APELLIDOS': r.nombre&&r.nombre!=='(sin nombre)'?r.nombre:'',
+    'PAÍS DE RESIDENCIA': d.pais||'',
+    'CONVOCATORIA': conv,
+    'ID PROGRAMA': d.idPrograma||'',
+    'PROGRAMA': r.programa&&r.programa!=='—'?r.programa:'',
+    'FECHA PRODUCCIÓN': d.fechaProduccion||'',
+    'FECHA INSCRIPCIÓN': d.fechaInscripcion||'',
+    'FACTURACIÓN NETA': r.facturacion!=null?r.facturacion:'',
+    'IMPORTE INSCRIPCIÓN': r.pi!=null?r.pi:'',
+    'FORMA DE PAGO': d.formaPago||'',
+    'ASESOR': asesor,
+    'JE': dzLookupEquipo(asesor).je,
+    'DV': dzLookupEquipo(asesor).dv,
+    'FECHA BAJA': d.fechaBaja||'',
+    'MOTIVO DE BAJA': statKey==='bajas'?(d.motivo||'').toUpperCase():'',
+    'LÍNEA COMPLETA': ''
+  };
+  const req=['ID OPORTUNIDAD','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','PROGRAMA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR'];
+  if(statKey==='bajas'){req.push('FECHA BAJA','MOTIVO DE BAJA');}
+  rec['LÍNEA COMPLETA']=req.every(k=>rec[k]!==''&&rec[k]!=null)?'SI':'NO';
+  return rec;
+}
 function exportPanel(which){
   if(!openDetail)return;
+  if(typeof XLSX==='undefined'){alert('No se ha podido cargar la librería de Excel. Revisa la conexión y recarga la página.');return;}
   const b=MT_BRANDS.find(x=>x.key===openDetail.brandKey);
   const weekIds=[...selectedWeeks];
-  const fielRows=aggregateDetail(b.key,weekIds,openDetail.stat);
-  const excRows=exceptionRows(b.key,openDetail.stat);
-  let label,count;
-  if(which==='fiel'){label='FIEL A ATENEA';count=fielRows.length;}
-  else if(which==='exc'){label='PF Y OTRAS EXCEPCIONES A CONTAR';count=excRows.length;}
-  else{label='FIEL A ATENEA + PF Y OTRAS EXCEPCIONES (listado unido)';count=fielRows.length+excRows.length;}
-  alert(`Se exportaría un Excel de "${label}" · ${b.name} · ${STAT_LABEL[openDetail.stat]} · ${weekIds.length} semana${weekIds.length!==1?'s':''} seleccionada${weekIds.length!==1?'s':''} · ${count} filas. Acción de ejemplo — pendiente de conectar a datos reales.`);
+  const stat=openDetail.stat;
+  const recs=[];
+  if(which==='fiel'||which==='ambos'){
+    aggregateDetail(b.key,weekIds,stat).forEach(r=>recs.push(exportRecord(r,stat,'Fiel a Atenea')));
+  }
+  if(which==='exc'||which==='ambos'){
+    exceptionRows(b.key,stat).forEach(r=>recs.push(exportRecord(r,stat,'PF y Otras Excepciones')));
+  }
+  const ws=XLSX.utils.json_to_sheet(recs,{header:EXPORT_COLS});
+  ws['!cols']=EXPORT_COLS.map(c=>({wch:Math.max(c.length+2,14)}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,('CONVOCATORIO '+b.name).slice(0,31));
+  const tag=which==='fiel'?'Fiel':which==='exc'?'PF-Excepciones':'Conjunto';
+  XLSX.writeFile(wb,`Convo27_${b.name}_${STAT_LABEL[stat].replace(/[^\w]+/g,'-')}_${tag}.xlsx`);
 }
 function addExceptionMock(){
   alert('Aquí se abriría el formulario para añadir manualmente un caso a "PF y otras excepciones a contar" (nombre, ID NACS, ID Oportunidad, convocatoria, programa, PI%, JE y facturación). Acción de ejemplo.');
@@ -1760,8 +1807,24 @@ function dzConvForRow(conv){
   return m ? (m[0][0].toUpperCase()+m[0].slice(1).toLowerCase()) : '';
 }
 
+/* Normaliza fechas 2026-09-16 / 14/09/2026 a dd/mm/aaaa */
+function dzDate(str){
+  if(!str) return '';
+  let m = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[3]+'/'+m[2]+'/'+m[1];
+  m = str.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+  if(m) return m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+m[3];
+  return '';
+}
+function dzToday(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+function dzDatos(type, f, convFull){
+  return {tipoDoc:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:f.fechaInscripcion||'',
+    formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
+}
+
 function dzExtractFields(type, text){
-  const f = {nombre:'', id:'', programa:'', convocatoria:'', motivo:'', tipo:'', marca:'', facturacion:null, asesor:'', pi:null};
+  const f = {nombre:'', id:'', programa:'', convocatoria:'', motivo:'', tipo:'', marca:'', facturacion:null, asesor:'', pi:null,
+    pais:'', fechaProduccion:'', fechaInscripcion:'', formaPago:'', idPrograma:''};
   const idMatch = text.match(/\b(\d{4}-\d{6,})\b/);
   if(idMatch) f.id = idMatch[1];
   f.marca = dzResolveBrandKey(text);
@@ -1769,6 +1832,14 @@ function dzExtractFields(type, text){
   f.asesor = dzLine(text,'Asesor \\(Atenea\\)') || dzLine(text,'Asesora?');
   f.pi = dzParseAmount(dzLine(text,'\\bPI\\b') || dzLine(text,'Importe Inscripci[oó]n'));
 
+  f.pais = dzLine(text,'Pa[ií]s(?: de residencia)?');
+  f.formaPago = dzLine(text,'Forma de pago');
+  if(type==='PF'){
+    f.fechaProduccion = dzDate(dzLine(text,'Fecha de producci[oó]n'));
+  } else if(type==='HM'){
+    f.fechaInscripcion = dzDate(dzLine(text,'Fecha de matr[ií]cula'));
+    f.idPrograma = dzLine(text,'ID Programa');
+  }
   if(type==='PF'){
     f.nombre = dzLine(text,'Alumno');
     f.programa = dzLine(text,'Programa');
@@ -1900,7 +1971,8 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
       pi: piVal!=='' ? Number(piVal) : null,
       je: asesor || '—',
       facturacion: dzFixParsedFields.facturacion!=null ? dzFixParsedFields.facturacion : null,
-      comentario: 'Añadido desde arrastre ('+detectado+') — pendiente de completar ID NACS.'
+      comentario: 'Añadido desde arrastre ('+detectado+') — pendiente de completar ID NACS.',
+      datos: dzDatos(detectado.startsWith('HM')?'HM':'PF', dzFixParsedFields, (mes?mes+' ':'')+(anio||''))
     };
     dzAddManualRow(marca, statKey, row);
     mtRenderGrid(); renderPanels(); renderSummary();
@@ -2003,7 +2075,8 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
             pi: fields.pi,
             je: fields.asesor || '—',
             facturacion: fields.facturacion,
-            comentario: 'Añadido desde arrastre ('+type+' NUEVA) — pendiente de completar PI%/JE/ID NACS.'
+            comentario: 'Añadido desde arrastre ('+type+' NUEVA) — pendiente de completar PI%/JE/ID NACS.',
+            datos: dzDatos(type, fields, (function(){const c=dzParseConvocatoria(fields.convocatoria);return c.mes?c.mes+' '+c.anio:'';})())
           };
           dzAddManualRow(brandKey, 'altas', row);
           mtRenderGrid(); renderPanels(); renderSummary();
@@ -2025,7 +2098,12 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const arr = dzManualRows[existing.key];
         const idx = arr ? arr.indexOf(existing.row) : -1;
         if(idx!==-1) arr.splice(idx,1);
+        const newDatos = Object.assign({}, existing.row.datos||{}, {tipoDoc: changes.detectado.split(' ')[0]});
+        if(changes.mes) newDatos.convocatoriaFull = changes.mes+' '+(changes.anio||'');
+        if(changes.statKey==='bajas'){ newDatos.fechaBaja = dzToday(); newDatos.motivo = changes.motivo||''; newDatos.tipoBaja = changes.tipo||''; }
+        else if(changes.motivo){ newDatos.motivo = changes.motivo; }
         const updatedRow = Object.assign({}, existing.row, {
+          datos: newDatos,
           convocatoria: changes.mes || existing.row.convocatoria,
           comentario: (existing.row.comentario?existing.row.comentario+' — ':'') + 'Actualizado por '+changes.detectado+(changes.motivo?(' ('+changes.motivo+')'):'')
         });
@@ -2164,6 +2242,60 @@ function handleTemplateFile(evt){
   };
   reader.readAsArrayBuffer(file);
 }
+
+/* ===================== CARGAR EQUIPOS (mensual: Asesor → JE / DV) ===================== */
+let dzEquipos = {};   // clave normalizada del asesor -> {je, dv}
+let dzEquiposMes = '';
+function dzNorm(t){ return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
+function dzEquiposBadge(){
+  const n=Object.keys(dzEquipos).length;
+  const el=document.getElementById('equiposBadge');
+  if(el) el.textContent = n ? '('+n+(dzEquiposMes?' · '+dzEquiposMes:'')+')' : '';
+}
+try{
+  const saved=JSON.parse(localStorage.getItem('convo27_equipos')||'null');
+  if(saved&&saved.map){ dzEquipos=saved.map; dzEquiposMes=saved.mes||''; }
+}catch(e){}
+function handleEquiposFile(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:''});
+      const hi = rows.findIndex(r=>r.some(c=>/asesor|comercial/i.test(String(c))));
+      if(hi===-1) throw new Error('Sin columna Asesor');
+      const h = rows[hi].map(c=>dzNorm(c));
+      const iA = h.findIndex(c=>/asesor|comercial/.test(c));
+      const iJ = h.findIndex(c=>c==='je'||/\bje\b|jefe de equipo/.test(c));
+      const iD = h.findIndex(c=>c==='dv'||/\bdv\b|director/.test(c));
+      if(iJ===-1 && iD===-1) throw new Error('Sin columnas JE / DV');
+      const map={};
+      rows.slice(hi+1).forEach(r=>{
+        const a=dzNorm(r[iA]); if(!a) return;
+        map[a]={je: iJ!==-1?String(r[iJ]||'').trim():'', dv: iD!==-1?String(r[iD]||'').trim():''};
+      });
+      dzEquipos=map;
+      const d=new Date(); dzEquiposMes=String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+      try{ localStorage.setItem('convo27_equipos', JSON.stringify({map, mes:dzEquiposMes})); }catch(_){}
+      dzEquiposBadge();
+      alert('Equipos cargados: '+Object.keys(map).length+' asesores con su JE y DV.');
+    }catch(err){
+      console.error(err);
+      alert('No se ha podido leer el archivo de equipos. Necesito una hoja con columnas Asesor, JE y DV. ('+err.message+')');
+    }
+    evt.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+function dzLookupEquipo(asesor){
+  const k=dzNorm(asesor); if(!k) return {je:'',dv:''};
+  if(dzEquipos[k]) return dzEquipos[k];
+  const hit=Object.keys(dzEquipos).find(x=>x.includes(k)||k.includes(x));
+  return hit?dzEquipos[hit]:{je:'',dv:''};
+}
+dzEquiposBadge();
 
 /* Inicialización directa — esta página ya ES el módulo, no hay overlay que abrir */
 initDropzones();
