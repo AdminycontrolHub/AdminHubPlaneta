@@ -146,6 +146,20 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-table tbody tr:hover td { background:rgba(0,100,160,0.05); }
 .detail-table tbody tr:last-child td { border-bottom:none; }
 .detail-table tbody tr.exc-row td:first-child { border-left:3px solid #8a5cc8; }
+.row-actions{ white-space:nowrap; text-align:right; }
+.ra-btn{ border:none; background:rgba(122,20,112,0.10); color:#7A1470; border-radius:6px; width:28px; height:28px; font-size:15px; cursor:pointer; margin-left:4px; }
+.ra-btn:hover{ background:#7A1470; color:#fff; }
+.ra-del{ background:rgba(214,48,48,0.10); color:#D63030; }
+.ra-del:hover{ background:#D63030; color:#fff; }
+#rowEditOverlay{ position:fixed; inset:0; background:rgba(4,28,46,0.65); display:none; align-items:center; justify-content:center; z-index:99999; }
+#rowEditOverlay.open{ display:flex; }
+#rowEditBox{ background:#0A2A40; color:#E8F2F6; border:1px solid rgba(0,230,255,0.4); border-radius:12px; padding:20px 22px; width:min(560px,94vw); max-height:90vh; overflow:auto; }
+#rowEditBox h3{ margin:0 0 12px; font-size:16px; color:#00E6FF; }
+#rowEditBox .re-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; }
+#rowEditBox label{ font-size:12px; color:#7FA0B0; display:flex; flex-direction:column; gap:3px; }
+#rowEditBox input,#rowEditBox select{ background:#041C2E; color:#E8F2F6; border:1px solid rgba(0,230,255,0.35); border-radius:6px; padding:7px 8px; font-size:13px; }
+#rowEditBox .re-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+#rowEditBox .re-actions button{ border:none; border-radius:8px; padding:9px 18px; font-weight:800; cursor:pointer; }
 .comment-cell { white-space:normal; max-width:220px; color:#5a4a6a; font-size:11.5px; }
 .pi-pct { font-family:'Courier New',monospace; font-weight:600; }
 .fact-cell { font-family:'Courier New',monospace; font-weight:600; color:#005a30; }
@@ -515,6 +529,7 @@ body{ font-size:14px; }
         <th><div class="th-head-row"><span>Asesor (Atenea)</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excJEPop"><select class="th-select" id="excJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
         <th>Facturación Neta</th>
         <th>Comentarios</th>
+        <th style="width:70px;"></th>
       </tr></thead>
       <tbody id="excBody"></tbody>
     </table>
@@ -579,6 +594,27 @@ body{ font-size:14px; }
   </div>
 </div>
 
+<div id="rowEditOverlay"><div id="rowEditBox">
+  <h3>Modificar fila</h3>
+  <div class="re-grid">
+    <label>Nombre<input id="reNombre"></label>
+    <label>ID Oportunidad<input id="reId" disabled></label>
+    <label>Convocatoria<select id="reMes"><option>Abril</option><option>Octubre</option></select></label>
+    <label>Año convocatoria<input id="reAnio" type="number" min="2024" max="2035"></label>
+    <label style="grid-column:1/3;">Programa<input id="rePrograma"></label>
+    <label>PI (importe inscripción)<input id="rePi" type="number" step="0.01"></label>
+    <label>Facturación Neta<input id="reFact" type="number" step="0.01"></label>
+    <label>Asesor (Atenea)<input id="reAsesor"></label>
+    <label>País de residencia<input id="rePais"></label>
+    <label>Fecha producción<input id="reFProd" type="date"></label>
+    <label>Fecha inscripción<input id="reFInsc" type="date"></label>
+    <label>Forma de pago<select id="reForma"><option value=""></option><option>APLAZADO</option><option>CONTADO</option></select></label>
+  </div>
+  <div class="re-actions">
+    <button style="background:#33506a;color:#fff;" onclick="document.getElementById('rowEditOverlay').classList.remove('open')">Cancelar</button>
+    <button style="background:#5CFF9E;color:#03210F;" onclick="dzRowEditSave()">Guardar</button>
+  </div>
+</div></div>
 <div class="imac-popup" id="templatePopup">
   <div class="imac-titlebar">
     <button class="traffic red" data-label="Cerrar" onclick="document.getElementById('templatePopup').classList.remove('show')"></button>
@@ -902,6 +938,7 @@ let dzManualRows = {};
 function dzManualKey(brandKey,statKey){ return brandKey+'|'+statKey; }
 function dzManualRowsFor(brandKey,statKey){ return dzManualRows[dzManualKey(brandKey,statKey)] || []; }
 function dzAddManualRow(brandKey,statKey,row){
+  row._manual=true;
   const k = dzManualKey(brandKey,statKey);
   if(!dzManualRows[k]) dzManualRows[k]=[];
   dzManualRows[k].push(row);
@@ -1093,6 +1130,7 @@ function rowHtmlExc(r){
     <td><span class="je-pill">${r.je}</span></td>
     <td class="fact-cell">${r.facturacion!=null?euro(r.facturacion):'—'}</td>
     <td class="comment-cell">${r.comentario||''}</td>
+    <td class="row-actions">${r._manual?`<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${r.idOportunidad}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${r.idOportunidad}')">&#128465;</button>`:''}</td>
   </tr>`;
 }
 function toggleColPopover(evt,id){
@@ -1169,7 +1207,7 @@ function renderPanels(){
   document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
 
   document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="8" class="detail-empty">Sin registros con estos filtros</td></tr>`;
-  document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="9" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
+  document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="10" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
 
   panelFiel.classList.add('open');
   panelExc.classList.add('open');
@@ -2324,6 +2362,66 @@ function dzLookupEquipo(asesor){
   return hit?dzEquipos[hit]:{je:'',dv:''};
 }
 dzEquiposBadge();
+
+/* ===================== PAPELERA / LÁPIZ POR FILA (con contraseña) ===================== */
+let dzEditingId = null;
+function dzRowDelete(id){
+  const found = dzFindManualRowById(id);
+  if(!found) return;
+  bmRequestPassword(()=>{
+    if(!confirm('¿Borrar la fila de '+found.row.nombre+' (ID '+id+')?')) return;
+    const arr = dzManualRows[found.key];
+    const idx = arr.indexOf(found.row);
+    if(idx!==-1) arr.splice(idx,1);
+    mtRenderGrid(); renderPanels(); renderSummary();
+  }, 'Introduce la contraseña para borrar esta fila.');
+}
+function dzIsoDate(ddmmyyyy){ const m=String(ddmmyyyy||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m?m[3]+'-'+m[2]+'-'+m[1]:''; }
+function dzRowEdit(id){
+  const found = dzFindManualRowById(id);
+  if(!found) return;
+  bmRequestPassword(()=>{
+    const r = found.row, d = r.datos||{};
+    dzEditingId = id;
+    const conv = dzParseConvocatoria(d.convocatoriaFull||r.convocatoria);
+    document.getElementById('reNombre').value = r.nombre||'';
+    document.getElementById('reId').value = r.idOportunidad||'';
+    document.getElementById('reMes').value = conv.mes||r.convocatoria||'Abril';
+    document.getElementById('reAnio').value = conv.anio||'';
+    document.getElementById('rePrograma').value = (r.programa&&r.programa!=='—')?r.programa:'';
+    document.getElementById('rePi').value = r.pi!=null?r.pi:'';
+    document.getElementById('reFact').value = r.facturacion!=null?r.facturacion:'';
+    document.getElementById('reAsesor').value = (r.je&&r.je!=='—')?r.je:'';
+    document.getElementById('rePais').value = d.pais||'';
+    document.getElementById('reFProd').value = dzIsoDate(d.fechaProduccion);
+    document.getElementById('reFInsc').value = dzIsoDate(d.fechaInscripcion);
+    document.getElementById('reForma').value = d.formaPago||'';
+    document.getElementById('rowEditOverlay').classList.add('open');
+  }, 'Introduce la contraseña para modificar esta fila.');
+}
+function dzRowEditSave(){
+  const found = dzFindManualRowById(dzEditingId);
+  if(!found){ document.getElementById('rowEditOverlay').classList.remove('open'); return; }
+  const r = found.row;
+  const v = id=>document.getElementById(id).value.trim();
+  const num = x=>x===''?null:Number(x);
+  r.nombre = v('reNombre') || r.nombre;
+  r.programa = v('rePrograma') || '—';
+  r.pi = num(v('rePi'));
+  r.facturacion = num(v('reFact'));
+  r.je = v('reAsesor') || '—';
+  r.convocatoria = v('reMes');
+  r.datos = Object.assign({}, r.datos||{}, {
+    pais: v('rePais'),
+    fechaProduccion: dzDate(v('reFProd')),
+    fechaInscripcion: dzDate(v('reFInsc')),
+    formaPago: v('reForma'),
+    convocatoriaFull: v('reMes') + (v('reAnio')?' '+v('reAnio'):'')
+  });
+  r.comentario = (r.comentario?r.comentario+' — ':'') + 'Modificado manualmente';
+  document.getElementById('rowEditOverlay').classList.remove('open');
+  mtRenderGrid(); renderPanels(); renderSummary();
+}
 
 /* Inicialización directa — esta página ya ES el módulo, no hay overlay que abrir */
 initDropzones();
