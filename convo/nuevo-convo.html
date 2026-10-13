@@ -1184,6 +1184,8 @@ function dzToDate(str){
 }
 /* "Abril 2027" -> 2704 ; "Octubre 2026" -> 2610 (código AAMM como en la columna CONVOCATORIA) */
 function dzConvCode(conv){
+  const mm=String(conv||'').trim().match(/^(Abril|Octubre)$/i);
+  if(mm) return /abril/i.test(mm[1])?2704:2610;   // solo mes: ciclo Convo '27 (Oct-2026 / Abr-2027)
   const m=String(conv||'').match(/(Abril|Octubre)\D*(20\d{2})/i);
   if(!m) return '';
   return Number(m[2].slice(2)+(/abril/i.test(m[1])?'04':'10'));
@@ -1202,7 +1204,7 @@ function exportRecord(r,statKey,seguimiento){
     'DIA CERO': '',
     'FECHA PRODUCCIÓN': dzToDate(d.fechaProduccion),
     'FECHA INSCRIPCIÓN': dzToDate(d.fechaInscripcion),
-    'CONVOCATORIA': dzConvCode(d.convocatoriaFull),
+    'CONVOCATORIA': dzConvCode(d.convocatoriaFull||r.convocatoria),
     'PROGRAMA': r.programa&&r.programa!=='—'?r.programa:'',
     'ID PROGRAMA': idProg,
     'NOMBRES APELLIDOS': r.nombre&&r.nombre!=='(sin nombre)'?r.nombre.toUpperCase():'',
@@ -1772,6 +1774,17 @@ function dzClassify(text){
   return null;
 }
 
+/* Igual que dzLine pero exige que la etiqueta esté al principio de la línea (evita que "Programa" case con "ID Programa") */
+function dzLineStart(text,label){
+  const m = text.match(new RegExp('^\\s*(?:'+label+')\\s*:?\\s*(.+)$','im'));
+  return m ? m[1].trim() : '';
+}
+function dzPayNorm(v){
+  if(!v) return '';
+  if(/aplazad/i.test(v)) return 'APLAZADO';
+  if(/contado|[uú]nico/i.test(v)) return 'CONTADO';
+  return v.toUpperCase();
+}
 function dzLine(text,label){
   const re = new RegExp(label+"\\s*:?\\s*(.+)","i");
   const m = text.match(re);
@@ -1845,13 +1858,14 @@ function dzExtractFields(type, text){
   f.asesor = dzLine(text,'Asesor \\(Atenea\\)') || dzLine(text,'Asesora?');
   f.pi = dzParseAmount(dzLine(text,'\\bPI\\b') || dzLine(text,'Importe Inscripci[oó]n'));
 
-  f.pais = dzLine(text,'Pa[ií]s(?: de residencia)?');
-  f.formaPago = dzLine(text,'Forma de pago');
+  f.pais = dzLineStart(text,'Pa[ií]s(?:\\s+de)?\\s+residencia') || dzLineStart(text,'Pa[ií]s');
+  f.formaPago = dzPayNorm(dzLineStart(text,'Forma de pago') || dzLineStart(text,'Forma pago seleccionada'));
   if(type==='PF'){
     f.fechaProduccion = dzDate(dzLine(text,'Fecha de producci[oó]n'));
   } else if(type==='HM'){
     f.fechaInscripcion = dzDate(dzLine(text,'Fecha de matr[ií]cula'));
-    f.idPrograma = dzLine(text,'ID Programa');
+    f.idPrograma = (dzLineStart(text,'ID Programa').match(/^\d+$/)||[''])[0];
+    f.fechaProduccion = f.fechaInscripcion;
   }
   if(type==='PF'){
     f.nombre = dzLine(text,'Alumno');
@@ -1860,7 +1874,7 @@ function dzExtractFields(type, text){
   } else if(type==='HM'){
     const nom = dzLine(text,'Nombre'); const ape = dzLine(text,'Apellidos');
     f.nombre = [nom,ape].filter(Boolean).join(' ');
-    f.programa = dzLine(text,'Programa');
+    f.programa = dzLineStart(text,'Programa').replace(/\s+-\s+\d{4}$/,'');
     f.convocatoria = dzLine(text,'Convocatoria');
   } else if(type==='BAJA'){
     const m = text.match(/[Aa]l alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+se le resuelve la incidencia como\s+(Baja[^.\n]+?)\s+por\s+(?:Motivos?)\s+([^.\n]+)/i);
