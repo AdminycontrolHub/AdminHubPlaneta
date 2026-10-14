@@ -456,6 +456,7 @@ body{ font-size:14px; }
         <th><div class="th-head-row"><span>PI</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielPIPop"><select class="th-select" id="fielPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
         <th><div class="th-head-row"><span>Asesor (Atenea)</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielJEPop"><select class="th-select" id="fielJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
         <th>Facturación Neta</th>
+        <th style="width:80px;"></th>
       </tr></thead>
       <tbody id="fielBody"></tbody>
     </table>
@@ -913,7 +914,7 @@ function weekDetail(brandKey,weekId,statKey){
 /* Excepciones manuales — lista pequeña y fija de ejemplo, independiente de la semana */
 function exceptionRows(brandKey,statKey){
   const base=(brandKey.charCodeAt(0)+statKey.length)%3;
-  if(base===0)return dzManualRowsFor(brandKey,statKey);
+  if(base===0)return dzManualRowsFor(brandKey,statKey);   // sin ejemplos: solo filas arrastradas
   const rows=[];
   for(let i=0;i<base;i++){
     const seed=brandKey.charCodeAt(1)*23+i*13+statKey.length*7;
@@ -929,7 +930,7 @@ function exceptionRows(brandKey,statKey){
       comentario:COMENTARIOS[Math.floor(seedRandom(seed+7)*COMENTARIOS.length)]
     });
   }
-  return rows.concat(dzManualRowsFor(brandKey,statKey));
+  return dzApplyReg(rows).concat(dzManualRowsFor(brandKey,statKey));
 }
 
 /* Filas añadidas de verdad desde las zonas de arrastre — se guardan solo en memoria de esta
@@ -966,8 +967,13 @@ function aggregate(brandKey,weekIds){
     return acc;
   },{altas:0,bajas:0,ccce:0});
 }
+/* Registro de borrados y modificaciones sobre filas de ejemplo/automáticas (no son filas arrastradas) */
+let dzHidden = {}, dzOverrides = {};
+function dzApplyReg(rows){
+  return rows.filter(r=>!dzHidden[r.idOportunidad]).map(r=>dzOverrides[r.idOportunidad]?Object.assign({},r,dzOverrides[r.idOportunidad]):r);
+}
 function aggregateDetail(brandKey,weekIds,statKey){
-  return weekIds.flatMap(id=>weekDetail(brandKey,id,statKey));
+  return dzApplyReg(weekIds.flatMap(id=>weekDetail(brandKey,id,statKey)));
 }
 
 function sparkline(brandKey,color){
@@ -1107,6 +1113,10 @@ function convTagHtml(conv){
   if(conv==='Abril'||conv==='Octubre') return `<span class="conv-tag ${conv==='Abril'?'abril':'octubre'}">${conv}</span>`;
   return `<span style="color:#8a97a0;">${conv||'—'}</span>`;
 }
+function dzActionsHtml(r,src){
+  const id=String(r.idOportunidad).replace(/'/g,'');
+  return `<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${id}','${src}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${id}','${src}')">&#128465;</button>`;
+}
 function rowHtmlFiel(r){
   return `<tr>
     <td>${r.nombre}</td>
@@ -1117,6 +1127,7 @@ function rowHtmlFiel(r){
     <td class="pi-pct">${r.pi}</td>
     <td><span class="je-pill">${r.je}</span></td>
     <td class="fact-cell">${euro(r.facturacion)}</td>
+    <td class="row-actions">${dzActionsHtml(r,'fiel')}</td>
   </tr>`;
 }
 function rowHtmlExc(r){
@@ -1130,7 +1141,7 @@ function rowHtmlExc(r){
     <td><span class="je-pill">${r.je}</span></td>
     <td class="fact-cell">${r.facturacion!=null?euro(r.facturacion):'—'}</td>
     <td class="comment-cell">${r.comentario||''}</td>
-    <td class="row-actions">${r._manual?`<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${r.idOportunidad}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${r.idOportunidad}')">&#128465;</button>`:''}</td>
+    <td class="row-actions">${dzActionsHtml(r,'exc')}</td>
   </tr>`;
 }
 function toggleColPopover(evt,id){
@@ -1206,7 +1217,7 @@ function renderPanels(){
   document.getElementById('fielSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · ${periodLabel()} · ${fielRows.length} registro${fielRows.length!==1?'s':''}`;
   document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
 
-  document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="8" class="detail-empty">Sin registros con estos filtros</td></tr>`;
+  document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="9" class="detail-empty">Sin registros con estos filtros</td></tr>`;
   document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="10" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
 
   panelFiel.classList.add('open');
@@ -2364,25 +2375,38 @@ function dzLookupEquipo(asesor){
 dzEquiposBadge();
 
 /* ===================== PAPELERA / LÁPIZ POR FILA (con contraseña) ===================== */
-let dzEditingId = null;
-function dzRowDelete(id){
-  const found = dzFindManualRowById(id);
-  if(!found) return;
+let dzEditingId = null, dzEditingSrc = null;
+function dzLocateRow(id,src){
+  const m = dzFindManualRowById(id);
+  if(m) return {manual:true, found:m, row:m.row};
+  if(!openDetail) return null;
+  const list = src==='exc' ? exceptionRows(openDetail.brandKey,openDetail.stat)
+                           : aggregateDetail(openDetail.brandKey,[...selectedWeeks],openDetail.stat);
+  const row = list.find(r=>r.idOportunidad===id);
+  return row ? {manual:false, row} : null;
+}
+function dzRowDelete(id,src){
+  const loc = dzLocateRow(id,src);
+  if(!loc) return;
   bmRequestPassword(()=>{
-    if(!confirm('¿Borrar la fila de '+found.row.nombre+' (ID '+id+')?')) return;
-    const arr = dzManualRows[found.key];
-    const idx = arr.indexOf(found.row);
-    if(idx!==-1) arr.splice(idx,1);
+    if(!confirm('¿Borrar la fila de '+loc.row.nombre+' (ID '+id+')?')) return;
+    if(loc.manual){
+      const arr = dzManualRows[loc.found.key];
+      const idx = arr.indexOf(loc.row);
+      if(idx!==-1) arr.splice(idx,1);
+    } else {
+      dzHidden[id] = true;
+    }
     mtRenderGrid(); renderPanels(); renderSummary();
   }, 'Introduce la contraseña para borrar esta fila.');
 }
 function dzIsoDate(ddmmyyyy){ const m=String(ddmmyyyy||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m?m[3]+'-'+m[2]+'-'+m[1]:''; }
-function dzRowEdit(id){
-  const found = dzFindManualRowById(id);
-  if(!found) return;
+function dzRowEdit(id,src){
+  const loc = dzLocateRow(id,src);
+  if(!loc) return;
   bmRequestPassword(()=>{
-    const r = found.row, d = r.datos||{};
-    dzEditingId = id;
+    const r = loc.row, d = r.datos||{};
+    dzEditingId = id; dzEditingSrc = src;
     const conv = dzParseConvocatoria(d.convocatoriaFull||r.convocatoria);
     document.getElementById('reNombre').value = r.nombre||'';
     document.getElementById('reId').value = r.idOportunidad||'';
@@ -2400,25 +2424,31 @@ function dzRowEdit(id){
   }, 'Introduce la contraseña para modificar esta fila.');
 }
 function dzRowEditSave(){
-  const found = dzFindManualRowById(dzEditingId);
-  if(!found){ document.getElementById('rowEditOverlay').classList.remove('open'); return; }
-  const r = found.row;
+  const loc = dzLocateRow(dzEditingId,dzEditingSrc);
+  if(!loc){ document.getElementById('rowEditOverlay').classList.remove('open'); return; }
   const v = id=>document.getElementById(id).value.trim();
   const num = x=>x===''?null:Number(x);
-  r.nombre = v('reNombre') || r.nombre;
-  r.programa = v('rePrograma') || '—';
-  r.pi = num(v('rePi'));
-  r.facturacion = num(v('reFact'));
-  r.je = v('reAsesor') || '—';
-  r.convocatoria = v('reMes');
-  r.datos = Object.assign({}, r.datos||{}, {
-    pais: v('rePais'),
-    fechaProduccion: dzDate(v('reFProd')),
-    fechaInscripcion: dzDate(v('reFInsc')),
-    formaPago: v('reForma'),
-    convocatoriaFull: v('reMes') + (v('reAnio')?' '+v('reAnio'):'')
-  });
-  r.comentario = (r.comentario?r.comentario+' — ':'') + 'Modificado manualmente';
+  const fields = {
+    nombre: v('reNombre') || loc.row.nombre,
+    programa: v('rePrograma') || '—',
+    pi: num(v('rePi')),
+    facturacion: num(v('reFact')),
+    je: v('reAsesor') || '—',
+    convocatoria: v('reMes'),
+    datos: Object.assign({}, loc.row.datos||{}, {
+      pais: v('rePais'),
+      fechaProduccion: dzDate(v('reFProd')),
+      fechaInscripcion: dzDate(v('reFInsc')),
+      formaPago: v('reForma'),
+      convocatoriaFull: v('reMes') + (v('reAnio')?' '+v('reAnio'):'')
+    })
+  };
+  if(loc.manual){
+    Object.assign(loc.row, fields);
+    loc.row.comentario = (loc.row.comentario?loc.row.comentario+' — ':'') + 'Modificado manualmente';
+  } else {
+    dzOverrides[dzEditingId] = Object.assign({}, fields, {comentario:(loc.row.comentario?loc.row.comentario+' — ':'')+'Modificado manualmente'});
+  }
   document.getElementById('rowEditOverlay').classList.remove('open');
   mtRenderGrid(); renderPanels(); renderSummary();
 }
