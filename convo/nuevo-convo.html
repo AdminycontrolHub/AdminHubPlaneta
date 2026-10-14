@@ -269,7 +269,15 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-panel.fiel,.detail-panel.excepciones{margin-left:16px;margin-right:16px;}
 }
 
-/* ===== Zonas de arrastre: HM/PF/Baja/CC/CE/CP + Comprobante ===== */
+/* ===== Zona de arrastre grande (HM/PF/Baja/CC/CE/CP) ===== */
+#dzLeft{ min-height:210px; padding:20px 24px; justify-content:center; align-items:center; text-align:center; gap:14px; border-style:dashed; border-width:3px; }
+#dzLeft .dz-head{ flex-direction:column; gap:10px; }
+#dzLeft .dz-icon{ min-width:64px; height:32px; font-size:14px; border-radius:8px; }
+#dzLeft .dz-title{ font-size:22px; }
+#dzLeft .dz-sub{ font-size:13.5px; }
+#dzLeft .dz-paste{ max-width:720px; font-size:14px; padding:10px 12px; }
+#dzLeft.dragover{ background:#C21AA6; transform:scale(1.005); }
+/* ===== Zonas de arrastre ===== */
 .dz-row{ display:flex; align-items:stretch; gap:14px; flex-wrap:wrap; width:100%; }
 .dropzone{ flex:1; min-width:220px; border:2px solid transparent; border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:7px; transition:all .18s ease; cursor:pointer; }
 .dropzone{ background:#A5158C; border-color:#E14FCC; }
@@ -470,11 +478,11 @@ body{ font-size:14px; }
       <div class="dz-head">
         <div class="dz-icon">DOC</div>
         <div>
-          <div class="dz-title">Arrastra o pega: PF / HM / Baja / CC / CE / CP</div>
-          <div class="dz-sub">Detecto el tipo automáticamente</div>
+          <div class="dz-title">Arrastra aquí: PF / HM / Baja / CC / CE / CP</div>
+          <div class="dz-sub">Suelta el PDF o la captura en cualquier punto de este recuadro · detecto el tipo automáticamente</div>
         </div>
       </div>
-      <textarea class="dz-paste" id="dzLeftPaste" rows="1" placeholder="…o pega aquí el texto del correo"></textarea>
+      <textarea class="dz-paste" id="dzLeftPaste" rows="2" placeholder="…o pega aquí el texto del correo"></textarea>
       <input type="file" class="dz-input" id="dzLeftInput" accept="application/pdf,image/*" multiple>
     </div>
 
@@ -483,16 +491,6 @@ body{ font-size:14px; }
       Extraer conjunto (Fiel + PF)
     </button>
 
-    <div class="dropzone receipt" id="dzRight">
-      <div class="dz-head">
-        <div class="dz-icon">PAGO</div>
-        <div>
-          <div class="dz-title">Arrastra aquí Comprobante de pago</div>
-          <div class="dz-sub">Opcional — se vincula por ID Oportunidad</div>
-        </div>
-      </div>
-      <input type="file" class="dz-input" id="dzRightInput" accept="image/*,application/pdf" multiple>
-    </div>
 
   </div>
 </div>
@@ -2296,6 +2294,7 @@ async function dzProcessRightFile(file){
 
 function dzWireRight(){
   const zone = document.getElementById('dzRight');
+  if(!zone) return;   // zona de comprobante retirada
   const input = document.getElementById('dzRightInput');
   zone.addEventListener('click', ()=> input.click());
   zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
