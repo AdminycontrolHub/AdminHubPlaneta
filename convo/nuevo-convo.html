@@ -269,6 +269,12 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-panel.fiel,.detail-panel.excepciones{margin-left:16px;margin-right:16px;}
 }
 
+.draft-row td{ background:#FFF6C9 !important; }
+.dr-in{ width:100%; box-sizing:border-box; font-size:10.5px; padding:3px 3px; border:1px solid rgba(122,20,112,0.45); border-radius:4px; background:#fff; color:#1a3a50; min-width:0; }
+.dc-sel{ width:100%; font-size:10.5px; padding:2px 0; border:1px solid rgba(0,100,140,0.25); border-radius:4px; background:#fff; color:#1a3a50; }
+.ra-ok{ background:rgba(20,150,70,0.14); color:#0B7A38; }
+.ra-ok:hover{ background:#0B7A38; color:#fff; }
+.detail-table.cols22 tbody td.ra-cell{ overflow:visible; }
 /* ===== Zona de arrastre grande (HM/PF/Baja/CC/CE/CP) ===== */
 #dzLeft{ min-height:210px; padding:20px 24px; justify-content:center; align-items:center; text-align:center; gap:14px; border-style:dashed; border-width:3px; }
 #dzLeft .dz-head{ flex-direction:column; gap:10px; }
@@ -597,6 +603,7 @@ body{ font-size:14px; }
     <label>País de residencia<input id="rePais"></label>
     <label>Fecha producción<input id="reFProd" type="date"></label>
     <label>Fecha inscripción<input id="reFInsc" type="date"></label>
+    <label>Día cero<select id="reDia"><option value=""></option><option>SI</option><option>NO</option></select></label>
     <label>Forma de pago<select id="reForma"><option value=""></option><option>APLAZADO</option><option>CONTADO</option></select></label>
   </div>
   <div class="re-actions">
@@ -1088,6 +1095,7 @@ function toggleDetail(brandKey,stat){
     closeDetail();return;
   }
   openDetail={brandKey,stat};
+  dzDraft=null;
   ['fielConvFilter','fielJEFilter','fielProgFilter','fielPIFilter','excConvFilter','excJEFilter','excProgFilter','excPIFilter'].forEach(id=>{document.getElementById(id).value='';});
   ['fielOppFilter','excOppFilter','fielSearch','excSearch'].forEach(id=>{document.getElementById(id).value='';});
   mtRenderGrid();
@@ -1157,6 +1165,10 @@ function dzRowHtml(r,src){
   const tds=dzActiveCols.map(c=>{
     const t=dzFmtCell(c,rec[c]);
     const esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    if(c==='DIA CERO'){
+      const id=String(r.idOportunidad).replace(/'/g,'');
+      return `<td><select class="dc-sel" onchange="dzSetDiaCero('${id}','${src}',this.value)"><option value=""></option><option${t==='SI'?' selected':''}>SI</option><option${t==='NO'?' selected':''}>NO</option></select></td>`;
+    }
     if(c==='LINEA COMPLETA') return `<td><span class="${t==='SI'?'lc-si':'lc-no'}">${esc}</span></td>`;
     const tip=c==='NOMBRES APELLIDOS'&&r.comentario?esc+' — '+String(r.comentario).replace(/"/g,'&quot;'):esc;
     return `<td title="${tip}">${esc}</td>`;
@@ -1239,7 +1251,7 @@ function renderPanels(){
   document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
 
   document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin registros con estos filtros</td></tr>`;
-  document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
+  document.getElementById('excBody').innerHTML=(dzDraft?dzDraftRowHtml():'')+(excRows.length?excRows.map(rowHtmlExc).join(''):(dzDraft?'':`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin excepciones con estos filtros</td></tr>`));
 
   panelFiel.classList.add('open');
   panelExc.classList.add('open');
@@ -1265,12 +1277,12 @@ function exportRecord(r,statKey,seguimiento){
   const eq=dzLookupEquipo(asesor);
   const idProg=d.idPrograma&&/^\d+$/.test(String(d.idPrograma).trim())?Number(d.idPrograma):(d.idPrograma||'');
   const rec={
-    'STATUS': statKey==='bajas'?'BAJAS arranque curso':(statKey==='altas'?'ALTA':''),
+    'STATUS': d.status!=null&&d.status!==''?d.status:(statKey==='bajas'?'BAJAS arranque curso':(statKey==='altas'?'ALTA':'')),
     'SEGUIMIENTO': seguimiento,
-    'TIPOLOGIA MATRICULA': statKey==='bajas'?'BAJA':'ALTA',
+    'TIPOLOGIA MATRICULA': d.tipoMat?d.tipoMat:(statKey==='bajas'?'BAJA':'ALTA'),
     'TIPOLOGIA ALUMNO': d.tipoAlumno||(statKey==='altas'?'NM':''),
     'ID OPORTUNIDAD': r.idOportunidad&&r.idOportunidad!=='—'?r.idOportunidad:'',
-    'DIA CERO': '',
+    'DIA CERO': d.diaCero||'',
     'FECHA PRODUCCIÓN': dzToDate(d.fechaProduccion),
     'FECHA INSCRIPCIÓN': dzToDate(d.fechaInscripcion),
     'CONVOCATORIA': dzConvCode(d.convocatoriaFull||r.convocatoria),
@@ -1282,8 +1294,8 @@ function exportRecord(r,statKey,seguimiento){
     'IMPORTE INSCRIPCIÓN': r.pi!=null?r.pi:'',
     'FORMA DE PAGO': d.formaPago||'',
     'ASESOR': asesor,
-    'JEFE EQUIPO': eq.je,
-    'DIRECTOR VENTAS': eq.dv,
+    'JEFE EQUIPO': d.jefe||eq.je,
+    'DIRECTOR VENTAS': d.dv||eq.dv,
     'FECHA BAJA': dzToDate(d.fechaBaja),
     'MOTIVO DE BAJA': statKey==='bajas'?(d.motivo||'').toUpperCase():'',
     'LINEA COMPLETA': ''
@@ -1313,9 +1325,6 @@ function exportPanel(which){
   XLSX.utils.book_append_sheet(wb,ws,'Convo 27 - Columnas Pedidas');
   const tag=which==='fiel'?'Fiel':which==='exc'?'PF-Excepciones':'Conjunto';
   XLSX.writeFile(wb,`Convo27_${b.name}_${STAT_LABEL[stat].replace(/[^\w]+/g,'-')}_${tag}.xlsx`,{cellDates:true});
-}
-function addExceptionMock(){
-  alert('Aquí se abriría el formulario para añadir manualmente un caso a "PF y otras excepciones a contar" (nombre, ID NACS, ID Oportunidad, convocatoria, programa, PI%, JE y facturación). Acción de ejemplo.');
 }
 
 /* ===================== CONTADOR INFERIOR POR MARCA ===================== */
@@ -2415,6 +2424,60 @@ function dzLookupEquipo(asesor){
 }
 dzEquiposBadge();
 
+/* ===================== DIA CERO EDITABLE + FILA MANUAL NUEVA ===================== */
+function dzSetDiaCero(id,src,val){
+  const loc=dzLocateRow(id,src); if(!loc) return;
+  if(loc.manual){ loc.row.datos=Object.assign({},loc.row.datos||{},{diaCero:val}); }
+  else{
+    const base=(dzOverrides[id]&&dzOverrides[id].datos)||loc.row.datos||{};
+    dzOverrides[id]=Object.assign({},dzOverrides[id]||{},{datos:Object.assign({},base,{diaCero:val})});
+  }
+}
+let dzDraft=null;
+const DZ_DRAFT_SEL={'STATUS':['','ALTA','BAJAS arranque curso'],'TIPOLOGIA MATRICULA':['','ALTA','BAJA'],'TIPOLOGIA ALUMNO':['','NM','CC','CE','CP'],'DIA CERO':['','SI','NO'],'FORMA DE PAGO':['','APLAZADO','CONTADO']};
+const DZ_DRAFT_TYPE={'FECHA PRODUCCIÓN':'date','FECHA INSCRIPCIÓN':'date','FECHA BAJA':'date','FACTURACIÓN NETA':'number','IMPORTE INSCRIPCIÓN':'number','ID PROGRAMA':'text'};
+function dzDraftRowHtml(){
+  const cells=dzActiveCols.map(c=>{
+    const v=(dzDraft[c]!=null?dzDraft[c]:'');
+    const key=c.replace(/"/g,'');
+    if(DZ_DRAFT_SEL[c]) return `<td><select class="dr-in" onchange="dzDraft['${key}']=this.value">${DZ_DRAFT_SEL[c].map(o=>`<option${o===v?' selected':''}>${o}</option>`).join('')}</select></td>`;
+    const t=DZ_DRAFT_TYPE[c]||'text';
+    const ph=c==='CONVOCATORIA'?'2704':'';
+    return `<td><input class="dr-in" type="${t}" ${t==='number'?'step="0.01"':''} placeholder="${ph}" value="${String(v).replace(/"/g,'&quot;')}" title="${c}" oninput="dzDraft['${key}']=this.value"></td>`;
+  }).join('');
+  return `<tr class="draft-row"><td class="ra-cell"><button class="ra-btn ra-ok" title="Guardar fila" onclick="dzDraftSave()">&#10003;</button><button class="ra-btn ra-del" title="Descartar" onclick="dzDraftDiscard()">&#128465;</button></td>${cells}</tr>`;
+}
+function dzDraftDiscard(){ dzDraft=null; renderPanels(); }
+function addExceptionMock(){
+  if(!openDetail) return;
+  if(!dzDraft) dzDraft={};
+  renderPanels();
+  const first=document.querySelector('#excBody .draft-row input'); if(first) first.focus();
+}
+function dzDraftSave(){
+  const g=k=>String(dzDraft[k]==null?'':dzDraft[k]).trim();
+  const id=g('ID OPORTUNIDAD'), nombre=g('NOMBRES APELLIDOS');
+  if(!id||!nombre){ alert('Rellena al menos ID OPORTUNIDAD y NOMBRES APELLIDOS.'); return; }
+  if(dzLocateRow(id,'exc')||dzLocateRow(id,'fiel')){ alert('Ya existe una fila con ID '+id+'. No se añade duplicada.'); return; }
+  let mes='',anio='';
+  const cv=g('CONVOCATORIA');
+  if(/^\d{4}$/.test(cv)){ mes=cv.slice(2)==='04'?'Abril':(cv.slice(2)==='10'?'Octubre':''); anio='20'+cv.slice(0,2); }
+  else { const pc=dzParseConvocatoria(cv); mes=pc.mes; anio=pc.anio; }
+  const num=k=>g(k)===''?null:Number(g(k));
+  const row={
+    nombre, idNacs:'—', idOportunidad:id, convocatoria:mes||'—', programa:g('PROGRAMA')||'—',
+    pi:num('IMPORTE INSCRIPCIÓN'), je:g('ASESOR')||'—', facturacion:num('FACTURACIÓN NETA'),
+    comentario:'Añadida manualmente',
+    datos:{tipoDoc:'MANUAL', origen:'MANUAL', tipoAlumno:g('TIPOLOGIA ALUMNO'), status:g('STATUS'), tipoMat:g('TIPOLOGIA MATRICULA'),
+      diaCero:g('DIA CERO'), pais:g('PAÍS DE RESIDENCIA'), fechaProduccion:dzDate(g('FECHA PRODUCCIÓN')), fechaInscripcion:dzDate(g('FECHA INSCRIPCIÓN')),
+      formaPago:g('FORMA DE PAGO'), idPrograma:g('ID PROGRAMA'), convocatoriaFull:mes?(mes+' '+anio):'', fechaBaja:dzDate(g('FECHA BAJA')),
+      motivo:g('MOTIVO DE BAJA'), tipoBaja:'', jefe:g('JEFE EQUIPO'), dv:g('DIRECTOR VENTAS')}
+  };
+  dzAddManualRow(openDetail.brandKey, openDetail.stat, row);
+  dzDraft=null;
+  mtRenderGrid(); renderPanels(); renderSummary();
+}
+
 /* ===================== PAPELERA / LÁPIZ POR FILA (con contraseña) ===================== */
 let dzEditingId = null, dzEditingSrc = null;
 function dzLocateRow(id,src){
@@ -2461,6 +2524,7 @@ function dzRowEdit(id,src){
     document.getElementById('reFProd').value = dzIsoDate(d.fechaProduccion);
     document.getElementById('reFInsc').value = dzIsoDate(d.fechaInscripcion);
     document.getElementById('reForma').value = d.formaPago||'';
+    document.getElementById('reDia').value = d.diaCero||'';
     document.getElementById('rowEditOverlay').classList.add('open');
   }, 'Introduce la contraseña para modificar esta fila.');
 }
@@ -2481,6 +2545,7 @@ function dzRowEditSave(){
       fechaProduccion: dzDate(v('reFProd')),
       fechaInscripcion: dzDate(v('reFInsc')),
       formaPago: v('reForma'),
+      diaCero: v('reDia'),
       convocatoriaFull: v('reMes') + (v('reAnio')?' '+v('reAnio'):'')
     })
   };
