@@ -904,7 +904,8 @@ function weekDetail(brandKey,weekId,statKey){
 /* Excepciones manuales — lista pequeña y fija de ejemplo, independiente de la semana */
 function exceptionRows(brandKey,statKey){
   const base=(brandKey.charCodeAt(0)+statKey.length)%3;
-  if(base===0)return dzManualRowsFor(brandKey,statKey);   // sin ejemplos: solo filas arrastradas
+  const manual=dzManualRowsFor(brandKey,statKey).filter(r=>!(r.datos&&r.datos.origen==='HM'));
+  if(base===0)return manual;   // sin ejemplos: solo filas arrastradas
   const rows=[];
   for(let i=0;i<base;i++){
     const seed=brandKey.charCodeAt(1)*23+i*13+statKey.length*7;
@@ -920,7 +921,7 @@ function exceptionRows(brandKey,statKey){
       comentario:COMENTARIOS[Math.floor(seedRandom(seed+7)*COMENTARIOS.length)]
     });
   }
-  return dzApplyReg(rows).concat(dzManualRowsFor(brandKey,statKey));
+  return dzApplyReg(rows).concat(manual);
 }
 
 /* Filas añadidas de verdad desde las zonas de arrastre — se guardan solo en memoria de esta
@@ -963,7 +964,9 @@ function dzApplyReg(rows){
   return rows.filter(r=>!dzHidden[r.idOportunidad]).map(r=>dzOverrides[r.idOportunidad]?Object.assign({},r,dzOverrides[r.idOportunidad]):r);
 }
 function aggregateDetail(brandKey,weekIds,statKey){
-  return dzApplyReg(weekIds.flatMap(id=>weekDetail(brandKey,id,statKey)));
+  /* las HM finalizadas que se arrastran van aquí (ya están en Atenea); las PF y excepciones, a la otra tabla */
+  const hm=dzManualRowsFor(brandKey,statKey).filter(r=>r.datos&&r.datos.origen==='HM');
+  return dzApplyReg(weekIds.flatMap(id=>weekDetail(brandKey,id,statKey))).concat(hm);
 }
 
 function sparkline(brandKey,color){
@@ -1912,7 +1915,7 @@ function dzDate(str){
 }
 function dzToday(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
 function dzDatos(type, f, convFull){
-  return {tipoDoc:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:f.fechaInscripcion||'',
+  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:f.fechaInscripcion||'',
     tipoAlumno:'NM', formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
 }
 
@@ -2072,7 +2075,7 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
     dzAddManualRow(marca, statKey, row);
     mtRenderGrid(); renderPanels(); renderSummary();
     fb.className='fix-feedback ok';
-    fb.textContent='Fila añadida a "PF y Otras Excepciones" ('+MT_BRANDS.find(b=>b.key===marca).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[statKey])+').';
+    fb.textContent='Fila añadida a "'+(detectado.startsWith('HM')?'Fiel a Atenea':'PF y Otras Excepciones')+'" ('+MT_BRANDS.find(b=>b.key===marca).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[statKey])+').';
     setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
   } else {
     /* Baja / CC / CE / CP: modifican una fila existente — nunca se crea una nueva suelta */
@@ -2176,7 +2179,7 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
           dzAddManualRow(brandKey, 'altas', row);
           mtRenderGrid(); renderPanels(); renderSummary();
           dfb.className='fix-feedback ok';
-          dfb.textContent='Fila añadida a "PF y Otras Excepciones" ('+MT_BRANDS.find(b=>b.key===brandKey).name+' · Altas).';
+          dfb.textContent='Fila añadida a "'+(type==='HM'?'Fiel a Atenea':'PF y Otras Excepciones')+'" ('+MT_BRANDS.find(b=>b.key===brandKey).name+' · Altas).';
           setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
         }
       } else {
