@@ -137,7 +137,7 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-btn.primary:hover { background:rgba(0,140,70,0.18); }
 .detail-close { width:26px; height:26px; border-radius:7px; border:1px solid rgba(0,100,140,0.2); background:transparent; color:#6a8a9a; font-size:13px; cursor:pointer; flex-shrink:0; }
 .detail-close:hover { background:rgba(0,100,160,0.08); }
-.detail-table-wrap { overflow-x:auto; max-height:320px; overflow-y:auto; }
+.detail-table-wrap { overflow-x:hidden; max-height:320px; overflow-y:auto; }
 .detail-table { width:100%; border-collapse:collapse; font-size:12px; }
 .detail-panel.fiel .detail-table thead th { background:#D9EAF7; }
 .detail-panel.excepciones .detail-table thead th { background:#E4D4F5; }
@@ -287,10 +287,19 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .detail-btn.merge{ background:#5CFF9E; border-color:#5CFF9E; color:#02320F; font-weight:800; font-size:13.5px; box-shadow:0 3px 12px rgba(92,255,158,0.4); }
 .detail-btn.merge:hover{ background:#7AFFB2; }
 
+/* ===== Tabla en columnas definitivas de Convo: caben todas sin scroll horizontal ===== */
+.detail-table.cols22{ table-layout:fixed; width:100%; font-size:11px; }
+.detail-table.cols22 thead th{ font-size:8.5px; padding:7px 4px; overflow:visible; }
+.detail-table.cols22 thead th .th-head-row span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.detail-table.cols22 tbody td{ padding:6px 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
+.detail-table.cols22 .th-popover.pop-right{ left:auto; right:0; }
+.detail-table.cols22 td.ra-cell, .detail-table.cols22 th.ra-cell{ padding:4px 2px; text-align:left; overflow:visible; }
+.ra-btn{ width:24px; height:24px; font-size:13px; margin:0 1px; padding:0; }
+.lc-si{ background:#CFF5DC; color:#0B6B33; border-radius:5px; padding:1px 6px; font-weight:800; }
+.lc-no{ background:#FFD9D9; color:#9B1C1C; border-radius:5px; padding:1px 6px; font-weight:800; }
 /* ===== Legibilidad general del módulo — tamaños de letra aumentados ===== */
 body{ font-size:14px; }
-.detail-table{ font-size:14px; }
-.detail-table thead th{ font-size:11.5px; }
+
 .detail-title{ font-size:14px; }
 .detail-sub{ font-size:11.5px; }
 .detail-btn{ font-size:13px; }
@@ -445,19 +454,10 @@ body{ font-size:14px; }
       <button class="detail-close" onclick="closeDetail()">✕</button>
     </div>
   </div>
+  <div id="fielStash" style="display:none"></div>
   <div class="detail-table-wrap">
     <table class="detail-table">
-      <thead><tr>
-        <th>Nombre</th>
-        <th>ID NACS</th>
-        <th><div class="th-head-row"><span>ID Oportunidad</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielOppPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielOppPop"><input type="text" class="th-input" id="fielOppFilter" placeholder="Buscar…" oninput="renderPanels()"></div></th>
-        <th><div class="th-head-row"><span>Convocatoria</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielConvPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielConvPop"><select class="th-select" id="fielConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select></div></th>
-        <th><div class="th-head-row"><span>Programa</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielProgPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielProgPop"><select class="th-select" id="fielProgFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>PI</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielPIPop"><select class="th-select" id="fielPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>Asesor (Atenea)</span><button class="th-filter-icon" onclick="toggleColPopover(event,'fielJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="fielJEPop"><select class="th-select" id="fielJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th>Facturación Neta</th>
-        <th style="width:80px;"></th>
-      </tr></thead>
+      <thead><tr id="fielHead"></tr></thead>
       <tbody id="fielBody"></tbody>
     </table>
   </div>
@@ -518,20 +518,10 @@ body{ font-size:14px; }
       <button class="detail-close" onclick="closeDetail()">✕</button>
     </div>
   </div>
+  <div id="excStash" style="display:none"></div>
   <div class="detail-table-wrap">
     <table class="detail-table">
-      <thead><tr>
-        <th>Nombre</th>
-        <th>ID NACS</th>
-        <th><div class="th-head-row"><span>ID Oportunidad</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excOppPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excOppPop"><input type="text" class="th-input" id="excOppFilter" placeholder="Buscar…" oninput="renderPanels()"></div></th>
-        <th><div class="th-head-row"><span>Convocatoria</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excConvPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excConvPop"><select class="th-select" id="excConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select></div></th>
-        <th><div class="th-head-row"><span>Programa</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excProgPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excProgPop"><select class="th-select" id="excProgFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>PI</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excPIPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excPIPop"><select class="th-select" id="excPIFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th><div class="th-head-row"><span>Asesor (Atenea)</span><button class="th-filter-icon" onclick="toggleColPopover(event,'excJEPop')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button></div><div class="th-popover" id="excJEPop"><select class="th-select" id="excJEFilter" onchange="renderPanels()"><option value="">Todos</option></select></div></th>
-        <th>Facturación Neta</th>
-        <th>Comentarios</th>
-        <th style="width:70px;"></th>
-      </tr></thead>
+      <thead><tr id="excHead"></tr></thead>
       <tbody id="excBody"></tbody>
     </table>
   </div>
@@ -1117,33 +1107,63 @@ function dzActionsHtml(r,src){
   const id=String(r.idOportunidad).replace(/'/g,'');
   return `<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${id}','${src}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${id}','${src}')">&#128465;</button>`;
 }
-function rowHtmlFiel(r){
-  return `<tr>
-    <td>${r.nombre}</td>
-    <td class="id-muted">${r.idNacs}</td>
-    <td class="id-muted">${r.idOportunidad}</td>
-    <td>${convTagHtml(r.convocatoria)}</td>
-    <td>${r.programa}</td>
-    <td class="pi-pct">${r.pi}</td>
-    <td><span class="je-pill">${r.je}</span></td>
-    <td class="fact-cell">${euro(r.facturacion)}</td>
-    <td class="row-actions">${dzActionsHtml(r,'fiel')}</td>
-  </tr>`;
+const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA'];
+/* Columnas visibles = columnas definitivas de Convo (las que haya en la plantilla cargada) */
+const DZ_COL_W={'STATUS':6,'SEGUIMIENTO':8,'TIPOLOGIA MATRICULA':5,'TIPOLOGIA ALUMNO':4,'ID OPORTUNIDAD':8,'DIA CERO':4,'FECHA PRODUCCIÓN':6,'FECHA INSCRIPCIÓN':6,'CONVOCATORIA':5,'PROGRAMA':14,'ID PROGRAMA':6,'NOMBRES APELLIDOS':12,'PAÍS DE RESIDENCIA':6,'FACTURACIÓN NETA':6,'IMPORTE INSCRIPCIÓN':5,'FORMA DE PAGO':6,'ASESOR':8,'JEFE EQUIPO':8,'DIRECTOR VENTAS':8,'FECHA BAJA':6,'MOTIVO DE BAJA':8,'LINEA COMPLETA':5};
+let dzActiveCols = EXPORT_COLS.filter(c=>c!=='SEGUIMIENTO'&&c!=='LINEA COMPLETA');   // ConvoLite: 20 columnas
+try{
+  const sc=JSON.parse(localStorage.getItem('convo27_cols')||'null');
+  if(Array.isArray(sc)&&sc.length){ const f=sc.filter(c=>EXPORT_COLS.includes(c)); if(f.length) dzActiveCols=f; }
+}catch(e){}
+const DZ_FILTER_COL={'ID OPORTUNIDAD':'Opp','CONVOCATORIA':'Conv','PROGRAMA':'Prog','IMPORTE INSCRIPCIÓN':'PI','ASESOR':'JE'};
+const DZ_SVG_FILTER='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+function dzFilterBlock(pre,k,label,popClass){
+  let ctl;
+  if(k==='Opp') ctl=`<input type="text" class="th-input" id="${pre}OppFilter" placeholder="Buscar…" oninput="renderPanels()">`;
+  else if(k==='Conv') ctl=`<select class="th-select" id="${pre}ConvFilter" onchange="renderPanels()"><option value="">Todas</option><option value="Abril">Abril</option><option value="Octubre">Octubre</option></select>`;
+  else ctl=`<select class="th-select" id="${pre}${k}Filter" onchange="renderPanels()"><option value="">Todos</option></select>`;
+  return `<div class="th-head-row"><span title="${label}">${label}</span><button class="th-filter-icon" onclick="toggleColPopover(event,'${pre}${k}Pop')">${DZ_SVG_FILTER}</button></div><div class="th-popover ${popClass||''}" id="${pre}${k}Pop">${ctl}</div>`;
 }
-function rowHtmlExc(r){
-  return `<tr class="exc-row">
-    <td>${r.nombre}</td>
-    <td class="id-muted">${r.idNacs}</td>
-    <td class="id-muted">${r.idOportunidad}</td>
-    <td>${convTagHtml(r.convocatoria)}</td>
-    <td>${r.programa}</td>
-    <td class="pi-pct">${r.pi!=null?r.pi:'—'}</td>
-    <td><span class="je-pill">${r.je}</span></td>
-    <td class="fact-cell">${r.facturacion!=null?euro(r.facturacion):'—'}</td>
-    <td class="comment-cell">${r.comentario||''}</td>
-    <td class="row-actions">${dzActionsHtml(r,'exc')}</td>
-  </tr>`;
+function dzRenderHeads(){
+  const total=dzActiveCols.reduce((a,c)=>a+(DZ_COL_W[c]||6),0);
+  ['fiel','exc'].forEach(pre=>{
+    const table=document.getElementById(pre+'Head').closest('table');
+    table.classList.add('cols22');
+    let cg=table.querySelector('colgroup'); if(cg) cg.remove();
+    cg=document.createElement('colgroup');
+    cg.innerHTML='<col style="width:58px">'+dzActiveCols.map(c=>`<col style="width:calc((100% - 58px) * ${(DZ_COL_W[c]||6)/total})">`).join('');
+    table.insertBefore(cg,table.firstChild);
+    const used={};
+    let html='<th class="ra-cell"></th>';
+    dzActiveCols.forEach((c,idx)=>{
+      const fk=DZ_FILTER_COL[c];
+      if(fk){ used[fk]=true; html+='<th title="'+c+'">'+dzFilterBlock(pre,fk,c,idx>dzActiveCols.length/2?'pop-right':'')+'</th>'; }
+      else html+='<th title="'+c+'"><div class="th-head-row"><span>'+c+'</span></div></th>';
+    });
+    document.getElementById(pre+'Head').innerHTML=html;
+    /* filtros de columnas que ya no están: se conservan ocultos para que el código no falle */
+    document.getElementById(pre+'Stash').innerHTML=Object.values(DZ_FILTER_COL).filter(k=>!used[k]).map(k=>'<div>'+dzFilterBlock(pre,k,k,'')+'</div>').join('');
+  });
 }
+function dzFmtCell(col,v){
+  if(v instanceof Date) return v.toISOString().slice(0,10).split('-').reverse().join('/');
+  if(v===''||v==null) return '';
+  if(col==='FACTURACIÓN NETA'&&typeof v==='number') return euro(v);
+  return String(v);
+}
+function dzRowHtml(r,src){
+  const rec=exportRecord(r,openDetail.stat,src==='fiel'?'Fiel a Atenea':'PF y Otras Excepciones');
+  const tds=dzActiveCols.map(c=>{
+    const t=dzFmtCell(c,rec[c]);
+    const esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    if(c==='LINEA COMPLETA') return `<td><span class="${t==='SI'?'lc-si':'lc-no'}">${esc}</span></td>`;
+    const tip=c==='NOMBRES APELLIDOS'&&r.comentario?esc+' — '+String(r.comentario).replace(/"/g,'&quot;'):esc;
+    return `<td title="${tip}">${esc}</td>`;
+  }).join('');
+  return `<tr${src==='exc'?' class="exc-row"':''}><td class="ra-cell">${dzActionsHtml(r,src)}</td>${tds}</tr>`;
+}
+function rowHtmlFiel(r){ return dzRowHtml(r,'fiel'); }
+function rowHtmlExc(r){ return dzRowHtml(r,'exc'); }
 function toggleColPopover(evt,id){
   evt.stopPropagation();
   const pop=document.getElementById(id);
@@ -1217,15 +1237,14 @@ function renderPanels(){
   document.getElementById('fielSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · ${periodLabel()} · ${fielRows.length} registro${fielRows.length!==1?'s':''}`;
   document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
 
-  document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="9" class="detail-empty">Sin registros con estos filtros</td></tr>`;
-  document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="10" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
+  document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin registros con estos filtros</td></tr>`;
+  document.getElementById('excBody').innerHTML=excRows.length?excRows.map(rowHtmlExc).join(''):`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin excepciones con estos filtros</td></tr>`;
 
   panelFiel.classList.add('open');
   panelExc.classList.add('open');
   mergeBar.style.display='flex';
   panelFiel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA'];
 /* dd/mm/aaaa -> Date (Excel lo guarda como fecha real, igual que el archivo Convo 27) */
 function dzToDate(str){
   const m=String(str||'').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
@@ -1268,7 +1287,7 @@ function exportRecord(r,statKey,seguimiento){
     'MOTIVO DE BAJA': statKey==='bajas'?(d.motivo||'').toUpperCase():'',
     'LINEA COMPLETA': ''
   };
-  const req=['ID OPORTUNIDAD','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','PROGRAMA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR'];
+  const req=['ID OPORTUNIDAD','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','PROGRAMA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR'].filter(k=>dzActiveCols.includes(k));
   if(statKey==='bajas'){req.push('FECHA BAJA','MOTIVO DE BAJA');}
   rec['LINEA COMPLETA']=req.every(k=>rec[k]!==''&&rec[k]!=null)?'SI':'NO';
   return rec;
@@ -1286,9 +1305,9 @@ function exportPanel(which){
   if(which==='exc'||which==='ambos'){
     exceptionRows(b.key,stat).forEach(r=>recs.push(exportRecord(r,stat,'PF y Otras Excepciones')));
   }
-  const ws=XLSX.utils.json_to_sheet(recs,{header:EXPORT_COLS,cellDates:true});
+  const ws=XLSX.utils.json_to_sheet(recs,{header:dzActiveCols,cellDates:true});
   Object.keys(ws).forEach(a=>{ if(a[0]!=='!' && ws[a].t==='d') ws[a].z='dd/mm/yyyy'; });
-  ws['!cols']=EXPORT_COLS.map(c=>({wch:Math.max(c.length+2,14)}));
+  ws['!cols']=dzActiveCols.map(c=>({wch:Math.max(c.length+2,14)}));
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Convo 27 - Columnas Pedidas');
   const tag=which==='fiel'?'Fiel':which==='exc'?'PF-Excepciones':'Conjunto';
@@ -2294,6 +2313,11 @@ function triggerTemplateUpload(){
   document.getElementById('templateFileInput').click();
 }
 
+function dzColNorm(t){
+  let n=String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+  const alias={'JE':'JEFE EQUIPO','JEFE DE EQUIPO':'JEFE EQUIPO','DV':'DIRECTOR VENTAS','DIRECTOR DE VENTAS':'DIRECTOR VENTAS','TIPOLOGIA DE MATRICULA':'TIPOLOGIA MATRICULA','TIPOLOGIA DE ALUMNO':'TIPOLOGIA ALUMNO'};
+  return alias[n]||n;
+}
 function handleTemplateFile(evt){
   const file = evt.target.files[0];
   if(!file) return;
@@ -2301,15 +2325,30 @@ function handleTemplateFile(evt){
   reader.onload = function(e){
     try{
       const wb = XLSX.read(e.target.result, {type:'array'});
-      const sheetName = wb.SheetNames.find(n=>/convocatoria/i.test(n)) || wb.SheetNames[0];
+      const visible = wb.SheetNames.filter(n=>{ const st=(wb.Workbook&&wb.Workbook.Sheets||[]).find(x=>x.name===n); return !st||!st.Hidden; });
+      const pool = visible.length?visible:wb.SheetNames;
+      const sheetName = pool.find(n=>/pedidas/i.test(n)) || pool.find(n=>/convo/i.test(n)) || pool[0];
       const ws = wb.Sheets[sheetName];
       const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       const headerRow = rows.find(r=>r.some(c=>String(c).trim()!=='')) || [];
       dzTemplateColumns = headerRow.map(c=>String(c).trim()).filter(Boolean);
+      /* columnas activas = las de nuestro listado definitivo que existan en la plantilla, en el orden de la plantilla */
+      const byNorm={}; EXPORT_COLS.forEach(c=>{byNorm[dzColNorm(c)]=c;});
+      const active=[]; dzTemplateColumns.forEach(c=>{ const k=byNorm[dzColNorm(c)]; if(k && !active.includes(k)) active.push(k); });
       const title = document.getElementById('templatePopupTitle');
       const list = document.getElementById('templatePopupList');
-      title.textContent = dzTemplateColumns.length+' columnas detectadas en "'+sheetName+'"';
-      list.innerHTML = dzTemplateColumns.map((c,i)=>'<b>'+(i+1)+'.</b> '+c).join('<br>') || '<span style="color:#7FA0B0">No se ha encontrado ninguna fila de cabeceras.</span>';
+      if(!active.length){
+        title.textContent = 'No reconozco ninguna de las columnas de Convo en "'+sheetName+'"';
+        list.innerHTML = '<span style="color:#FFB4B4">Se mantienen las columnas anteriores.</span>';
+      } else {
+        const removed = EXPORT_COLS.filter(c=>!active.includes(c));
+        dzActiveCols = active;
+        try{ localStorage.setItem('convo27_cols', JSON.stringify(active)); }catch(_){}
+        dzRenderHeads(); renderPanels();
+        title.textContent = active.length+' columnas activas (hoja "'+sheetName+'")';
+        list.innerHTML = active.map((c,i)=>'<b>'+(i+1)+'.</b> '+c).join('<br>') +
+          (removed.length?'<br><br><span style="color:#FFB4B4"><b>Quitadas respecto a la versión anterior:</b> '+removed.join(', ')+'</span>':'');
+      }
       document.getElementById('templatePopup').classList.add('show');
     }catch(err){
       console.error(err);
@@ -2454,6 +2493,7 @@ function dzRowEditSave(){
 }
 
 /* Inicialización directa — esta página ya ES el módulo, no hay overlay que abrir */
+dzRenderHeads();
 initDropzones();
 refreshAll();
 </script>
