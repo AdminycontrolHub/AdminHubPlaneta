@@ -151,15 +151,15 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .ra-btn:hover{ background:#7A1470; color:#fff; }
 .ra-del{ background:rgba(214,48,48,0.10); color:#D63030; }
 .ra-del:hover{ background:#D63030; color:#fff; }
-#rowEditOverlay{ position:fixed; inset:0; background:rgba(4,28,46,0.65); display:none; align-items:center; justify-content:center; z-index:99999; }
-#rowEditOverlay.open{ display:flex; }
-#rowEditBox{ background:#0A2A40; color:#E8F2F6; border:1px solid rgba(0,230,255,0.4); border-radius:12px; padding:20px 22px; width:min(560px,94vw); max-height:90vh; overflow:auto; }
-#rowEditBox h3{ margin:0 0 12px; font-size:16px; color:#00E6FF; }
+#rowEditOverlay,#importOverlay{ position:fixed; inset:0; background:rgba(4,28,46,0.65); display:none; align-items:center; justify-content:center; z-index:99999; }
+#rowEditOverlay.open,#importOverlay.open{ display:flex; }
+#rowEditBox,#importBox{ background:#0A2A40; color:#E8F2F6; border:1px solid rgba(0,230,255,0.4); border-radius:12px; padding:20px 22px; width:min(560px,94vw); max-height:90vh; overflow:auto; }
+#rowEditBox h3,#importBox h3{ margin:0 0 12px; font-size:16px; color:#00E6FF; }
 #rowEditBox .re-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; }
-#rowEditBox label{ font-size:12px; color:#7FA0B0; display:flex; flex-direction:column; gap:3px; }
-#rowEditBox input,#rowEditBox select{ background:#041C2E; color:#E8F2F6; border:1px solid rgba(0,230,255,0.35); border-radius:6px; padding:7px 8px; font-size:13px; }
-#rowEditBox .re-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
-#rowEditBox .re-actions button{ border:none; border-radius:8px; padding:9px 18px; font-weight:800; cursor:pointer; }
+#rowEditBox label,#importBox label{ font-size:12px; color:#7FA0B0; display:flex; flex-direction:column; gap:3px; }
+#rowEditBox input,#rowEditBox select,#importBox input,#importBox select{ background:#041C2E; color:#E8F2F6; border:1px solid rgba(0,230,255,0.35); border-radius:6px; padding:7px 8px; font-size:13px; }
+#rowEditBox .re-actions,#importBox .re-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+#rowEditBox .re-actions button,#importBox .re-actions button{ border:none; border-radius:8px; padding:9px 18px; font-weight:800; cursor:pointer; }
 .comment-cell { white-space:normal; max-width:220px; color:#5a4a6a; font-size:11.5px; }
 .pi-pct { font-family:'Courier New',monospace; font-weight:600; }
 .fact-cell { font-family:'Courier New',monospace; font-weight:600; color:#005a30; }
@@ -270,6 +270,13 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 }
 
 .draft-row td{ background:#FFF6C9 !important; }
+.detail-table tbody tr.pair-orig td{ background:#FFE3B3 !important; }
+.detail-table tbody tr.pair-dup td{ background:#FFCB80 !important; }
+.detail-table tbody tr.pair-ghost td{ font-style:italic; opacity:.85; }
+.match-btns{ display:flex; gap:10px; margin-top:14px; }
+.match-btns button{ flex:1; border:none; border-radius:9px; padding:11px 10px; font-size:13.5px; font-weight:800; cursor:pointer; }
+.match-btns .mb-dup{ background:#FFB84D; color:#3a2300; }
+.match-btns .mb-comp{ background:#5CFF9E; color:#03210F; }
 .dr-in{ width:100%; box-sizing:border-box; font-size:10.5px; padding:3px 3px; border:1px solid rgba(122,20,112,0.45); border-radius:4px; background:#fff; color:#1a3a50; min-width:0; }
 .dc-sel{ width:100%; font-size:10.5px; padding:2px 0; border:1px solid rgba(0,100,140,0.25); border-radius:4px; background:#fff; color:#1a3a50; }
 .ra-ok{ background:rgba(20,150,70,0.14); color:#0B7A38; }
@@ -398,6 +405,12 @@ body{ font-size:14px; }
     </div>
   </div>
   <div style="display:flex; align-items:center; gap:10px;">
+    <span id="kvStatus" style="font-size:11px;color:#7FA0B0;font-family:'Courier New',monospace;">cargando…</span>
+    <button class="back-btn" style="cursor:pointer;border-style:dashed;" title="Botón temporal" onclick="bmRequestPassword(function(){document.getElementById('importFileInput').click();}, 'Introduce la contraseña para importar filas existentes.')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Importar filas
+    </button>
+    <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)">
     <button class="back-btn" style="cursor:pointer;" onclick="bmRequestPassword(triggerTemplateUpload, 'Introduce la contraseña para cargar la plantilla de columnas.')">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Cargar plantilla
@@ -589,6 +602,15 @@ body{ font-size:14px; }
   </div>
 </div>
 
+<div id="importOverlay"><div id="importBox">
+  <h3>Importar filas existentes</h3>
+  <div id="importSummary" style="font-size:13px;line-height:1.7;max-height:50vh;overflow:auto;"></div>
+  <label style="margin-top:12px;">Marca (si el archivo no trae columna MARCA)<select id="importBrand"></select></label>
+  <div class="re-actions">
+    <button style="background:#33506a;color:#fff;" onclick="document.getElementById('importOverlay').classList.remove('open')">Cancelar</button>
+    <button id="importGo" style="background:#5CFF9E;color:#03210F;" onclick="dzImportConfirm()">Importar</button>
+  </div>
+</div></div>
 <div id="rowEditOverlay"><div id="rowEditBox">
   <h3>Modificar fila</h3>
   <div class="re-grid">
@@ -707,16 +729,17 @@ body{ font-size:14px; }
     </div>
 
     <div id="dzViewMatch" style="display:none;">
-      <div class="fix-title">Ya existe una fila con este ID</div>
+      <div class="fix-title" id="dzMatchTitle">Ya existe una fila con este ID</div>
       <div class="imac-fields" id="dzMatchExisting"></div>
       <div style="margin:14px 0; border-top:1px solid rgba(255,255,255,0.12);"></div>
       <div class="fix-title" style="font-size:13px;">Cambios a aplicar</div>
       <div class="imac-fields" id="dzMatchChanges"></div>
-      <div class="imac-hint" style="margin-top:12px;">
-        <span><i style="background:#3DDC97"></i>Confirmar y mover</span>
-        <span><i style="background:#FFD24D"></i>Aplazar</span>
-        <span><i style="background:#FF5C5C"></i>Cancelar</span>
+      <div class="fix-title" style="font-size:13px;margin-top:14px;">¿Qué hago con este documento?</div>
+      <div class="match-btns">
+        <button class="mb-dup" onclick="dzMatchApply('duplicate')">Duplicar fila<br><span style="font-weight:600;font-size:11px;">copia debajo de la original, ambas resaltadas</span></button>
+        <button class="mb-comp" onclick="dzMatchApply('complete')">Completar fila<br><span style="font-weight:600;font-size:11px;">rellena solo las columnas que faltan</span></button>
       </div>
+      <div class="imac-hint" style="margin-top:12px;"><span><i style="background:#FF5C5C"></i>Cancelar</span></div>
       <div class="fix-feedback" id="dzMatchFeedback"></div>
     </div>
 
@@ -883,13 +906,8 @@ const JE_INIT=['EZ','NO','SI','AN','CR']; /* iniciales del equipo, dato de ejemp
 const COMENTARIOS=['Confirmado por email con Admisiones','Ajuste manual tras revisión de Financiero','Trasladado desde convocatoria anterior','Pago verificado fuera de Atenea','Corrección de duplicado detectado en Atenea','Pendiente de validar con Cobros'];
 
 function seedRandom(seed){let x=Math.sin(seed)*10000;return x-Math.floor(x);}
-function weekData(brandKey,weekId){
-  const seed=brandKey.charCodeAt(0)*13+weekId.charCodeAt(0)*7+weekId.charCodeAt(1)*3;
-  const altas=Math.floor(seedRandom(seed)*6)+1;
-  const bajas=Math.floor(seedRandom(seed+1)*3);
-  const ccce=Math.floor(seedRandom(seed+2)*3);
-  return {altas,bajas,ccce};
-}
+/* Sin datos de ejemplo: todo a 0 hasta que se arrastren documentos (las filas reales se suman en aggregate*) */
+function weekData(brandKey,weekId){ return {altas:0,bajas:0,ccce:0}; }
 function weekDetail(brandKey,weekId,statKey){
   const n=weekData(brandKey,weekId)[statKey];
   const rows=[];
@@ -908,25 +926,7 @@ function weekDetail(brandKey,weekId,statKey){
 }
 /* Excepciones manuales — lista pequeña y fija de ejemplo, independiente de la semana */
 function exceptionRows(brandKey,statKey){
-  const base=(brandKey.charCodeAt(0)+statKey.length)%3;
-  const manual=dzManualRowsFor(brandKey,statKey).filter(r=>!(r.datos&&r.datos.origen==='HM'));
-  if(base===0)return manual;   // sin ejemplos: solo filas arrastradas
-  const rows=[];
-  for(let i=0;i<base;i++){
-    const seed=brandKey.charCodeAt(1)*23+i*13+statKey.length*7;
-    rows.push({
-      nombre:NOMBRES[Math.floor(seedRandom(seed)*NOMBRES.length)],
-      idNacs:'NACS-'+(50000+Math.floor(seedRandom(seed+1)*999)),
-      idOportunidad:'OPP-'+(9000+Math.floor(seedRandom(seed+2)*999)),
-      convocatoria:seedRandom(seed+3)>0.5?'Octubre':'Abril',
-      programa:PROGRAMAS[brandKey],
-      pi:Math.round(70+seedRandom(seed+4)*30),
-      je:JE_INIT[Math.floor(seedRandom(seed+5)*JE_INIT.length)],
-      facturacion:Math.round((2800+seedRandom(seed+6)*3600)/10)*10,
-      comentario:COMENTARIOS[Math.floor(seedRandom(seed+7)*COMENTARIOS.length)]
-    });
-  }
-  return dzApplyReg(rows).concat(manual);
+  return dzManualRowsFor(brandKey,statKey).filter(r=>!(r.datos&&r.datos.origen==='HM'));
 }
 
 /* Filas añadidas de verdad desde las zonas de arrastre — se guardan solo en memoria de esta
@@ -936,6 +936,7 @@ function dzManualKey(brandKey,statKey){ return brandKey+'|'+statKey; }
 function dzManualRowsFor(brandKey,statKey){ return dzManualRows[dzManualKey(brandKey,statKey)] || []; }
 function dzAddManualRow(brandKey,statKey,row){
   row._manual=true;
+  if(!row._uid) row._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
   const k = dzManualKey(brandKey,statKey);
   if(!dzManualRows[k]) dzManualRows[k]=[];
   dzManualRows[k].push(row);
@@ -943,6 +944,14 @@ function dzAddManualRow(brandKey,statKey,row){
 /* Busca una fila ya añadida en esta sesión por ID Oportunidad, en cualquier marca/estadística */
 function dzFindManualRowById(id){
   if(!id) return null;
+  for(const key in dzManualRows){
+    const rows = dzManualRows[key];
+    const idx = rows.findIndex(r=>r._uid===id);
+    if(idx!==-1){
+      const [brandKey,statKey] = key.split('|');
+      return {brandKey, statKey, key, row:rows[idx]};
+    }
+  }
   for(const key in dzManualRows){
     const rows = dzManualRows[key];
     const idx = rows.findIndex(r=>r.idOportunidad===id);
@@ -961,8 +970,10 @@ function aggregate(brandKey,weekIds){
     const w=weekData(brandKey,id);
     acc.altas+=w.altas;acc.bajas+=w.bajas;acc.ccce+=w.ccce;
     return acc;
-  },{altas:0,bajas:0,ccce:0});
+  },{altas:dzFielRows(brandKey,'altas').length,bajas:dzFielRows(brandKey,'bajas').length,ccce:dzFielRows(brandKey,'ccce').length});
 }
+/* Filas reales de la tabla "Fiel a Atenea" (HM finalizadas arrastradas) — se cuentan una vez, sin depender de la semana */
+function dzFielRows(brandKey,statKey){ return dzManualRowsFor(brandKey,statKey).filter(r=>r.datos&&r.datos.origen==='HM'); }
 /* Registro de borrados y modificaciones sobre filas de ejemplo/automáticas (no son filas arrastradas) */
 let dzHidden = {}, dzOverrides = {};
 function dzApplyReg(rows){
@@ -1083,7 +1094,7 @@ function mtRenderGrid(){
         </div>
       </div>
 
-      <div class="mc-updated">datos de ejemplo</div>
+      <div class="mc-updated">sesión actual</div>
     </div>`;
   }).join('');
 }
@@ -1113,7 +1124,7 @@ function convTagHtml(conv){
   return `<span style="color:#8a97a0;">${conv||'—'}</span>`;
 }
 function dzActionsHtml(r,src){
-  const id=String(r.idOportunidad).replace(/'/g,'');
+  const id=String(r._uid||r.idOportunidad).replace(/'/g,'');
   return `<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${id}','${src}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${id}','${src}')">&#128465;</button>`;
 }
 const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA'];
@@ -1160,20 +1171,42 @@ function dzFmtCell(col,v){
   if(col==='FACTURACIÓN NETA'&&typeof v==='number') return euro(v);
   return String(v);
 }
-function dzRowHtml(r,src){
-  const rec=exportRecord(r,openDetail.stat,src==='fiel'?'Fiel a Atenea':'PF y Otras Excepciones');
+function dzRowHtml(r,src,ghostStat){
+  const rec=exportRecord(r,ghostStat||openDetail.stat,src==='fiel'?'Fiel a Atenea':'PF y Otras Excepciones');
+  const pr=r.datos&&r.datos.pairRole;
+  const trCls=(src==='exc'?'exc-row ':'')+(ghostStat?'pair-ghost pair-orig':(pr==='orig'?'pair-orig':(pr==='dup'?'pair-dup':'')));
   const tds=dzActiveCols.map(c=>{
     const t=dzFmtCell(c,rec[c]);
     const esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
     if(c==='DIA CERO'){
-      const id=String(r.idOportunidad).replace(/'/g,'');
-      return `<td><select class="dc-sel" onchange="dzSetDiaCero('${id}','${src}',this.value)"><option value=""></option><option${t==='SI'?' selected':''}>SI</option><option${t==='NO'?' selected':''}>NO</option></select></td>`;
+      const id=String(r._uid||r.idOportunidad).replace(/'/g,'');
+      return `<td><select class="dc-sel" ${ghostStat?'disabled':''} onchange="dzSetDiaCero('${id}','${src}',this.value)"><option value=""></option><option${t==='SI'?' selected':''}>SI</option><option${t==='NO'?' selected':''}>NO</option></select></td>`;
     }
     if(c==='LINEA COMPLETA') return `<td><span class="${t==='SI'?'lc-si':'lc-no'}">${esc}</span></td>`;
     const tip=c==='NOMBRES APELLIDOS'&&r.comentario?esc+' — '+String(r.comentario).replace(/"/g,'&quot;'):esc;
     return `<td title="${tip}">${esc}</td>`;
   }).join('');
-  return `<tr${src==='exc'?' class="exc-row"':''}><td class="ra-cell">${dzActionsHtml(r,src)}</td>${tds}</tr>`;
+  const actions=ghostStat?'<span title="Fila original (referencia)" style="opacity:.7">&#128279;</span>':dzActionsHtml(r,src);
+  return `<tr class="${trCls.trim()}"><td class="ra-cell">${actions}</td>${tds}</tr>`;
+}
+function dzFindPairOriginal(dup){
+  const key=dup.datos&&dup.datos.pairKey; if(!key) return null;
+  for(const k in dzManualRows){
+    const row=dzManualRows[k].find(x=>x!==dup&&x.datos&&x.datos.pairKey===key&&x.datos.pairRole==='orig');
+    if(row){ const [brandKey,statKey]=k.split('|'); return {row,brandKey,statKey}; }
+  }
+  return null;
+}
+function dzExcRowsHtml(rows){
+  const out=[];
+  rows.forEach(r=>{
+    if(r.datos&&r.datos.pairRole==='dup'&&!rows.some(x=>x.datos&&x.datos.pairKey===r.datos.pairKey&&x.datos.pairRole==='orig')){
+      const o=dzFindPairOriginal(r);
+      if(o&&o.brandKey===openDetail.brandKey) out.push(dzRowHtml(o.row,'exc',o.statKey));
+    }
+    out.push(dzRowHtml(r,'exc'));
+  });
+  return out.join('');
 }
 function rowHtmlFiel(r){ return dzRowHtml(r,'fiel'); }
 function rowHtmlExc(r){ return dzRowHtml(r,'exc'); }
@@ -1251,7 +1284,7 @@ function renderPanels(){
   document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
 
   document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin registros con estos filtros</td></tr>`;
-  document.getElementById('excBody').innerHTML=(dzDraft?dzDraftRowHtml():'')+(excRows.length?excRows.map(rowHtmlExc).join(''):(dzDraft?'':`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin excepciones con estos filtros</td></tr>`));
+  document.getElementById('excBody').innerHTML=(dzDraft?dzDraftRowHtml():'')+(excRows.length?dzExcRowsHtml(excRows):(dzDraft?'':`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin excepciones con estos filtros</td></tr>`));
 
   panelFiel.classList.add('open');
   panelExc.classList.add('open');
@@ -1374,7 +1407,13 @@ function aggregateConvSplit(brandKey,weekIds){
     acc.bajasAbril+=s.bajasAbril;acc.bajasOctubre+=s.bajasOctubre;
     acc.ceAbril+=s.ceAbril;acc.ceOctubre+=s.ceOctubre;
     return acc;
-  },{altasAbril:0,altasOctubre:0,bajasAbril:0,bajasOctubre:0,ceAbril:0,ceOctubre:0});
+  },(function(){
+    const z={altasAbril:0,altasOctubre:0,bajasAbril:0,bajasOctubre:0,ceAbril:0,ceOctubre:0};
+    dzFielRows(brandKey,'altas').forEach(r=>{ z['altas'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
+    dzFielRows(brandKey,'bajas').forEach(r=>{ z['bajas'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
+    dzFielRows(brandKey,'ccce').forEach(r=>{ if(r.datos&&r.datos.tipoAlumno==='CE') z['ce'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
+    return z;
+  })());
 }
 /* De las matrículas Brutas (altas+CC/CE) de Abril y Octubre que conviven en un mismo mes de
    transición, solo cuentan las de la convocatoria más próxima a iniciar (activeConv de ese mes).
@@ -1387,9 +1426,11 @@ function countingBrutasByConv(brandKey,weekIds){
     if(month.activeConv==='Octubre')octubre+=s.altasOctubre+s.ccceOctubre;
     else abril+=s.altasAbril+s.ccceAbril;
   });
+  ['altas','ccce'].forEach(st=>dzFielRows(brandKey,st).forEach(r=>{ if(r.convocatoria==='Abril')abril++; else octubre++; }));
   return {octubre,abril};
 }
 function renderSummary(){
+  dzSaveSoon();
   const weekIds=[...selectedWeeks];
   const nearestConv=MONTHS[currentMonthIdx].activeConv; /* 'Octubre' o 'Abril' — la más próxima a iniciar según el mes centrado */
   const grid=document.getElementById('summaryGrid');
@@ -2102,7 +2143,7 @@ document.getElementById('dzLinkDelete').addEventListener('click', ()=>{
 let dzMatchContext = null;
 
 function dzShowMatchPopup(existing, changes){
-  dzMode='match'; dzMatchContext = {existing, changes};
+  dzMode='match'; dzMatchContext = {existing, changes, parsed: Object.assign({}, dzFixParsedFields||{})};
   document.getElementById('dzViewDetected').style.display='none';
   document.getElementById('dzViewFix').style.display='none';
   document.getElementById('dzViewReceipt').style.display='none';
@@ -2111,8 +2152,11 @@ function dzShowMatchPopup(existing, changes){
   const r = existing.row;
   const brandName = (MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name || existing.brandKey;
   const statLabel = {altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey];
+  const od=(r.datos&&r.datos.origen)||'';
+  const where=od==='HM'?'HM · Fiel a Atenea':(od==='PF'?'PF · PF y Otras Excepciones':'PF y Otras Excepciones');
+  document.getElementById('dzMatchTitle').textContent='Se ha encontrado una fila con este ID (en '+(od==='HM'?'HM':'PF')+')';
   document.getElementById('dzMatchExisting').innerHTML =
-    '<b>Marca:</b> '+brandName+' · '+statLabel+'<br>'+
+    '<b>Marca:</b> '+brandName+' · '+statLabel+' · '+where+'<br>'+
     '<b>Nombre:</b> '+r.nombre+'<br>'+
     '<b>ID Oportunidad:</b> '+r.idOportunidad+'<br>'+
     '<b>Programa:</b> '+r.programa+'<br>'+
@@ -2125,6 +2169,74 @@ function dzShowMatchPopup(existing, changes){
   const fb = document.getElementById('dzMatchFeedback');
   fb.className='fix-feedback'; fb.textContent='';
   document.getElementById('dzPopup').classList.add('show');
+}
+
+/* Construye la fila resultante aplicando el documento (Baja/CC/CE/CP) sobre una fila base.
+   Solo rellena lo que está vacío; los datos que ya existían no se pisan (salvo los propios del cambio). */
+function dzBuildFromChanges(base, changes, parsed){
+  const f=parsed||{};
+  const row=JSON.parse(JSON.stringify(base));
+  const d=row.datos=Object.assign({},row.datos||{});
+  const empty=v=>v==null||v===''||v==='—'||v==='(sin nombre)';
+  if(empty(row.nombre)&&f.nombre) row.nombre=f.nombre;
+  if(empty(row.programa)&&f.programa) row.programa=f.programa;
+  if(empty(row.je)&&f.asesor) row.je=f.asesor;
+  if(row.pi==null&&f.pi!=null) row.pi=f.pi;
+  if(row.facturacion==null&&f.facturacion!=null) row.facturacion=f.facturacion;
+  if(empty(d.pais)&&f.pais) d.pais=f.pais;
+  if(empty(d.formaPago)&&f.formaPago) d.formaPago=f.formaPago;
+  if(empty(d.idPrograma)&&f.idPrograma) d.idPrograma=f.idPrograma;
+  const tipo=changes.detectado.split(' ')[0];
+  d.tipoDoc=tipo;
+  if(/^(CC|CE|CP)/.test(tipo)){
+    d.tipoAlumno=tipo;
+    if(changes.mes){
+      if(d.convocatoriaFull) d.convocatoriaOrigen=d.convocatoriaFull;
+      d.convocatoriaFull=changes.mes+' '+(changes.anio||'');
+      row.convocatoria=changes.mes;
+    }
+    if(changes.motivo) d.motivo=changes.motivo;
+  } else {
+    if(empty(d.convocatoriaFull)&&changes.mes){ d.convocatoriaFull=changes.mes+' '+(changes.anio||''); }
+    if(empty(row.convocatoria)&&changes.mes) row.convocatoria=changes.mes;
+    d.fechaBaja=dzToday(); d.motivo=changes.motivo||d.motivo||''; d.tipoBaja=changes.tipo||'';
+  }
+  d.origen='PF';   // las bajas y cambios van siempre al bloque "PF y Otras Excepciones"
+  row.comentario=(base.comentario?base.comentario+' — ':'')+(changes.detectado)+(changes.motivo?(' ('+changes.motivo+')'):'');
+  return row;
+}
+function dzMatchApply(mode){
+  if(!dzMatchContext) return;
+  const {existing, changes, parsed}=dzMatchContext;
+  const fb=document.getElementById('dzMatchFeedback');
+  const arr=dzManualRows[existing.key];
+  const idx=arr?arr.indexOf(existing.row):-1;
+  if(idx===-1){ fb.className='fix-feedback fail'; fb.textContent='La fila original ya no existe.'; return; }
+  const statName={altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[changes.statKey];
+  if(mode==='complete'){
+    const updated=dzBuildFromChanges(existing.row,changes,parsed);
+    updated._uid=existing.row._uid;
+    arr.splice(idx,1);
+    if(changes.statKey===existing.statKey) arr.splice(idx,0,updated); else dzAddManualRow(existing.brandKey,changes.statKey,updated);
+    fb.className='fix-feedback ok';
+    fb.textContent='Fila completada'+(changes.statKey!==existing.statKey?' y movida a '+statName:'')+'.';
+  } else {
+    const key=existing.row._uid+'-p'+Date.now().toString(36);
+    const dup=dzBuildFromChanges(existing.row,changes,parsed);
+    delete dup._uid;
+    dup.datos.pairKey=key; dup.datos.pairRole='dup';
+    existing.row.datos=Object.assign({},existing.row.datos||{},{pairKey:key,pairRole:'orig'});
+    if(changes.statKey===existing.statKey){
+      dup._manual=true; dup._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      arr.splice(idx+1,0,dup);       // justo debajo de la original
+    } else {
+      dzAddManualRow(existing.brandKey,changes.statKey,dup);
+    }
+    fb.className='fix-feedback ok';
+    fb.textContent='Fila duplicada en "PF y Otras Excepciones" ('+statName+'). Ambas quedan resaltadas.';
+  }
+  mtRenderGrid(); renderPanels(); renderSummary();
+  setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1600);
 }
 
 function dzOpenReceipt(filename, wrongType){
@@ -2198,30 +2310,9 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
     } else if(dzMode==='fix'){
       if(!btn.classList.contains('red')) document.getElementById('dzPopup').classList.remove('show');
     } else if(dzMode==='match'){
-      if(btn.classList.contains('green')){
-        const {existing, changes} = dzMatchContext;
-        const arr = dzManualRows[existing.key];
-        const idx = arr ? arr.indexOf(existing.row) : -1;
-        if(idx!==-1) arr.splice(idx,1);
-        const newDatos = Object.assign({}, existing.row.datos||{}, {tipoDoc: changes.detectado.split(' ')[0]});
-        if(/^(CC|CE|CP)/.test(changes.detectado)) newDatos.tipoAlumno = changes.detectado.split(' ')[0];
-        if(changes.mes) newDatos.convocatoriaFull = changes.mes+' '+(changes.anio||'');
-        if(changes.statKey==='bajas'){ newDatos.fechaBaja = dzToday(); newDatos.motivo = changes.motivo||''; newDatos.tipoBaja = changes.tipo||''; }
-        else if(changes.motivo){ newDatos.motivo = changes.motivo; }
-        const updatedRow = Object.assign({}, existing.row, {
-          datos: newDatos,
-          convocatoria: changes.mes || existing.row.convocatoria,
-          comentario: (existing.row.comentario?existing.row.comentario+' — ':'') + 'Actualizado por '+changes.detectado+(changes.motivo?(' ('+changes.motivo+')'):'')
-        });
-        dzAddManualRow(existing.brandKey, changes.statKey, updatedRow);
-        mtRenderGrid(); renderPanels(); renderSummary();
-        const fb = document.getElementById('dzMatchFeedback');
-        fb.className='fix-feedback ok';
-        fb.textContent='Fila movida a '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[changes.statKey])+'.';
-        setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
-      } else {
-        document.getElementById('dzPopup').classList.remove('show');
-      }
+      /* el cierre/cancelación se hace con el semáforo rojo; la acción se elige con los dos botones grandes */
+      if(btn.classList.contains('green')) dzMatchApply('complete');
+      else document.getElementById('dzPopup').classList.remove('show');
     } else if(dzMode==='receipt'){
       const wrongZone = document.getElementById('dzReceiptBanner').style.display !== 'none';
       if(wrongZone){
@@ -2355,7 +2446,7 @@ function handleTemplateFile(evt){
         const removed = EXPORT_COLS.filter(c=>!active.includes(c));
         dzActiveCols = active;
         try{ localStorage.setItem('convo27_cols', JSON.stringify(active)); }catch(_){}
-        dzRenderHeads(); renderPanels();
+        dzRenderHeads(); renderPanels(); dzSaveSoon();
         title.textContent = active.length+' columnas activas (hoja "'+sheetName+'")';
         list.innerHTML = active.map((c,i)=>'<b>'+(i+1)+'.</b> '+c).join('<br>') +
           (removed.length?'<br><br><span style="color:#FFB4B4"><b>Quitadas respecto a la versión anterior:</b> '+removed.join(', ')+'</span>':'');
@@ -2406,7 +2497,7 @@ function handleEquiposFile(evt){
       dzEquipos=map;
       const d=new Date(); dzEquiposMes=String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
       try{ localStorage.setItem('convo27_equipos', JSON.stringify({map, mes:dzEquiposMes})); }catch(_){}
-      dzEquiposBadge();
+      dzEquiposBadge(); dzSaveSoon();
       alert('Equipos cargados: '+Object.keys(map).length+' asesores con su JE y DV.');
     }catch(err){
       console.error(err);
@@ -2427,6 +2518,7 @@ dzEquiposBadge();
 /* ===================== DIA CERO EDITABLE + FILA MANUAL NUEVA ===================== */
 function dzSetDiaCero(id,src,val){
   const loc=dzLocateRow(id,src); if(!loc) return;
+  setTimeout(dzSaveSoon,0);
   if(loc.manual){ loc.row.datos=Object.assign({},loc.row.datos||{},{diaCero:val}); }
   else{
     const base=(dzOverrides[id]&&dzOverrides[id].datos)||loc.row.datos||{};
@@ -2559,10 +2651,159 @@ function dzRowEditSave(){
   mtRenderGrid(); renderPanels(); renderSummary();
 }
 
+/* ===================== PERSISTENCIA EN KV (entre sesiones) ===================== */
+const DZ_WORKER='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
+const DZ_KV_KEY='adminhub_convo27_matriculas_v1';
+let dzLoaded=false, dzSaveTimer=null, dzSaving=false, dzSavePending=false;
+function dzKvStatus(t,color){ const el=document.getElementById('kvStatus'); if(el){ el.textContent=t; el.style.color=color||'#7FA0B0'; } }
+function dzWithTimeout(promise,ms){ return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]); }
+function dzStateSnapshot(){
+  return {v:1, savedAt:new Date().toISOString(), rows:dzManualRows, hidden:dzHidden, overrides:dzOverrides, cols:dzActiveCols, equipos:dzEquipos, equiposMes:dzEquiposMes};
+}
+function dzSaveSoon(){
+  if(!dzLoaded) return;          // nunca guardar antes de haber cargado: evitaría pisar lo que ya hay
+  clearTimeout(dzSaveTimer);
+  dzKvStatus('guardando…','#F5C542');
+  dzSaveTimer=setTimeout(dzSaveNow,500);
+}
+async function dzSaveNow(){
+  if(dzSaving){ dzSavePending=true; return; }
+  dzSaving=true;
+  try{
+    const res=await dzWithTimeout(fetch(DZ_WORKER+'/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:DZ_KV_KEY,value:dzStateSnapshot()})}),8000);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    dzKvStatus('guardado ✓ '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),'#5CFF9E');
+  }catch(e){
+    console.error('Error guardando en KV:',e);
+    dzKvStatus('⚠ sin guardar (reintenta)','#FF7B7B');
+  }
+  dzSaving=false;
+  if(dzSavePending){ dzSavePending=false; dzSaveSoon(); }
+}
+async function dzLoadState(){
+  try{
+    const res=await dzWithTimeout(fetch(DZ_WORKER+'/kv?key='+DZ_KV_KEY+'&_ts='+Date.now(),{cache:'no-store'}),6000);
+    const data=await res.json();
+    if(data&&data.value){
+      const st=typeof data.value==='string'?JSON.parse(data.value):data.value;
+      if(st.rows&&typeof st.rows==='object'){ dzManualRows=st.rows; Object.keys(dzManualRows).forEach(k=>dzManualRows[k].forEach(r=>{ if(!r._uid) r._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); })); }
+      if(st.hidden) dzHidden=st.hidden;
+      if(st.overrides) dzOverrides=st.overrides;
+      if(Array.isArray(st.cols)){ const f=st.cols.filter(c=>EXPORT_COLS.includes(c)); if(f.length) dzActiveCols=f; }
+      if(st.equipos&&Object.keys(st.equipos).length){ dzEquipos=st.equipos; dzEquiposMes=st.equiposMes||''; }
+    }
+    dzLoaded=true;
+    dzKvStatus('sincronizado ✓','#5CFF9E');
+  }catch(e){
+    console.error('No se ha podido cargar el estado de KV:',e);
+    dzKvStatus('⚠ sin conexión: no se guarda','#FF7B7B');
+  }
+  dzEquiposBadge();
+  dzRenderHeads();
+  refreshAll();
+}
+
+/* ===================== IMPORTAR FILAS EXISTENTES (botón temporal) ===================== */
+let dzImportParsed=null;
+function dzImpNorm(t){ return dzColNorm(t); }
+function dzImpDate(v){
+  if(Object.prototype.toString.call(v)==='[object Date]' && !isNaN(v)) return String(v.getUTCDate()).padStart(2,'0')+'/'+String(v.getUTCMonth()+1).padStart(2,'0')+'/'+v.getUTCFullYear();
+  if(typeof v==='number' && v>20000 && v<80000){ const d=new Date(Math.round((v-25569)*86400*1000)); return dzImpDate(d); }
+  return dzDate(String(v||''));
+}
+function dzImpConv(v){
+  const t=String(v==null?'':v).trim();
+  if(/^\d{4}$/.test(t)){ const mm=t.slice(2); return {mes:mm==='04'?'Abril':(mm==='10'?'Octubre':''), full:(mm==='04'?'Abril':(mm==='10'?'Octubre':''))+' 20'+t.slice(0,2)}; }
+  const c=dzParseConvocatoria(t); return {mes:c.mes, full:c.mes?(c.mes+' '+c.anio).trim():''};
+}
+function dzImpNum(v){ if(v===''||v==null) return null; const n=typeof v==='number'?v:parseFloat(String(v).replace(/[^\d.,-]/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.')); return isNaN(n)?null:n; }
+function handleImportFile(evt){
+  const file=evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      const visible=wb.SheetNames.filter(n=>{ const st=(wb.Workbook&&wb.Workbook.Sheets||[]).find(x=>x.name===n); return !st||!st.Hidden; });
+      const pool=visible.length?visible:wb.SheetNames;
+      let rows=null;
+      for(const n of pool){
+        const r=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:'',cellDates:true});
+        const hi=r.findIndex(x=>x.some(c=>dzImpNorm(c)==='ID OPORTUNIDAD'));
+        if(hi!==-1){ rows={head:r[hi].map(dzImpNorm),data:r.slice(hi+1),sheet:n}; break; }
+      }
+      if(!rows) throw new Error('No encuentro una hoja con la columna ID OPORTUNIDAD');
+      const idx=name=>rows.head.indexOf(dzImpNorm(name));
+      const col=(r,name)=>{ const i=idx(name); return i===-1?'':r[i]; };
+      const parsed=[]; let sinId=0, dup=0; const seen={};
+      rows.data.forEach(r=>{
+        const id=String(col(r,'ID OPORTUNIDAD')||'').trim();
+        const nombre=String(col(r,'NOMBRES APELLIDOS')||'').trim();
+        if(!id){ if(nombre||r.some(c=>c!=='')) sinId++; return; }
+        if(seen[id]){ dup++; return; } seen[id]=true;
+        const status=String(col(r,'STATUS')||'').trim(), tmat=String(col(r,'TIPOLOGIA MATRICULA')||'').trim().toUpperCase();
+        const talu=String(col(r,'TIPOLOGIA ALUMNO')||'').trim().toUpperCase(), seg=String(col(r,'SEGUIMIENTO')||'').trim();
+        const fbaja=dzImpDate(col(r,'FECHA BAJA')), motivo=String(col(r,'MOTIVO DE BAJA')||'').trim();
+        let stat='altas';
+        if(tmat==='BAJA'||/BAJA/i.test(status)||fbaja||motivo) stat='bajas';
+        else if(/^(CC|CE|CP)$/.test(talu)) stat='ccce';
+        const origen=/PF|EXCEP/i.test(seg+' '+status)?'PF':'HM';
+        const cv=dzImpConv(col(r,'CONVOCATORIA'));
+        const marcaTxt=String(col(r,'MARCA')||'');
+        parsed.push({stat,origen,brandKey:dzResolveBrandKey(marcaTxt),
+          row:{nombre:nombre||'(sin nombre)',idNacs:'—',idOportunidad:id,convocatoria:cv.mes||'—',programa:String(col(r,'PROGRAMA')||'').trim()||'—',
+            pi:dzImpNum(col(r,'IMPORTE INSCRIPCIÓN')),je:String(col(r,'ASESOR')||'').trim()||'—',facturacion:dzImpNum(col(r,'FACTURACIÓN NETA')),
+            comentario:'Importado desde archivo',
+            datos:{tipoDoc:origen,origen,tipoAlumno:talu,status:status,tipoMat:tmat,diaCero:String(col(r,'DIA CERO')||'').trim().toUpperCase(),
+              pais:String(col(r,'PAÍS DE RESIDENCIA')||'').trim(),fechaProduccion:dzImpDate(col(r,'FECHA PRODUCCIÓN')),fechaInscripcion:dzImpDate(col(r,'FECHA INSCRIPCIÓN')),
+              formaPago:dzPayNorm(String(col(r,'FORMA DE PAGO')||'')),idPrograma:String(col(r,'ID PROGRAMA')||'').trim(),convocatoriaFull:cv.full,
+              fechaBaja:fbaja,motivo:motivo,tipoBaja:'',jefe:String(col(r,'JEFE EQUIPO')||'').trim(),dv:String(col(r,'DIRECTOR VENTAS')||'').trim()}}});
+      });
+      dzImportParsed={items:parsed,sinId,dup,sheet:rows.sheet};
+      dzShowImportSummary();
+    }catch(err){
+      console.error(err);
+      alert('No se ha podido leer el archivo: '+err.message);
+    }
+    evt.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+function dzShowImportSummary(){
+  const d=dzImportParsed;
+  const sel=document.getElementById('importBrand');
+  sel.innerHTML=MT_BRANDS.map(b=>`<option value="${b.key}">${b.name}</option>`).join('');
+  sel.value=(openDetail&&openDetail.brandKey)||MT_BRANDS[0].key;
+  const cnt={};
+  d.items.forEach(it=>{ const k=(it.origen==='HM'?'Fiel a Atenea':'PF y Otras Excepciones')+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[it.stat]); cnt[k]=(cnt[k]||0)+1; });
+  const existing=d.items.filter(it=>dzFindManualRowById(it.row.idOportunidad)).length;
+  document.getElementById('importSummary').innerHTML=
+    '<b>'+d.items.length+' filas válidas</b> en la hoja "'+d.sheet+'"<br>'+
+    Object.keys(cnt).map(k=>'&nbsp;&nbsp;• '+k+': <b>'+cnt[k]+'</b>').join('<br>')+
+    (existing?'<br><span style="color:#FFD479">'+existing+' ya existen y se omitirán (mismo ID).</span>':'')+
+    (d.sinId?'<br><span style="color:#FFB4B4">'+d.sinId+' filas sin ID oportunidad: se omiten.</span>':'')+
+    (d.dup?'<br><span style="color:#FFD479">'+d.dup+' repetidas dentro del archivo: se omiten.</span>':'');
+  document.getElementById('importGo').disabled=!d.items.length;
+  document.getElementById('importOverlay').classList.add('open');
+}
+function dzImportConfirm(){
+  const d=dzImportParsed; if(!d) return;
+  const fallback=document.getElementById('importBrand').value;
+  let added=0, skipped=0;
+  d.items.forEach(it=>{
+    if(dzFindManualRowById(it.row.idOportunidad)){ skipped++; return; }
+    dzAddManualRow(it.brandKey||fallback, it.stat, it.row); added++;
+  });
+  dzImportParsed=null;
+  document.getElementById('importOverlay').classList.remove('open');
+  mtRenderGrid(); renderPanels(); renderSummary();
+  alert('Importadas '+added+' filas'+(skipped?(' ('+skipped+' omitidas por ID repetido)'):'')+'.');
+}
+
 /* Inicialización directa — esta página ya ES el módulo, no hay overlay que abrir */
 dzRenderHeads();
 initDropzones();
 refreshAll();
+dzLoadState();
 </script>
 
 </body>
