@@ -1,5 +1,45 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import * as XLSX from "xlsx";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bajas comisiones — Admin Hub</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #060D17; }
+  #root { min-height: 100vh; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+// ---------- almacenamiento compartido (KV en el Worker) ----------
+const WORKER_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
+const KV_KEY = 'adminhub_bajas_comisiones_v1';
+const RESET_PASSWORD = 'AdminHub';
+
+async function kvGet(key) {
+  const res = await fetch(`${WORKER_URL}/kv?key=${encodeURIComponent(key)}`);
+  if (!res.ok) throw new Error('kv get failed');
+  const d = await res.json();
+  if (!d.value) return null;
+  return typeof d.value === 'string' ? JSON.parse(d.value) : d.value;
+}
+async function kvSet(key, value) {
+  const res = await fetch(`${WORKER_URL}/kv`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, value })
+  });
+  if (!res.ok) throw new Error('kv set failed');
+  return true;
+}
 
 // ---------- helpers ----------
 const STOPWORDS = new Set(["de", "del", "la", "las", "los", "y", "san", "santa"]);
@@ -117,10 +157,9 @@ function simpleHash(str) {
   return "gen-" + Math.abs(h).toString(36);
 }
 
-const STORAGE_KEY = "comisiones-db-v3";
 const emptyDb = { advisors: {}, bajas: [], aplicaOverrides: {}, lastUpdate: null };
 
-export default function App() {
+function App() {
   const [db, setDb] = useState(emptyDb);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
@@ -138,10 +177,11 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await window.storage.get(STORAGE_KEY, false);
-        if (res && res.value) setDb({ ...emptyDb, ...JSON.parse(res.value) });
-      } catch (e) {}
-      finally {
+        const saved = await kvGet(KV_KEY);
+        if (saved) setDb({ ...emptyDb, ...saved });
+      } catch (e) {
+        setStatus({ type: "error", text: "No se pudo cargar el histórico guardado. Recarga la página." });
+      } finally {
         setReady(true);
       }
     })();
@@ -151,7 +191,7 @@ export default function App() {
     const withStamp = { ...newDb, lastUpdate: new Date().toISOString() };
     setDb(withStamp);
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(withStamp), false);
+      await kvSet(KV_KEY, withStamp);
     } catch (e) {
       setStatus({ type: "error", text: "No se pudo guardar. Inténtalo de nuevo." });
     }
@@ -349,6 +389,10 @@ export default function App() {
   }
 
   async function handleReset() {
+    // El histórico es compartido por todo el equipo: se protege con la misma contraseña que el resto de Admin Hub
+    const pwd = prompt("Contraseña para borrar el histórico de todo el equipo:");
+    if (pwd === null) return;
+    if (pwd !== RESET_PASSWORD) { alert("Contraseña incorrecta."); return; }
     if (!confirm("¿Borrar todo el histórico guardado (tramos y bajas)? No se puede deshacer.")) return;
     await persist(emptyDb);
     setStatus({ type: "ok", text: "Histórico borrado." });
@@ -493,7 +537,10 @@ export default function App() {
               <div style={styles.headerSub}>Administración comercial</div>
             </div>
           </div>
-          <div style={styles.headerRight}>Actualizado: {lastUpdateStr}</div>
+          <div style={styles.headerRightWrap}>
+            <div style={styles.headerRight}>Actualizado: {lastUpdateStr}</div>
+            <a href="index.html" style={styles.backBtn}>‹ Volver a Comisiones</a>
+          </div>
         </div>
 
         <div style={styles.row}>
@@ -651,7 +698,7 @@ export default function App() {
                 {enrichedBajas.length === 0 && (
                   <tr>
                     <td style={styles.td} colSpan={13}>
-                      Sube el Excel de bajas para ver el desglose aquí.
+                      {ready ? "Sube el Excel de bajas para ver el desglose aquí." : "Cargando histórico…"}
                     </td>
                   </tr>
                 )}
@@ -808,15 +855,17 @@ export default function App() {
 }
 
 const styles = {
-  app: { position: "relative", minHeight: "700px", background: "radial-gradient(ellipse at 30% 0%, #0E2438 0%, #081422 55%, #060D17 100%)", color: "#E8F1FA", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
+  app: { position: "relative", minHeight: "100vh", background: "radial-gradient(ellipse at 30% 0%, #0E2438 0%, #081422 55%, #060D17 100%)", color: "#E8F1FA", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
   bgGrid: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(79,216,232,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(79,216,232,0.035) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none" },
   shell: { position: "relative", maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 },
-  headerPanel: { background: "rgba(15,31,53,0.65)", border: "1px solid rgba(79,216,232,0.25)", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  headerPanel: { background: "rgba(15,31,53,0.65)", border: "1px solid rgba(79,216,232,0.25)", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
   headerLeft: { display: "flex", alignItems: "center", gap: 14 },
   headerIcon: { width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #FF3D8A", color: "#FF3D8A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, fontFamily: "'IBM Plex Mono', monospace" },
   headerTitle: { fontSize: 18, fontWeight: 700 },
   headerSub: { fontSize: 11.5, color: "#7C93AE", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
+  headerRightWrap: { display: "flex", alignItems: "center", gap: 16 },
   headerRight: { fontSize: 12, color: "#7C93AE", fontFamily: "'IBM Plex Mono', monospace" },
+  backBtn: { background: "rgba(0,90,130,0.15)", border: "1px solid rgba(0,212,240,0.25)", borderRadius: 10, padding: "7px 14px", color: "rgba(0,212,240,0.85)", fontSize: 12, textDecoration: "none", whiteSpace: "nowrap" },
   row: { display: "flex", gap: 16, flexWrap: "wrap" },
   panel: { background: "rgba(15,31,53,0.55)", border: "1px solid rgba(79,216,232,0.2)", borderRadius: 16, padding: 20, minWidth: 260 },
   panelPink: { background: "rgba(15,31,53,0.55)", border: "1px solid rgba(255,61,138,0.3)", borderRadius: 16, padding: "20px 0" },
@@ -858,3 +907,8 @@ const css = `
   ::-webkit-scrollbar { height: 8px; width: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(79,216,232,0.25); border-radius: 8px; }
 `;
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
