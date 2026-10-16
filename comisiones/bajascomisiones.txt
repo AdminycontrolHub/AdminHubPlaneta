@@ -1,0 +1,860 @@
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import * as XLSX from "xlsx";
+
+// ---------- helpers ----------
+const STOPWORDS = new Set(["de", "del", "la", "las", "los", "y", "san", "santa"]);
+
+const normalize = (s) =>
+  String(s ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const CODE_RE = /^\d{4,}$/;
+
+function tokenize(name) {
+  return normalize(name)
+    .replace(/,/g, " ")
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t && !STOPWORDS.has(t));
+}
+
+function parseTramo(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+  if (typeof raw === "number") return raw <= 1 ? raw * 100 : raw;
+  const s = String(raw).replace("%", "").replace(",", ".").trim();
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function parseNumber(raw) {
+  if (raw === null || raw === undefined || raw === "") return null;
+  if (typeof raw === "number") return raw;
+  const s = String(raw)
+    .replace(/€/g, "")
+    .replace(/\s/g, "")
+    .replace(/\.(?=\d{3}(?:\D|$))/g, "")
+    .replace(",", ".")
+    .trim();
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function findHeaderRow(rows, requiredIncludes) {
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const norm = rows[i].map(normalize);
+    const ok = requiredIncludes.every((req) => norm.some((c) => req(c)));
+    if (ok) return i;
+  }
+  return -1;
+}
+
+function findCol(headerNorm, matcher) {
+  for (let i = 0; i < headerNorm.length; i++) {
+    if (matcher(headerNorm[i])) return i;
+  }
+  return -1;
+}
+
+function tramoColor(v) {
+  if (v === null || v === undefined) return "#41556E";
+  const t = Math.max(0, Math.min(1, v / 5));
+  const c1 = [86, 132, 163];
+  const c2 = [255, 61, 138];
+  const r = Math.round(c1[0] + (c2[0] - c1[0]) * t);
+  const g = Math.round(c1[1] + (c2[1] - c1[1]) * t);
+  const b = Math.round(c1[2] + (c2[2] - c1[2]) * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+function fmtMes(mes) {
+  if (!mes) return "—";
+  const m = String(mes).match(/^(\d{4})-(\d{2})$/);
+  if (!m) return mes;
+  const names = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+  const idx = parseInt(m[2], 10) - 1;
+  return `${names[idx] || m[2]} ${m[1]}`;
+}
+
+function fmtEUR(n) {
+  if (n === null || n === undefined) return "—";
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+}
+
+function fmtEURShort(n) {
+  if (n === null || n === undefined) return "—";
+  if (Math.abs(n) >= 1000) return (n / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " mil €";
+  return fmtEUR(n);
+}
+
+// best-match a free-text name against known advisors (used for asesor / jefe / director)
+function matchPerson(advisors, freeName, equipoHint) {
+  const nameTokens = tokenize(freeName);
+  if (nameTokens.length === 0) return null;
+  let best = null;
+  let bestScore = -1;
+  for (const a of Object.values(advisors)) {
+    const aTokens = new Set(tokenize(a.nombre));
+    const allFound = nameTokens.every((t) => aTokens.has(t));
+    if (!allFound) continue;
+    let score = nameTokens.length;
+    if (equipoHint && a.equipo && normalize(a.equipo) === normalize(equipoHint)) score += 2;
+    if (score > bestScore) {
+      bestScore = score;
+      best = a.codigo;
+    }
+  }
+  return best;
+}
+
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return "gen-" + Math.abs(h).toString(36);
+}
+
+const STORAGE_KEY = "comisiones-db-v3";
+const emptyDb = { advisors: {}, bajas: [], aplicaOverrides: {}, lastUpdate: null };
+
+export default function App() {
+  const [db, setDb] = useState(emptyDb);
+  const [ready, setReady] = useState(false);
+  const [search, setSearch] = useState("");
+  const [equipoFilter, setEquipoFilter] = useState("Todos");
+  const [mesFilter, setMesFilter] = useState("Todos");
+  const [fallbackMonth, setFallbackMonth] = useState("");
+  const [status, setStatus] = useState(null);
+  const [bajasStatus, setBajasStatus] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [showUnmatched, setShowUnmatched] = useState(false);
+  const [showTramos, setShowTramos] = useState(false);
+  const fileRef = useRef(null);
+  const bajasFileRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await window.storage.get(STORAGE_KEY, false);
+        if (res && res.value) setDb({ ...emptyDb, ...JSON.parse(res.value) });
+      } catch (e) {}
+      finally {
+        setReady(true);
+      }
+    })();
+  }, []);
+
+  async function persist(newDb) {
+    const withStamp = { ...newDb, lastUpdate: new Date().toISOString() };
+    setDb(withStamp);
+    try {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(withStamp), false);
+    } catch (e) {
+      setStatus({ type: "error", text: "No se pudo guardar. Inténtalo de nuevo." });
+    }
+  }
+
+  // ---------- upload tramos ----------
+  function handleTramosFile(file) {
+    if (!file) return;
+    setBusy(true);
+    setStatus(null);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: "array" });
+        let addedRows = 0;
+        const monthsSeen = new Set();
+        const newDb = { ...db, advisors: { ...db.advisors } };
+
+        wb.SheetNames.forEach((sheetName) => {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "" });
+          const headerIdx = findHeaderRow(rows, [(c) => c.includes("codigo"), (c) => c.includes("nombre")]);
+          if (headerIdx === -1) return;
+          const headerNorm = rows[headerIdx].map(normalize);
+
+          const idx = {
+            codigo: findCol(headerNorm, (h) => h.includes("codigo")),
+            nombre: findCol(headerNorm, (h) => h.includes("nombre")),
+            equipo: findCol(headerNorm, (h) => h === "equipo"),
+            categoria: findCol(headerNorm, (h) => h.includes("categoria")),
+            tramo: findCol(headerNorm, (h) => h.includes("tramo")),
+            totalPuntos: findCol(headerNorm, (h) => h.includes("total") && h.includes("punto")),
+            factNeta: findCol(headerNorm, (h) => h.includes("fact")),
+            matriculas: findCol(headerNorm, (h) => h.includes("matricul")),
+            mes: findCol(headerNorm, (h) => h.includes("mes")),
+          };
+          if (idx.codigo === -1 || idx.nombre === -1) return;
+
+          for (let r = headerIdx + 1; r < rows.length; r++) {
+            const row = rows[r];
+            const codigoRaw = String(row[idx.codigo] ?? "").trim();
+            const nombreRaw = String(row[idx.nombre] ?? "").trim();
+            if (!CODE_RE.test(codigoRaw) || !nombreRaw) continue;
+
+            const mes = idx.mes !== -1 && row[idx.mes] ? String(row[idx.mes]).trim() : fallbackMonth;
+            if (!mes) continue;
+            monthsSeen.add(mes);
+
+            const record = {
+              mes,
+              categoria: idx.categoria !== -1 ? String(row[idx.categoria] ?? "").trim() : "",
+              equipo: idx.equipo !== -1 ? String(row[idx.equipo] ?? "").trim() : "",
+              totalPuntos: idx.totalPuntos !== -1 ? parseNumber(row[idx.totalPuntos]) : null,
+              factNeta: idx.factNeta !== -1 ? parseNumber(row[idx.factNeta]) : null,
+              matriculas: idx.matriculas !== -1 ? parseNumber(row[idx.matriculas]) : null,
+              tramo: idx.tramo !== -1 ? parseTramo(row[idx.tramo]) : null,
+            };
+
+            if (!newDb.advisors[codigoRaw]) {
+              newDb.advisors[codigoRaw] = { codigo: codigoRaw, nombre: nombreRaw, equipo: record.equipo, categoria: record.categoria, records: {} };
+            } else {
+              newDb.advisors[codigoRaw] = { ...newDb.advisors[codigoRaw], records: { ...newDb.advisors[codigoRaw].records } };
+              if (nombreRaw) newDb.advisors[codigoRaw].nombre = nombreRaw;
+              if (record.equipo) newDb.advisors[codigoRaw].equipo = record.equipo;
+              if (record.categoria) newDb.advisors[codigoRaw].categoria = record.categoria;
+            }
+            newDb.advisors[codigoRaw].records[mes] = record;
+            addedRows++;
+          }
+        });
+
+        if (addedRows === 0) {
+          setStatus({ type: "error", text: "No se han encontrado filas válidas (columnas 'Código asesor' y 'Nombre')." });
+        } else {
+          persist(newDb);
+          setStatus({ type: "ok", text: `${addedRows} registros cargados (${Array.from(monthsSeen).join(", ")}).` });
+        }
+      } catch (err) {
+        setStatus({ type: "error", text: "No se pudo leer el archivo. ¿Es un .xlsx válido?" });
+      } finally {
+        setBusy(false);
+        if (fileRef.current) fileRef.current.value = "";
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ---------- upload bajas ----------
+  function handleBajasFile(file) {
+    if (!file) return;
+    setBusy(true);
+    setBajasStatus(null);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: "array" });
+        let matchedCount = 0;
+        let unmatchedCount = 0;
+        let dupCount = 0;
+        const existingIds = new Set((db.bajas || []).map((b) => b.id));
+        const newBajas = [...(db.bajas || [])];
+
+        wb.SheetNames.forEach((sheetName) => {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "" });
+          const headerIdx = findHeaderRow(rows, [(c) => c === "asesor", (c) => c.includes("facturacion")]);
+          if (headerIdx === -1) return;
+          const headerNorm = rows[headerIdx].map(normalize);
+
+          const idx = {
+            asesor: findCol(headerNorm, (h) => h === "asesor"),
+            equipo: findCol(headerNorm, (h) => h === "equipo"),
+            jefe: findCol(headerNorm, (h) => h.includes("jefe") && h.includes("equipo")),
+            director: findCol(headerNorm, (h) => h.includes("director")),
+            factNeta: findCol(headerNorm, (h) => h.includes("facturacion") && h.includes("neta")),
+            mesComisiones: findCol(headerNorm, (h) => h.includes("mes") && h.includes("comision")),
+            mesComercialBaja: findCol(headerNorm, (h) => h.includes("mes") && h.includes("comercial")),
+            idOportunidad: findCol(headerNorm, (h) => h.includes("id") && h.includes("oportunidad")),
+            motivo: findCol(headerNorm, (h) => h.includes("motivo")),
+            alumno: findCol(headerNorm, (h) => h.includes("nombres") || (h.includes("nombre") && h.includes("apellido"))),
+          };
+          if (idx.asesor === -1 || idx.factNeta === -1) return;
+
+          for (let r = headerIdx + 1; r < rows.length; r++) {
+            const row = rows[r];
+            const asesorNombre = String(row[idx.asesor] ?? "").trim();
+            if (!asesorNombre) continue;
+            const factNeta = parseNumber(row[idx.factNeta]);
+            if (factNeta === null) continue;
+            const mesComisiones = idx.mesComisiones !== -1 && row[idx.mesComisiones] ? String(row[idx.mesComisiones]).trim() : fallbackMonth;
+            if (!mesComisiones) continue;
+            const mesComercialBaja = idx.mesComercialBaja !== -1 && row[idx.mesComercialBaja] ? String(row[idx.mesComercialBaja]).trim() : mesComisiones;
+            const equipo = idx.equipo !== -1 ? String(row[idx.equipo] ?? "").trim() : "";
+            const jefeNombre = idx.jefe !== -1 ? String(row[idx.jefe] ?? "").trim() : "";
+            const directorNombre = idx.director !== -1 ? String(row[idx.director] ?? "").trim() : "";
+            const motivo = idx.motivo !== -1 ? String(row[idx.motivo] ?? "").trim() : "";
+            const alumno = idx.alumno !== -1 ? String(row[idx.alumno] ?? "").trim() : "";
+            const idOportunidadRaw = idx.idOportunidad !== -1 ? String(row[idx.idOportunidad] ?? "").trim() : "";
+
+            const id = idOportunidadRaw || simpleHash(`${asesorNombre}|${alumno}|${factNeta}|${mesComercialBaja}`);
+            if (existingIds.has(id)) {
+              dupCount++;
+              continue;
+            }
+            existingIds.add(id);
+
+            const asesorCodigo = matchPerson(db.advisors, asesorNombre, equipo);
+            const jefeCodigo = jefeNombre ? matchPerson(db.advisors, jefeNombre, equipo) : null;
+            const directorCodigo = directorNombre ? matchPerson(db.advisors, directorNombre, null) : null;
+
+            if (!asesorCodigo) unmatchedCount++;
+            else matchedCount++;
+
+            newBajas.push({
+              id,
+              idOportunidad: idOportunidadRaw || null,
+              asesorNombre,
+              asesorCodigo,
+              equipo,
+              jefeNombre: jefeNombre || null,
+              jefeCodigo,
+              directorNombre: directorNombre || null,
+              directorCodigo,
+              mesOrigen: mesComercialBaja,
+              mesComisiones,
+              factNeta,
+              motivo,
+              alumno,
+            });
+          }
+        });
+
+        const newDb = { ...db, bajas: newBajas };
+
+        if (matchedCount === 0 && unmatchedCount === 0 && dupCount === 0) {
+          setBajasStatus({ type: "error", text: "No se han encontrado filas válidas (columnas 'ASESOR' y 'FACTURACIÓN NETA')." });
+        } else {
+          persist(newDb);
+          let text = `${matchedCount} bajas emparejadas.`;
+          if (unmatchedCount > 0) text += ` ${unmatchedCount} sin asesor identificado.`;
+          if (dupCount > 0) text += ` ${dupCount} ya existían (omitidas).`;
+          setBajasStatus({ type: unmatchedCount > 0 ? "warn" : "ok", text });
+        }
+      } catch (err) {
+        setBajasStatus({ type: "error", text: "No se pudo leer el archivo. ¿Es un .xlsx válido?" });
+      } finally {
+        setBusy(false);
+        if (bajasFileRef.current) bajasFileRef.current.value = "";
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function toggleAplica(bajaId, checked) {
+    const newOverrides = { ...db.aplicaOverrides, [bajaId]: checked };
+    persist({ ...db, aplicaOverrides: newOverrides });
+  }
+
+  async function handleReset() {
+    if (!confirm("¿Borrar todo el histórico guardado (tramos y bajas)? No se puede deshacer.")) return;
+    await persist(emptyDb);
+    setStatus({ type: "ok", text: "Histórico borrado." });
+    setBajasStatus(null);
+  }
+
+  // ---------- derived data ----------
+  const equipos = useMemo(() => {
+    const s = new Set(Object.values(db.advisors || {}).map((a) => a.equipo).filter(Boolean));
+    return Array.from(s).sort();
+  }, [db]);
+
+  const mesesTramos = useMemo(() => {
+    const s = new Set();
+    Object.values(db.advisors || {}).forEach((a) => Object.keys(a.records).forEach((m) => s.add(m)));
+    return Array.from(s).sort().reverse();
+  }, [db]);
+
+  const mesesComisiones = useMemo(() => {
+    const s = new Set((db.bajas || []).map((b) => b.mesComisiones));
+    return Array.from(s).sort().reverse();
+  }, [db]);
+
+  const meses = useMemo(() => {
+    const s = new Set([...mesesTramos, ...mesesComisiones]);
+    return Array.from(s).sort().reverse();
+  }, [mesesTramos, mesesComisiones]);
+
+  function tramoFor(codigo, mes) {
+    if (!codigo || !mes) return null;
+    const a = db.advisors[codigo];
+    if (!a) return null;
+    const rec = a.records[mes];
+    return rec ? rec.tramo : null;
+  }
+  function nombreFor(codigo, fallback) {
+    if (codigo && db.advisors[codigo]) return db.advisors[codigo].nombre;
+    return fallback;
+  }
+
+  const enrichedBajas = useMemo(() => {
+    const s = normalize(search);
+    return (db.bajas || [])
+      .map((b) => {
+        const tramoAsesor = tramoFor(b.asesorCodigo, b.mesOrigen);
+        const tramoJefe = tramoFor(b.jefeCodigo, b.mesOrigen);
+        const tramoDirector = tramoFor(b.directorCodigo, b.mesOrigen);
+        const aplica = db.aplicaOverrides[b.id] !== false;
+        return {
+          ...b,
+          asesorNombreFinal: nombreFor(b.asesorCodigo, b.asesorNombre),
+          jefeNombreFinal: b.jefeNombre ? nombreFor(b.jefeCodigo, b.jefeNombre) : null,
+          directorNombreFinal: b.directorNombre ? nombreFor(b.directorCodigo, b.directorNombre) : null,
+          tramoAsesor,
+          tramoJefe,
+          tramoDirector,
+          descAsesor: tramoAsesor != null ? -(b.factNeta * (tramoAsesor / 100)) : null,
+          descJefe: b.jefeCodigo && tramoJefe != null ? -(b.factNeta * (tramoJefe / 100)) : null,
+          descDirector: b.directorCodigo && tramoDirector != null ? -(b.factNeta * (tramoDirector / 100)) : null,
+          aplica,
+        };
+      })
+      .filter((b) => equipoFilter === "Todos" || b.equipo === equipoFilter)
+      .filter((b) => mesFilter === "Todos" || b.mesComisiones === mesFilter)
+      .filter((b) => !s || normalize(b.asesorNombreFinal).includes(s) || (b.asesorCodigo || "").includes(s))
+      .sort((a, b) => (a.mesComisiones === b.mesComisiones ? a.asesorNombreFinal.localeCompare(b.asesorNombreFinal) : b.mesComisiones.localeCompare(a.mesComisiones)));
+  }, [db, search, equipoFilter, mesFilter]);
+
+  const bajasByAdvisor = useMemo(() => {
+    const groups = {};
+    enrichedBajas.forEach((b) => {
+      const key = b.asesorCodigo || `sin-identificar:${b.asesorNombre}`;
+      if (!groups[key]) groups[key] = { nombre: b.asesorNombreFinal, rows: [] };
+      groups[key].rows.push(b);
+    });
+    return Object.entries(groups).sort((a, b) => a[1].nombre.localeCompare(b[1].nombre));
+  }, [enrichedBajas]);
+
+  const jefeSummary = useMemo(() => {
+    const map = {};
+    enrichedBajas.forEach((b) => {
+      if (!b.jefeCodigo || b.descJefe == null || !b.aplica) return;
+      const key = b.jefeCodigo;
+      if (!map[key]) map[key] = { nombre: b.jefeNombreFinal, total: 0, count: 0 };
+      map[key].total += b.descJefe;
+      map[key].count += 1;
+    });
+    return Object.values(map).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [enrichedBajas]);
+
+  const directorSummary = useMemo(() => {
+    const map = {};
+    enrichedBajas.forEach((b) => {
+      if (!b.directorCodigo || b.descDirector == null || !b.aplica) return;
+      const key = b.directorCodigo;
+      if (!map[key]) map[key] = { nombre: b.directorNombreFinal, total: 0, count: 0 };
+      map[key].total += b.descDirector;
+      map[key].count += 1;
+    });
+    return Object.values(map).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [enrichedBajas]);
+
+  const flatTramoRows = useMemo(() => {
+    const rows = [];
+    Object.values(db.advisors || {}).forEach((a) => {
+      Object.values(a.records).forEach((r) => {
+        rows.push({ codigo: a.codigo, nombre: a.nombre, equipo: r.equipo || a.equipo, mes: r.mes, factNeta: r.factNeta, tramo: r.tramo });
+      });
+    });
+    const s = normalize(search);
+    return rows
+      .filter((r) => equipoFilter === "Todos" || r.equipo === equipoFilter)
+      .filter((r) => mesFilter === "Todos" || r.mes === mesFilter)
+      .filter((r) => !s || normalize(r.nombre).includes(s) || r.codigo.includes(s))
+      .sort((a, b) => (a.mes === b.mes ? a.nombre.localeCompare(b.nombre) : b.mes.localeCompare(a.mes)));
+  }, [db, search, equipoFilter, mesFilter]);
+
+  const kpis = useMemo(() => {
+    const totalAdvisors = new Set(flatTramoRows.map((r) => r.codigo)).size;
+    const factNetaTotal = flatTramoRows.reduce((sum, r) => sum + (r.factNeta || 0), 0);
+    const deduccionTotal = enrichedBajas.reduce((sum, b) => sum + (b.aplica && b.descAsesor != null ? b.descAsesor : 0), 0);
+    return { totalAdvisors, factNetaTotal, deduccionTotal };
+  }, [flatTramoRows, enrichedBajas]);
+
+  const unmatched = enrichedBajas.filter((b) => !b.asesorCodigo);
+  const lastUpdateStr = db.lastUpdate ? new Date(db.lastUpdate).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+
+  function TramoChip({ v }) {
+    return <span style={{ ...styles.chip, background: tramoColor(v) }}>{v != null ? `${v}%` : "—"}</span>;
+  }
+
+  return (
+    <div style={styles.app}>
+      <style>{css}</style>
+      <div style={styles.bgGrid} />
+      <div style={styles.shell}>
+        <div style={styles.headerPanel}>
+          <div style={styles.headerLeft}>
+            <div style={styles.headerIcon}>%</div>
+            <div>
+              <div style={styles.headerTitle}>Histórico de Comisiones</div>
+              <div style={styles.headerSub}>Administración comercial</div>
+            </div>
+          </div>
+          <div style={styles.headerRight}>Actualizado: {lastUpdateStr}</div>
+        </div>
+
+        <div style={styles.row}>
+          <div style={{ ...styles.panel, flex: 2 }}>
+            <div style={styles.panelHead}>
+              <span style={styles.dot("#35D6E0")} />
+              <span style={styles.panelHeadText}>FILTROS</span>
+            </div>
+            <div style={styles.filtersGrid}>
+              <div>
+                <div style={styles.fieldLabel}>EQUIPO</div>
+                <select value={equipoFilter} onChange={(e) => setEquipoFilter(e.target.value)} style={styles.select}>
+                  <option>Todos</option>
+                  {equipos.map((eq) => (
+                    <option key={eq}>{eq}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div style={styles.fieldLabel}>MES (COMISIONES)</div>
+                <select value={mesFilter} onChange={(e) => setMesFilter(e.target.value)} style={styles.select}>
+                  <option>Todos</option>
+                  {meses.map((m) => (
+                    <option key={m} value={m}>
+                      {fmtMes(m)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={styles.fieldLabel}>BUSCAR ASESOR</div>
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o código…" style={styles.select} />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ ...styles.panel, flex: 1.3 }}>
+            <div style={styles.panelHead}>
+              <span style={styles.dot("#35D67B")} />
+              <span style={styles.panelHeadText}>CARGA DE DATOS</span>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <div style={styles.fieldLabel}>MES (si el Excel no lo trae)</div>
+              <input type="month" value={fallbackMonth} onChange={(e) => setFallbackMonth(e.target.value)} style={styles.select} />
+            </div>
+            <div style={styles.uploadBtns}>
+              <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={(e) => handleTramosFile(e.target.files[0])} style={{ display: "none" }} id="up-tramos" />
+              <label htmlFor="up-tramos" style={styles.btnPrimary}>
+                {busy ? "Procesando…" : "Subir tramos"}
+              </label>
+              <input ref={bajasFileRef} type="file" accept=".xlsx,.xls" onChange={(e) => handleBajasFile(e.target.files[0])} style={{ display: "none" }} id="up-bajas" />
+              <label htmlFor="up-bajas" style={styles.btnGhost}>
+                {busy ? "Procesando…" : "Subir bajas"}
+              </label>
+            </div>
+            {status && <div style={{ ...styles.statusMsg, color: status.type === "error" ? "#FF6B81" : "#35D67B" }}>{status.text}</div>}
+            {bajasStatus && (
+              <div style={{ ...styles.statusMsg, color: bajasStatus.type === "error" ? "#FF6B81" : bajasStatus.type === "warn" ? "#FFC24B" : "#35D67B" }}>
+                {bajasStatus.text}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={styles.kpiRow}>
+          <div style={styles.kpiCard}>
+            <div style={styles.kpiLabel}>ASESORES</div>
+            <div style={{ ...styles.kpiValue, color: "#35D6E0" }}>{kpis.totalAdvisors}</div>
+          </div>
+          <div style={styles.kpiCard}>
+            <div style={styles.kpiLabel}>MESES CARGADOS</div>
+            <div style={{ ...styles.kpiValue, color: "#B98CFF" }}>{meses.length}</div>
+          </div>
+          <div style={styles.kpiCard}>
+            <div style={styles.kpiLabel}>FACT. NETA (filtro)</div>
+            <div style={{ ...styles.kpiValue, color: "#35D67B" }}>{fmtEURShort(kpis.factNetaTotal)}</div>
+          </div>
+          <div style={styles.kpiCard}>
+            <div style={styles.kpiLabel}>A DESCONTAR ASESOR (filtro)</div>
+            <div style={{ ...styles.kpiValue, color: "#FF3D8A" }}>{fmtEURShort(kpis.deduccionTotal)}</div>
+          </div>
+        </div>
+
+        {unmatched.length > 0 && (
+          <div style={styles.warnPanel}>
+            <button style={styles.warnHead} onClick={() => setShowUnmatched((v) => !v)}>
+              <span style={styles.dot("#FFC24B")} />
+              <span style={styles.panelHeadText}>{unmatched.length} BAJAS SIN ASESOR IDENTIFICADO</span>
+              <span style={{ marginLeft: "auto", color: "#FFC24B" }}>{showUnmatched ? "−" : "+"}</span>
+            </button>
+            {showUnmatched && (
+              <div style={styles.tableWrap}>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>MES ORIGEN</th>
+                      <th style={styles.th}>MES COMISIONES</th>
+                      <th style={styles.th}>ASESOR (TEXTO ORIGINAL)</th>
+                      <th style={styles.th}>EQUIPO</th>
+                      <th style={styles.th}>FACT. NETA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unmatched.slice(0, 40).map((u) => (
+                      <tr key={u.id}>
+                        <td style={styles.td}>{fmtMes(u.mesOrigen)}</td>
+                        <td style={styles.td}>{fmtMes(u.mesComisiones)}</td>
+                        <td style={styles.td}>{u.asesorNombre}</td>
+                        <td style={styles.td}>{u.equipo || "—"}</td>
+                        <td style={styles.td}>{fmtEUR(u.factNeta)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p style={styles.smallHint}>
+                  Sube el Excel de tramos del mes de origen de esas bajas para que el asesor exista en el histórico, y vuelve a
+                  subir el Excel de bajas para reintentar el emparejamiento (las ya cargadas no se duplican).
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DESGLOSE DE BAJAS */}
+        <div style={styles.panelPink}>
+          <div style={styles.panelHead}>
+            <span style={styles.dot("#FF3D8A")} />
+            <span style={{ ...styles.panelHeadText, color: "#FF3D8A" }}>DESGLOSE DE BAJAS</span>
+            <span style={styles.panelHeadCount}>{enrichedBajas.length} bajas</span>
+          </div>
+          <div style={{ padding: "0 20px 10px 20px", fontSize: 11, color: "#7C93AE" }}>
+            El tramo aplicado es el que tenía cada persona en el mes comercial de origen de la venta. Desmarca "APLICA" para
+            excluir una línea del total.
+          </div>
+          <div style={styles.tableWrap}>
+            <table style={{ ...styles.table, minWidth: 1200 }}>
+              <thead>
+                <tr>
+                  <th style={{ ...styles.th, width: 30 }}>APLICA</th>
+                  <th style={styles.th}>ASESOR</th>
+                  <th style={styles.th}>ID OPORTUNIDAD</th>
+                  <th style={styles.th}>MES ORIGEN</th>
+                  <th style={styles.th}>FACT. NETA</th>
+                  <th style={{ ...styles.th, color: "#FF3D8A" }}>TRAMO ASESOR</th>
+                  <th style={{ ...styles.th, color: "#FF3D8A" }}>DESC. ASESOR</th>
+                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(255,61,138,0.15)" }}>JEFE EQUIPO</th>
+                  <th style={{ ...styles.th, color: "#B98CFF" }}>TRAMO JEFE</th>
+                  <th style={{ ...styles.th, color: "#B98CFF" }}>DESC. JEFE</th>
+                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(255,61,138,0.15)" }}>DIRECTOR VENTAS</th>
+                  <th style={{ ...styles.th, color: "#35D6E0" }}>TRAMO DIR.</th>
+                  <th style={{ ...styles.th, color: "#35D6E0" }}>DESC. DIR.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {enrichedBajas.length === 0 && (
+                  <tr>
+                    <td style={styles.td} colSpan={13}>
+                      Sube el Excel de bajas para ver el desglose aquí.
+                    </td>
+                  </tr>
+                )}
+                {bajasByAdvisor.map(([key, group]) => (
+                  <React.Fragment key={key}>
+                    {group.rows.map((b) => (
+                      <tr key={b.id} style={{ opacity: b.aplica ? 1 : 0.4 }}>
+                        <td style={{ ...styles.td, textAlign: "center" }}>
+                          <input type="checkbox" checked={b.aplica} onChange={(e) => toggleAplica(b.id, e.target.checked)} style={{ width: 14, height: 14, accentColor: "#35D67B" }} />
+                        </td>
+                        <td style={{ ...styles.td, textDecoration: b.aplica ? "none" : "line-through" }}>{b.asesorNombreFinal}</td>
+                        <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#7CA9D6" }}>{b.idOportunidad || "—"}</td>
+                        <td style={styles.td}>{fmtMes(b.mesOrigen)}</td>
+                        <td style={styles.td}>{fmtEUR(b.factNeta)}</td>
+                        <td style={styles.td}>
+                          <TramoChip v={b.tramoAsesor} />
+                        </td>
+                        <td style={{ ...styles.td, color: "#FF3D8A", fontWeight: 600 }}>{b.descAsesor != null ? fmtEUR(b.descAsesor) : "—"}</td>
+                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(255,61,138,0.08)" }}>{b.jefeNombreFinal || "—"}</td>
+                        <td style={styles.td}>{b.jefeCodigo ? <TramoChip v={b.tramoJefe} /> : "—"}</td>
+                        <td style={{ ...styles.td, color: "#B98CFF", fontWeight: 600 }}>{b.descJefe != null ? fmtEUR(b.descJefe) : "—"}</td>
+                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(255,61,138,0.08)" }}>{b.directorNombreFinal || "—"}</td>
+                        <td style={styles.td}>{b.directorCodigo ? <TramoChip v={b.tramoDirector} /> : "—"}</td>
+                        <td style={{ ...styles.td, color: "#35D6E0", fontWeight: 600 }}>{b.descDirector != null ? fmtEUR(b.descDirector) : "—"}</td>
+                      </tr>
+                    ))}
+                    <tr style={{ background: "rgba(255,61,138,0.05)" }}>
+                      <td style={styles.td}></td>
+                      <td style={{ ...styles.td, fontWeight: 600, color: "#9FB4CC" }} colSpan={5}>
+                        Subtotal {group.nombre} ({group.rows.length} bajas)
+                      </td>
+                      <td style={{ ...styles.td, color: "#FF3D8A", fontWeight: 700 }}>
+                        {fmtEUR(group.rows.reduce((s, b) => s + (b.aplica && b.descAsesor != null ? b.descAsesor : 0), 0))}
+                      </td>
+                      <td style={{ ...styles.td, borderLeft: "1px solid rgba(255,61,138,0.08)" }} colSpan={5}></td>
+                    </tr>
+                  </React.Fragment>
+                ))}
+              </tbody>
+              {enrichedBajas.length > 0 && (
+                <tfoot>
+                  <tr>
+                    <td style={{ ...styles.th, borderTop: "1px solid rgba(255,61,138,0.3)" }} colSpan={6}>
+                      TOTAL (LÍNEAS MARCADAS)
+                    </td>
+                    <td style={{ ...styles.th, color: "#FF3D8A", fontSize: 13, borderTop: "1px solid rgba(255,61,138,0.3)" }}>
+                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplica && b.descAsesor != null ? b.descAsesor : 0), 0))}
+                    </td>
+                    <td style={{ borderTop: "1px solid rgba(255,61,138,0.3)" }} colSpan={2}></td>
+                    <td style={{ ...styles.th, color: "#B98CFF", fontSize: 13, borderTop: "1px solid rgba(255,61,138,0.3)" }}>
+                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplica && b.descJefe != null ? b.descJefe : 0), 0))}
+                    </td>
+                    <td style={{ borderTop: "1px solid rgba(255,61,138,0.3)" }} colSpan={2}></td>
+                    <td style={{ ...styles.th, color: "#35D6E0", fontSize: 13, borderTop: "1px solid rgba(255,61,138,0.3)" }}>
+                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplica && b.descDirector != null ? b.descDirector : 0), 0))}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
+
+        {(jefeSummary.length > 0 || directorSummary.length > 0) && (
+          <div style={styles.row}>
+            <div style={{ ...styles.panelPurple, flex: 1 }}>
+              <div style={styles.panelHead}>
+                <span style={styles.dot("#B98CFF")} />
+                <span style={{ ...styles.panelHeadText, color: "#B98CFF" }}>RESUMEN POR JEFE DE EQUIPO</span>
+              </div>
+              <div style={{ padding: "0 18px 16px 18px" }}>
+                {jefeSummary.map((j) => (
+                  <div key={j.nombre} style={styles.summaryRow}>
+                    <span>{j.nombre}</span>
+                    <span style={{ color: "#B98CFF", fontWeight: 700 }}>{fmtEUR(j.total)}</span>
+                  </div>
+                ))}
+                {jefeSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
+              </div>
+            </div>
+            <div style={{ ...styles.panelCyan, flex: 1 }}>
+              <div style={styles.panelHead}>
+                <span style={styles.dot("#35D6E0")} />
+                <span style={{ ...styles.panelHeadText, color: "#35D6E0" }}>RESUMEN POR DIRECTOR DE VENTAS</span>
+              </div>
+              <div style={{ padding: "0 18px 16px 18px" }}>
+                {directorSummary.map((d) => (
+                  <div key={d.nombre} style={styles.summaryRow}>
+                    <span>{d.nombre}</span>
+                    <span style={{ color: "#35D6E0", fontWeight: 700 }}>{fmtEUR(d.total)}</span>
+                  </div>
+                ))}
+                {directorSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* DETALLE DE TRAMOS */}
+        <div style={styles.panel}>
+          <button style={{ ...styles.warnHead, padding: 0 }} onClick={() => setShowTramos((v) => !v)}>
+            <span style={styles.dot("#35D6E0")} />
+            <span style={styles.panelHeadText}>DETALLE DE TRAMOS POR ASESOR Y MES</span>
+            <span style={styles.panelHeadCount}>{flatTramoRows.length} registros</span>
+            <span style={{ marginLeft: 8, color: "#35D6E0" }}>{showTramos ? "−" : "+"}</span>
+          </button>
+          {showTramos && (
+            <div style={{ ...styles.tableWrap, marginTop: 14 }}>
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>MES</th>
+                    <th style={styles.th}>CÓDIGO</th>
+                    <th style={styles.th}>ASESOR</th>
+                    <th style={styles.th}>EQUIPO</th>
+                    <th style={styles.th}>FACT. NETA</th>
+                    <th style={styles.th}>TRAMO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {flatTramoRows.length === 0 && (
+                    <tr>
+                      <td style={styles.td} colSpan={6}>
+                        Sube el Excel de tramos del mes para empezar.
+                      </td>
+                    </tr>
+                  )}
+                  {flatTramoRows.map((r) => (
+                    <tr key={r.codigo + r.mes}>
+                      <td style={styles.td}>{fmtMes(r.mes)}</td>
+                      <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#7C93AE" }}>{r.codigo}</td>
+                      <td style={{ ...styles.td, color: "#E8F1FA" }}>{r.nombre}</td>
+                      <td style={styles.td}>{r.equipo || "—"}</td>
+                      <td style={styles.td}>{fmtEUR(r.factNeta)}</td>
+                      <td style={styles.td}>
+                        <TramoChip v={r.tramo} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {Object.keys(db.advisors || {}).length > 0 && (
+          <button onClick={handleReset} style={styles.resetBtn}>
+            Borrar histórico completo
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  app: { position: "relative", minHeight: "700px", background: "radial-gradient(ellipse at 30% 0%, #0E2438 0%, #081422 55%, #060D17 100%)", color: "#E8F1FA", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
+  bgGrid: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(79,216,232,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(79,216,232,0.035) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none" },
+  shell: { position: "relative", maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 },
+  headerPanel: { background: "rgba(15,31,53,0.65)", border: "1px solid rgba(79,216,232,0.25)", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  headerLeft: { display: "flex", alignItems: "center", gap: 14 },
+  headerIcon: { width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #FF3D8A", color: "#FF3D8A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, fontFamily: "'IBM Plex Mono', monospace" },
+  headerTitle: { fontSize: 18, fontWeight: 700 },
+  headerSub: { fontSize: 11.5, color: "#7C93AE", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
+  headerRight: { fontSize: 12, color: "#7C93AE", fontFamily: "'IBM Plex Mono', monospace" },
+  row: { display: "flex", gap: 16, flexWrap: "wrap" },
+  panel: { background: "rgba(15,31,53,0.55)", border: "1px solid rgba(79,216,232,0.2)", borderRadius: 16, padding: 20, minWidth: 260 },
+  panelPink: { background: "rgba(15,31,53,0.55)", border: "1px solid rgba(255,61,138,0.3)", borderRadius: 16, padding: "20px 0" },
+  panelPurple: { background: "rgba(184,140,255,0.06)", border: "1px solid rgba(184,140,255,0.3)", borderRadius: 16, padding: "16px 0" },
+  panelCyan: { background: "rgba(53,214,224,0.06)", border: "1px solid rgba(53,214,224,0.3)", borderRadius: 16, padding: "16px 0" },
+  panelHead: { display: "flex", alignItems: "center", gap: 9, marginBottom: 14, padding: "0 20px" },
+  panelHeadText: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, color: "#35D6E0" },
+  panelHeadCount: { marginLeft: "auto", fontSize: 11, color: "#7C93AE", fontFamily: "'IBM Plex Mono', monospace" },
+  dot: (color) => ({ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 8px ${color}`, display: "inline-block" }),
+  filtersGrid: { display: "flex", gap: 14, flexWrap: "wrap" },
+  fieldLabel: { fontSize: 10.5, color: "#7C93AE", letterSpacing: 1, fontWeight: 600, marginBottom: 6 },
+  select: { width: "100%", background: "#0D1B2E", border: "1px solid rgba(79,216,232,0.25)", borderRadius: 8, color: "#E8F1FA", padding: "8px 10px", fontSize: 13, fontFamily: "'Inter', sans-serif", boxSizing: "border-box" },
+  uploadBtns: { display: "flex", gap: 10, marginBottom: 6 },
+  btnPrimary: { flex: 1, background: "linear-gradient(135deg,#35D6E0,#2AB8C9)", color: "#06131F", textAlign: "center", padding: "9px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  btnGhost: { flex: 1, background: "transparent", border: "1.5px solid #FF3D8A", color: "#FF3D8A", textAlign: "center", padding: "8px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  statusMsg: { fontSize: 11.5, lineHeight: 1.4, marginTop: 4 },
+  kpiRow: { display: "flex", gap: 16, flexWrap: "wrap" },
+  kpiCard: { flex: "1 1 200px", background: "rgba(15,31,53,0.55)", border: "1px solid rgba(79,216,232,0.2)", borderRadius: 14, padding: "16px 18px" },
+  kpiLabel: { fontSize: 10.5, color: "#7C93AE", letterSpacing: 1, fontWeight: 600, marginBottom: 8 },
+  kpiValue: { fontSize: 26, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace" },
+  warnPanel: { background: "rgba(255,194,75,0.06)", border: "1px solid rgba(255,194,75,0.3)", borderRadius: 14, overflow: "hidden" },
+  warnHead: { width: "100%", display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "none", padding: "14px 20px", cursor: "pointer", textAlign: "left" },
+  tableWrap: { overflowX: "auto", padding: "0 20px 16px 20px" },
+  table: { width: "100%", borderCollapse: "collapse" },
+  th: { textAlign: "left", fontSize: 10, color: "#7C93AE", fontWeight: 700, letterSpacing: 0.5, padding: "8px 10px", borderBottom: "1px solid rgba(79,216,232,0.2)", whiteSpace: "nowrap" },
+  td: { fontSize: 12.5, padding: "8px 10px", borderBottom: "1px solid rgba(79,216,232,0.08)", color: "#C6D4E3", whiteSpace: "nowrap" },
+  chip: { color: "#06131F", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontFamily: "'IBM Plex Mono', monospace" },
+  summaryRow: { display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13, borderBottom: "1px solid rgba(255,255,255,0.06)" },
+  emptyHint: { color: "#7C93AE", fontSize: 12, padding: "6px 0" },
+  smallHint: { fontSize: 12, color: "#8893AC", marginTop: 10, lineHeight: 1.5 },
+  resetBtn: { alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(255,107,129,0.35)", color: "#FF6B81", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer" },
+};
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  label:hover, button:hover { filter: brightness(1.08); }
+  input:focus, select:focus { outline: 2px solid #35D6E0; outline-offset: 1px; }
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(79,216,232,0.25); border-radius: 8px; }
+`;
