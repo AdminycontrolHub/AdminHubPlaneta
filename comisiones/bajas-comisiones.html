@@ -173,6 +173,27 @@ function App() {
   const [showTramos, setShowTramos] = useState(false);
   const fileRef = useRef(null);
   const bajasFileRef = useRef(null);
+  const [dragOver, setDragOver] = useState(null);
+
+  // arrastrar y soltar: cada botón actúa como zona de destino
+  function dropProps(kind, handler) {
+    return {
+      onDragOver: (e) => { e.preventDefault(); setDragOver(kind); },
+      onDragLeave: () => setDragOver(null),
+      onDrop: (e) => {
+        e.preventDefault();
+        setDragOver(null);
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        if (!/\.(xlsx|xls)$/i.test(file.name)) {
+          const setter = kind === "tramos" ? setStatus : setBajasStatus;
+          setter({ type: "error", text: "Solo se admiten archivos .xlsx o .xls." });
+          return;
+        }
+        handler(file);
+      },
+    };
+  }
 
   useEffect(() => {
     (async () => {
@@ -588,12 +609,12 @@ function App() {
             </div>
             <div style={styles.uploadBtns}>
               <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={(e) => handleTramosFile(e.target.files[0])} style={{ display: "none" }} id="up-tramos" />
-              <label htmlFor="up-tramos" style={styles.btnPrimary}>
-                {busy ? "Procesando…" : "Subir tramos"}
+              <label htmlFor="up-tramos" style={{ ...styles.btnPrimary, ...(dragOver === "tramos" ? styles.dropActive : {}) }} {...dropProps("tramos", handleTramosFile)}>
+                {busy ? "Procesando…" : dragOver === "tramos" ? "Suelta aquí" : "Subir tramos"}
               </label>
               <input ref={bajasFileRef} type="file" accept=".xlsx,.xls" onChange={(e) => handleBajasFile(e.target.files[0])} style={{ display: "none" }} id="up-bajas" />
-              <label htmlFor="up-bajas" style={styles.btnGhost}>
-                {busy ? "Procesando…" : "Subir bajas"}
+              <label htmlFor="up-bajas" style={{ ...styles.btnGhost, ...(dragOver === "bajas" ? styles.dropActive : {}) }} {...dropProps("bajas", handleBajasFile)}>
+                {busy ? "Procesando…" : dragOver === "bajas" ? "Suelta aquí" : "Subir bajas"}
               </label>
             </div>
             {status && <div style={{ ...styles.statusMsg, color: status.type === "error" ? "#FF6B81" : "#35D67B" }}>{status.text}</div>}
@@ -881,6 +902,7 @@ const styles = {
   uploadBtns: { display: "flex", gap: 10, marginBottom: 6 },
   btnPrimary: { flex: 1, background: "linear-gradient(135deg,#35D6E0,#2AB8C9)", color: "#06131F", textAlign: "center", padding: "9px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
   btnGhost: { flex: 1, background: "transparent", border: "1.5px solid #FF3D8A", color: "#FF3D8A", textAlign: "center", padding: "8px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  dropActive: { boxShadow: "0 0 0 2px #fff, 0 0 18px rgba(53,214,224,0.7)", transform: "scale(1.03)" },
   statusMsg: { fontSize: 11.5, lineHeight: 1.4, marginTop: 4 },
   kpiRow: { display: "flex", gap: 16, flexWrap: "wrap" },
   kpiCard: { flex: "1 1 200px", background: "rgba(15,31,53,0.55)", border: "1px solid rgba(79,216,232,0.2)", borderRadius: 14, padding: "16px 18px" },
