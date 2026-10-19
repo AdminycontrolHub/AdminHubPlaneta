@@ -270,13 +270,22 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 }
 
 .draft-row td{ background:#FFF6C9 !important; }
-.detail-table tbody tr.pair-orig td{ background:#FFE3B3 !important; }
-.detail-table tbody tr.pair-dup td{ background:#FFCB80 !important; }
+.detail-table tbody tr.pair-orig td, .detail-table tbody tr.pair-dup td{ background:#FFD9A0 !important; }
 .detail-table tbody tr.pair-ghost td{ font-style:italic; opacity:.85; }
-.match-btns{ display:flex; gap:10px; margin-top:14px; }
-.match-btns button{ flex:1; border:none; border-radius:9px; padding:11px 10px; font-size:13.5px; font-weight:800; cursor:pointer; }
-.match-btns .mb-dup{ background:#FFB84D; color:#3a2300; }
-.match-btns .mb-comp{ background:#5CFF9E; color:#03210F; }
+.detail-table tbody tr.sent-row td.ra-cell{ box-shadow:inset 4px 0 0 #2BBF6B; }
+.detail-table tbody tr.pend-old td.ra-cell{ box-shadow:inset 4px 0 0 #E5533D; }
+.dz-banner{ display:none; margin:0 32px 12px; padding:9px 14px; background:#3a2a05; border:1px solid #FFB84D; color:#FFD79A; border-radius:9px; font-size:12.5px; font-weight:700; }
+#dzToast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:99999; padding:11px 18px; border-radius:10px; font-size:13px; font-weight:800; color:#03210F; background:#5CFF9E; box-shadow:0 8px 30px rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .25s; max-width:80vw; }
+#dzToast.show{ opacity:1; }
+#dzToast.err{ background:#FF8E8E; color:#3a0505; }
+.choose-btns{ display:flex; flex-direction:column; gap:9px; margin-top:12px; }
+.choose-btns button{ border:none; border-radius:10px; padding:12px 12px; font-size:14px; font-weight:800; cursor:pointer; text-align:left; background:#E9F1F5; color:#0c2a3b; }
+.choose-btns button span{ display:block; font-weight:600; font-size:11px; opacity:.75; margin-top:2px; }
+.choose-btns button:hover{ filter:brightness(1.05); }
+.choose-btns button.sug{ outline:3px solid #5CFF9E; }
+.choose-btns #chCC{ background:#FFB84D; color:#3a2300; }
+.choose-btns #chBaja{ background:#FF9C9C; color:#3a0505; }
+.choose-btns #chPF{ background:#8FD3FF; color:#06263b; }
 .dr-in{ width:100%; box-sizing:border-box; font-size:10.5px; padding:3px 3px; border:1px solid rgba(122,20,112,0.45); border-radius:4px; background:#fff; color:#1a3a50; min-width:0; }
 .dc-sel{ width:100%; font-size:10.5px; padding:2px 0; border:1px solid rgba(0,100,140,0.25); border-radius:4px; background:#fff; color:#1a3a50; }
 .ra-ok{ background:rgba(20,150,70,0.14); color:#0B7A38; }
@@ -406,6 +415,10 @@ body{ font-size:14px; }
   </div>
   <div style="display:flex; align-items:center; gap:10px;">
     <span id="kvStatus" style="font-size:11px;color:#7FA0B0;font-family:'Courier New',monospace;">cargando…</span>
+    <button class="back-btn" id="btnSendAll" style="cursor:pointer;border-color:#5CFF9E;color:#5CFF9E;font-weight:800;" title="Envía al Excel todas las filas pendientes de todas las marcas" onclick="dzSendAll()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Enviar todo a Excel <span id="sendAllBadge" style="opacity:.85;"></span>
+    </button>
     <button class="back-btn" style="cursor:pointer;border-style:dashed;" title="Botón temporal" onclick="bmRequestPassword(function(){document.getElementById('importFileInput').click();}, 'Introduce la contraseña para importar filas existentes.')">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Importar filas
@@ -458,6 +471,7 @@ body{ font-size:14px; }
   <div class="period-hint">Flechas para recorrer los meses · clic en el mes central marca todas sus semanas · clic en una semana la marca individualmente · se puede combinar semanas de varios meses</div>
 </div>
 
+<div class="dz-banner" id="dzPendBanner"></div>
 <div class="marca-grid" id="grid"></div>
 
 <div class="detail-panel fiel" id="panelFiel">
@@ -474,9 +488,9 @@ body{ font-size:14px; }
       </div>
     </div>
     <div class="detail-actions">
-      <button class="detail-btn primary" onclick="exportPanel('fiel')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Extraer
+      <button class="detail-btn primary" onclick="dzSendPanel('fiel')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Enviar a Excel
       </button>
       <button class="detail-close" onclick="closeDetail()">✕</button>
     </div>
@@ -498,16 +512,16 @@ body{ font-size:14px; }
         <div class="dz-icon">DOC</div>
         <div>
           <div class="dz-title">Arrastra aquí: PF / HM / Baja / CC / CE / CP</div>
-          <div class="dz-sub">Suelta el PDF o la captura en cualquier punto de este recuadro · detecto el tipo automáticamente</div>
+          <div class="dz-sub">Suelta el PDF o la captura en cualquier punto de este recuadro · la HM la detecto sola; con el resto te pregunto si es CC, CE/Baja o PF/CP/CFP</div>
         </div>
       </div>
       <textarea class="dz-paste" id="dzLeftPaste" rows="2" placeholder="…o pega aquí el texto del correo"></textarea>
       <input type="file" class="dz-input" id="dzLeftInput" accept="application/pdf,image/*" multiple>
     </div>
 
-    <button class="detail-btn merge" onclick="exportPanel('ambos')" style="flex:none; align-self:center;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Extraer conjunto (Fiel + PF)
+    <button class="detail-btn merge" onclick="dzSendPanel('ambos')" style="flex:none; align-self:center;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Enviar a Excel (Fiel + PF)
     </button>
 
 
@@ -528,9 +542,9 @@ body{ font-size:14px; }
       </div>
     </div>
     <div class="detail-actions">
-      <button class="detail-btn primary" onclick="exportPanel('exc')">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Extraer
+      <button class="detail-btn primary" onclick="dzSendPanel('exc')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Enviar a Excel
       </button>
       <button class="detail-close" onclick="closeDetail()">✕</button>
     </div>
@@ -708,6 +722,7 @@ body{ font-size:14px; }
           <option>Descatalogado</option><option>Cambio de Edición Pactado</option>
         </select>
       </div>
+      <div class="fix-field"><label class="fix-label">Fecha de producción (nueva, solo CC · vacío = hoy)</label><input type="text" id="dzFixFprod" placeholder="dd/mm/aaaa"></div>
       <div class="fix-field"><label class="fix-label">Nombre</label><input type="text" id="dzFixNombre"></div>
       <div class="fix-field"><label class="fix-label">ID Oportunidad</label><input type="text" id="dzFixId"></div>
       <div class="fix-field"><label class="fix-label">Programa</label><input type="text" id="dzFixPrograma"></div>
@@ -721,6 +736,13 @@ body{ font-size:14px; }
           <input type="number" id="dzFixAnio" placeholder="Año" style="flex:1;" min="2024" max="2030">
         </div>
       </div>
+      <div class="fix-row">
+        <div class="fix-field" style="flex:1;"><label class="fix-label">País</label><input type="text" id="dzFixPais"></div>
+        <div class="fix-field" style="flex:1;"><label class="fix-label">Forma de pago</label>
+          <select id="dzFixForma"><option value="">—</option><option>APLAZADO</option><option>CONTADO</option></select>
+        </div>
+        <div class="fix-field" style="flex:1;"><label class="fix-label">Facturación</label><input type="number" id="dzFixFact" step="0.01"></div>
+      </div>
       <div class="fix-actions">
         <button class="btn-retry" id="dzBtnRetry">Reintentar</button>
         <span class="link-delete" id="dzLinkDelete">Borrar registro</span>
@@ -728,19 +750,16 @@ body{ font-size:14px; }
       <div class="fix-feedback" id="dzFixFeedback"></div>
     </div>
 
-    <div id="dzViewMatch" style="display:none;">
-      <div class="fix-title" id="dzMatchTitle">Ya existe una fila con este ID</div>
-      <div class="imac-fields" id="dzMatchExisting"></div>
-      <div style="margin:14px 0; border-top:1px solid rgba(255,255,255,0.12);"></div>
-      <div class="fix-title" style="font-size:13px;">Cambios a aplicar</div>
-      <div class="imac-fields" id="dzMatchChanges"></div>
-      <div class="fix-title" style="font-size:13px;margin-top:14px;">¿Qué hago con este documento?</div>
-      <div class="match-btns">
-        <button class="mb-dup" onclick="dzMatchApply('duplicate')">Duplicar fila<br><span style="font-weight:600;font-size:11px;">copia debajo de la original, ambas resaltadas</span></button>
-        <button class="mb-comp" onclick="dzMatchApply('complete')">Completar fila<br><span style="font-weight:600;font-size:11px;">rellena solo las columnas que faltan</span></button>
+    <div id="dzViewChoose" style="display:none;">
+      <div class="imac-detected" id="dzChooseTag"></div>
+      <div class="imac-fields" id="dzChooseFields"></div>
+      <div class="fix-title" style="font-size:13px;margin-top:14px;">¿Qué quieres hacer con este documento?</div>
+      <div class="choose-btns">
+        <button id="chCC" onclick="dzChoose('CC')">CC<span>Duplica la fila con la nueva información. Original y copia quedan juntas, del mismo color y editables.</span></button>
+        <button id="chBaja" onclick="dzChoose('CEBAJA')">CE / Baja<span>No duplica: cambia el tipo de matrícula, completa fecha y motivo. Lo original pasa a HISTÓRICO.</span></button>
+        <button id="chPF" onclick="dzChoose('PF')">PF / CP / CFP<span>No duplica: deja el dato final real en las columnas y guarda lo original en HISTÓRICO.</span></button>
       </div>
       <div class="imac-hint" style="margin-top:12px;"><span><i style="background:#FF5C5C"></i>Cancelar</span></div>
-      <div class="fix-feedback" id="dzMatchFeedback"></div>
     </div>
 
     <div id="dzViewReceipt" style="display:none;">
@@ -925,18 +944,21 @@ function weekDetail(brandKey,weekId,statKey){
   return rows;
 }
 /* Excepciones manuales — lista pequeña y fija de ejemplo, independiente de la semana */
-function exceptionRows(brandKey,statKey){
-  return dzManualRowsFor(brandKey,statKey).filter(r=>!(r.datos&&r.datos.origen==='HM'));
+/* all=true incluye las filas archivadas (ya volcadas a Excel en días anteriores): no se ven ni cuentan, pero se localizan por ID */
+function exceptionRows(brandKey,statKey,all){
+  return (all?dzManualRowsAll(brandKey,statKey):dzManualRowsFor(brandKey,statKey)).filter(r=>!(r.datos&&r.datos.origen==='HM'));
 }
 
 /* Filas añadidas de verdad desde las zonas de arrastre — se guardan solo en memoria de esta
    sesión (no en KV todavía, pendiente del esquema de 30 columnas) */
 let dzManualRows = {};
 function dzManualKey(brandKey,statKey){ return brandKey+'|'+statKey; }
-function dzManualRowsFor(brandKey,statKey){ return dzManualRows[dzManualKey(brandKey,statKey)] || []; }
+function dzManualRowsAll(brandKey,statKey){ return dzManualRows[dzManualKey(brandKey,statKey)] || []; }
+function dzManualRowsFor(brandKey,statKey){ return dzManualRowsAll(brandKey,statKey).filter(r=>!r._archived); }
 function dzAddManualRow(brandKey,statKey,row){
   row._manual=true;
   if(!row._uid) row._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  if(!row._createdAt) row._createdAt=new Date().toISOString();
   const k = dzManualKey(brandKey,statKey);
   if(!dzManualRows[k]) dzManualRows[k]=[];
   dzManualRows[k].push(row);
@@ -973,7 +995,7 @@ function aggregate(brandKey,weekIds){
   },{altas:dzFielRows(brandKey,'altas').length,bajas:dzFielRows(brandKey,'bajas').length,ccce:dzFielRows(brandKey,'ccce').length});
 }
 /* Filas reales de la tabla "Fiel a Atenea" (HM finalizadas arrastradas) — se cuentan una vez, sin depender de la semana */
-function dzFielRows(brandKey,statKey){ return dzManualRowsFor(brandKey,statKey).filter(r=>r.datos&&r.datos.origen==='HM'); }
+function dzFielRows(brandKey,statKey){ return dzManualRowsFor(brandKey,statKey).filter(r=>r.datos&&r.datos.origen==='HM'); }   // contadores: solo filas del día (las archivadas ya no cuentan)
 /* Registro de borrados y modificaciones sobre filas de ejemplo/automáticas (no son filas arrastradas) */
 let dzHidden = {}, dzOverrides = {};
 function dzApplyReg(rows){
@@ -1127,14 +1149,15 @@ function dzActionsHtml(r,src){
   const id=String(r._uid||r.idOportunidad).replace(/'/g,'');
   return `<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${id}','${src}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${id}','${src}')">&#128465;</button>`;
 }
-const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA'];
+const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA','HISTÓRICO'];
 /* Columnas visibles = columnas definitivas de Convo (las que haya en la plantilla cargada) */
-const DZ_COL_W={'STATUS':6,'SEGUIMIENTO':8,'TIPOLOGIA MATRICULA':5,'TIPOLOGIA ALUMNO':4,'ID OPORTUNIDAD':8,'DIA CERO':4,'FECHA PRODUCCIÓN':6,'FECHA INSCRIPCIÓN':6,'CONVOCATORIA':5,'PROGRAMA':14,'ID PROGRAMA':6,'NOMBRES APELLIDOS':12,'PAÍS DE RESIDENCIA':6,'FACTURACIÓN NETA':6,'IMPORTE INSCRIPCIÓN':5,'FORMA DE PAGO':6,'ASESOR':8,'JEFE EQUIPO':8,'DIRECTOR VENTAS':8,'FECHA BAJA':6,'MOTIVO DE BAJA':8,'LINEA COMPLETA':5};
-let dzActiveCols = EXPORT_COLS.filter(c=>c!=='SEGUIMIENTO'&&c!=='LINEA COMPLETA');   // ConvoLite: 20 columnas
-try{
-  const sc=JSON.parse(localStorage.getItem('convo27_cols')||'null');
-  if(Array.isArray(sc)&&sc.length){ const f=sc.filter(c=>EXPORT_COLS.includes(c)); if(f.length) dzActiveCols=f; }
-}catch(e){}
+const DZ_COL_W={'STATUS':6,'SEGUIMIENTO':8,'TIPOLOGIA MATRICULA':5,'TIPOLOGIA ALUMNO':4,'ID OPORTUNIDAD':8,'DIA CERO':4,'FECHA PRODUCCIÓN':6,'FECHA INSCRIPCIÓN':6,'CONVOCATORIA':5,'PROGRAMA':14,'ID PROGRAMA':6,'NOMBRES APELLIDOS':12,'PAÍS DE RESIDENCIA':6,'FACTURACIÓN NETA':6,'IMPORTE INSCRIPCIÓN':5,'FORMA DE PAGO':6,'ASESOR':8,'JEFE EQUIPO':8,'DIRECTOR VENTAS':8,'FECHA BAJA':6,'MOTIVO DE BAJA':8,'LINEA COMPLETA':5,'HISTÓRICO':7};
+/* Columnas DEFINITIVAS (ConvoLite): las mismas en Fiel a Atenea, PF y Excepciones y envío conjunto. Fijas; HISTÓRICO siempre la última. */
+const DZ_FINAL_COLS=['TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','HISTÓRICO'];
+let dzActiveCols = DZ_FINAL_COLS.slice();
+/* HISTÓRICO siempre es la última columna: guarda la información original cuando una fila cambia (CE/Baja, PF/CP/CFP) */
+function dzEnsureHist(){ dzActiveCols=DZ_FINAL_COLS.slice(); }
+dzEnsureHist();
 const DZ_FILTER_COL={'ID OPORTUNIDAD':'Opp','CONVOCATORIA':'Conv','PROGRAMA':'Prog','IMPORTE INSCRIPCIÓN':'PI','ASESOR':'JE'};
 const DZ_SVG_FILTER='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
 function dzFilterBlock(pre,k,label,popClass){
@@ -1174,7 +1197,11 @@ function dzFmtCell(col,v){
 function dzRowHtml(r,src,ghostStat){
   const rec=exportRecord(r,ghostStat||openDetail.stat,src==='fiel'?'Fiel a Atenea':'PF y Otras Excepciones');
   const pr=r.datos&&r.datos.pairRole;
-  const trCls=(src==='exc'?'exc-row ':'')+(ghostStat?'pair-ghost pair-orig':(pr==='orig'?'pair-orig':(pr==='dup'?'pair-dup':'')));
+  const stRow=ghostStat||openDetail.stat;
+  const sentOk=!ghostStat&&dzIsSent(r,stRow);
+  const pendOld=!ghostStat&&!sentOk&&r._createdAt&&dzLocalDay(r._createdAt)<dzLocalDay(new Date().toISOString());
+  const trCls=(src==='exc'?'exc-row ':'')+(ghostStat?'pair-ghost pair-orig':(pr==='orig'?'pair-orig':(pr==='dup'?'pair-dup':'')))+(sentOk?' sent-row':'')+(pendOld?' pend-old':'');
+  const raTitle=sentOk?('Enviada a Excel el '+new Date(r._sentAt).toLocaleString('es-ES')):(pendOld?'Pendiente de enviar a Excel (de un día anterior)':'Pendiente de enviar a Excel');
   const tds=dzActiveCols.map(c=>{
     const t=dzFmtCell(c,rec[c]);
     const esc=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -1187,7 +1214,7 @@ function dzRowHtml(r,src,ghostStat){
     return `<td title="${tip}">${esc}</td>`;
   }).join('');
   const actions=ghostStat?'<span title="Fila original (referencia)" style="opacity:.7">&#128279;</span>':dzActionsHtml(r,src);
-  return `<tr class="${trCls.trim()}"><td class="ra-cell">${actions}</td>${tds}</tr>`;
+  return `<tr class="${trCls.trim()}"><td class="ra-cell" title="${raTitle}">${actions}</td>${tds}</tr>`;
 }
 function dzFindPairOriginal(dup){
   const key=dup.datos&&dup.datos.pairKey; if(!key) return null;
@@ -1330,11 +1357,12 @@ function exportRecord(r,statKey,seguimiento){
     'JEFE EQUIPO': d.jefe||eq.je,
     'DIRECTOR VENTAS': d.dv||eq.dv,
     'FECHA BAJA': dzToDate(d.fechaBaja),
-    'MOTIVO DE BAJA': statKey==='bajas'?(d.motivo||'').toUpperCase():'',
-    'LINEA COMPLETA': ''
+    'MOTIVO DE BAJA': (statKey==='bajas'||d.tipoMat==='BAJA'||d.tipoMat==='CE')?(d.motivo||'').toUpperCase():'',
+    'LINEA COMPLETA': '',
+    'HISTÓRICO': d.historico||''
   };
   const req=['ID OPORTUNIDAD','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','CONVOCATORIA','PROGRAMA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR'].filter(k=>dzActiveCols.includes(k));
-  if(statKey==='bajas'){req.push('FECHA BAJA','MOTIVO DE BAJA');}
+  if(statKey==='bajas'||d.tipoMat==='BAJA'||d.tipoMat==='CE'){req.push('FECHA BAJA','MOTIVO DE BAJA');}
   rec['LINEA COMPLETA']=req.every(k=>rec[k]!==''&&rec[k]!=null)?'SI':'NO';
   return rec;
 }
@@ -1431,6 +1459,7 @@ function countingBrutasByConv(brandKey,weekIds){
 }
 function renderSummary(){
   dzSaveSoon();
+  dzUpdateSendUi();
   const weekIds=[...selectedWeeks];
   const nearestConv=MONTHS[currentMonthIdx].activeConv; /* 'Octubre' o 'Abril' — la más próxima a iniciar según el mes centrado */
   const grid=document.getElementById('summaryGrid');
@@ -1962,8 +1991,16 @@ function dzDate(str){
   return '';
 }
 function dzToday(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+/* FECHA INSCRIPCIÓN automática: el día anterior; si hoy es lunes, el viernes anterior (domingo -> viernes). Después es editable. */
+function dzPrevBizDay(now){
+  const d=new Date((now||new Date()).getTime()); d.setHours(12,0,0,0);
+  const dow=d.getDay();
+  d.setDate(d.getDate()-(dow===1?3:(dow===0?2:1)));
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+function dzLocalDay(iso){ const d=new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dzDatos(type, f, convFull){
-  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:f.fechaInscripcion||'',
+  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:dzPrevBizDay(),
     tipoAlumno:'NM', formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
 }
 
@@ -2018,9 +2055,7 @@ function dzAssumedBrand(fields){
 
 function dzOpenDetected(type, fields){
   dzMode='detect'; dzPendingFields=fields; dzPendingType=type;
-  document.getElementById('dzViewDetected').style.display='block';
-  document.getElementById('dzViewFix').style.display='none';
-  document.getElementById('dzViewReceipt').style.display='none';
+  dzShowView('Detected');
   document.getElementById('dzTitlebarLabel').textContent='Validación';
   document.getElementById('dzDetectedTag').innerHTML = 'Detectado: <span class="tag">'+type+'</span>';
   const rows = [];
@@ -2040,11 +2075,12 @@ function dzOpenDetected(type, fields){
 
 function dzOpenFix(opts){
   dzMode='fix';
-  document.getElementById('dzViewDetected').style.display='none';
-  document.getElementById('dzViewFix').style.display='block';
-  document.getElementById('dzViewReceipt').style.display='none';
+  dzShowView('Fix');
+  dzChoice = opts.choice||null;
+  dzSetFixOptions(opts.choice ? opts.options : DZ_FIX_FULL_OPTS);
+  document.getElementById('dzBtnRetry').textContent = opts.choice ? 'Aplicar' : 'Reintentar';
   document.getElementById('dzTitlebarLabel').textContent = opts.auto ? 'Corrección requerida' : 'Confirma los datos';
-  document.getElementById('dzFixTitle').textContent = opts.auto ? 'Corrige los datos y reintenta' : 'Revisa y confirma el tipo y los datos';
+  document.getElementById('dzFixTitle').textContent = opts.choice ? ({CC:'CC · se duplica la fila',CEBAJA:'CE / Baja · se modifica la fila',PF:'PF / CP / CFP · dato final real'}[opts.choice]) : (opts.auto ? 'Corrige los datos y reintenta' : 'Revisa y confirma el tipo y los datos');
   const banner = document.getElementById('dzAutoBanner');
   if(opts.auto && opts.bannerText){ banner.style.display='flex'; document.getElementById('dzAutoBannerText').textContent=opts.bannerText; }
   else { banner.style.display='none'; }
@@ -2054,7 +2090,10 @@ function dzOpenFix(opts){
   document.getElementById('dzFixDetectado').value = opts.detectadoGuess||'';
   document.getElementById('dzFixMarca').value = dzAssumedBrand(f);
   document.getElementById('dzFixTipo').value = f.tipo||'';
-  document.getElementById('dzFixMotivo').value = f.motivo||'';
+  { const sel=document.getElementById('dzFixMotivo'); const mv=(f.motivo||'').trim();
+    if(mv && ![...sel.options].some(o=>o.value.toLowerCase()===mv.toLowerCase())){ const o=document.createElement('option'); o.textContent=mv; sel.appendChild(o); }
+    const hit=[...sel.options].find(o=>o.value.toLowerCase()===mv.toLowerCase()); sel.value=hit?hit.value:''; }
+  document.getElementById('dzFixFprod').value = f.fechaProduccion||'';
   document.getElementById('dzFixNombre').value = f.nombre||'';
   document.getElementById('dzFixId').value = f.id||'';
   document.getElementById('dzFixPrograma').value = f.programa||'';
@@ -2062,6 +2101,9 @@ function dzOpenFix(opts){
   document.getElementById('dzFixPi').value = f.pi!=null ? f.pi : '';
   document.getElementById('dzFixMes').value = cv.mes;
   document.getElementById('dzFixAnio').value = cv.anio;
+  document.getElementById('dzFixPais').value = f.pais||'';
+  document.getElementById('dzFixForma').value = f.formaPago||'';
+  document.getElementById('dzFixFact').value = f.facturacion!=null ? f.facturacion : '';
   document.getElementById('dzFixFeedback').className='fix-feedback';
   document.getElementById('dzFixFeedback').textContent='';
   dzToggleTipoField();
@@ -2071,14 +2113,57 @@ function dzOpenFix(opts){
 function dzToggleTipoField(){
   const v = document.getElementById('dzFixDetectado').value;
   const esBaja = v.startsWith('BAJA');
+  const conMotivo = esBaja || v.startsWith('CE') || v.startsWith('CC');
   document.getElementById('dzFixTipoField').style.display = esBaja ? 'block' : 'none';
-  document.getElementById('dzFixMotivoField').style.display = esBaja ? 'block' : 'none';
-  if(!esBaja){
-    document.getElementById('dzFixTipo').value = '';
-    document.getElementById('dzFixMotivo').value = '';
-  }
+  document.getElementById('dzFixMotivoField').style.display = conMotivo ? 'block' : 'none';
+  if(!esBaja) document.getElementById('dzFixTipo').value = '';
+  if(!conMotivo) document.getElementById('dzFixMotivo').value = '';
 }
 document.getElementById('dzFixDetectado').addEventListener('change', dzToggleTipoField);
+
+/* ===== Documentos que NO son HM: CC · CE/Baja · PF/CP/CFP ===== */
+let dzChoice = null, dzChooseCtx = null;
+const DZ_FIX_FULL_OPTS = ['PF NUEVA','HM NUEVA','BAJA · PF','BAJA · FINALIZADA','CC · PF','CC · FINALIZADA','CE · PF','CE · FINALIZADA','CP · PF','CP · FINALIZADA'];
+function dzSetFixOptions(list){
+  document.getElementById('dzFixDetectado').innerHTML='<option value="">— Selecciona —</option>'+list.map(o=>'<option value="'+o+'">'+o+'</option>').join('');
+}
+function dzShowView(v){
+  ['Detected','Fix','Receipt','Choose'].forEach(n=>{ const el=document.getElementById('dzView'+n); if(el) el.style.display=(n===v)?'block':'none'; });
+}
+function dzFieldRowsHtml(fields){
+  const rows=[]; const brandKey=dzAssumedBrand(fields);
+  if(brandKey) rows.push('<b>Marca:</b> '+(MT_BRANDS.find(b=>b.key===brandKey)||{}).name);
+  if(fields.nombre) rows.push('<b>Alumno:</b> '+fields.nombre);
+  if(fields.id) rows.push('<b>ID Oportunidad:</b> '+fields.id);
+  if(fields.programa) rows.push('<b>Programa:</b> '+fields.programa);
+  if(fields.asesor) rows.push('<b>Asesor (Atenea):</b> '+fields.asesor);
+  if(fields.pi!=null) rows.push('<b>PI:</b> '+fields.pi);
+  if(fields.convocatoria) rows.push('<b>Convocatoria:</b> '+fields.convocatoria);
+  if(fields.motivo) rows.push('<b>Motivo:</b> '+fields.motivo);
+  return rows.join('<br>') || '<span style="color:#7FA0B0">Sin más datos extraídos del texto.</span>';
+}
+function dzOpenChoose(type, fields){
+  dzMode='choose'; dzChooseCtx={type,fields};
+  dzShowView('Choose');
+  document.getElementById('dzTitlebarLabel').textContent='Documento recibido';
+  document.getElementById('dzChooseTag').innerHTML = type ? 'Detectado: <span class="tag">'+type+'</span>' : 'No he reconocido el tipo de documento';
+  document.getElementById('dzChooseFields').innerHTML = dzFieldRowsHtml(fields||{});
+  const sug = type==='CC'?'chCC' : (type==='BAJA'||type==='CE')?'chBaja' : (type==='PF'||type==='CP')?'chPF' : '';
+  ['chCC','chBaja','chPF'].forEach(id=>document.getElementById(id).classList.toggle('sug', id===sug));
+  document.getElementById('dzPopup').classList.add('show');
+}
+function dzChoose(kind){
+  const ctx=dzChooseCtx||{type:'',fields:{}};
+  const guess = kind==='CC' ? 'CC' : kind==='CEBAJA' ? (ctx.type==='CE'?'CE':'BAJA') : (ctx.type==='CP'?'CP':'PF');
+  const options = kind==='CC' ? ['CC'] : kind==='CEBAJA' ? ['BAJA','CE'] : ['PF','CP','CFP'];
+  dzOpenFix({auto:false, fields:ctx.fields||{}, detectadoGuess:guess, choice:kind, options});
+}
+function dzKindOf(detectado){
+  if(/^CC/.test(detectado)) return 'CC';
+  if(/^(BAJA|CE)/.test(detectado)) return 'CEBAJA';
+  if(/^(PF|CP|CFP)/.test(detectado)) return 'PF';
+  return '';
+}
 
 document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
   const detectado = document.getElementById('dzFixDetectado').value;
@@ -2092,148 +2177,175 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
   const piVal = document.getElementById('dzFixPi').value;
   const motivo = document.getElementById('dzFixMotivo').value;
   const tipo = document.getElementById('dzFixTipo').value;
+  const pais = document.getElementById('dzFixPais').value.trim();
+  const forma = document.getElementById('dzFixForma').value;
+  const factVal = document.getElementById('dzFixFact').value;
   const fb = document.getElementById('dzFixFeedback');
   if(!(detectado && marca && mes && anio && id)){
     fb.className='fix-feedback fail';
     fb.textContent='Revisa los campos obligatorios: Detectado, Marca, ID Oportunidad y Convocatoria.';
     return;
   }
-  const esNuevaMatricula = detectado.startsWith('PF')||detectado.startsWith('HM');
-  const statKey = detectado.startsWith('BAJA') ? 'bajas' : esNuevaMatricula ? 'altas' : 'ccce';
-  const existing = dzFindManualRowById(id);
+  /* datos finales = lo extraído del documento + lo que hayas corregido en el formulario */
+  const fx = Object.assign({}, dzFixParsedFields);
+  if(nombre) fx.nombre=nombre;
+  if(programa) fx.programa=programa;
+  if(asesor) fx.asesor=asesor;
+  if(piVal!=='') fx.pi=Number(piVal);
+  if(pais) fx.pais=pais;
+  if(forma) fx.formaPago=forma;
+  if(factVal!=='') fx.facturacion=Number(factVal);
+  const fprod = document.getElementById('dzFixFprod').value.trim();
+  if(fprod) fx.fechaProduccion=fprod;
+  const v = {marca, mes, anio, id, motivo, tipo, fx};
 
-  if(esNuevaMatricula){
+  if(detectado.startsWith('HM')){
+    /* HM NUEVA (solo llega aquí si la HM no traía ID): fila de Fiel a Atenea */
+    const existing = dzFindManualRowById(id);
     if(existing){
       fb.className='fix-feedback fail';
       fb.textContent='Ya existe una fila con ID '+id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+'). No se añade duplicada.';
       return;
     }
-    const row = {
-      nombre: nombre || '(sin nombre)',
-      idNacs: '—',
-      idOportunidad: id,
-      convocatoria: mes,
-      programa: programa || '—',
-      pi: piVal!=='' ? Number(piVal) : null,
-      je: asesor || '—',
-      facturacion: dzFixParsedFields.facturacion!=null ? dzFixParsedFields.facturacion : null,
-      comentario: 'Añadido desde arrastre ('+detectado+') — pendiente de completar ID NACS.',
-      datos: dzDatos(detectado.startsWith('HM')?'HM':'PF', dzFixParsedFields, (mes?mes+' ':'')+(anio||''))
-    };
-    dzAddManualRow(marca, statKey, row);
-    mtRenderGrid(); renderPanels(); renderSummary();
-    fb.className='fix-feedback ok';
-    fb.textContent='Fila añadida a "'+(detectado.startsWith('HM')?'Fiel a Atenea':'PF y Otras Excepciones')+'" ('+MT_BRANDS.find(b=>b.key===marca).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[statKey])+').';
-    setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1800);
-  } else {
-    /* Baja / CC / CE / CP: modifican una fila existente — nunca se crea una nueva suelta */
-    if(!existing){
-      fb.className='fix-feedback fail';
-      fb.textContent='No se ha encontrado ninguna fila con ID '+id+' entre lo añadido en esta sesión. Añade primero la matrícula original o revisa el ID.';
-      return;
-    }
-    dzShowMatchPopup(existing, {detectado, marca, mes, anio, motivo, tipo, statKey});
+    dzCreateRowFromForm('HM', v, fb);
+    return;
   }
+  const kind = dzChoice || dzKindOf(detectado);
+  const sub = detectado.split(' ')[0];
+  dzRunChoice(kind, sub, v, fb);
 });
+
+function dzCreateRowFromForm(type, v, fb){
+  const fx=v.fx;
+  const row = {
+    nombre: fx.nombre || '(sin nombre)',
+    idNacs: '—',
+    idOportunidad: v.id,
+    convocatoria: v.mes,
+    programa: fx.programa || '—',
+    pi: fx.pi!=null ? fx.pi : null,
+    je: fx.asesor || '—',
+    facturacion: fx.facturacion!=null ? fx.facturacion : null,
+    comentario: 'Añadido desde arrastre ('+type+') — pendiente de completar ID NACS.',
+    datos: dzDatos(type, fx, (v.mes?v.mes+' ':'')+(v.anio||''))
+  };
+  dzAddManualRow(v.marca, 'altas', row);
+  mtRenderGrid(); renderPanels(); renderSummary();
+  fb.className='fix-feedback ok';
+  fb.textContent='Fila añadida a "'+(type==='HM'?'Fiel a Atenea':'PF y Otras Excepciones')+'" ('+MT_BRANDS.find(b=>b.key===v.marca).name+' · Altas).';
+  setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'), 1600);
+}
+
+function dzRunChoice(kind, sub, v, fb){
+  const existing = dzFindManualRowById(v.id);
+  if(!existing){
+    if(kind==='PF' && sub==='PF'){ dzCreateRowFromForm('PF', v, fb); return; }   // PF sin HM previa: fila nueva en PF y Otras
+    fb.className='fix-feedback fail';
+    fb.textContent='No se ha encontrado ninguna fila con ID '+v.id+'. Añade primero la matrícula (HM) o revisa el ID.';
+    return;
+  }
+  dzApplyChoice(kind, sub, existing, v, fb);
+}
 
 document.getElementById('dzLinkDelete').addEventListener('click', ()=>{
   bmRequestPassword(()=>{ document.getElementById('dzPopup').classList.remove('show'); }, 'Introduce la contraseña para borrar este registro.');
 });
 
-let dzMatchContext = null;
-
-function dzShowMatchPopup(existing, changes){
-  dzMode='match'; dzMatchContext = {existing, changes, parsed: Object.assign({}, dzFixParsedFields||{})};
-  document.getElementById('dzViewDetected').style.display='none';
-  document.getElementById('dzViewFix').style.display='none';
-  document.getElementById('dzViewReceipt').style.display='none';
-  document.getElementById('dzViewMatch').style.display='block';
-  document.getElementById('dzTitlebarLabel').textContent='Fila encontrada';
-  const r = existing.row;
-  const brandName = (MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name || existing.brandKey;
-  const statLabel = {altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey];
-  const od=(r.datos&&r.datos.origen)||'';
-  const where=od==='HM'?'HM · Fiel a Atenea':(od==='PF'?'PF · PF y Otras Excepciones':'PF y Otras Excepciones');
-  document.getElementById('dzMatchTitle').textContent='Se ha encontrado una fila con este ID (en '+(od==='HM'?'HM':'PF')+')';
-  document.getElementById('dzMatchExisting').innerHTML =
-    '<b>Marca:</b> '+brandName+' · '+statLabel+' · '+where+'<br>'+
-    '<b>Nombre:</b> '+r.nombre+'<br>'+
-    '<b>ID Oportunidad:</b> '+r.idOportunidad+'<br>'+
-    '<b>Programa:</b> '+r.programa+'<br>'+
-    '<b>Convocatoria:</b> '+r.convocatoria;
-  document.getElementById('dzMatchChanges').innerHTML =
-    '<b>Nuevo estado:</b> '+changes.detectado+'<br>'+
-    (changes.tipo?('<b>Tipo:</b> '+changes.tipo+'<br>'):'')+
-    (changes.motivo?('<b>Motivo:</b> '+changes.motivo+'<br>'):'')+
-    '<b>Convocatoria destino:</b> '+(changes.mes||'—')+' '+(changes.anio||'');
-  const fb = document.getElementById('dzMatchFeedback');
-  fb.className='fix-feedback'; fb.textContent='';
-  document.getElementById('dzPopup').classList.add('show');
-}
-
-/* Construye la fila resultante aplicando el documento (Baja/CC/CE/CP) sobre una fila base.
-   Solo rellena lo que está vacío; los datos que ya existían no se pisan (salvo los propios del cambio). */
-function dzBuildFromChanges(base, changes, parsed){
-  const f=parsed||{};
+/* Construye la fila resultante aplicando el documento sobre una fila base.
+   CC y CE/Baja: solo rellenan lo que está vacío (más lo propio del cambio).
+   PF/CP/CFP (kind 'PF'): el documento manda, el dato final real sustituye al anterior (lo original va a HISTÓRICO). */
+function dzBuildFromChanges(base, ch, f, kind){
+  f=f||{};
   const row=JSON.parse(JSON.stringify(base));
+  ['_sentAt','_sentHash','_sentRec','_archived'].forEach(k=>delete row[k]);
   const d=row.datos=Object.assign({},row.datos||{});
   const empty=v=>v==null||v===''||v==='—'||v==='(sin nombre)';
-  if(empty(row.nombre)&&f.nombre) row.nombre=f.nombre;
-  if(empty(row.programa)&&f.programa) row.programa=f.programa;
-  if(empty(row.je)&&f.asesor) row.je=f.asesor;
-  if(row.pi==null&&f.pi!=null) row.pi=f.pi;
-  if(row.facturacion==null&&f.facturacion!=null) row.facturacion=f.facturacion;
-  if(empty(d.pais)&&f.pais) d.pais=f.pais;
-  if(empty(d.formaPago)&&f.formaPago) d.formaPago=f.formaPago;
-  if(empty(d.idPrograma)&&f.idPrograma) d.idPrograma=f.idPrograma;
-  const tipo=changes.detectado.split(' ')[0];
-  d.tipoDoc=tipo;
-  if(/^(CC|CE|CP)/.test(tipo)){
-    d.tipoAlumno=tipo;
-    if(changes.mes){
-      if(d.convocatoriaFull) d.convocatoriaOrigen=d.convocatoriaFull;
-      d.convocatoriaFull=changes.mes+' '+(changes.anio||'');
-      row.convocatoria=changes.mes;
-    }
-    if(changes.motivo) d.motivo=changes.motivo;
-  } else {
-    if(empty(d.convocatoriaFull)&&changes.mes){ d.convocatoriaFull=changes.mes+' '+(changes.anio||''); }
-    if(empty(row.convocatoria)&&changes.mes) row.convocatoria=changes.mes;
-    d.fechaBaja=dzToday(); d.motivo=changes.motivo||d.motivo||''; d.tipoBaja=changes.tipo||'';
+  const ow=(kind==='PF');
+  const setTop=(k,v)=>{ if(v==null||v==='') return; if(ow||empty(row[k])) row[k]=v; };
+  setTop('nombre',f.nombre); setTop('programa',f.programa); setTop('je',f.asesor);
+  if(f.pi!=null&&(ow||row.pi==null)) row.pi=f.pi;
+  if(f.facturacion!=null&&(ow||row.facturacion==null)) row.facturacion=f.facturacion;
+  const setD=(k,v)=>{ if(v==null||v==='') return; if(ow||empty(d[k])) d[k]=v; };
+  setD('pais',f.pais); setD('formaPago',(f.formaPago||'').toUpperCase()); setD('idPrograma',f.idPrograma);
+  if(ow&&f.fechaProduccion) d.fechaProduccion=f.fechaProduccion;
+  const sub=ch.sub;
+  d.tipoDoc=sub;
+  const conv=ch.mes?(ch.mes+' '+(ch.anio||'')).trim():'';
+  if(sub==='CC'||sub==='CP'){
+    d.tipoAlumno=sub;
+    if(conv){ if(d.convocatoriaFull) d.convocatoriaOrigen=d.convocatoriaFull; d.convocatoriaFull=conv; row.convocatoria=ch.mes; }
+    if(ch.motivo) d.motivo=ch.motivo;
+  } else if(sub==='CE'||sub==='BAJA'){
+    if(sub==='BAJA'){ d.tipoMat='BAJA'; d.status='BAJAS arranque curso'; }
+    else { d.tipoMat='CE'; d.tipoAlumno='CE'; }   // CE: lo que dice el documento
+    if(empty(d.convocatoriaFull)&&conv) d.convocatoriaFull=conv;
+    if(empty(row.convocatoria)&&ch.mes) row.convocatoria=ch.mes;
+    d.fechaBaja=dzToday(); d.motivo=ch.motivo||d.motivo||''; d.tipoBaja=ch.tipo||'';
+  } else {   // PF / CFP
+    if(ow&&conv&&conv!==d.convocatoriaFull){ if(d.convocatoriaFull) d.convocatoriaOrigen=d.convocatoriaFull; d.convocatoriaFull=conv; row.convocatoria=ch.mes; }
   }
-  d.origen='PF';   // las bajas y cambios van siempre al bloque "PF y Otras Excepciones"
-  row.comentario=(base.comentario?base.comentario+' — ':'')+(changes.detectado)+(changes.motivo?(' ('+changes.motivo+')'):'');
+  d.origen='PF';   // todo lo que no es HM va al bloque "PF y Otras Excepciones"
+  row.comentario=(base.comentario?base.comentario+' — ':'')+sub+(ch.motivo?(' ('+ch.motivo+')'):'');
   return row;
 }
-function dzMatchApply(mode){
-  if(!dzMatchContext) return;
-  const {existing, changes, parsed}=dzMatchContext;
-  const fb=document.getElementById('dzMatchFeedback');
+function dzPlain(v){
+  if(Object.prototype.toString.call(v)==='[object Date]') return isNaN(v)?'':v.toISOString().slice(0,10).split('-').reverse().join('/');
+  return v==null?'':String(v);
+}
+/* Texto de HISTÓRICO: fecha + tipo + los valores ORIGINALES de las columnas que cambian */
+function dzHistText(label,before,after){
+  const skip=['HISTÓRICO','LINEA COMPLETA','SEGUIMIENTO'];
+  const parts=[];
+  Object.keys(before).forEach(c=>{
+    if(skip.includes(c)) return;
+    const b=dzPlain(before[c]), a=dzPlain(after[c]);
+    if(b!==''&&b!==a) parts.push(c+'='+b);
+  });
+  return dzToday()+' '+label+(parts.length?' · antes: '+parts.join('; '):'');
+}
+function dzUnarchive(row){
+  row._archived=false; delete row._sentAt; delete row._sentHash; delete row._sentRec;
+  row._createdAt=new Date().toISOString();
+}
+function dzApplyChoice(kind, sub, existing, v, fb){
   const arr=dzManualRows[existing.key];
   const idx=arr?arr.indexOf(existing.row):-1;
   if(idx===-1){ fb.className='fix-feedback fail'; fb.textContent='La fila original ya no existe.'; return; }
-  const statName={altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[changes.statKey];
-  if(mode==='complete'){
-    const updated=dzBuildFromChanges(existing.row,changes,parsed);
-    updated._uid=existing.row._uid;
-    arr.splice(idx,1);
-    if(changes.statKey===existing.statKey) arr.splice(idx,0,updated); else dzAddManualRow(existing.brandKey,changes.statKey,updated);
-    fb.className='fix-feedback ok';
-    fb.textContent='Fila completada'+(changes.statKey!==existing.statKey?' y movida a '+statName:'')+'.';
-  } else {
-    const key=existing.row._uid+'-p'+Date.now().toString(36);
-    const dup=dzBuildFromChanges(existing.row,changes,parsed);
-    delete dup._uid;
+  const orig=existing.row;
+  const statName={altas:'Altas',bajas:'Bajas',ccce:'CC/CE'};
+  const statNew = kind==='CC' ? 'ccce' : kind==='CEBAJA' ? (sub==='BAJA'?'bajas':'ccce') : (sub==='CP'?'ccce':existing.statKey);
+  const ch={sub, mes:v.mes, anio:v.anio, motivo:v.motivo, tipo:v.tipo};
+  const before=exportRecord(orig, existing.statKey, '');
+  const prevHist=(orig.datos&&orig.datos.historico)?orig.datos.historico+' | ':'';
+  const now=new Date().toISOString();
+  if(kind==='CC'){
+    /* CC: duplica. La original no se toca; la copia lleva la info nueva, es editable y queda junto a la original (mismo color) */
+    const dup=dzBuildFromChanges(orig,ch,v.fx,kind);
+    delete dup._uid; dup._createdAt=now;
+    dup.datos.fechaInscripcion=dzPrevBizDay();
+    dup.datos.fechaProduccion=(v.fx&&v.fx.fechaProduccion)||dzToday();   // nueva producción en la copia; la original mantiene la suya
+    dup.datos.historico=prevHist+dzHistText('CC',before,exportRecord(dup,statNew,''));
+    const key=orig._uid+'-p'+Date.now().toString(36);
     dup.datos.pairKey=key; dup.datos.pairRole='dup';
-    existing.row.datos=Object.assign({},existing.row.datos||{},{pairKey:key,pairRole:'orig'});
-    if(changes.statKey===existing.statKey){
+    orig.datos=Object.assign({},orig.datos||{},{pairKey:key,pairRole:'orig'});
+    dzUnarchive(orig);   // si la original estaba ya volcada en un día anterior, vuelve a verse junto a la copia
+    if(statNew===existing.statKey){
       dup._manual=true; dup._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
       arr.splice(idx+1,0,dup);       // justo debajo de la original
     } else {
-      dzAddManualRow(existing.brandKey,changes.statKey,dup);
+      dzAddManualRow(existing.brandKey,statNew,dup);
     }
     fb.className='fix-feedback ok';
-    fb.textContent='Fila duplicada en "PF y Otras Excepciones" ('+statName+'). Ambas quedan resaltadas.';
+    fb.textContent='Fila duplicada ('+statName[statNew]+'). Original y copia quedan juntas y del mismo color.';
+  } else {
+    /* CE/Baja y PF/CP/CFP: NO duplican, modifican la fila y guardan lo original en HISTÓRICO */
+    const upd=dzBuildFromChanges(orig,ch,v.fx,kind);
+    upd._uid=orig._uid; upd._manual=true; upd._createdAt=now;
+    upd.datos.historico=prevHist+dzHistText(sub,before,exportRecord(upd,statNew,''));
+    arr.splice(idx,1);
+    if(statNew===existing.statKey) arr.splice(idx,0,upd); else dzAddManualRow(existing.brandKey,statNew,upd);
+    fb.className='fix-feedback ok';
+    fb.textContent=(kind==='CEBAJA'?'Fila actualizada como '+sub:'Fila actualizada con el dato final')+(statNew!==existing.statKey?' y movida a '+statName[statNew]:'')+'. Lo original está en HISTÓRICO.';
   }
   mtRenderGrid(); renderPanels(); renderSummary();
   setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1600);
@@ -2241,9 +2353,7 @@ function dzMatchApply(mode){
 
 function dzOpenReceipt(filename, wrongType){
   dzMode='receipt';
-  document.getElementById('dzViewDetected').style.display='none';
-  document.getElementById('dzViewFix').style.display='none';
-  document.getElementById('dzViewReceipt').style.display='block';
+  dzShowView('Receipt');
   document.getElementById('dzTitlebarLabel').textContent='Comprobante';
   document.getElementById('dzReceiptFilename').textContent = filename;
   document.getElementById('dzReceiptId').value = '';
@@ -2309,10 +2419,9 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
       }
     } else if(dzMode==='fix'){
       if(!btn.classList.contains('red')) document.getElementById('dzPopup').classList.remove('show');
-    } else if(dzMode==='match'){
-      /* el cierre/cancelación se hace con el semáforo rojo; la acción se elige con los dos botones grandes */
-      if(btn.classList.contains('green')) dzMatchApply('complete');
-      else document.getElementById('dzPopup').classList.remove('show');
+    } else if(dzMode==='choose'){
+      /* la acción se elige con los tres botones grandes; cualquier semáforo cierra */
+      document.getElementById('dzPopup').classList.remove('show');
     } else if(dzMode==='receipt'){
       const wrongZone = document.getElementById('dzReceiptBanner').style.display !== 'none';
       if(wrongZone){
@@ -2333,19 +2442,15 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
 
 function dzProcessLeftText(text){
   const type = dzClassify(text);
-  if(!type){
-    dzOpenFix({auto:true, bannerText:'No se ha reconocido el tipo de documento automáticamente.', fields:{}});
+  const fields = type ? dzExtractFields(type, text) : {};
+  if(type==='HM'){
+    /* la HM se reconoce sola */
+    if(fields.id) dzOpenDetected(type, fields);
+    else dzOpenFix({auto:true, bannerText:'No se ha podido extraer el ID Oportunidad — dato obligatorio ausente.', fields, detectadoGuess:'HM NUEVA'});
     return;
   }
-  const fields = dzExtractFields(type, text);
-  if((type==='PF'||type==='HM') && fields.id){
-    dzOpenDetected(type, fields);
-  } else if(type==='PF'||type==='HM'){
-    dzOpenFix({auto:true, bannerText:'No se ha podido extraer el ID Oportunidad — dato obligatorio ausente.', fields, detectadoGuess:type+' NUEVA'});
-  } else {
-    /* Baja/CC/CE/CP siempre pasan por aquí: necesitan que confirmes el estado (PF o Finalizada) */
-    dzOpenFix({auto:false, fields});
-  }
+  /* cualquier otro documento (PF, Baja, CC, CE, CP o no reconocido): te pregunto qué es */
+  dzOpenChoose(type||'', fields);
 }
 
 async function dzProcessLeftFile(file){
@@ -2443,9 +2548,8 @@ function handleTemplateFile(evt){
         title.textContent = 'No reconozco ninguna de las columnas de Convo en "'+sheetName+'"';
         list.innerHTML = '<span style="color:#FFB4B4">Se mantienen las columnas anteriores.</span>';
       } else {
-        const removed = EXPORT_COLS.filter(c=>!active.includes(c));
-        dzActiveCols = active;
-        try{ localStorage.setItem('convo27_cols', JSON.stringify(active)); }catch(_){}
+        const removed = EXPORT_COLS.filter(c=>!active.includes(c)&&c!=='HISTÓRICO');
+        dzEnsureHist();
         dzRenderHeads(); renderPanels(); dzSaveSoon();
         title.textContent = active.length+' columnas activas (hoja "'+sheetName+'")';
         list.innerHTML = active.map((c,i)=>'<b>'+(i+1)+'.</b> '+c).join('<br>') +
@@ -2542,7 +2646,7 @@ function dzDraftRowHtml(){
 function dzDraftDiscard(){ dzDraft=null; renderPanels(); }
 function addExceptionMock(){
   if(!openDetail) return;
-  if(!dzDraft) dzDraft={};
+  if(!dzDraft) dzDraft={'FECHA INSCRIPCIÓN':dzIsoDate(dzPrevBizDay())};
   renderPanels();
   const first=document.querySelector('#excBody .draft-row input'); if(first) first.focus();
 }
@@ -2561,9 +2665,9 @@ function dzDraftSave(){
     pi:num('IMPORTE INSCRIPCIÓN'), je:g('ASESOR')||'—', facturacion:num('FACTURACIÓN NETA'),
     comentario:'Añadida manualmente',
     datos:{tipoDoc:'MANUAL', origen:'MANUAL', tipoAlumno:g('TIPOLOGIA ALUMNO'), status:g('STATUS'), tipoMat:g('TIPOLOGIA MATRICULA'),
-      diaCero:g('DIA CERO'), pais:g('PAÍS DE RESIDENCIA'), fechaProduccion:dzDate(g('FECHA PRODUCCIÓN')), fechaInscripcion:dzDate(g('FECHA INSCRIPCIÓN')),
+      diaCero:g('DIA CERO'), pais:g('PAÍS DE RESIDENCIA'), fechaProduccion:dzDate(g('FECHA PRODUCCIÓN')), fechaInscripcion:dzDate(g('FECHA INSCRIPCIÓN'))||dzPrevBizDay(),
       formaPago:g('FORMA DE PAGO'), idPrograma:g('ID PROGRAMA'), convocatoriaFull:mes?(mes+' '+anio):'', fechaBaja:dzDate(g('FECHA BAJA')),
-      motivo:g('MOTIVO DE BAJA'), tipoBaja:'', jefe:g('JEFE EQUIPO'), dv:g('DIRECTOR VENTAS')}
+      motivo:g('MOTIVO DE BAJA'), tipoBaja:'', jefe:g('JEFE EQUIPO'), dv:g('DIRECTOR VENTAS'), historico:g('HISTÓRICO')}
   };
   dzAddManualRow(openDetail.brandKey, openDetail.stat, row);
   dzDraft=null;
@@ -2660,33 +2764,116 @@ function dzWithTimeout(promise,ms){ return Promise.race([promise,new Promise((_,
 function dzStateSnapshot(){
   return {v:1, savedAt:new Date().toISOString(), rows:dzManualRows, hidden:dzHidden, overrides:dzOverrides, cols:dzActiveCols, equipos:dzEquipos, equiposMes:dzEquiposMes};
 }
-/* Feed para el Excel de SharePoint (lo lee el script de Office vía Worker convo-excel-feed).
-   Filas ya organizadas con las columnas de la tabla (dzActiveCols), agrupadas por marca. */
+/* ===================== ENVIAR A EXCEL (feed) + LIMPIEZA DIARIA ===================== */
+/* "Enviar a Excel" marca las filas como enviadas y publica el feed que lee el script del Excel de SharePoint
+   (Worker convo-excel-feed). El feed guarda los envíos de los últimos 7 días, cada uno con su marca de hora
+   (_sentAt): el script del Excel solo aplica lo que sea posterior a su última ejecución. */
 const DZ_FEED_KEY='convo27_excel_feed';
+const DZ_FEED_DAYS=7;
+function dzRecFor(r,stat){
+  const rec=exportRecord(r,stat,'');
+  const o={};
+  dzActiveCols.forEach(c=>{
+    let v=rec[c];
+    if(Object.prototype.toString.call(v)==='[object Date]') v=isNaN(v)?'':v.toISOString().slice(0,10);
+    o[c]=v==null?'':v;
+  });
+  o._uid=r._uid||'';
+  return o;
+}
+function dzRecHash(r,stat){ return JSON.stringify(dzRecFor(r,stat)); }
+function dzIsSent(r,stat){ return !!(r._sentAt && r._sentHash===dzRecHash(r,stat)); }
+function dzMarkSent(r,stat,nowIso,withRec){
+  r._sentAt=nowIso; r._sentHash=dzRecHash(r,stat);
+  if(withRec) r._sentRec=dzRecFor(r,stat); else delete r._sentRec;
+}
 function dzFeedSnapshot(){
-  const brands={};
+  const brands={}; const limit=Date.now()-DZ_FEED_DAYS*864e5;
   Object.keys(dzManualRows).forEach(k=>{
-    const parts=k.split('|'); const b=parts[0], stat=parts[1];
-    if(!brands[b]) brands[b]=[];
+    const b=k.split('|')[0];
     (dzManualRows[k]||[]).forEach(r=>{
-      const rec=exportRecord(r,stat,'');
-      const o={};
-      dzActiveCols.forEach(c=>{
-        let v=rec[c];
-        if(Object.prototype.toString.call(v)==='[object Date]') v=isNaN(v)?'':v.toISOString().slice(0,10);
-        o[c]=v==null?'':v;
-      });
-      o._uid=r._uid||'';
-      brands[b].push(o);
+      if(!r._sentRec||!r._sentAt||new Date(r._sentAt).getTime()<limit) return;
+      if(!brands[b]) brands[b]=[];
+      brands[b].push(Object.assign({},r._sentRec,{_sentAt:r._sentAt}));
     });
   });
-  return {v:1, savedAt:new Date().toISOString(), cols:dzActiveCols.slice(), brands};
+  Object.keys(brands).forEach(b=>brands[b].sort((x,y)=>String(x._sentAt).localeCompare(String(y._sentAt))));
+  return {v:2, savedAt:new Date().toISOString(), cols:dzActiveCols.slice(), brands};
 }
-function dzFeedHasRows(){ return Object.keys(dzManualRows).some(k=>(dzManualRows[k]||[]).length); }
 async function dzPublishFeed(){
   const res=await dzWithTimeout(fetch(DZ_WORKER+'/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:DZ_FEED_KEY,value:dzFeedSnapshot()})}),8000);
   if(!res.ok) throw new Error('HTTP '+res.status);
 }
+function dzToast(msg,ok){
+  let t=document.getElementById('dzToast');
+  if(!t){ t=document.createElement('div'); t.id='dzToast'; document.body.appendChild(t); }
+  t.textContent=msg; t.className='show '+(ok===false?'err':'ok');
+  clearTimeout(t._h); t._h=setTimeout(()=>{ t.className=''; },5500);
+}
+/* filas visibles (no archivadas) de una marca; stat opcional */
+function dzVisibleRows(brandKey,statKey){
+  const out=[];
+  Object.keys(dzManualRows).forEach(k=>{
+    const [b,st]=k.split('|');
+    if(brandKey&&b!==brandKey) return;
+    if(statKey&&st!==statKey) return;
+    (dzManualRows[k]||[]).forEach(r=>{ if(!r._archived) out.push({r,stat:st,brand:b}); });
+  });
+  return out;
+}
+async function dzSendList(list){
+  const pend=list.filter(x=>!dzIsSent(x.r,x.stat));
+  if(!pend.length){ dzToast('No hay filas pendientes de enviar.',true); return; }
+  const now=new Date().toISOString();
+  const prev=pend.map(x=>({r:x.r,sa:x.r._sentAt,sh:x.r._sentHash,sr:x.r._sentRec}));
+  pend.forEach(x=>dzMarkSent(x.r,x.stat,now,true));
+  try{
+    await dzPublishFeed();
+    dzToast(pend.length+(pend.length===1?' fila enviada':' filas enviadas')+' a Excel. Ahora ejecuta el script en el Excel.',true);
+    dzSaveNow();
+  }catch(e){
+    console.error('Error publicando feed Excel:',e);
+    prev.forEach(p=>{ p.r._sentAt=p.sa; p.r._sentHash=p.sh; p.r._sentRec=p.sr; if(p.sa===undefined){ delete p.r._sentAt; delete p.r._sentHash; delete p.r._sentRec; } });
+    dzToast('No se ha podido enviar a Excel (sin conexión). No se ha marcado nada como enviado.',false);
+  }
+  mtRenderGrid(); renderPanels(); renderSummary();
+}
+function dzSendAll(){ dzSendList(dzVisibleRows()); }
+function dzSendPanel(which){
+  if(!openDetail) return;
+  const st=openDetail.stat, bk=openDetail.brandKey;
+  const list=[];
+  if(which==='fiel'||which==='ambos') dzFielRows(bk,st).filter(r=>!r._archived).forEach(r=>list.push({r,stat:st,brand:bk}));
+  if(which==='exc'||which==='ambos') exceptionRows(bk,st).forEach(r=>list.push({r,stat:st,brand:bk}));
+  dzSendList(list);
+}
+function dzPendingCount(){ return dzVisibleRows().filter(x=>!dzIsSent(x.r,x.stat)).length; }
+function dzUpdateSendUi(){
+  const n=dzPendingCount();
+  const bd=document.getElementById('sendAllBadge'); if(bd) bd.textContent=n?('('+n+')'):'';
+  const today=dzLocalDay(new Date().toISOString());
+  const old=dzVisibleRows().filter(x=>!dzIsSent(x.r,x.stat)&&x.r._createdAt&&dzLocalDay(x.r._createdAt)<today).length;
+  const bn=document.getElementById('dzPendBanner');
+  if(bn){
+    if(old){ bn.style.display='block'; bn.textContent='⚠ Hay '+old+(old===1?' fila':' filas')+' de días anteriores sin enviar a Excel. Pulsa «Enviar todo a Excel» para dejarlo todo volcado.'; }
+    else bn.style.display='none';
+  }
+}
+/* Limpieza diaria: las filas ya enviadas a Excel en un día anterior (y sin cambios desde entonces) se archivan:
+   dejan de verse en las tablas pero siguen contando en los contadores y se pueden localizar por ID (CC, Baja…). */
+function dzDailyClean(){
+  const today=dzLocalDay(new Date().toISOString());
+  let changed=false;
+  Object.keys(dzManualRows).forEach(k=>{
+    const stat=k.split('|')[1];
+    (dzManualRows[k]||[]).forEach(r=>{
+      if(!r._archived && r._sentAt && dzLocalDay(r._sentAt)<today && r._sentHash===dzRecHash(r,stat)){ r._archived=true; changed=true; }
+      if(r._sentRec && r._sentAt && (Date.now()-new Date(r._sentAt).getTime())>14*864e5){ delete r._sentRec; changed=true; }
+    });
+  });
+  return changed;
+}
+setInterval(()=>{ if(!dzLoaded) return; if(dzDailyClean()){ mtRenderGrid(); renderPanels(); renderSummary(); } else dzUpdateSendUi(); },60000);
 function dzSaveSoon(){
   if(!dzLoaded) return;          // nunca guardar antes de haber cargado: evitaría pisar lo que ya hay
   clearTimeout(dzSaveTimer);
@@ -2699,10 +2886,7 @@ async function dzSaveNow(){
   try{
     const res=await dzWithTimeout(fetch(DZ_WORKER+'/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:DZ_KV_KEY,value:dzStateSnapshot()})}),8000);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const hora=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-    let feedOk=true;
-    try{ await dzPublishFeed(); }catch(fe){ feedOk=false; console.error('Error publicando feed Excel:',fe); }
-    dzKvStatus(feedOk?('guardado ✓ '+hora+' · Excel listo'):('guardado ✓ '+hora+' · ⚠ feed Excel sin publicar'),feedOk?'#5CFF9E':'#F5C542');
+    dzKvStatus('guardado ✓ '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),'#5CFF9E');
   }catch(e){
     console.error('Error guardando en KV:',e);
     dzKvStatus('⚠ sin guardar (reintenta)','#FF7B7B');
@@ -2719,12 +2903,13 @@ async function dzLoadState(){
       if(st.rows&&typeof st.rows==='object'){ dzManualRows=st.rows; Object.keys(dzManualRows).forEach(k=>dzManualRows[k].forEach(r=>{ if(!r._uid) r._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); })); }
       if(st.hidden) dzHidden=st.hidden;
       if(st.overrides) dzOverrides=st.overrides;
-      if(Array.isArray(st.cols)){ const f=st.cols.filter(c=>EXPORT_COLS.includes(c)); if(f.length) dzActiveCols=f; }
+      if(Array.isArray(st.cols)){ const f=st.cols.filter(c=>EXPORT_COLS.includes(c)); if(f.length){ dzActiveCols=f; dzEnsureHist(); } }
       if(st.equipos&&Object.keys(st.equipos).length){ dzEquipos=st.equipos; dzEquiposMes=st.equiposMes||''; }
     }
+    Object.keys(dzManualRows).forEach(k=>dzManualRows[k].forEach(r=>{ if(!r._createdAt) r._createdAt=new Date().toISOString(); }));
     dzLoaded=true;
     dzKvStatus('sincronizado ✓','#5CFF9E');
-    if(dzFeedHasRows()) dzPublishFeed().catch(fe=>console.error('Error publicando feed Excel:',fe));
+    if(dzDailyClean()) dzSaveSoon();
   }catch(e){
     console.error('No se ha podido cargar el estado de KV:',e);
     dzKvStatus('⚠ sin conexión: no se guarda','#FF7B7B');
@@ -2822,7 +3007,9 @@ function dzImportConfirm(){
   let added=0, skipped=0;
   d.items.forEach(it=>{
     if(dzFindManualRowById(it.row.idOportunidad)){ skipped++; return; }
-    dzAddManualRow(it.brandKey||fallback, it.stat, it.row); added++;
+    dzAddManualRow(it.brandKey||fallback, it.stat, it.row);
+    dzMarkSent(it.row, it.stat, new Date().toISOString(), false);   // vienen del Excel: ya están allí
+    added++;
   });
   dzImportParsed=null;
   document.getElementById('importOverlay').classList.remove('open');
