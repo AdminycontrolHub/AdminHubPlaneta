@@ -2660,6 +2660,33 @@ function dzWithTimeout(promise,ms){ return Promise.race([promise,new Promise((_,
 function dzStateSnapshot(){
   return {v:1, savedAt:new Date().toISOString(), rows:dzManualRows, hidden:dzHidden, overrides:dzOverrides, cols:dzActiveCols, equipos:dzEquipos, equiposMes:dzEquiposMes};
 }
+/* Feed para el Excel de SharePoint (lo lee el script de Office vía Worker convo-excel-feed).
+   Filas ya organizadas con las columnas de la tabla (dzActiveCols), agrupadas por marca. */
+const DZ_FEED_KEY='convo27_excel_feed';
+function dzFeedSnapshot(){
+  const brands={};
+  Object.keys(dzManualRows).forEach(k=>{
+    const parts=k.split('|'); const b=parts[0], stat=parts[1];
+    if(!brands[b]) brands[b]=[];
+    (dzManualRows[k]||[]).forEach(r=>{
+      const rec=exportRecord(r,stat,'');
+      const o={};
+      dzActiveCols.forEach(c=>{
+        let v=rec[c];
+        if(Object.prototype.toString.call(v)==='[object Date]') v=isNaN(v)?'':v.toISOString().slice(0,10);
+        o[c]=v==null?'':v;
+      });
+      o._uid=r._uid||'';
+      brands[b].push(o);
+    });
+  });
+  return {v:1, savedAt:new Date().toISOString(), cols:dzActiveCols.slice(), brands};
+}
+function dzFeedHasRows(){ return Object.keys(dzManualRows).some(k=>(dzManualRows[k]||[]).length); }
+async function dzPublishFeed(){
+  const res=await dzWithTimeout(fetch(DZ_WORKER+'/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:DZ_FEED_KEY,value:dzFeedSnapshot()})}),8000);
+  if(!res.ok) throw new Error('HTTP '+res.status);
+}
 function dzSaveSoon(){
   if(!dzLoaded) return;          // nunca guardar antes de haber cargado: evitaría pisar lo que ya hay
   clearTimeout(dzSaveTimer);
@@ -2672,7 +2699,10 @@ async function dzSaveNow(){
   try{
     const res=await dzWithTimeout(fetch(DZ_WORKER+'/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:DZ_KV_KEY,value:dzStateSnapshot()})}),8000);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    dzKvStatus('guardado ✓ '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),'#5CFF9E');
+    const hora=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    let feedOk=true;
+    try{ await dzPublishFeed(); }catch(fe){ feedOk=false; console.error('Error publicando feed Excel:',fe); }
+    dzKvStatus(feedOk?('guardado ✓ '+hora+' · Excel listo'):('guardado ✓ '+hora+' · ⚠ feed Excel sin publicar'),feedOk?'#5CFF9E':'#F5C542');
   }catch(e){
     console.error('Error guardando en KV:',e);
     dzKvStatus('⚠ sin guardar (reintenta)','#FF7B7B');
@@ -2694,6 +2724,7 @@ async function dzLoadState(){
     }
     dzLoaded=true;
     dzKvStatus('sincronizado ✓','#5CFF9E');
+    if(dzFeedHasRows()) dzPublishFeed().catch(fe=>console.error('Error publicando feed Excel:',fe));
   }catch(e){
     console.error('No se ha podido cargar el estado de KV:',e);
     dzKvStatus('⚠ sin conexión: no se guarda','#FF7B7B');
