@@ -963,7 +963,7 @@ function dzAddManualRow(brandKey,statKey,row){
   dzManualRows[k].push(row);
 }
 /* Busca una fila ya añadida en esta sesión por ID Oportunidad, en cualquier marca/estadística */
-function dzFindManualRowById(id){
+function dzFindManualRowById(id,visibleOnly){
   if(!id) return null;
   for(const key in dzManualRows){
     const rows = dzManualRows[key];
@@ -976,7 +976,7 @@ function dzFindManualRowById(id){
   /* varias filas con el mismo ID (p. ej. una HM que pasó a CC): los cambios van a la más reciente (la copia CC), nunca a la original */
   const found=[];
   for(const key in dzManualRows){
-    dzManualRows[key].forEach(r=>{ if(r.idOportunidad===id){ const [brandKey,statKey]=key.split('|'); found.push({brandKey,statKey,key,row:r}); } });
+    dzManualRows[key].forEach(r=>{ if(r.idOportunidad===id && !(visibleOnly&&r._archived)){ const [brandKey,statKey]=key.split('|'); found.push({brandKey,statKey,key,row:r}); } });
   }
   if(!found.length) return null;
   const rank=x=>(x.row.datos&&x.row.datos.pairRole==='orig')?0:1;
@@ -1307,7 +1307,7 @@ function renderPanels(){
 
   document.getElementById('fielDot').style.background=b.color;
   document.getElementById('excDot').style.background=b.color;
-  document.getElementById('fielSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · ${periodLabel()} · ${fielRows.length} registro${fielRows.length!==1?'s':''}`;
+  document.getElementById('fielSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · ${periodLabel()} · ${fielRows.length} registro${fielRows.length!==1?'s':''}`+(()=>{ const n=dzManualRowsAll(b.key,openDetail.stat).filter(r=>r._archived).length; return n?` · ${n} de días anteriores ya archivada${n!==1?'s':''} (volcadas a Excel)`:''; })();
   document.getElementById('excSub').textContent=`${b.name} · ${STAT_LABEL[openDetail.stat]} · casos añadidos manualmente al recuento`;
 
   document.getElementById('fielBody').innerHTML=fielRows.length?fielRows.map(rowHtmlFiel).join(''):`<tr><td colspan="${dzActiveCols.length+1}" class="detail-empty">Sin registros con estos filtros</td></tr>`;
@@ -2207,7 +2207,7 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
 
   if(detectado.startsWith('HM')){
     /* HM NUEVA (solo llega aquí si la HM no traía ID): fila de Fiel a Atenea */
-    const existing = dzFindManualRowById(id);
+    const existing = dzFindManualRowById(id,true);   // las ya archivadas (de días anteriores) no bloquean
     if(existing && !dzForceAdd){
       dzForceAdd=true;
       fb.className='fix-feedback fail';
@@ -2395,7 +2395,7 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const fields = dzPendingFields, type = dzPendingType;
         const dfb = document.getElementById('dzDetectedFeedback');
         const brandKey = dzAssumedBrand(fields);
-        const existing = dzFindManualRowById(fields.id);
+        const existing = dzFindManualRowById(fields.id,true);   // las ya archivadas (de días anteriores) no bloquean
         if(!brandKey){
           dzOpenFix({auto:false, fields, detectadoGuess:type+' NUEVA'});
         } else if(existing && !dzForceAdd){
