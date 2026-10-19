@@ -722,8 +722,7 @@ body{ font-size:14px; }
           <option>Descatalogado</option><option>Cambio de Edición Pactado</option>
         </select>
       </div>
-      <div class="fix-field"><label class="fix-label">Fecha de producción (nueva, solo CC · vacío = hoy)</label><input type="text" id="dzFixFprod" placeholder="dd/mm/aaaa"></div>
-      <div class="fix-field"><label class="fix-label">Nombre</label><input type="text" id="dzFixNombre"></div>
+            <div class="fix-field"><label class="fix-label">Nombre</label><input type="text" id="dzFixNombre"></div>
       <div class="fix-field"><label class="fix-label">ID Oportunidad</label><input type="text" id="dzFixId"></div>
       <div class="fix-field"><label class="fix-label">Programa</label><input type="text" id="dzFixPrograma"></div>
       <div class="fix-row">
@@ -1147,7 +1146,8 @@ function convTagHtml(conv){
 }
 function dzActionsHtml(r,src){
   const id=String(r._uid||r.idOportunidad).replace(/'/g,'');
-  return `<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${id}','${src}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${id}','${src}')">&#128465;</button>`;
+  const up=(src==='exc'&&!(r.datos&&r.datos.pairRole))?`<button class="ra-btn" title="Pasar al bloque Fiel a Atenea / HM (contraseña)" onclick="dzRowPromote('${id}')">&#8593;</button>`:'';
+  return up+`<button class="ra-btn" title="Modificar (contraseña)" onclick="dzRowEdit('${id}','${src}')">&#9998;</button><button class="ra-btn ra-del" title="Borrar (contraseña)" onclick="dzRowDelete('${id}','${src}')">&#128465;</button>`;
 }
 const EXPORT_COLS=['STATUS','SEGUIMIENTO','TIPOLOGIA MATRICULA','TIPOLOGIA ALUMNO','ID OPORTUNIDAD','DIA CERO','FECHA PRODUCCIÓN','FECHA INSCRIPCIÓN','CONVOCATORIA','PROGRAMA','ID PROGRAMA','NOMBRES APELLIDOS','PAÍS DE RESIDENCIA','FACTURACIÓN NETA','IMPORTE INSCRIPCIÓN','FORMA DE PAGO','ASESOR','JEFE EQUIPO','DIRECTOR VENTAS','FECHA BAJA','MOTIVO DE BAJA','LINEA COMPLETA','HISTÓRICO'];
 /* Columnas visibles = columnas definitivas de Convo (las que haya en la plantilla cargada) */
@@ -1915,7 +1915,7 @@ async function dzReadPdfText(file){
 function dzClassify(text){
   if(/PENDIENTE DE FINALIZAR EN ATENEA/i.test(text)) return 'PF';
   if(/Detalle de Conceptos/i.test(text) || /RGPD (Grupo|Terceros)/i.test(text)) return 'HM';
-  if(/se le resuelve la incidencia como\s+Baja/i.test(text) || /\bBaja (sin|con) Devoluci[oó]n\b/i.test(text)) return 'BAJA';
+  if(/desistimiento/i.test(text) || /se le resuelve la incidencia como\s+Baja/i.test(text) || /\bBaja (sin|con) Devoluci[oó]n\b/i.test(text)) return 'BAJA';
   if(/Adjunto\s+CE\b/i.test(text) || /\bCambio de Edici[oó]n\b/i.test(text)) return 'CE';
   if(/Adjunto\s+CP\b/i.test(text) || /\bCambio de Programa\b/i.test(text)) return 'CP';
   if(/Adjunto\s+CC\b/i.test(text) || /convocatoria de[^.]+a\s+Convocatoria/i.test(text)) return 'CC';
@@ -2035,6 +2035,13 @@ function dzExtractFields(type, text){
   } else if(type==='BAJA'){
     const m = text.match(/[Aa]l alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+se le resuelve la incidencia como\s+(Baja[^.\n]+?)\s+por\s+(?:Motivos?)\s+([^.\n]+)/i);
     if(m){ f.nombre=m[1].trim(); f.id=m[2].trim(); f.tipo=/con devoluci/i.test(m[3])?'CON DEVOLUCIÓN':'SIN DEVOLUCIÓN'; f.motivo=m[4].trim(); }
+    if(!f.id){
+      const g=text.match(/alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})/i);
+      if(g){ f.nombre=g[1].trim(); f.id=g[2].trim(); }
+      else { const i=text.match(/\b(\d{4}-\d{6,})\b/); if(i) f.id=i[1]; }
+    }
+    if(!f.tipo) f.tipo=/con devoluci/i.test(text)?'CON DEVOLUCIÓN':(/sin devoluci/i.test(text)?'SIN DEVOLUCIÓN':'');
+    if(!f.motivo && /desistimiento/i.test(text)) f.motivo='Desistimiento';
     f.convocatoria = dzLine(text,'Convocatoria');
   } else if(type==='CC' || type==='CE' || type==='CP'){
     const m = text.match(/[Aa]djunto\s+(?:CC|CE|CP)\s+del alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+de la convocatoria de\s+([^\s]+)\s+a\s+Convocatoria\s+([^\s.]+)(?:\s+por\s+(?:Motivos?):?\s*([^.\n]+))?/i);
@@ -2093,7 +2100,7 @@ function dzOpenFix(opts){
   { const sel=document.getElementById('dzFixMotivo'); const mv=(f.motivo||'').trim();
     if(mv && ![...sel.options].some(o=>o.value.toLowerCase()===mv.toLowerCase())){ const o=document.createElement('option'); o.textContent=mv; sel.appendChild(o); }
     const hit=[...sel.options].find(o=>o.value.toLowerCase()===mv.toLowerCase()); sel.value=hit?hit.value:''; }
-  document.getElementById('dzFixFprod').value = f.fechaProduccion||'';
+
   document.getElementById('dzFixNombre').value = f.nombre||'';
   document.getElementById('dzFixId').value = f.id||'';
   document.getElementById('dzFixPrograma').value = f.programa||'';
@@ -2195,8 +2202,7 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
   if(pais) fx.pais=pais;
   if(forma) fx.formaPago=forma;
   if(factVal!=='') fx.facturacion=Number(factVal);
-  const fprod = document.getElementById('dzFixFprod').value.trim();
-  if(fprod) fx.fechaProduccion=fprod;
+
   const v = {marca, mes, anio, id, motivo, tipo, fx};
 
   if(detectado.startsWith('HM')){
@@ -2323,11 +2329,11 @@ function dzApplyChoice(kind, sub, existing, v, fb){
     const dup=dzBuildFromChanges(orig,ch,v.fx,kind);
     delete dup._uid; dup._createdAt=now;
     dup.datos.fechaInscripcion=dzPrevBizDay();
-    dup.datos.fechaProduccion=(v.fx&&v.fx.fechaProduccion)||dzToday();   // nueva producción en la copia; la original mantiene la suya
+    dup.datos.fechaProduccion=(orig.datos&&orig.datos.fechaProduccion)||dup.datos.fechaProduccion;   // la copia lleva la misma fecha de producción que la original
     dup.datos.historico=prevHist+dzHistText('CC',before,exportRecord(dup,statNew,''));
     const key=orig._uid+'-p'+Date.now().toString(36);
     dup.datos.pairKey=key; dup.datos.pairRole='dup';
-    orig.datos=Object.assign({},orig.datos||{},{pairKey:key,pairRole:'orig'});
+    orig.datos=Object.assign({},orig.datos||{},{pairKey:key,pairRole:'orig',tipoMat:'CC'});   // la original pasa a TIPOLOGIA MATRICULA = CC
     dzUnarchive(orig);   // si la original estaba ya volcada en un día anterior, vuelve a verse junto a la copia
     if(statNew===existing.statKey){
       dup._manual=true; dup._uid='r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -2347,7 +2353,8 @@ function dzApplyChoice(kind, sub, existing, v, fb){
     fb.className='fix-feedback ok';
     fb.textContent=(kind==='CEBAJA'?'Fila actualizada como '+sub:'Fila actualizada con el dato final')+(statNew!==existing.statKey?' y movida a '+statName[statNew]:'')+'. Lo original está en HISTÓRICO.';
   }
-  mtRenderGrid(); renderPanels(); renderSummary();
+  if(openDetail&&openDetail.brandKey===existing.brandKey) openDetail.stat=statNew;   // seguir a la fila: abre el recuadro donde ha quedado
+  mtRenderGrid(); renderPanels(); renderSummary(); dzSaveSoon();
   setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1600);
 }
 
@@ -2685,6 +2692,14 @@ function dzLocateRow(id,src){
   const row = list.find(r=>r.idOportunidad===id);
   return row ? {manual:false, row} : null;
 }
+function dzRowPromote(id){
+  const m=dzFindManualRowById(id); if(!m) return;
+  bmRequestPassword(()=>{
+    if(!confirm('¿Pasar la fila de '+m.row.nombre+' (ID '+id+') al bloque Fiel a Atenea (HM)?')) return;
+    m.row.datos=Object.assign({},m.row.datos||{},{origen:'HM'});
+    mtRenderGrid(); renderPanels(); renderSummary(); dzSaveSoon();
+  }, 'Introduce la contraseña para pasar esta matrícula al bloque HM.');
+}
 function dzRowDelete(id,src){
   const loc = dzLocateRow(id,src);
   if(!loc) return;
@@ -2779,6 +2794,7 @@ function dzRecFor(r,stat){
     o[c]=v==null?'':v;
   });
   o._uid=r._uid||'';
+  o._pair=(r.datos&&r.datos.pairKey)?String(r.datos.pairKey):'';   // CC: original y copia comparten pairKey (el script de Excel las pinta del mismo color)
   return o;
 }
 function dzRecHash(r,stat){ return JSON.stringify(dzRecFor(r,stat)); }
