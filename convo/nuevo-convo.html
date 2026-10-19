@@ -1194,10 +1194,15 @@ function dzFmtCell(col,v){
   if(col==='FACTURACIÓN NETA'&&typeof v==='number') return euro(v);
   return String(v);
 }
+function dzStatOfRow(r){
+  for(const k in dzManualRows){ if(dzManualRows[k].indexOf(r)!==-1) return k.split('|')[1]; }
+  return null;
+}
 function dzRowHtml(r,src,ghostStat){
-  const rec=exportRecord(r,ghostStat||openDetail.stat,src==='fiel'?'Fiel a Atenea':'PF y Otras Excepciones');
+  const stNow=ghostStat||dzStatOfRow(r)||openDetail.stat;
+  const rec=exportRecord(r,stNow,src==='fiel'?'Fiel a Atenea':'PF y Otras Excepciones');
   const pr=r.datos&&r.datos.pairRole;
-  const stRow=ghostStat||openDetail.stat;
+  const stRow=stNow;
   const sentOk=!ghostStat&&dzIsSent(r,stRow);
   const pendOld=!ghostStat&&!sentOk&&r._createdAt&&dzLocalDay(r._createdAt)<dzLocalDay(new Date().toISOString());
   const trCls=(src==='exc'?'exc-row ':'')+(ghostStat?'pair-ghost pair-orig':(pr==='orig'?'pair-orig':(pr==='dup'?'pair-dup':'')))+(sentOk?' sent-row':'')+(pendOld?' pend-old':'');
@@ -1291,7 +1296,12 @@ function renderPanels(){
   const weekIds=[...selectedWeeks];
 
   const fielRaw=aggregateDetail(b.key,weekIds,openDetail.stat);
-  const excRaw=exceptionRows(b.key,openDetail.stat);
+  const excBase=exceptionRows(b.key,openDetail.stat);
+  /* CC: la copia vive en CC/CE, pero se muestra también aquí, junto a su original, para que no parezca que desaparece */
+  const linked=[];
+  Object.keys(dzManualRows).forEach(k=>{ const [kb,ks]=k.split('|'); if(kb!==b.key||ks===openDetail.stat) return;
+    dzManualRowsFor(kb,ks).forEach(r=>{ if(r.datos&&r.datos.pairRole==='dup'){ const o=dzFindPairOriginal(r); if(o&&o.brandKey===b.key&&o.statKey===openDetail.stat&&!excBase.includes(r)) linked.push(r); } }); });
+  const excRaw=excBase.concat(linked);
 
   fillSelectOptions(document.getElementById('fielJEFilter'),fielRaw.map(r=>r.je),'Todos');
   fillSelectOptions(document.getElementById('fielProgFilter'),fielRaw.map(r=>r.programa),'Todos');
@@ -2357,7 +2367,7 @@ function dzApplyChoice(kind, sub, existing, v, fb){
     fb.className='fix-feedback ok';
     fb.textContent=(kind==='CEBAJA'?'Fila actualizada como '+sub:'Fila actualizada con el dato final')+(statNew!==existing.statKey?' y movida a '+statName[statNew]:'')+'. Lo original está en HISTÓRICO.';
   }
-  if(openDetail&&openDetail.brandKey===existing.brandKey) openDetail.stat=statNew;   // seguir a la fila: abre el recuadro donde ha quedado
+  if(kind!=='CC' && openDetail&&openDetail.brandKey===existing.brandKey) openDetail.stat=statNew;   // seguir a la fila movida (en CC se queda donde está: la original sigue en Fiel y la copia se ve a su lado)
   mtRenderGrid(); renderPanels(); renderSummary(); dzSaveSoon();
   setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1600);
 }
