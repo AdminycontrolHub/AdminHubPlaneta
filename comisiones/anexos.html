@@ -80,8 +80,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .abtn.dng:hover{background:rgba(190,60,40,0.2);filter:none}
 .abtn.sm{padding:9px 14px;font-size:12.5px}
 .gen-group{display:inline-flex;gap:6px;vertical-align:middle}
-td.email-cell{display:flex;align-items:center;gap:6px}
-td.email-cell input{flex:1;min-width:0}
 .abtn.icon-btn{padding:9px 13px;font-size:22px;line-height:1;border-radius:10px;display:inline-flex;align-items:center;justify-content:center}
 .gen-group.locked .abtn.icon-btn{background:#F0A830;color:#3a2600}
 .gen-group.locked .abtn.icon-btn:hover{filter:brightness(1.08)}
@@ -111,30 +109,28 @@ table.ppl td:nth-child(2),table.ppl th:nth-child(2){width:30px}
 table.ppl td:nth-child(3),table.ppl th:nth-child(3){width:48px}
 table.ppl td:nth-child(4),table.ppl th:nth-child(4){width:68px}
 table.ppl td:nth-child(5),table.ppl th:nth-child(5){width:148px}
-table.ppl td:nth-child(6),table.ppl th:nth-child(6){width:148px}
-table.ppl td:nth-child(7),table.ppl th:nth-child(7){width:105px}
-table.ppl td:nth-child(8),table.ppl th:nth-child(8){width:92px}
-table.ppl td:nth-child(9),table.ppl th:nth-child(9){width:132px}
-table.ppl td:nth-child(10),table.ppl th:nth-child(10){width:48px;padding-left:5px;padding-right:5px}
-table.ppl td:nth-child(11),table.ppl th:nth-child(11){width:52px;padding-left:4px;padding-right:4px}
+table.ppl td:nth-child(6),table.ppl th:nth-child(6){width:105px}
+table.ppl td:nth-child(7),table.ppl th:nth-child(7){width:92px}
+table.ppl td:nth-child(8),table.ppl th:nth-child(8){width:132px}
+table.ppl td:nth-child(9),table.ppl th:nth-child(9){width:48px;padding-left:5px;padding-right:5px}
+table.ppl td:nth-child(10),table.ppl th:nth-child(10){width:52px;padding-left:4px;padding-right:4px}
+table.ppl td:nth-child(10){text-align:center}
+table.ppl td:nth-child(11),table.ppl th:nth-child(11){width:72px;padding-left:4px;padding-right:5px}
 table.ppl td:nth-child(11){text-align:center}
-table.ppl td:nth-child(12),table.ppl th:nth-child(12){width:72px;padding-left:4px;padding-right:5px}
-table.ppl td:nth-child(12){text-align:center}
-table.ppl td:nth-child(13),table.ppl th:nth-child(13){width:132px}
-table.ppl th:nth-child(13){white-space:normal;overflow:visible}
-table.ppl td:nth-child(14),table.ppl th:nth-child(14){width:105px}
-table.ppl td:nth-child(15),table.ppl th:nth-child(15){width:50px;text-align:center}
-table.ppl td:nth-child(16),table.ppl th:nth-child(16){width:230px}
+table.ppl td:nth-child(12),table.ppl th:nth-child(12){width:132px}
+table.ppl th:nth-child(12){white-space:normal;overflow:visible}
+table.ppl td:nth-child(13),table.ppl th:nth-child(13){width:105px}
+table.ppl td:nth-child(14),table.ppl th:nth-child(14){width:50px;text-align:center}
+table.ppl td:nth-child(15),table.ppl th:nth-child(15){width:230px}
 table.ppl td,table.ppl th{overflow:hidden;text-overflow:ellipsis}
-table.ppl td:nth-child(16){white-space:nowrap}
+table.ppl td:nth-child(15){white-space:nowrap}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 14px}
 .pill.yes{background:#0F6E44;color:#fff}
 .pill.no{background:#e4ddd0;color:#5d7486}
 .pill.est-pendiente{background:#e4ddd0;color:#5d7486}
 .pill.est-revision{background:#F0A830;color:#3a2600}
 .pill.est-generado{background:#0F6E44;color:#fff}
-.pill.est-no_enviado{background:#F0A830;color:#3a2600}
-.pill.est-enviado{background:#17709f;color:#fff}
+.pill.est-impreso{background:#17709f;color:#fff}
 .hist-item{background:#fff;border:1px solid rgba(4,28,46,0.15);border-radius:12px;margin-bottom:10px;overflow:hidden}
 tr.sec-row td{padding:10px 14px!important;border-top:none!important;cursor:default}
 .sec-row-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -192,7 +188,8 @@ table.ppl td.st{font-size:13.5px;white-space:nowrap}
  html,body{background:#fff!important}
  body>*:not(#printRoot){display:none!important}
  #printRoot{display:block!important}
- #printRoot section{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+ #printRoot section{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+ #printRoot svg{position:absolute!important}
 }
 </style>
 </head>
@@ -717,7 +714,6 @@ drawBg();window.addEventListener('resize',drawBg);
 
 var DOC_ICON='<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="6" y="5" width="24" height="26" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="11" y1="12" x2="25" y2="12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="11" y1="17" x2="25" y2="17" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="11" y1="22" x2="19" y2="22" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
 var DL_ICON='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="14"/><polyline points="7 9 12 14 17 9"/><line x1="5" y1="19" x2="19" y2="19"/></svg>';
-var COPY_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 var EYE_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
 var EYE_OFF_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.9 4.24A11 11 0 0 1 12 4c7 0 11 8 11 8a18.6 18.6 0 0 1-3.22 4.36M6.1 6.1A18.7 18.7 0 0 0 1 12s4 8 11 8a10.6 10.6 0 0 0 5.17-1.33"/></svg>';
 var GRIP_ICON='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.8"/><circle cx="8" cy="12" r="1.8"/><circle cx="8" cy="18" r="1.8"/><circle cx="16" cy="6" r="1.8"/><circle cx="16" cy="12" r="1.8"/><circle cx="16" cy="18" r="1.8"/></svg>';
@@ -843,7 +839,6 @@ async function openModal(m){
       el('th',{text:'Marca'}),
       el('th',{text:'Código',title:'Código de alumno/empleado. Opcional: solo se rellena si viene en la BBDD.'}),
       el('th',{text:'Nombre y apellidos'}),
-      el('th',{text:'Correo electrónico',title:'Opcional: se rellena solo si viene en la BBDD.'}),
       el('th',{text:'Cargo'}),
       el('th',{text:'Antigüedad',title:'Fecha de incorporación / antigüedad reconocida (sale de la BBDD; si no está, de la convocatoria)'}),
       el('th',{text:'Fin de contrato',title:'Opcional. Si se rellena, el mínimo garantizado se recalcula hasta ese día (incluido).'}),
@@ -1067,24 +1062,22 @@ function estadoAnexo(r){
   if(r.aprox) return {estado:'revision',detalle:'El nombre coincide de forma aproximada con «'+r.bbddName+'» en la BBDD: revísalo.'};
   var hash=genHashOf(r);
   if(r.genHash&&r.genHash===hash){
-    if(activoDe(r)==='SI'){
-      return r.enviado
-        ? {estado:'enviado',detalle:'Correo copiado para enviarlo a firmar'+(r.genAt?(' · generado el '+new Date(r.genAt).toLocaleString('es-ES')):'')}
-        : {estado:'no_enviado',detalle:'Generado, pero todavía no has copiado el correo para pedirle la firma (botón de copiar en Correo electrónico).'};
+    if(activoDe(r)==='SI'&&r.enviado){
+      return {estado:'impreso',detalle:'Impreso para pedir la firma'+(r.genAt?(' · generado el '+new Date(r.genAt).toLocaleString('es-ES')):'')};
     }
-    return {estado:'generado',detalle:r.genAt?('Generado el '+new Date(r.genAt).toLocaleString('es-ES')):'Generado'};
+    return {estado:'generado',detalle:r.genAt?('Generado el '+new Date(r.genAt).toLocaleString('es-ES')+'. Imprímelo para marcarlo como Impreso.'):'Generado'};
   }
   if(r.genHash) return {estado:'revision',detalle:'Se editó después de generarlo: vuelve a generar y descargar.'};
   return {estado:'pendiente',detalle:'Todavía no se ha generado.'};
 }
-var ESTADO_LABEL={pendiente:'Pendiente',revision:'En revisión',generado:'Generado',no_enviado:'No enviado',enviado:'Enviado'};
+var ESTADO_LABEL={pendiente:'Pendiente',revision:'En revisión',generado:'Generado',impreso:'Impreso'};
 function paintEstado(r){
   var td=$('stt_'+r.id);if(!td)return;
   var e=estadoAnexo(r);
   td.innerHTML='';
   td.appendChild(el('span',{class:'pill est-'+e.estado,text:ESTADO_LABEL[e.estado],title:e.detalle}));
   if(td.parentNode)td.parentNode.className=e.estado==='pendiente'?'bad':'';
-  var generadoYa=(e.estado==='generado'||e.estado==='no_enviado'||e.estado==='enviado');
+  var generadoYa=(e.estado==='generado'||e.estado==='impreso');
   var gb=$('gen_'+r.id);
   if(gb){
     if(r.fin&&r.fin.trim()){
@@ -1097,7 +1090,7 @@ function paintEstado(r){
   }
 }
 function confirmRegen(list,cb){
-  var yaGenerados=list.filter(function(r){var e=estadoAnexo(r).estado;return e==='generado'||e==='no_enviado'||e==='enviado';});
+  var yaGenerados=list.filter(function(r){var e=estadoAnexo(r).estado;return e==='generado'||e==='impreso';});
   if(yaGenerados.length) askPass(cb); else cb();
 }
 function fmtEUR(n){return n.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:2})+' €';}
@@ -1197,20 +1190,6 @@ function buildRowTr(r,draggable,dropGroupId){
   var rm=marcaById(r.marca);
   var cod=el('input',{type:'text',value:r.codigo||'',placeholder:'—'});
   cod.oninput=function(){r.codigo=cod.value;r.codManual=true;touch(r);};
-  var em=el('input',{type:'text',value:r.email||'',placeholder:'correo@dominio.com'});
-  em.oninput=function(){r.email=em.value;r.emailManual=true;touch(r);};
-  var cpBtn=el('button',{class:'abtn sm icon-btn','aria-label':'Copiar correo',title:'Copiar correo electrónico (marca el anexo como Enviado)'});
-  cpBtn.innerHTML=COPY_ICON;
-  cpBtn.onclick=function(){
-    var v=(r.email||'').trim();
-    if(!v){toast('Esta fila no tiene correo electrónico.');return;}
-    function marcarEnviado(){r.enviado=true;touch(r);paintEstado(r);}
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(v).then(function(){marcarEnviado();toast('Correo copiado: '+v);}).catch(function(){marcarEnviado();toast('No se pudo copiar solo. Correo: '+v,6000);});
-    }else{
-      marcarEnviado();toast('Este navegador no deja copiar solo. Correo: '+v,6000);
-    }
-  };
   var nm=el('input',{type:'text',value:r.nombre,placeholder:'Nombre y apellidos'});
   var cs=el('select',null,cargoOptions(rm,r));
   cs.onchange=function(){
@@ -1240,7 +1219,6 @@ function buildRowTr(r,draggable,dropGroupId){
     r.nombre=nm.value;matchRow(r);touch(r);
     ai.value=r.antig||'';cs.innerHTML='';cargoOptions(rm,r).forEach(function(o){cs.appendChild(o);});
     cod.value=r.codigo||'';
-    em.value=r.email||'';
     paintTrat();paintEstado(r);paintMin(r);
   };
   var fm=el('input',{type:'checkbox','aria-label':'Firmado'});fm.checked=!!r.firmado;
@@ -1250,7 +1228,6 @@ function buildRowTr(r,draggable,dropGroupId){
   tr.appendChild(el('td',null,[el('span',{class:'bbdd-info',text:rm?marcaLabel(rm):'—'})]));
   tr.appendChild(el('td',null,[cod]));
   tr.appendChild(el('td',null,[nm]));
-  tr.appendChild(el('td',{class:'email-cell'},[em,cpBtn]));
   tr.appendChild(el('td',null,[cs]));
   tr.appendChild(el('td',null,[ai]));
   tr.appendChild(el('td',null,[fi,ft]));
@@ -1280,7 +1257,7 @@ function sectionHeaderTr(opts){
   var actions=el('div',{class:'sec-row-actions'});
   if(opts.onReclamar)actions.appendChild(el('button',{class:'abtn sm',text:'Reclamar',onclick:function(e){e.stopPropagation();opts.onReclamar();}}));
   if(opts.onDelete)actions.appendChild(el('button',{class:'abtn sm dng','aria-label':'Borrar grupo',text:'🗑️',onclick:function(e){e.stopPropagation();opts.onDelete();}}));
-  var td=el('td',{colspan:'16'},[el('div',{class:'sec-row-inner'},[head,actions])]);
+  var td=el('td',{colspan:'15'},[el('div',{class:'sec-row-inner'},[head,actions])]);
   tr.appendChild(td);
   if(opts.dropId!==undefined){
     tr.ondragover=allowDrop;
@@ -1305,7 +1282,7 @@ function renderRows(){
     tb.appendChild(h.tr);
     if(h.colapsado)return;
     if(!miembros.length){
-      tb.appendChild(el('tr',{class:'sec-empty'},[el('td',{colspan:'16',text:'Nadie en este grupo.'})]));
+      tb.appendChild(el('tr',{class:'sec-empty'},[el('td',{colspan:'15',text:'Nadie en este grupo.'})]));
       return;
     }
     miembros.forEach(function(r){
@@ -1348,7 +1325,7 @@ function renderRows(){
     grupos[cur.m.id].push({id:id,label:id,je:''});
     saveGrupos();renderRows();
   }});
-  tb.appendChild(el('tr',null,[el('td',{colspan:'16'},[addRowBtn])]));
+  tb.appendChild(el('tr',null,[el('td',{colspan:'15'},[addRowBtn])]));
   updateBulk();
 }
 function updateBulk(){
@@ -1532,6 +1509,7 @@ async function buildMany(list){
     try{
       var d=await buildDoc(r);
       if(names[d.name]){names[d.name]++;d.name=d.name.replace(/\.docx$/,'_'+names[d.name]+'.docx');}else names[d.name]=1;
+      d.row=r;
       ok.push(d);
     }catch(e){errs.push((r.nombre.trim()||'fila sin nombre')+': '+e.message);}
   }
@@ -1659,14 +1637,14 @@ function pedirJE(g,jeRows){
 }
 function exportRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
-  var head=['Marca','Código','Nombre y apellidos','Correo electrónico','Cargo','Grupo','Sede','Antigüedad','Fin de contrato','Tipo de baja','Sr./Sra.','Activo','Mínimo garantizado','Importe mínimo','Estado del anexo','Firmado'];
+  var head=['Marca','Código','Nombre y apellidos','Cargo','Grupo','Sede','Antigüedad','Fin de contrato','Tipo de baja','Sr./Sra.','Activo','Mínimo garantizado','Importe mínimo','Estado del anexo','Firmado'];
   var rowsOut=[head];
   list.forEach(function(r){
     var mm=marcaById(r.marca);
     var c=minGarantizado(toISODate(r.antig),todayYM(),MIN_BASE,MIN_DIAS,MIN_MESES,toISODate(r.fin));
     var g=(grupos[r.marca]||[]).find(function(x){return x.id===r.grupo;});
     rowsOut.push([
-      mm?marcaLabel(mm):r.marca, r.codigo||'', r.nombre, r.email||'', r.cargo, g?g.label:'', r.sede||'', r.antig||'', r.fin||'', r.finTipo||'',
+      mm?marcaLabel(mm):r.marca, r.codigo||'', r.nombre, r.cargo, g?g.label:'', r.sede||'', r.antig||'', r.fin||'', r.finTipo||'',
       r.trat||'', activoDe(r), c?(c.si?'SÍ':'NO'):'', (c&&c.si)?c.importe:'', ESTADO_LABEL[estadoAnexo(r).estado],
       r.firmado?'SÍ':'NO'
     ]);
@@ -1741,8 +1719,13 @@ async function extractShapeSizes(buf){
     var xml=await f.async('string');
     var out=[], re=/<v:shape\b[^>]*\bstyle="([^"]*)"/g, m;
     while((m=re.exec(xml))){
-      var mw=m[1].match(/width:\s*([\d.]+)pt/i), mh=m[1].match(/height:\s*([\d.]+)pt/i);
-      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1])});
+      var st=m[1];
+      var mw=st.match(/width:\s*([\d.]+)pt/i), mh=st.match(/height:\s*([\d.]+)pt/i);
+      // posición: Word la guarda como margin-left/margin-top (pt, a veces sin unidad cuando es 0) relativos
+      // al margen de página — es el mismo valor que docx-preview coloca como estilo del <svg>, pero al
+      // imprimir se ha visto que se pierde/descoloca, así que la leemos aquí para poder reafirmarla a mano.
+      var ml=st.match(/margin-left:\s*(-?[\d.]+)(pt)?/i), mt=st.match(/margin-top:\s*(-?[\d.]+)(pt)?/i);
+      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1]),left:ml?parseFloat(ml[1]):0,top:mt?parseFloat(mt[1]):0});
     }
     return out;
   }catch(e){return [];}
@@ -1761,6 +1744,13 @@ async function settleTextboxes(container,sizes){
       if(sz){
         svg.setAttribute('width',Math.ceil(ptToPx(sz.w)));
         svg.setAttribute('height',Math.ceil(ptToPx(sz.h)));
+        // la posición (margin-left/margin-top) ya viene en el style que pone docx-preview, pero al imprimir
+        // se ha visto que el cuadro se desplaza (sobre todo hacia la izquierda): la reafirmamos a mano con
+        // left/top absolutos en px en vez de confiar en el margin, que es más sensible a la paginación.
+        svg.style.position='absolute';
+        svg.style.margin='0';
+        svg.style.left=Math.round(ptToPx(sz.left))+'px';
+        svg.style.top=Math.round(ptToPx(sz.top))+'px';
         return;
       }
       var styled=svg.querySelector('[style*="width:"][style*="height:"]')||svg.firstElementChild;
@@ -1781,28 +1771,43 @@ async function settleTextboxes(container,sizes){
   });
   await nextFrame();
 }
+var COPIAS_POR_COLABORADOR=2; // un ejemplar para cada destinatario (p.ej. el propio colaborador y la empresa)
 async function printRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
   if(!window.docx||!docx.renderAsync){toast('No se ha cargado el visor para imprimir. Usa Descargar e imprime desde Word.');return;}
   var res=await buildMany(list);
   if(!res.ok.length){toast('No se ha podido generar ningún anexo: '+res.errs.join(' · '),9000);return;}
   var root=$('printRoot');root.innerHTML='';
-  var lastSection=null;
   for(var i=0;i<res.ok.length;i++){
-    var box=el('div');root.appendChild(box);
     var sizes=await extractShapeSizes(res.ok[i].buf);
-    await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
-    await settleTextboxes(box,sizes);
-    var secs=box.querySelectorAll('section');
-    if(secs.length) lastSection=secs[secs.length-1];
-  }
-  if(lastSection){
-    var blank=lastSection.cloneNode(false); // misma página/márgenes, sin contenido: hoja en blanco al final
-    root.appendChild(blank);
+    var firstBox=null;
+    for(var c=0;c<COPIAS_POR_COLABORADOR;c++){
+      var box;
+      if(c===0){
+        box=el('div');root.appendChild(box);
+        await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i+'_'+c,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
+        await settleTextboxes(box,sizes);
+        firstBox=box;
+      }else{
+        // mismo contenido para cada copia (solo cambia a quién se le entrega el papel impreso):
+        // clonamos el primer render ya resuelto en vez de volver a renderizar, es exactamente igual y más rápido.
+        box=firstBox.cloneNode(true);
+        box.removeAttribute('id');
+        box.querySelectorAll('[id]').forEach(function(elWithId){elWithId.removeAttribute('id');}); // evita ids duplicados del render clonado
+        root.appendChild(box);
+      }
+      // cada copia debe acabar en un número par de páginas: así, al imprimir a dos caras, la copia
+      // ocupa un número entero de hojas y no comparte ninguna hoja con la copia o el colaborador siguiente.
+      var secs=box.querySelectorAll('section');
+      if(secs.length%2===1){
+        box.appendChild(secs[secs.length-1].cloneNode(false));
+      }
+    }
+    if(res.ok[i].row){res.ok[i].row.enviado=true;touch(res.ok[i].row);paintEstado(res.ok[i].row);}
   }
   await new Promise(function(r){setTimeout(r,300);});
   window.print();
-  if(res.errs.length)toast('Sin imprimir: '+res.errs.join(' · '),9000);
+  toast('Se han preparado '+res.ok.length+' × '+COPIAS_POR_COLABORADOR+' copias (una por destinatario). En el diálogo de impresión, activa "A dos caras / Duplex" para que cada copia quede en hojas propias.'+(res.errs.length?(' Sin imprimir: '+res.errs.join(' · ')):''),9000);
 }
 window.addEventListener('afterprint',function(){var r=$('printRoot');if(r)r.innerHTML='';});
 
