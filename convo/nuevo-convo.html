@@ -1344,7 +1344,7 @@ function exportRecord(r,statKey,seguimiento){
     'ID OPORTUNIDAD': r.idOportunidad&&r.idOportunidad!=='—'?r.idOportunidad:'',
     'DIA CERO': d.diaCero||'',
     'FECHA PRODUCCIÓN': dzToDate(d.fechaProduccion),
-    'FECHA INSCRIPCIÓN': d.tipoDoc==='PF' ? '' : dzToDate(d.fechaInscripcion),   // en las PF la fecha de inscripción va siempre vacía
+    'FECHA INSCRIPCIÓN': dzToDate(d.fechaInscripcion),   // HM y PF: día anterior (lunes → viernes), editable; CC/CE/CP/CFP/Baja mantienen la original
     'CONVOCATORIA': dzConvCode(d.convocatoriaFull||r.convocatoria),
     'PROGRAMA': r.programa&&r.programa!=='—'?r.programa:'',
     'ID PROGRAMA': idProg,
@@ -2000,7 +2000,7 @@ function dzPrevBizDay(now){
 }
 function dzLocalDay(iso){ const d=new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dzDatos(type, f, convFull){
-  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:(type==='PF'?'':dzPrevBizDay()),
+  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:dzPrevBizDay(),
     tipoAlumno:'NM', formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
 }
 
@@ -2207,6 +2207,8 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
 
   if(detectado.startsWith('HM')){
     /* HM NUEVA (solo llega aquí si la HM no traía ID): fila de Fiel a Atenea */
+    const pfRow = dzPfRowFor(id);
+    if(pfRow){ dzMovePfToHM(pfRow); fb.className='fix-feedback ok'; fb.textContent='Esa matrícula estaba en PF: se ha movido a "Fiel a Atenea" (no se duplica).'; setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1400); return; }
     const existing = dzFindManualRowById(id,true);   // las ya archivadas (de días anteriores) no bloquean
     if(existing && !dzForceAdd){
       dzForceAdd=true;
@@ -2330,7 +2332,7 @@ function dzApplyChoice(kind, sub, existing, v, fb){
     /* CC: duplica. La original no se toca; la copia lleva la info nueva, es editable y queda junto a la original (mismo color) */
     const dup=dzBuildFromChanges(orig,ch,v.fx,kind);
     delete dup._uid; dup._createdAt=now;
-    dup.datos.fechaInscripcion=dzPrevBizDay();
+    dup.datos.fechaInscripcion=(orig.datos&&orig.datos.fechaInscripcion)||'';   // CC: se mantiene la fecha de inscripción original
     dup.datos.fechaProduccion=(orig.datos&&orig.datos.fechaProduccion)||dup.datos.fechaProduccion;   // la copia lleva la misma fecha de producción que la original
     dup.datos.historico=prevHist+dzHistText('CC',before,exportRecord(dup,statNew,''));
     const key=orig._uid+'-p'+Date.now().toString(36);
@@ -2395,8 +2397,14 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const fields = dzPendingFields, type = dzPendingType;
         const dfb = document.getElementById('dzDetectedFeedback');
         const brandKey = dzAssumedBrand(fields);
+        const pfRow = dzPfRowFor(fields.id);
         const existing = dzFindManualRowById(fields.id,true);   // las ya archivadas (de días anteriores) no bloquean
-        if(!brandKey){
+        if(pfRow){
+          dzMovePfToHM(pfRow);
+          dfb.className='fix-feedback ok';
+          dfb.textContent='Esa matrícula estaba en PF: se ha movido a "Fiel a Atenea" (no se duplica).';
+          setTimeout(()=>document.getElementById('dzPopup').classList.remove('show'),1400);
+        } else if(!brandKey){
           dzOpenFix({auto:false, fields, detectadoGuess:type+' NUEVA'});
         } else if(existing && !dzForceAdd){
           dzForceAdd=true;
@@ -2697,6 +2705,19 @@ function dzLocateRow(id,src){
   const row = list.find(r=>r.idOportunidad===id);
   return row ? {manual:false, row} : null;
 }
+/* HM que llega con un ID que ya está en PF: la fila se MUEVE al bloque Fiel a Atenea (sin duplicar) */
+function dzPfRowFor(id){
+  const m=dzFindManualRowById(id,true);
+  return (m && m.row.datos && m.row.datos.tipoDoc==='PF') ? m : null;
+}
+function dzMovePfToHM(m){
+  const d=Object.assign({},m.row.datos||{});
+  d.origen='HM'; d.tipoDoc='HM';
+  if(!d.fechaInscripcion) d.fechaInscripcion=dzPrevBizDay();
+  m.row.datos=d;
+  m.row._createdAt=new Date().toISOString();
+  mtRenderGrid(); renderPanels(); renderSummary(); dzSaveSoon();
+}
 function dzRowPromote(id){
   const m=dzFindManualRowById(id); if(!m) return;
   bmRequestPassword(()=>{
@@ -2799,7 +2820,7 @@ function dzRecFor(r,stat){
     o[c]=v==null?'':v;
   });
   o._uid=r._uid||'';
-  o._pf=(r.datos&&(r.datos.origen==='PF'||r.datos.tipoDoc==='PF'))?'1':'';   // PF: el script de Excel pone toda la fila en negrita
+  o._pf=(r.datos&&r.datos.tipoDoc==='PF')?'1':'';   // PF: el script de Excel pone toda la fila en negrita
   o._pair=(r.datos&&r.datos.pairKey)?String(r.datos.pairKey):'';   // CC: original y copia comparten pairKey (el script de Excel las pinta del mismo color)
   return o;
 }
@@ -2929,6 +2950,12 @@ async function dzLoadState(){
       if(st.equipos&&Object.keys(st.equipos).length){ dzEquipos=st.equipos; dzEquiposMes=st.equiposMes||''; }
     }
     Object.keys(dzManualRows).forEach(k=>dzManualRows[k].forEach(r=>{ if(!r._createdAt) r._createdAt=new Date().toISOString(); }));
+    /* HM y PF sin fecha de inscripción (filas anteriores a esta regla): se rellena con el día anterior (lunes → viernes) a su alta */
+    let dzFilled=false;
+    Object.keys(dzManualRows).forEach(k=>dzManualRows[k].forEach(r=>{
+      const d=r.datos; if(d && !d.fechaInscripcion && (d.tipoDoc==='HM'||d.tipoDoc==='PF')){ d.fechaInscripcion=dzPrevBizDay(new Date(r._createdAt)); dzFilled=true; }
+    }));
+    if(dzFilled) dzSaveSoon();
     dzLoaded=true;
     dzKvStatus('sincronizado ✓','#5CFF9E');
     if(dzDailyClean()) dzSaveSoon();
