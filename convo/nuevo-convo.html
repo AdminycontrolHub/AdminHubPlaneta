@@ -2129,7 +2129,7 @@ function dzToggleTipoField(){
 document.getElementById('dzFixDetectado').addEventListener('change', dzToggleTipoField);
 
 /* ===== Documentos que NO son HM: CC · CE/Baja · PF/CP/CFP ===== */
-let dzChoice = null, dzChooseCtx = null;
+let dzChoice = null, dzChooseCtx = null, dzForceAdd = false;
 const DZ_FIX_FULL_OPTS = ['PF NUEVA','HM NUEVA','BAJA · PF','BAJA · FINALIZADA','CC · PF','CC · FINALIZADA','CE · PF','CE · FINALIZADA','CP · PF','CP · FINALIZADA'];
 function dzSetFixOptions(list){
   document.getElementById('dzFixDetectado').innerHTML='<option value="">— Selecciona —</option>'+list.map(o=>'<option value="'+o+'">'+o+'</option>').join('');
@@ -2208,11 +2208,13 @@ document.getElementById('dzBtnRetry').addEventListener('click', ()=>{
   if(detectado.startsWith('HM')){
     /* HM NUEVA (solo llega aquí si la HM no traía ID): fila de Fiel a Atenea */
     const existing = dzFindManualRowById(id);
-    if(existing){
+    if(existing && !dzForceAdd){
+      dzForceAdd=true;
       fb.className='fix-feedback fail';
-      fb.textContent='Ya existe una fila con ID '+id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+'). No se añade duplicada.';
+      fb.textContent='Ya hay una fila con ID '+id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+', puede que oculta por algún filtro). Pulsa de nuevo "Reintentar" para añadirla igualmente.';
       return;
     }
+    dzForceAdd=false;
     dzCreateRowFromForm('HM', v, fb);
     return;
   }
@@ -2396,10 +2398,12 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
         const existing = dzFindManualRowById(fields.id);
         if(!brandKey){
           dzOpenFix({auto:false, fields, detectadoGuess:type+' NUEVA'});
-        } else if(existing){
+        } else if(existing && !dzForceAdd){
+          dzForceAdd=true;
           dfb.className='fix-feedback fail';
-          dfb.textContent='Ya existe una fila con ID '+fields.id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+'). No se añade duplicada.';
+          dfb.textContent='Ya hay una fila con ID '+fields.id+' ('+existing.row.nombre+' · '+(MT_BRANDS.find(b=>b.key===existing.brandKey)||{}).name+' · '+({altas:'Altas',bajas:'Bajas',ccce:'CC/CE'}[existing.statKey])+', puede que oculta por algún filtro). Pulsa de nuevo el botón verde para añadirla igualmente.';
         } else {
+          dzForceAdd=false;
           const row = {
             nombre: fields.nombre || '(sin nombre)',
             idNacs: '—',
@@ -2448,6 +2452,7 @@ document.querySelectorAll('#dzPopup .traffic').forEach(btn=>{
 });
 
 function dzProcessLeftText(text){
+  dzForceAdd=false;
   const type = dzClassify(text);
   const fields = type ? dzExtractFields(type, text) : {};
   if(type==='HM'){
