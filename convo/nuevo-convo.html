@@ -1174,7 +1174,7 @@ function dzRenderHeads(){
     table.classList.add('cols22');
     let cg=table.querySelector('colgroup'); if(cg) cg.remove();
     cg=document.createElement('colgroup');
-    cg.innerHTML='<col style="width:58px">'+dzActiveCols.map(c=>`<col style="width:calc((100% - 58px) * ${(DZ_COL_W[c]||6)/total})">`).join('');
+    cg.innerHTML='<col style="width:92px">'+dzActiveCols.map(c=>`<col style="width:calc((100% - 92px) * ${(DZ_COL_W[c]||6)/total})">`).join('');
     table.insertBefore(cg,table.firstChild);
     const used={};
     let html='<th class="ra-cell"></th>';
@@ -1344,7 +1344,7 @@ function exportRecord(r,statKey,seguimiento){
     'ID OPORTUNIDAD': r.idOportunidad&&r.idOportunidad!=='—'?r.idOportunidad:'',
     'DIA CERO': d.diaCero||'',
     'FECHA PRODUCCIÓN': dzToDate(d.fechaProduccion),
-    'FECHA INSCRIPCIÓN': dzToDate(d.fechaInscripcion),
+    'FECHA INSCRIPCIÓN': d.tipoDoc==='PF' ? '' : dzToDate(d.fechaInscripcion),   // en las PF la fecha de inscripción va siempre vacía
     'CONVOCATORIA': dzConvCode(d.convocatoriaFull||r.convocatoria),
     'PROGRAMA': r.programa&&r.programa!=='—'?r.programa:'',
     'ID PROGRAMA': idProg,
@@ -2000,7 +2000,7 @@ function dzPrevBizDay(now){
 }
 function dzLocalDay(iso){ const d=new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dzDatos(type, f, convFull){
-  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:dzPrevBizDay(),
+  return {tipoDoc:type, origen:type, pais:f.pais||'', fechaProduccion:f.fechaProduccion||'', fechaInscripcion:(type==='PF'?'':dzPrevBizDay()),
     tipoAlumno:'NM', formaPago:(f.formaPago||'').toUpperCase(), idPrograma:f.idPrograma||'', convocatoriaFull:convFull||'', fechaBaja:'', motivo:'', tipoBaja:''};
 }
 
