@@ -973,15 +973,15 @@ function dzFindManualRowById(id){
       return {brandKey, statKey, key, row:rows[idx]};
     }
   }
+  /* varias filas con el mismo ID (p. ej. una HM que pasó a CC): los cambios van a la más reciente (la copia CC), nunca a la original */
+  const found=[];
   for(const key in dzManualRows){
-    const rows = dzManualRows[key];
-    const idx = rows.findIndex(r=>r.idOportunidad===id);
-    if(idx!==-1){
-      const [brandKey,statKey] = key.split('|');
-      return {brandKey, statKey, key, row:rows[idx]};
-    }
+    dzManualRows[key].forEach(r=>{ if(r.idOportunidad===id){ const [brandKey,statKey]=key.split('|'); found.push({brandKey,statKey,key,row:r}); } });
   }
-  return null;
+  if(!found.length) return null;
+  const rank=x=>(x.row.datos&&x.row.datos.pairRole==='orig')?0:1;
+  found.sort((x,y)=>rank(y)-rank(x) || String(y.row._createdAt||'').localeCompare(String(x.row._createdAt||'')));
+  return found[0];
 }
 
 function euro(n){return n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
