@@ -633,8 +633,8 @@ body{ font-size:14px; }
     <label>Convocatoria<select id="reMes"><option>Abril</option><option>Octubre</option></select></label>
     <label>Año convocatoria<input id="reAnio" type="number" min="2024" max="2035"></label>
     <label style="grid-column:1/3;">Programa<input id="rePrograma"></label>
-    <label>PI (importe inscripción)<input id="rePi" type="number" step="0.01"></label>
-    <label>Facturación Neta<input id="reFact" type="number" step="0.01"></label>
+    <label>PI (importe inscripción)<input id="rePi" type="number" step="any"></label>
+    <label>Facturación Neta<input id="reFact" type="number" step="any"></label>
     <label>Asesor (Atenea)<input id="reAsesor"></label>
     <label>País de residencia<input id="rePais"></label>
     <label>Fecha producción<input id="reFProd" type="date"></label>
@@ -727,7 +727,7 @@ body{ font-size:14px; }
       <div class="fix-field"><label class="fix-label">Programa</label><input type="text" id="dzFixPrograma"></div>
       <div class="fix-row">
         <div class="fix-field" style="flex:1;"><label class="fix-label">Asesor (Atenea)</label><input type="text" id="dzFixAsesor"></div>
-        <div class="fix-field" style="flex:1;"><label class="fix-label">PI</label><input type="number" id="dzFixPi"></div>
+        <div class="fix-field" style="flex:1;"><label class="fix-label">PI</label><input type="number" step="any" id="dzFixPi"></div>
       </div>
       <div class="fix-field"><label class="fix-label">Convocatoria</label>
         <div class="fix-row">
@@ -740,7 +740,7 @@ body{ font-size:14px; }
         <div class="fix-field" style="flex:1;"><label class="fix-label">Forma de pago</label>
           <select id="dzFixForma"><option value="">—</option><option>APLAZADO</option><option>CONTADO</option></select>
         </div>
-        <div class="fix-field" style="flex:1;"><label class="fix-label">Facturación</label><input type="number" id="dzFixFact" step="0.01"></div>
+        <div class="fix-field" style="flex:1;"><label class="fix-label">Facturación</label><input type="number" id="dzFixFact" step="any"></div>
       </div>
       <div class="fix-actions">
         <button class="btn-retry" id="dzBtnRetry">Reintentar</button>
@@ -984,6 +984,7 @@ function dzFindManualRowById(id,visibleOnly){
   return found[0];
 }
 
+function euro2(n){return n.toLocaleString('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});}
 function euro(n){return n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
 
 function aggregate(brandKey,weekIds){
@@ -1191,7 +1192,7 @@ function dzRenderHeads(){
 function dzFmtCell(col,v){
   if(v instanceof Date) return v.toISOString().slice(0,10).split('-').reverse().join('/');
   if(v===''||v==null) return '';
-  if(col==='FACTURACIÓN NETA'&&typeof v==='number') return euro(v);
+  if(col==='FACTURACIÓN NETA'&&typeof v==='number') return euro2(v);
   return String(v);
 }
 function dzStatOfRow(r){
@@ -1966,7 +1967,7 @@ function dzParseAmount(str){
   if(s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',', '.');
   else if(s.includes(',')) s = s.replace(',', '.');
   const n = parseFloat(s);
-  return isNaN(n) ? null : Math.round(n);
+  return isNaN(n) ? null : n;   // exacto, sin redondear
 }
 
 /* De "Octubre/2026 → Abril/2027", "Abril 2027", "Octubre/2026"... separa mes y año para
@@ -2669,7 +2670,7 @@ function dzDraftRowHtml(){
     if(DZ_DRAFT_SEL[c]) return `<td><select class="dr-in" onchange="dzDraft['${key}']=this.value">${DZ_DRAFT_SEL[c].map(o=>`<option${o===v?' selected':''}>${o}</option>`).join('')}</select></td>`;
     const t=DZ_DRAFT_TYPE[c]||'text';
     const ph=c==='CONVOCATORIA'?'2704':'';
-    return `<td><input class="dr-in" type="${t}" ${t==='number'?'step="0.01"':''} placeholder="${ph}" value="${String(v).replace(/"/g,'&quot;')}" title="${c}" oninput="dzDraft['${key}']=this.value"></td>`;
+    return `<td><input class="dr-in" type="${t}" ${t==='number'?'step="any"':''} placeholder="${ph}" value="${String(v).replace(/"/g,'&quot;')}" title="${c}" oninput="dzDraft['${key}']=this.value"></td>`;
   }).join('');
   return `<tr class="draft-row"><td class="ra-cell"><button class="ra-btn ra-ok" title="Guardar fila" onclick="dzDraftSave()">&#10003;</button><button class="ra-btn ra-del" title="Descartar" onclick="dzDraftDiscard()">&#128465;</button></td>${cells}</tr>`;
 }
