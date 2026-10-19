@@ -2799,6 +2799,7 @@ function dzRecFor(r,stat){
     o[c]=v==null?'':v;
   });
   o._uid=r._uid||'';
+  o._pf=(r.datos&&(r.datos.origen==='PF'||r.datos.tipoDoc==='PF'))?'1':'';   // PF: el script de Excel pone toda la fila en negrita
   o._pair=(r.datos&&r.datos.pairKey)?String(r.datos.pairKey):'';   // CC: original y copia comparten pairKey (el script de Excel las pinta del mismo color)
   return o;
 }
