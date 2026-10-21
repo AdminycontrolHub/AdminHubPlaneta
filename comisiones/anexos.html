@@ -425,27 +425,34 @@ function anexoFill(xml, vals, forceBlack){
   var tx=fillXml(mf.xml,rules,forceBlack);
   return {xml:tx.xml,counts:mf.counts,legacy:tx.counts};
 }
-// Word a veces guarda, justo después de un salto de página manual (<w:br w:type="page"/>),
-// un <w:lastRenderedPageBreak/> "fantasma" al principio del párrafo siguiente, antes de su
-// texto real. docx-preview interpreta CADA uno como un salto independiente, así que ese
-// párrafo queda partido en dos: una página en blanco (sin contenido) + una página nueva que
-// empieza con el texto que debería haber seguido justo después del salto manual. Esta función
-// localiza ese patrón (salto manual -> ...sin texto/tabla real... -> lastRenderedPageBreak) y
-// elimina únicamente la marca lastRenderedPageBreak redundante, dejando intacto el resto del
-// documento y cualquier otro salto legítimo.
-function limpiarSaltosRedundantes(xml){
-  var marcador=/<w:br\s+w:type="page"\s*\/>/g, m, quitados=0;
-  var i=0;
-  while((m=marcador.exec(xml))){
-    marcador.lastIndex=m.index+m[0].length; // evita bucles infinitos tras recortar xml
-    var desde=m.index+m[0].length;
-    var sig=/<w:lastRenderedPageBreak\s*\/>|<w:t[ >]|<w:tbl>|<w:drawing|<w:pict/.exec(xml.slice(desde));
-    if(sig && /^<w:lastRenderedPageBreak/.test(sig[0])){
-      var pos=desde+sig.index;
-      xml=xml.slice(0,pos)+xml.slice(pos+sig[0].length);
-      quitados++;
-      marcador.lastIndex=desde; // el xml se acortó justo después del salto manual; seguir desde ahí
-    }
+// Word guarda <w:lastRenderedPageBreak/> como "aquí rendericé un salto de página" la última vez
+// que abrió/guardó el documento. Cuando esa marca cae pegada justo delante del texto real dentro
+// de la MISMA run (<w:lastRenderedPageBreak/><w:t>...), docx-preview corta el párrafo en dos:
+// una página que termina con un fragmento VACÍO (solo la viñeta/numeración, sin texto — el
+// "bullet suelto") y una página nueva que arranca con el texto real pegado al encabezado.
+// La marca en sí no tiene representación visual ni afecta al contenido: solo le dice al
+// renderizador "aquí cambia de página". Por eso, en vez de dejarla fragmentar el párrafo con
+// contenido, la trasladamos al final del párrafo ANTERIOR (como run propia e invisible): el
+// salto de página ocurre en el mismo punto del documento, pero el párrafo con texto ya no se
+// parte y no deja ningún fragmento huérfano.
+function reubicarSaltosDePagina(xml){
+  var MARCA='<w:lastRenderedPageBreak/>';
+  var cursor=0, trasladados=0;
+  while(true){
+    var pos=xml.indexOf(MARCA,cursor);
+    if(pos===-1)break;
+    var tras=pos+MARCA.length;
+    if(xml.slice(tras,tras+4)!=='<w:t'){ cursor=tras; continue; } // no está pegada a texto real: no es el patrón problemático
+    var antes=xml.slice(0,pos);
+    var idxPCierre=antes.lastIndexOf('</w:p>');
+    if(idxPCierre===-1){ cursor=tras; continue; }
+    var entre=antes.slice(idxPCierre+6);
+    if(entre.indexOf('<w:tbl')!==-1||entre.indexOf('</w:tbl')!==-1){ cursor=tras; continue; } // evita cruzar el límite de una tabla
+    xml=xml.slice(0,pos)+xml.slice(tras); // quita la marca de su posición original (pegada al texto)
+    var insertPos=idxPCierre; // posición válida también en el xml recortado, porque solo acortamos DESPUÉS de este punto
+    xml=xml.slice(0,insertPos)+'<w:r>'+MARCA+'</w:r>'+xml.slice(insertPos); // la reinserta como run propia al final del párrafo anterior
+    trasladados++;
+    cursor=insertPos; // seguir buscando después de este punto (la marca recién insertada no queda pegada a <w:t, así que no vuelve a engancharse)
   }
   return xml;
 }
@@ -1513,7 +1520,7 @@ async function buildDoc(r){
   var z=await JSZip.loadAsync(await getTpl(r.marca,slotFor(r).key));
   var xml=await z.file('word/document.xml').async('string');
   var res=anexoFill(xml,{nombre:r.nombre.trim(),antig:r.antig.trim(),trat:r.trat.trim(),fecha:fechaLarga()},VALORES_EN_NEGRO); // fecha de firma: siempre hoy. El encabezado de pág.1 ya usa directamente la antigüedad (M_041), así que nunca sale antes de la incorporación.
-  res.xml=limpiarSaltosRedundantes(res.xml);
+  res.xml=reubicarSaltosDePagina(res.xml);
   if(MARGENES_NORMALES)res.xml=setMargins(res.xml,MARGENES);
   z.file('word/document.xml',res.xml);
   var st=z.file('word/settings.xml');
@@ -1812,7 +1819,7 @@ async function printRows(list){
   var root=$('printRoot');root.innerHTML='';
   for(var i=0;i<res.ok.length;i++){
     var sizes=await extractShapeSizes(res.ok[i].buf);
-    var firstBox=null;
+    var firstBox=null, selectorContadorPrevio=':root';
     for(var c=0;c<COPIAS_POR_COLABORADOR;c++){
       var box;
       if(c===0){
@@ -1828,6 +1835,15 @@ async function printRows(list){
         box.querySelectorAll('[id]').forEach(function(elWithId){elWithId.removeAttribute('id');}); // evita ids duplicados del render clonado
         root.appendChild(box);
       }
+      // docx-preview numera las listas con letras/números (a, b, c…) mediante contadores CSS que
+      // reinicia en :root (una única vez en TODA la página), no por cada render/clon. Resultado:
+      // la 2ª copia seguía contando donde lo dejó la 1ª (a,b,c → e,f,g) en vez de reiniciar.
+      // Aislamos el contador de cada copia dándole un id propio y apuntando ahí el "counter-reset".
+      var selectorContador='#'+(box.id='contadorAnexo'+i+'_'+c);
+      box.querySelectorAll('style').forEach(function(st){
+        st.textContent=st.textContent.split(selectorContadorPrevio).join(selectorContador);
+      });
+      selectorContadorPrevio=selectorContador;
       // el nº de páginas lo decide el propio contenido (con los márgenes mínimos del documento), sin forzar
       // ni recortar nada; lo único que tocamos es añadir, como mucho, UNA página en blanco si hacen falta
       // para llegar a un nº par: así, al imprimir a dos caras, esta copia no comparte ninguna hoja física
