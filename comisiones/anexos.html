@@ -425,6 +425,30 @@ function anexoFill(xml, vals, forceBlack){
   var tx=fillXml(mf.xml,rules,forceBlack);
   return {xml:tx.xml,counts:mf.counts,legacy:tx.counts};
 }
+// Word a veces guarda, justo después de un salto de página manual (<w:br w:type="page"/>),
+// un <w:lastRenderedPageBreak/> "fantasma" al principio del párrafo siguiente, antes de su
+// texto real. docx-preview interpreta CADA uno como un salto independiente, así que ese
+// párrafo queda partido en dos: una página en blanco (sin contenido) + una página nueva que
+// empieza con el texto que debería haber seguido justo después del salto manual. Esta función
+// localiza ese patrón (salto manual -> ...sin texto/tabla real... -> lastRenderedPageBreak) y
+// elimina únicamente la marca lastRenderedPageBreak redundante, dejando intacto el resto del
+// documento y cualquier otro salto legítimo.
+function limpiarSaltosRedundantes(xml){
+  var marcador=/<w:br\s+w:type="page"\s*\/>/g, m, quitados=0;
+  var i=0;
+  while((m=marcador.exec(xml))){
+    marcador.lastIndex=m.index+m[0].length; // evita bucles infinitos tras recortar xml
+    var desde=m.index+m[0].length;
+    var sig=/<w:lastRenderedPageBreak\s*\/>|<w:t[ >]|<w:tbl>|<w:drawing|<w:pict/.exec(xml.slice(desde));
+    if(sig && /^<w:lastRenderedPageBreak/.test(sig[0])){
+      var pos=desde+sig.index;
+      xml=xml.slice(0,pos)+xml.slice(pos+sig[0].length);
+      quitados++;
+      marcador.lastIndex=desde; // el xml se acortó justo después del salto manual; seguir desde ahí
+    }
+  }
+  return xml;
+}
 function setMargins(xml, mm){
   return xml.replace(/<w:pgMar\b[^>]*\/>/g,function(tag){
     ['top','right','bottom','left','header','footer'].forEach(function(k){
@@ -1489,6 +1513,7 @@ async function buildDoc(r){
   var z=await JSZip.loadAsync(await getTpl(r.marca,slotFor(r).key));
   var xml=await z.file('word/document.xml').async('string');
   var res=anexoFill(xml,{nombre:r.nombre.trim(),antig:r.antig.trim(),trat:r.trat.trim(),fecha:fechaLarga()},VALORES_EN_NEGRO); // fecha de firma: siempre hoy. El encabezado de pág.1 ya usa directamente la antigüedad (M_041), así que nunca sale antes de la incorporación.
+  res.xml=limpiarSaltosRedundantes(res.xml);
   if(MARGENES_NORMALES)res.xml=setMargins(res.xml,MARGENES);
   z.file('word/document.xml',res.xml);
   var st=z.file('word/settings.xml');
