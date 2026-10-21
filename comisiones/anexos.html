@@ -1718,8 +1718,14 @@ async function extractShapeSizes(buf){
     var xml=await f.async('string');
     var out=[], re=/<v:shape\b[^>]*\bstyle="([^"]*)"/g, m;
     while((m=re.exec(xml))){
-      var mw=m[1].match(/width:\s*([\d.]+)pt/i), mh=m[1].match(/height:\s*([\d.]+)pt/i);
-      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1])});
+      var st=m[1];
+      var mw=st.match(/width:\s*([\d.]+)pt/i), mh=st.match(/height:\s*([\d.]+)pt/i);
+      // Word guarda la posición del cuadro como margin-left/margin-top (pt) del propio <v:shape>, medida
+      // desde donde está anclado el cuadro en el párrafo (no desde la página) — la leemos para poder
+      // reaplicarla nosotros mismos sobre el contenedor inmediato del SVG, en vez de confiar en que
+      // docx-preview la mantenga también al imprimir.
+      var ml=st.match(/margin-left:\s*(-?[\d.]+)(pt)?/i), mt=st.match(/margin-top:\s*(-?[\d.]+)(pt)?/i);
+      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1]),left:ml?parseFloat(ml[1]):0,top:mt?parseFloat(mt[1]):0});
     }
     return out;
   }catch(e){return [];}
@@ -1738,6 +1744,20 @@ async function settleTextboxes(container,sizes){
       if(sz){
         svg.setAttribute('width',Math.ceil(ptToPx(sz.w)));
         svg.setAttribute('height',Math.ceil(ptToPx(sz.h)));
+        // Posición: NO la anclamos a la página (ese fue el error la vez anterior: la vertical de Word es
+        // relativa al párrafo, no a la página, así que al forzarla relativa a la página el cuadro saltaba
+        // arriba del todo). En su lugar, convertimos el contenedor INMEDIATO del SVG —el que ya está
+        // colocado justo donde cae el párrafo ancla, tanto en pantalla como en cada página impresa— en el
+        // marco de referencia, y repetimos ahí el desplazamiento que Word guardó para el cuadro.
+        var holder=svg.parentElement;
+        if(holder){
+          var hp=holder.style.position;
+          if(!hp||hp==='static') holder.style.position='relative';
+        }
+        svg.style.position='absolute';
+        svg.style.margin='0';
+        svg.style.left=Math.round(ptToPx(sz.left))+'px';
+        svg.style.top=Math.round(ptToPx(sz.top))+'px';
         return;
       }
       var styled=svg.querySelector('[style*="width:"][style*="height:"]')||svg.firstElementChild;
@@ -1759,14 +1779,40 @@ async function settleTextboxes(container,sizes){
   await nextFrame();
 }
 var COPIAS_POR_COLABORADOR=2; // un ejemplar para cada destinatario (p.ej. el propio colaborador y la empresa)
+var PAGINAS_POR_CARGO={AC:6,JE:3,DV:3}; // caras que debe ocupar cada anexo ya impreso: AC = 3 hojas a dos caras; JE/DV = 1 hoja y media (la última hoja sale con una cara en blanco, es normal)
+function paginasEsperadas(r){return (r&&PAGINAS_POR_CARGO[r.cargo])||null;}
+function ajustarPaginas(box,target){
+  // Lo que se ha visto: el cuadro de firma va anclado a un párrafo casi vacío que a veces el
+  // paginador desborda a una página nueva solo para él (sale huérfano, arriba del todo de esa
+  // página siguiente). Si hay más páginas de las que le tocan a este anexo, no las dejamos sueltas:
+  // volvemos a pegar ese contenido al final de la página anterior (que es donde debía ir) y
+  // quitamos la página de más. Si faltan páginas para llegar a las que le tocan, añadimos en blanco.
+  var secs=box.querySelectorAll('section');
+  while(secs.length>target){
+    var overflow=secs[secs.length-1], prev=secs[secs.length-2];
+    if(!prev) break;
+    var prevArticle=prev.querySelector('article')||prev;
+    var ovArticle=overflow.querySelector('article')||overflow;
+    while(ovArticle.firstChild) prevArticle.appendChild(ovArticle.firstChild);
+    overflow.remove();
+    secs=box.querySelectorAll('section');
+  }
+  while(secs.length<target){
+    box.appendChild(secs[secs.length-1].cloneNode(false));
+    secs=box.querySelectorAll('section');
+  }
+  return secs.length;
+}
 async function printRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
   if(!window.docx||!docx.renderAsync){toast('No se ha cargado el visor para imprimir. Usa Descargar e imprime desde Word.');return;}
   var res=await buildMany(list);
   if(!res.ok.length){toast('No se ha podido generar ningún anexo: '+res.errs.join(' · '),9000);return;}
   var root=$('printRoot');root.innerHTML='';
+  var sinAjustar=[];
   for(var i=0;i<res.ok.length;i++){
     var sizes=await extractShapeSizes(res.ok[i].buf);
+    var target=paginasEsperadas(res.ok[i].row);
     var firstBox=null;
     for(var c=0;c<COPIAS_POR_COLABORADOR;c++){
       var box;
@@ -1774,6 +1820,11 @@ async function printRows(list){
         box=el('div');root.appendChild(box);
         await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i+'_'+c,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
         await settleTextboxes(box,sizes);
+        // se ajusta UNA vez sobre el primer render; la copia 2 clona este ya corregido, así es idéntica y más rápido.
+        if(target){
+          var final=ajustarPaginas(box,target);
+          if(final!==target&&sinAjustar.indexOf(res.ok[i].name)===-1) sinAjustar.push(res.ok[i].name);
+        }
         firstBox=box;
       }else{
         // mismo contenido para cada copia (solo cambia a quién se le entrega el papel impreso):
@@ -1783,18 +1834,15 @@ async function printRows(list){
         box.querySelectorAll('[id]').forEach(function(elWithId){elWithId.removeAttribute('id');}); // evita ids duplicados del render clonado
         root.appendChild(box);
       }
-      // cada copia debe acabar en un número par de páginas: así, al imprimir a dos caras, la copia
-      // ocupa un número entero de hojas y no comparte ninguna hoja con la copia o el colaborador siguiente.
-      var secs=box.querySelectorAll('section');
-      if(secs.length%2===1){
-        box.appendChild(secs[secs.length-1].cloneNode(false));
-      }
     }
     if(res.ok[i].row){res.ok[i].row.enviado=true;touch(res.ok[i].row);paintEstado(res.ok[i].row);}
   }
   await new Promise(function(r){setTimeout(r,300);});
   window.print();
-  toast('Se han preparado '+res.ok.length+' × '+COPIAS_POR_COLABORADOR+' copias (una por destinatario). En el diálogo de impresión, activa "A dos caras / Duplex" para que cada copia quede en hojas propias.'+(res.errs.length?(' Sin imprimir: '+res.errs.join(' · ')):''),9000);
+  var msg='Se han preparado '+res.ok.length+' × '+COPIAS_POR_COLABORADOR+' copias (AC: 3 hojas a dos caras · JE/DV: 1 hoja y media). En el diálogo de impresión, activa "A dos caras / Duplex". ';
+  if(sinAjustar.length)msg+='Ojo, revisa a mano: '+sinAjustar.join(', ')+' (tiene más contenido real del esperado y no ha cuadrado del todo). ';
+  if(res.errs.length)msg+='Sin imprimir: '+res.errs.join(' · ');
+  toast(msg,9000);
 }
 window.addEventListener('afterprint',function(){var r=$('printRoot');if(r)r.innerHTML='';});
 
