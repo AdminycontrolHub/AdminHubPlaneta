@@ -516,7 +516,7 @@ body{ font-size:14px; }
         </div>
       </div>
       <textarea class="dz-paste" id="dzLeftPaste" rows="2" placeholder="…o pega aquí el texto del correo"></textarea>
-      <input type="file" class="dz-input" id="dzLeftInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png,image/*,application/pdf" multiple>
+      <input type="file" class="dz-input" id="dzLeftInput" accept=".pdf,.doc,.docx,.xlsx,.xlsm,.xls,.csv,.jpg,.jpeg,.png,image/*,application/pdf" multiple>
     </div>
 
     <button class="detail-btn merge" onclick="dzSendPanel('ambos')" style="flex:none; align-self:center;">
@@ -2518,7 +2518,7 @@ async function dzFileToText(file){
   const name=file.name||'';
   if(file.type==='application/pdf' || /\.pdf$/i.test(name)) return {text:await dzReadPdfText(file), kind:'PDF'};
   if(/\.docx$/i.test(name) || file.type==='application/vnd.openxmlformats-officedocument.wordprocessingml.document') return {text:await dzReadDocxText(file), kind:'Word'};
-  if(/\.(xlsx|xls|csv)$/i.test(name)) return {text:await dzReadExcelText(file), kind:'Excel'};
+  if(/\.(xlsx|xlsm|xls|csv)$/i.test(name)) return {text:await dzReadExcelText(file), kind:'Excel'};
   if(/^image\//.test(file.type) || /\.(jpe?g|png)$/i.test(name)){
     dzToast('Leyendo la imagen (OCR)… puede tardar unos segundos.',true);
     return {text:await dzReadImageText(file), kind:'imagen'};
@@ -2534,7 +2534,7 @@ async function dzProcessLeftFile(file){
     return;
   }
   if(r.unsupported){
-    dzOpenFix({auto:true, bannerText:'Formato no admitido ('+file.name+'). Admito PDF, Word (.docx), Excel, JPG/PNG o texto pegado. Los .doc antiguos: guárdalos como .docx.', fields:{}});
+    dzOpenFix({auto:true, bannerText:'Formato no admitido ('+file.name+'). Admito PDF, Word (.docx), Excel (.xlsx, .xlsm, .xls, .csv), JPG/PNG o texto pegado. Los .doc antiguos: guárdalos como .docx.', fields:{}});
     return;
   }
   if(!r.text.trim()){
