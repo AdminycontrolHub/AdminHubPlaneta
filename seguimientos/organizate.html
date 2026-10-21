@@ -1026,6 +1026,7 @@ function mjDueWeekKey(t){
   return null;
 }
 function mjIsHiddenThisWeek(t){
+  if(t.status==='cerrado') return false; // un caso cerrado siempre se ve (en gris) esta semana
   // Un tema aplazado a una semana futura no debe verse en Orden del día / En vivo hasta que llegue esa semana
   const due = mjDueWeekKey(t);
   const cur = mjCurrentWeekKey || mjWeekKeyFor(mjGetRelevantThursday());
@@ -1255,7 +1256,7 @@ function mjRenderAgenda(){
     row.className = 'mj-row' + (t.locked ? ' pinned' : '');
     if(t.locked){
       row.innerHTML = `
-        <div class="mj-row-title">📌 ${t.title}<span style="display:block;font-size:11.5px;color:var(--mj-text-dim);margin-top:3px;"></span></div>
+        <div class="mj-row-title">📌 ${t.title}<span style="display:block;font-size:11.5px;color:var(--mj-text-dim);margin-top:3px;">Módulo en construcción — se integrará próximamente</span></div>
         <span class="mj-lock-tag">Fijo cada semana</span>`;
     } else {
       const openIdx = mjTopics.filter(x=>!x.locked).findIndex(x=>x.id===t.id);
@@ -1387,10 +1388,11 @@ function mjRenderOrbit(){
     node.addEventListener('click', ()=>mjOpenDetail(t.id));
     wrap.appendChild(node);
   }
-  function voteCls(num){
+  function voteCls(num, t){
     const vr = mjVoteHistory[String(num)];
     if(!vr) return null;
-    if(vr.weekKey && vr.weekKey !== mjCurrentWeekKey) return null; // votación de otra semana: no se aplica a esta burbuja
+    if(vr.weekKey !== mjCurrentWeekKey) return null; // sin semana o de otra semana: no se aplica
+    if(t && vr.topicTitle && vr.topicTitle !== t.title) return null; // la votación era de otro tema que ocupaba esa posición
     if(vr.resultado==='favorable') return 'st-vote-favor';
     if(vr.resultado==='contra') return 'st-vote-contra';
     return null;
@@ -1399,10 +1401,10 @@ function mjRenderOrbit(){
   const lockedTopics = mjTopics.filter(t=>t.locked);
   const openTopics = mjTopics.filter(t=>!t.locked && !mjShouldHideFromLive(t));
   const total = lockedTopics.length + openTopics.length;
-  lockedTopics.forEach(t=>placeNode(t, -90, null, voteCls(0))); // -90° = arriba del todo
+  lockedTopics.forEach(t=>placeNode(t, -90, null, voteCls(0, t))); // -90° = arriba del todo
   openTopics.forEach((t,i)=>{
     const num = i+1;
-    placeNode(t, -90 + ((num)/total)*360, num, voteCls(num));
+    placeNode(t, -90 + ((num)/total)*360, num, voteCls(num, t));
   });
 }
 function mjShortTitle(str){ return str.length > 32 ? str.slice(0,30)+'…' : str; }
