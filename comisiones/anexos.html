@@ -184,11 +184,11 @@ table.ppl td.st{font-size:13.5px;white-space:nowrap}
 #secret{position:fixed;right:16px;bottom:16px;background:none;border:0;font-size:22px;opacity:.3;cursor:pointer;z-index:700}
 #printRoot{display:none}
 @media print{
- @page{margin:0}
- html,body{background:#fff!important}
+ @page{size:A4;margin:0}
+ html,body{background:#fff!important;width:595.3pt!important;margin:0!important}
  body>*:not(#printRoot){display:none!important}
- #printRoot{display:block!important}
- #printRoot section{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
+ #printRoot{display:block!important;width:595.3pt!important;margin:0!important}
+ #printRoot section{box-shadow:none!important;margin:0 auto!important;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
 }
 </style>
 </head>
