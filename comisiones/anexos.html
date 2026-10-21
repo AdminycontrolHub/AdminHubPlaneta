@@ -189,7 +189,6 @@ table.ppl td.st{font-size:13.5px;white-space:nowrap}
  body>*:not(#printRoot){display:none!important}
  #printRoot{display:block!important}
  #printRoot section{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
- #printRoot svg{position:absolute!important}
 }
 </style>
 </head>
@@ -1719,13 +1718,8 @@ async function extractShapeSizes(buf){
     var xml=await f.async('string');
     var out=[], re=/<v:shape\b[^>]*\bstyle="([^"]*)"/g, m;
     while((m=re.exec(xml))){
-      var st=m[1];
-      var mw=st.match(/width:\s*([\d.]+)pt/i), mh=st.match(/height:\s*([\d.]+)pt/i);
-      // posición: Word la guarda como margin-left/margin-top (pt, a veces sin unidad cuando es 0) relativos
-      // al margen de página — es el mismo valor que docx-preview coloca como estilo del <svg>, pero al
-      // imprimir se ha visto que se pierde/descoloca, así que la leemos aquí para poder reafirmarla a mano.
-      var ml=st.match(/margin-left:\s*(-?[\d.]+)(pt)?/i), mt=st.match(/margin-top:\s*(-?[\d.]+)(pt)?/i);
-      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1]),left:ml?parseFloat(ml[1]):0,top:mt?parseFloat(mt[1]):0});
+      var mw=m[1].match(/width:\s*([\d.]+)pt/i), mh=m[1].match(/height:\s*([\d.]+)pt/i);
+      if(mw&&mh) out.push({w:parseFloat(mw[1]),h:parseFloat(mh[1])});
     }
     return out;
   }catch(e){return [];}
@@ -1744,13 +1738,6 @@ async function settleTextboxes(container,sizes){
       if(sz){
         svg.setAttribute('width',Math.ceil(ptToPx(sz.w)));
         svg.setAttribute('height',Math.ceil(ptToPx(sz.h)));
-        // la posición (margin-left/margin-top) ya viene en el style que pone docx-preview, pero al imprimir
-        // se ha visto que el cuadro se desplaza (sobre todo hacia la izquierda): la reafirmamos a mano con
-        // left/top absolutos en px en vez de confiar en el margin, que es más sensible a la paginación.
-        svg.style.position='absolute';
-        svg.style.margin='0';
-        svg.style.left=Math.round(ptToPx(sz.left))+'px';
-        svg.style.top=Math.round(ptToPx(sz.top))+'px';
         return;
       }
       var styled=svg.querySelector('[style*="width:"][style*="height:"]')||svg.firstElementChild;
