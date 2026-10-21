@@ -512,11 +512,11 @@ body{ font-size:14px; }
         <div class="dz-icon">DOC</div>
         <div>
           <div class="dz-title">Arrastra aquí: PF / HM / Baja / CC / CE / CP</div>
-          <div class="dz-sub">Suelta el PDF o la captura en cualquier punto de este recuadro · la HM la detecto sola; con el resto te pregunto si es CC, CE/Baja o PF/CP/CFP</div>
+          <div class="dz-sub">Suelta el PDF, Word, Excel, JPG/captura o pega el texto en cualquier punto de este recuadro · la HM la detecto sola; con el resto te pregunto si es CC, CE/Baja o PF/CP/CFP</div>
         </div>
       </div>
       <textarea class="dz-paste" id="dzLeftPaste" rows="2" placeholder="…o pega aquí el texto del correo"></textarea>
-      <input type="file" class="dz-input" id="dzLeftInput" accept="application/pdf,image/*" multiple>
+      <input type="file" class="dz-input" id="dzLeftInput" accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.jpg,.jpeg,.png,image/*,application/pdf" multiple>
     </div>
 
     <button class="detail-btn merge" onclick="dzSendPanel('ambos')" style="flex:none; align-self:center;">
@@ -1928,6 +1928,7 @@ function dzClassify(text){
   if(/Detalle de Conceptos/i.test(text) || /RGPD (Grupo|Terceros)/i.test(text)) return 'HM';
   if(/desistimiento/i.test(text) || /se le resuelve la incidencia como\s+Baja/i.test(text) || /\bBaja (sin|con) Devoluci[oó]n\b/i.test(text)) return 'BAJA';
   if(/Adjunto\s+CE\b/i.test(text) || /\bCambio de Edici[oó]n\b/i.test(text)) return 'CE';
+  if(/Adjunto\s+CFP\b/i.test(text)) return 'CFP';
   if(/Adjunto\s+CP\b/i.test(text) || /\bCambio de Programa\b/i.test(text)) return 'CP';
   if(/Adjunto\s+CC\b/i.test(text) || /convocatoria de[^.]+a\s+Convocatoria/i.test(text)) return 'CC';
   return null;
@@ -2054,8 +2055,8 @@ function dzExtractFields(type, text){
     if(!f.tipo) f.tipo=/con devoluci/i.test(text)?'CON DEVOLUCIÓN':(/sin devoluci/i.test(text)?'SIN DEVOLUCIÓN':'');
     if(!f.motivo && /desistimiento/i.test(text)) f.motivo='Desistimiento';
     f.convocatoria = dzLine(text,'Convocatoria');
-  } else if(type==='CC' || type==='CE' || type==='CP'){
-    const m = text.match(/[Aa]djunto\s+(?:CC|CE|CP)\s+del alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+de la convocatoria de\s+([^\s]+)\s+a\s+Convocatoria\s+([^\s.]+)(?:\s+por\s+(?:Motivos?):?\s*([^.\n]+))?/i);
+  } else if(type==='CC' || type==='CE' || type==='CP' || type==='CFP'){
+    const m = text.match(/[Aa]djunto\s+(?:CC|CE|CP|CFP)\s+del alumno\s+([^\d]+?)\s+ID\s+(\d{4}-\d{6,})\s+de la convocatoria de\s+([^\s]+)\s+a\s+Convocatoria\s+([^\s.]+)(?:\s+por\s+(?:Motivos?):?\s*([^.\n]+))?/i);
     if(m){ f.nombre=m[1].trim(); f.id=m[2].trim(); f.convocatoria=m[3].trim()+' → '+m[4].trim(); f.motivo=(m[5]||'').trim(); }
   }
   return f;
@@ -2141,7 +2142,7 @@ document.getElementById('dzFixDetectado').addEventListener('change', dzToggleTip
 
 /* ===== Documentos que NO son HM: CC · CE/Baja · PF/CP/CFP ===== */
 let dzChoice = null, dzChooseCtx = null, dzForceAdd = false;
-const DZ_FIX_FULL_OPTS = ['PF NUEVA','HM NUEVA','BAJA · PF','BAJA · FINALIZADA','CC · PF','CC · FINALIZADA','CE · PF','CE · FINALIZADA','CP · PF','CP · FINALIZADA'];
+const DZ_FIX_FULL_OPTS = ['PF NUEVA','HM NUEVA','BAJA · PF','BAJA · FINALIZADA','CC · PF','CC · FINALIZADA','CE · PF','CE · FINALIZADA','CP · PF','CP · FINALIZADA','CFP · PF','CFP · FINALIZADA'];
 function dzSetFixOptions(list){
   document.getElementById('dzFixDetectado').innerHTML='<option value="">— Selecciona —</option>'+list.map(o=>'<option value="'+o+'">'+o+'</option>').join('');
 }
@@ -2166,13 +2167,13 @@ function dzOpenChoose(type, fields){
   document.getElementById('dzTitlebarLabel').textContent='Documento recibido';
   document.getElementById('dzChooseTag').innerHTML = type ? 'Detectado: <span class="tag">'+type+'</span>' : 'No he reconocido el tipo de documento';
   document.getElementById('dzChooseFields').innerHTML = dzFieldRowsHtml(fields||{});
-  const sug = type==='CC'?'chCC' : (type==='BAJA'||type==='CE')?'chBaja' : (type==='PF'||type==='CP')?'chPF' : '';
+  const sug = type==='CC'?'chCC' : (type==='BAJA'||type==='CE')?'chBaja' : (type==='PF'||type==='CP'||type==='CFP')?'chPF' : '';
   ['chCC','chBaja','chPF'].forEach(id=>document.getElementById(id).classList.toggle('sug', id===sug));
   document.getElementById('dzPopup').classList.add('show');
 }
 function dzChoose(kind){
   const ctx=dzChooseCtx||{type:'',fields:{}};
-  const guess = kind==='CC' ? 'CC' : kind==='CEBAJA' ? (ctx.type==='CE'?'CE':'BAJA') : (ctx.type==='CP'?'CP':'PF');
+  const guess = kind==='CC' ? 'CC' : kind==='CEBAJA' ? (ctx.type==='CE'?'CE':'BAJA') : (ctx.type==='CP'?'CP':(ctx.type==='CFP'?'CFP':'PF'));
   const options = kind==='CC' ? ['CC'] : kind==='CEBAJA' ? ['BAJA','CE'] : ['PF','CP','CFP'];
   dzOpenFix({auto:false, fields:ctx.fields||{}, detectadoGuess:guess, choice:kind, options});
 }
@@ -2248,8 +2249,9 @@ function dzCreateRowFromForm(type, v, fb){
     je: fx.asesor || '—',
     facturacion: fx.facturacion!=null ? fx.facturacion : null,
     comentario: 'Añadido desde arrastre ('+type+') — pendiente de completar ID NACS.',
-    datos: dzDatos(type, fx, (v.mes?v.mes+' ':'')+(v.anio||''))
+    datos: dzDatos(type==='CFP'?'PF':type, fx, (v.mes?v.mes+' ':'')+(v.anio||''))
   };
+  if(type==='CFP'){ row.datos.tipoDoc='CFP'; row.datos.fechaInscripcion=''; }   // CFP: va a PF y Otras Excepciones; la fecha de inscripción es la original (aquí no hay)
   dzAddManualRow(v.marca, 'altas', row);
   mtRenderGrid(); renderPanels(); renderSummary();
   fb.className='fix-feedback ok';
@@ -2260,7 +2262,7 @@ function dzCreateRowFromForm(type, v, fb){
 function dzRunChoice(kind, sub, v, fb){
   const existing = dzFindManualRowById(v.id);
   if(!existing){
-    if(kind==='PF' && sub==='PF'){ dzCreateRowFromForm('PF', v, fb); return; }   // PF sin HM previa: fila nueva en PF y Otras
+    if(kind==='PF' && (sub==='PF'||sub==='CFP')){ dzCreateRowFromForm(sub, v, fb); return; }   // PF / CFP sin fila previa: fila nueva en PF y Otras Excepciones
     fb.className='fix-feedback fail';
     fb.textContent='No se ha encontrado ninguna fila con ID '+v.id+'. Añade primero la matrícula (HM) o revisa el ID.';
     return;
@@ -2484,17 +2486,62 @@ function dzProcessLeftText(text){
   dzOpenChoose(type||'', fields);
 }
 
-async function dzProcessLeftFile(file){
-  if(file.type==='application/pdf' || /\.pdf$/i.test(file.name)){
-    const text = await dzReadPdfText(file);
-    if(!text.trim()){
-      dzOpenFix({auto:true, bannerText:'El archivo no contiene texto legible (posible PDF escaneado). Si tienes el texto del correo, pégalo en el recuadro en vez de arrastrar el archivo.', fields:{}});
-      return;
-    }
-    dzProcessLeftText(text);
-  } else {
-    dzOpenFix({auto:true, bannerText:'No se ha podido leer el archivo automáticamente (imagen sin texto extraíble). Si tienes el texto del correo, pégalo en el recuadro en vez de la captura.', fields:{}});
+/* Carga bajo demanda de librerías externas (Word, OCR de imágenes) */
+function dzLoadScript(url){
+  return new Promise((res,rej)=>{ const t=document.createElement('script'); t.src=url; t.onload=res; t.onerror=()=>rej(new Error('No se ha podido cargar '+url)); document.head.appendChild(t); });
+}
+/* Excel/CSV → texto "etiqueta   valor" por filas, igual que el cuerpo de los correos */
+async function dzReadExcelText(file){
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array',cellDates:true});
+  let text='';
+  wb.SheetNames.forEach(n=>{
+    XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:'',raw:false}).forEach(r=>{
+      const cells=r.map(c=>String(c).trim()).filter(Boolean);
+      if(cells.length) text+=cells.join('   ')+'\n';
+    });
+  });
+  return text;
+}
+async function dzReadDocxText(file){
+  if(typeof mammoth==='undefined') await dzLoadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  const buf=await file.arrayBuffer();
+  const r=await mammoth.extractRawText({arrayBuffer:buf});
+  return r.value||'';
+}
+async function dzReadImageText(file){
+  if(typeof Tesseract==='undefined') await dzLoadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+  const r=await Tesseract.recognize(file,'spa');
+  return (r&&r.data&&r.data.text)||'';
+}
+async function dzFileToText(file){
+  const name=file.name||'';
+  if(file.type==='application/pdf' || /\.pdf$/i.test(name)) return {text:await dzReadPdfText(file), kind:'PDF'};
+  if(/\.docx$/i.test(name) || file.type==='application/vnd.openxmlformats-officedocument.wordprocessingml.document') return {text:await dzReadDocxText(file), kind:'Word'};
+  if(/\.(xlsx|xls|csv)$/i.test(name)) return {text:await dzReadExcelText(file), kind:'Excel'};
+  if(/^image\//.test(file.type) || /\.(jpe?g|png)$/i.test(name)){
+    dzToast('Leyendo la imagen (OCR)… puede tardar unos segundos.',true);
+    return {text:await dzReadImageText(file), kind:'imagen'};
   }
+  return {text:'', kind:'', unsupported:true};
+}
+async function dzProcessLeftFile(file){
+  let r;
+  try{ r=await dzFileToText(file); }
+  catch(e){
+    console.error('Error leyendo archivo:',e);
+    dzOpenFix({auto:true, bannerText:'No se ha podido leer el archivo ('+(e.message||e)+'). Si tienes el texto del correo, pégalo en el recuadro.', fields:{}});
+    return;
+  }
+  if(r.unsupported){
+    dzOpenFix({auto:true, bannerText:'Formato no admitido ('+file.name+'). Admito PDF, Word (.docx), Excel, JPG/PNG o texto pegado. Los .doc antiguos: guárdalos como .docx.', fields:{}});
+    return;
+  }
+  if(!r.text.trim()){
+    dzOpenFix({auto:true, bannerText:'El archivo no contiene texto legible'+(r.kind==='PDF'?' (posible PDF escaneado)':'')+'. Si tienes el texto del correo, pégalo en el recuadro en vez de arrastrar el archivo.', fields:{}});
+    return;
+  }
+  dzProcessLeftText(r.text);
 }
 
 function dzWireLeft(){
