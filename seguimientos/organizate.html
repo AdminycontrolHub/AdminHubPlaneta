@@ -155,7 +155,7 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 .mj-row.pinned{background:linear-gradient(90deg, rgba(0,255,180,.07), var(--mj-surface));border-style:dashed;border-color:rgba(0,255,180,.35);}
 .mj-row-title{flex:1;min-width:180px;font-size:14px;line-height:1.45;}
 .mj-carry-tag{display:block;margin-top:4px;font-family:'Courier New',monospace;font-size:10.5px;color:var(--mj-amber-text);}
-.mj-avatar{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:10.5px;font-weight:600;flex:none;}
+.mj-avatar{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:11.5px;font-weight:800;flex:none;}
 .mj-author-tag{display:inline-block;margin-top:7px;font-family:'Courier New',monospace;font-size:10.5px;padding:3px 10px;border-radius:100px;color:color-mix(in srgb, var(--pc) 60%, #08192a);background:color-mix(in srgb, var(--pc) 16%, transparent);border:1px solid color-mix(in srgb, var(--pc) 45%, transparent);}
 .mj-lock-tag{font-family:'Courier New',monospace;font-size:10px;color:var(--mj-mint-text);background:rgba(0,255,180,.12);padding:4px 10px;border-radius:100px;flex:none;}
 .mj-icon-btn{background:none;border:none;cursor:pointer;color:var(--mj-text-dim);font-size:13px;padding:4px 6px;border-radius:6px;flex:none;opacity:.6;}
@@ -1263,7 +1263,7 @@ function mjRenderAgenda(){
       const openCount = mjTopics.filter(x=>!x.locked).length;
       row.innerHTML = `
         <div class="mj-row-title" data-id="${t.id}">${t.title}${t.carriedFrom ? `<span class="mj-carry-tag">↳ viene de ${t.carriedFrom}</span>` : ''}</div>
-        <div class="mj-avatar" title="Autor: ${mjAuthorOf(t)} — toca para corregir" onclick="mjOpenAuthorPicker('${t.id}')" style="cursor:pointer;background:color-mix(in srgb, ${mjColorFor(mjAuthorOf(t))} 22%, var(--mj-surface-3));color:${mjColorFor(mjAuthorOf(t))};border:1px solid color-mix(in srgb, ${mjColorFor(mjAuthorOf(t))} 45%, transparent);">${mjAuthorOf(t)[0]}</div>
+        <div class="mj-avatar" title="Autor: ${mjAuthorOf(t)} — toca para corregir" onclick="mjOpenAuthorPicker('${t.id}')" style="cursor:pointer;background:color-mix(in srgb, ${mjColorFor(mjAuthorOf(t))} 80%, #ffffff);color:#08192a;font-weight:800;border:1px solid color-mix(in srgb, ${mjColorFor(mjAuthorOf(t))} 45%, transparent);">${mjAuthorOf(t)[0]}</div>
         <button class="mj-icon-btn" title="Subir" data-mjact="up" data-id="${t.id}" ${openIdx===0?'disabled style="opacity:.25;cursor:default;"':''}>▲</button>
         <button class="mj-icon-btn" title="Bajar" data-mjact="down" data-id="${t.id}" ${openIdx===openCount-1?'disabled style="opacity:.25;cursor:default;"':''}>▼</button>
         <button class="mj-icon-btn" title="${t.recurring?'Quitar marca de recurrente':'Marcar como recurrente (violeta en el orbe)'}" data-mjact="rec" data-id="${t.id}" style="opacity:${t.recurring?1:.4};">🔁</button>
@@ -1578,7 +1578,7 @@ function mjRenderPublished(t){
   if(!t.comments || t.comments.length===0){ list.innerHTML = `<div class="mj-empty-note">Nada publicado todavía en este tema.</div>`; return; }
   list.innerHTML = t.comments.map(c=>`
     <div class="mj-published-item">
-      <div class="mj-avatar" style="background:color-mix(in srgb, ${mjColorFor(c.author)} 22%, var(--mj-surface-3));color:${mjColorFor(c.author)};border:1px solid color-mix(in srgb, ${mjColorFor(c.author)} 45%, transparent);">${c.author[0]}</div>
+      <div class="mj-avatar" style="background:color-mix(in srgb, ${mjColorFor(c.author)} 80%, #ffffff);color:#08192a;font-weight:800;border:1px solid color-mix(in srgb, ${mjColorFor(c.author)} 45%, transparent);">${c.author[0]}</div>
       <div class="mj-published-body"><div class="mj-published-meta">${c.author} · ${c.time}</div>${c.text}</div>
     </div>`).join('');
 }
