@@ -307,8 +307,8 @@ var MIN_BASE=300, MIN_DIAS=30, MIN_MESES=3; // mínimo garantizado: 300 € al m
 var IMPORTE_MES=1; // qué mes (1/2/3) muestra la columna "Importe mínimo"; se elige desde el desplegable de su cabecera
 var TERM_TIPOS=['BV','BNV','BAJA','FIN','CESE']; // prefijos de asunto que se leen como fin de contrato, no como alta (BV/BNV confirmados; el resto por si acaso)
 function todayYM(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
-var MARGENES_NORMALES=true; // true = todos los anexos salen con márgenes normales de Word (A4): 2,5 cm arriba/abajo, 3 cm a los lados, cabecera y pie a 1,25 cm
-var MARGENES={top:1417,right:1701,bottom:1417,left:1701,header:709,footer:709}; // en twips (567 = 1 cm)
+var MARGENES_NORMALES=true; // true = se fuerzan los márgenes de abajo en todos los anexos (ahora mínimos, para que el texto quepa en el nº de carillas esperado sin cortarse)
+var MARGENES={top:720,right:720,bottom:720,left:720,header:425,footer:425}; // en twips (567 = 1 cm) — 720 = 1,27 cm (margen mínimo habitual de impresora), 425 = 0,75 cm
 var VALORES_EN_NEGRO=true; // true = los datos (nombre, antigüedad, Sr./Sra. y fecha) salen en negro aunque el campo de la plantilla esté en rojo
 
 //ENGINE_START
@@ -1779,40 +1779,14 @@ async function settleTextboxes(container,sizes){
   await nextFrame();
 }
 var COPIAS_POR_COLABORADOR=2; // un ejemplar para cada destinatario (p.ej. el propio colaborador y la empresa)
-var PAGINAS_POR_CARGO={AC:6,JE:3,DV:3}; // caras que debe ocupar cada anexo ya impreso: AC = 3 hojas a dos caras; JE/DV = 1 hoja y media (la última hoja sale con una cara en blanco, es normal)
-function paginasEsperadas(r){return (r&&PAGINAS_POR_CARGO[r.cargo])||null;}
-function ajustarPaginas(box,target){
-  // Lo que se ha visto: el cuadro de firma va anclado a un párrafo casi vacío que a veces el
-  // paginador desborda a una página nueva solo para él (sale huérfano, arriba del todo de esa
-  // página siguiente). Si hay más páginas de las que le tocan a este anexo, no las dejamos sueltas:
-  // volvemos a pegar ese contenido al final de la página anterior (que es donde debía ir) y
-  // quitamos la página de más. Si faltan páginas para llegar a las que le tocan, añadimos en blanco.
-  var secs=box.querySelectorAll('section');
-  while(secs.length>target){
-    var overflow=secs[secs.length-1], prev=secs[secs.length-2];
-    if(!prev) break;
-    var prevArticle=prev.querySelector('article')||prev;
-    var ovArticle=overflow.querySelector('article')||overflow;
-    while(ovArticle.firstChild) prevArticle.appendChild(ovArticle.firstChild);
-    overflow.remove();
-    secs=box.querySelectorAll('section');
-  }
-  while(secs.length<target){
-    box.appendChild(secs[secs.length-1].cloneNode(false));
-    secs=box.querySelectorAll('section');
-  }
-  return secs.length;
-}
 async function printRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
   if(!window.docx||!docx.renderAsync){toast('No se ha cargado el visor para imprimir. Usa Descargar e imprime desde Word.');return;}
   var res=await buildMany(list);
   if(!res.ok.length){toast('No se ha podido generar ningún anexo: '+res.errs.join(' · '),9000);return;}
   var root=$('printRoot');root.innerHTML='';
-  var sinAjustar=[];
   for(var i=0;i<res.ok.length;i++){
     var sizes=await extractShapeSizes(res.ok[i].buf);
-    var target=paginasEsperadas(res.ok[i].row);
     var firstBox=null;
     for(var c=0;c<COPIAS_POR_COLABORADOR;c++){
       var box;
@@ -1820,11 +1794,6 @@ async function printRows(list){
         box=el('div');root.appendChild(box);
         await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i+'_'+c,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
         await settleTextboxes(box,sizes);
-        // se ajusta UNA vez sobre el primer render; la copia 2 clona este ya corregido, así es idéntica y más rápido.
-        if(target){
-          var final=ajustarPaginas(box,target);
-          if(final!==target&&sinAjustar.indexOf(res.ok[i].name)===-1) sinAjustar.push(res.ok[i].name);
-        }
         firstBox=box;
       }else{
         // mismo contenido para cada copia (solo cambia a quién se le entrega el papel impreso):
@@ -1834,15 +1803,20 @@ async function printRows(list){
         box.querySelectorAll('[id]').forEach(function(elWithId){elWithId.removeAttribute('id');}); // evita ids duplicados del render clonado
         root.appendChild(box);
       }
+      // el nº de páginas lo decide el propio contenido (con los márgenes mínimos del documento), sin forzar
+      // ni recortar nada; lo único que tocamos es añadir, como mucho, UNA página en blanco si hacen falta
+      // para llegar a un nº par: así, al imprimir a dos caras, esta copia no comparte ninguna hoja física
+      // con la copia o el colaborador siguiente.
+      var secs=box.querySelectorAll('section');
+      if(secs.length%2===1){
+        box.appendChild(secs[secs.length-1].cloneNode(false));
+      }
     }
     if(res.ok[i].row){res.ok[i].row.enviado=true;touch(res.ok[i].row);paintEstado(res.ok[i].row);}
   }
   await new Promise(function(r){setTimeout(r,300);});
   window.print();
-  var msg='Se han preparado '+res.ok.length+' × '+COPIAS_POR_COLABORADOR+' copias (AC: 3 hojas a dos caras · JE/DV: 1 hoja y media). En el diálogo de impresión, activa "A dos caras / Duplex". ';
-  if(sinAjustar.length)msg+='Ojo, revisa a mano: '+sinAjustar.join(', ')+' (tiene más contenido real del esperado y no ha cuadrado del todo). ';
-  if(res.errs.length)msg+='Sin imprimir: '+res.errs.join(' · ');
-  toast(msg,9000);
+  toast('Se han preparado '+res.ok.length+' × '+COPIAS_POR_COLABORADOR+' copias. En el diálogo de impresión, activa "A dos caras / Duplex" y márgenes mínimos.'+(res.errs.length?(' Sin imprimir: '+res.errs.join(' · ')):''),9000);
 }
 window.addEventListener('afterprint',function(){var r=$('printRoot');if(r)r.innerHTML='';});
 
