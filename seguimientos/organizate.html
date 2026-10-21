@@ -1255,7 +1255,7 @@ function mjRenderAgenda(){
     row.className = 'mj-row' + (t.locked ? ' pinned' : '');
     if(t.locked){
       row.innerHTML = `
-        <div class="mj-row-title">📌 ${t.title}<span style="display:block;font-size:11.5px;color:var(--mj-text-dim);margin-top:3px;">Módulo en construcción — se integrará próximamente</span></div>
+        <div class="mj-row-title">📌 ${t.title}<span style="display:block;font-size:11.5px;color:var(--mj-text-dim);margin-top:3px;"></span></div>
         <span class="mj-lock-tag">Fijo cada semana</span>`;
     } else {
       const openIdx = mjTopics.filter(x=>!x.locked).findIndex(x=>x.id===t.id);
