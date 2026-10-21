@@ -992,9 +992,10 @@ function aggregate(brandKey,weekIds){
     const w=weekData(brandKey,id);
     acc.altas+=w.altas;acc.bajas+=w.bajas;acc.ccce+=w.ccce;
     return acc;
-  },{altas:dzFielRows(brandKey,'altas').length,bajas:dzFielRows(brandKey,'bajas').length,ccce:dzFielRows(brandKey,'ccce').length});
+  },{altas:dzCountRows(brandKey,'altas').length,bajas:dzFielRows(brandKey,'bajas').length,ccce:dzFielRows(brandKey,'ccce').length});
 }
 /* Filas reales de la tabla "Fiel a Atenea" (HM finalizadas arrastradas) — se cuentan una vez, sin depender de la semana */
+function dzCountRows(brandKey,statKey){ return dzManualRowsFor(brandKey,statKey).filter(r=>r.datos&&(r.datos.origen==='HM'||(statKey==='altas'&&r.datos.tipoDoc==='PF'))); }   // contador de altas = HM + PF
 function dzFielRows(brandKey,statKey){ return dzManualRowsFor(brandKey,statKey).filter(r=>r.datos&&r.datos.origen==='HM'); }   // contadores: solo filas del día (las archivadas ya no cuentan)
 /* Registro de borrados y modificaciones sobre filas de ejemplo/automáticas (no son filas arrastradas) */
 let dzHidden = {}, dzOverrides = {};
@@ -1351,7 +1352,7 @@ function exportRecord(r,statKey,seguimiento){
     'STATUS': d.status!=null&&d.status!==''?d.status:(statKey==='bajas'?'BAJAS arranque curso':(statKey==='altas'?'ALTA':'')),
     'SEGUIMIENTO': seguimiento,
     'TIPOLOGIA MATRICULA': d.tipoMat?d.tipoMat:(statKey==='bajas'?'BAJA':'ALTA'),
-    'TIPOLOGIA ALUMNO': d.tipoAlumno||(statKey==='altas'?'NM':''),
+    'TIPOLOGIA ALUMNO': d.tipoAlumno||'NM',
     'ID OPORTUNIDAD': r.idOportunidad&&r.idOportunidad!=='—'?r.idOportunidad:'',
     'DIA CERO': d.diaCero||'',
     'FECHA PRODUCCIÓN': dzToDate(d.fechaProduccion),
@@ -1390,6 +1391,7 @@ function exportPanel(which){
   if(which==='exc'||which==='ambos'){
     exceptionRows(b.key,stat).forEach(r=>recs.push(exportRecord(r,stat,'PF y Otras Excepciones')));
   }
+  recs.forEach(o=>Object.keys(o).forEach(k=>{ if(typeof o[k]==='string') o[k]=dzNoAccents(o[k]); }));
   const ws=XLSX.utils.json_to_sheet(recs,{header:dzActiveCols,cellDates:true});
   Object.keys(ws).forEach(a=>{ if(a[0]!=='!' && ws[a].t==='d') ws[a].z='dd/mm/yyyy'; });
   ws['!cols']=dzActiveCols.map(c=>({wch:Math.max(c.length+2,14)}));
@@ -1448,7 +1450,7 @@ function aggregateConvSplit(brandKey,weekIds){
     return acc;
   },(function(){
     const z={altasAbril:0,altasOctubre:0,bajasAbril:0,bajasOctubre:0,ceAbril:0,ceOctubre:0};
-    dzFielRows(brandKey,'altas').forEach(r=>{ z['altas'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
+    dzCountRows(brandKey,'altas').forEach(r=>{ z['altas'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
     dzFielRows(brandKey,'bajas').forEach(r=>{ z['bajas'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
     dzFielRows(brandKey,'ccce').forEach(r=>{ if(r.datos&&r.datos.tipoAlumno==='CE') z['ce'+(r.convocatoria==='Abril'?'Abril':'Octubre')]++; });
     return z;
@@ -1465,7 +1467,7 @@ function countingBrutasByConv(brandKey,weekIds){
     if(month.activeConv==='Octubre')octubre+=s.altasOctubre+s.ccceOctubre;
     else abril+=s.altasAbril+s.ccceAbril;
   });
-  ['altas','ccce'].forEach(st=>dzFielRows(brandKey,st).forEach(r=>{ if(r.convocatoria==='Abril')abril++; else octubre++; }));
+  ['altas','ccce'].forEach(st=>dzCountRows(brandKey,st).forEach(r=>{ if(r.convocatoria==='Abril')abril++; else octubre++; }));
   return {octubre,abril};
 }
 function renderSummary(){
@@ -1477,7 +1479,7 @@ function renderSummary(){
   grid.innerHTML=MT_BRANDS.map(b=>{
     const agg=aggregate(b.key,weekIds);
     const brutas=agg.altas+agg.ccce;
-    const pf=pfCountTotal(b.key);
+    const pf=pfCountTotal(b.key)-dzManualRowsFor(b.key,'altas').filter(r=>r.datos&&r.datos.tipoDoc==='PF').length;   // las PF de altas ya van en el contador de altas
     const split=aggregateConvSplit(b.key,weekIds);
     const netasOctubre=split.altasOctubre-(split.bajasOctubre+split.ceOctubre);
     const netasAbril=split.altasAbril-split.bajasAbril;
@@ -2295,12 +2297,12 @@ function dzBuildFromChanges(base, ch, f, kind){
   d.tipoDoc=sub;
   const conv=ch.mes?(ch.mes+' '+(ch.anio||'')).trim():'';
   if(sub==='CC'||sub==='CP'){
-    d.tipoAlumno=sub;
+    d.tipoAlumno=(sub==='CC')?'CC':'NM';   // solo la copia del CC lleva alumno CC; CP se queda en NM
     if(conv){ if(d.convocatoriaFull) d.convocatoriaOrigen=d.convocatoriaFull; d.convocatoriaFull=conv; row.convocatoria=ch.mes; }
     if(ch.motivo) d.motivo=ch.motivo;
   } else if(sub==='CE'||sub==='BAJA'){
     if(sub==='BAJA'){ d.tipoMat='BAJA'; d.status='BAJAS arranque curso'; }
-    else { d.tipoMat='CE'; d.tipoAlumno='CE'; }   // CE: lo que dice el documento
+    else { d.tipoMat='CE'; d.tipoAlumno='NM'; }   // CE en la convocatoria actual: matricula CE / alumno NM
     if(empty(d.convocatoriaFull)&&conv) d.convocatoriaFull=conv;
     if(empty(row.convocatoria)&&ch.mes) row.convocatoria=ch.mes;
     d.fechaBaja=dzToday(); d.motivo=ch.motivo||d.motivo||''; d.tipoBaja=ch.tipo||'';
@@ -2324,6 +2326,10 @@ function dzHistText(label,before,after){
     const b=dzPlain(before[c]), a=dzPlain(after[c]);
     if(b!==''&&b!==a) parts.push(c+'='+b);
   });
+  if((label==='CP'||label==='CFP')&&!parts.some(x=>x.indexOf('FACTURACIÓN NETA=')===0)){
+    const fn=dzPlain(before['FACTURACIÓN NETA']);
+    if(fn!=='') parts.push('FACTURACIÓN NETA='+fn);
+  }
   return dzToday()+' '+label+(parts.length?' · antes: '+parts.join('; '):'');
 }
 function dzUnarchive(row){
@@ -2367,6 +2373,21 @@ function dzApplyChoice(kind, sub, existing, v, fb){
     upd.datos.historico=prevHist+dzHistText(sub,before,exportRecord(upd,statNew,''));
     arr.splice(idx,1);
     if(statNew===existing.statKey) arr.splice(idx,0,upd); else dzAddManualRow(existing.brandKey,statNew,upd);
+    if(sub==='CE'){
+      /* CE a otra convocatoria: en la actual queda CE / NM (upd) y en la nueva se crea ALTA / CE */
+      const convNew=ch.mes?(ch.mes+' '+(ch.anio||'')).trim():'';
+      const convOld=(orig.datos&&orig.datos.convocatoriaFull)||'';
+      if(convNew&&convNew!==convOld){
+        const nr=JSON.parse(JSON.stringify(orig));
+        ['_sentAt','_sentHash','_sentRec','_archived','_uid'].forEach(k=>delete nr[k]);
+        nr._createdAt=now; nr._manual=true;
+        nr.convocatoria=ch.mes;
+        nr.datos=Object.assign({},nr.datos||{},{tipoDoc:'CE',origen:'PF',tipoMat:'',tipoAlumno:'CE',status:'ALTA',convocatoriaFull:convNew,convocatoriaOrigen:convOld,fechaBaja:'',motivo:'',tipoBaja:'',pairKey:'',pairRole:'',
+          historico:prevHist+dzToday()+' CE desde '+(convOld||'convocatoria anterior')});
+        delete nr.datos.pairKey; delete nr.datos.pairRole;
+        dzAddManualRow(existing.brandKey,'ccce',nr);
+      }
+    }
     fb.className='fix-feedback ok';
     fb.textContent=(kind==='CEBAJA'?'Fila actualizada como '+sub:'Fila actualizada con el dato final')+(statNew!==existing.statKey?' y movida a '+statName[statNew]:'')+'. Lo original está en HISTÓRICO.';
   }
@@ -2869,12 +2890,14 @@ function dzStateSnapshot(){
    (_sentAt): el script del Excel solo aplica lo que sea posterior a su última ejecución. */
 const DZ_FEED_KEY='convo27_excel_feed';
 const DZ_FEED_DAYS=7;
+function dzNoAccents(t){ return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ñ/g,'n').replace(/Ñ/g,'N'); }
 function dzRecFor(r,stat){
   const rec=exportRecord(r,stat,'');
   const o={};
   dzActiveCols.forEach(c=>{
     let v=rec[c];
     if(Object.prototype.toString.call(v)==='[object Date]') v=isNaN(v)?'':v.toISOString().slice(0,10);
+    if(typeof v==='string') v=dzNoAccents(v);
     o[c]=v==null?'':v;
   });
   o._uid=r._uid||'';
