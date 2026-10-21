@@ -307,8 +307,8 @@ var MIN_BASE=300, MIN_DIAS=30, MIN_MESES=3; // mínimo garantizado: 300 € al m
 var IMPORTE_MES=1; // qué mes (1/2/3) muestra la columna "Importe mínimo"; se elige desde el desplegable de su cabecera
 var TERM_TIPOS=['BV','BNV','BAJA','FIN','CESE']; // prefijos de asunto que se leen como fin de contrato, no como alta (BV/BNV confirmados; el resto por si acaso)
 function todayYM(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
-var MARGENES_NORMALES=true; // true = se fuerzan los márgenes de abajo en todos los anexos (ahora mínimos, para que el texto quepa en el nº de carillas esperado sin cortarse)
-var MARGENES={top:720,right:720,bottom:720,left:720,header:425,footer:425}; // en twips (567 = 1 cm) — 720 = 1,27 cm (margen mínimo habitual de impresora), 425 = 0,75 cm
+var MARGENES_NORMALES=false; // false = se respetan los márgenes que ya trae cada plantilla (los personalizados por VRO en el .docx); true forzaría los de abajo encima de los de la plantilla
+var MARGENES={top:720,right:720,bottom:720,left:720,header:425,footer:425}; // solo se usa si MARGENES_NORMALES=true; en twips (567 = 1 cm)
 var VALORES_EN_NEGRO=true; // true = los datos (nombre, antigüedad, Sr./Sra. y fecha) salen en negro aunque el campo de la plantilla esté en rojo
 
 //ENGINE_START
