@@ -97,7 +97,7 @@ tr.sel td{outline:1px solid var(--cyan);outline-offset:-1px;color:var(--cyan)}
 .mb td input{padding:7px 9px;font-size:13px}
 .mb h4{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
 .mb .del{background:none;border:none;cursor:pointer;font-size:15px}
-body.ext #btnVolver,body.ext #btnTarifas,body.ext #btnHist,body.ext #btnLink,body.ext #mask,body.ext #pmask,body.ext #hmask{display:none!important}
+body.ext #btnVolver,body.ext #btnTarifas,body.ext #mask,body.ext #pmask{display:none!important}
 #pmask{z-index:70}
 .hq{max-width:300px}
 .mb table.ht td,.mb table.ht th{font-size:12px;padding:7px 8px}
@@ -221,7 +221,7 @@ body.ext #btnVolver,body.ext #btnTarifas,body.ext #btnHist,body.ext #btnLink,bod
       <table class="ht"><thead><tr><th>Fecha</th><th>Candidato</th><th>Programa</th><th>Campaña</th><th>Plazo</th><th>Cuota</th><th>Apertura</th><th>Válida hasta</th><th style="width:70px"></th></tr></thead><tbody id="hBody"></tbody></table>
       <div class="hempty" id="hEmpty" style="display:none">Todavía no hay propuestas descargadas.</div>
     </div>
-    <div class="mf"><span class="status" id="hStatus"></span><span class="status">Solo se registra al descargar el PDF.</span></div>
+    <div class="mf"><span class="status" id="hStatus"></span><span class="status" id="hNote">Solo se registra al descargar el PDF.</span></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -521,11 +521,20 @@ function kvGetKey(k){
 function kvSetKey(k,v){
   return fetch(KV_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,value:v})}).then(function(r){return r.ok;});
 }
+function isExt(){return /^#externo$/i.test(location.hash);}
+var HIST_LOCAL_KEY='adminhub_cuotas_sabadell_hist_local_v1', HIST_LOCAL_MAX=200;
+function locGet(){try{var v=JSON.parse(localStorage.getItem(HIST_LOCAL_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}}
+function locSet(a){try{localStorage.setItem(HIST_LOCAL_KEY,JSON.stringify(a));return true;}catch(e){return false;}}
 /* Lectura fresca antes de cada escritura para no pisar lo de otros usuarios */
 function registrarHist(L){
   var e=JSON.parse(JSON.stringify(L));
   e.id='h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   e.ts=new Date().toISOString();
+  if(isExt()){
+    var la=locGet(); la.unshift(e); if(la.length>HIST_LOCAL_MAX) la=la.slice(0,HIST_LOCAL_MAX);
+    toast(locSet(la)?'Propuesta descargada y guardada en tu histórico':'Propuesta descargada (este navegador no permite guardar el histórico)');
+    return;
+  }
   kvGetKey(HIST_KEY).then(function(cur){
     var arr=Array.isArray(cur)?cur:[];
     arr.unshift(e); if(arr.length>HIST_MAX) arr=arr.slice(0,HIST_MAX);
@@ -535,7 +544,12 @@ function registrarHist(L){
 }
 function fdt(iso){var d=new Date(iso); if(isNaN(d)) return ''; function z(n){return ('0'+n).slice(-2);} return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' '+z(d.getHours())+':'+z(d.getMinutes());}
 function openHist(){
-  $('hQ').value=''; $('hStatus').textContent='Cargando…'; $('hmask').classList.add('on'); renderHist();
+  $('hQ').value=''; $('hmask').classList.add('on');
+  if(isExt()){
+    HIST=locGet(); $('hStatus').textContent=HIST.length+' propuesta'+(HIST.length===1?'':'s');
+    $('hNote').textContent='Solo se muestran las descargas hechas desde este ordenador.'; renderHist(); return;
+  }
+  $('hNote').textContent='Solo se registra al descargar el PDF.'; $('hStatus').textContent='Cargando…'; renderHist();
   kvGetKey(HIST_KEY).then(function(cur){HIST=Array.isArray(cur)?cur:[]; $('hStatus').textContent=HIST.length+' propuesta'+(HIST.length===1?'':'s'); renderHist();})
     .catch(function(){$('hStatus').textContent='No se pudo cargar el histórico'; renderHist();});
 }
@@ -549,6 +563,10 @@ function renderHist(){
   }).join('');
 }
 function hDelete(id){
+  if(isExt()){
+    HIST=locGet().filter(function(x){return x.id!==id;}); locSet(HIST); renderHist();
+    $('hStatus').textContent=HIST.length+' propuesta'+(HIST.length===1?'':'s'); toast('Eliminada del histórico'); return;
+  }
   kvGetKey(HIST_KEY).then(function(cur){
     var arr=(Array.isArray(cur)?cur:[]).filter(function(x){return x.id!==id;});
     return kvSetKey(HIST_KEY,arr).then(function(ok){ if(!ok) throw 0; HIST=arr; renderHist(); $('hStatus').textContent=HIST.length+' propuesta'+(HIST.length===1?'':'s'); toast('Eliminada del histórico'); });
@@ -557,7 +575,7 @@ function hDelete(id){
 document.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-pdf],[data-hdel]'); if(!b) return;
   if(b.dataset.pdf){ var h=HIST.filter(function(x){return x.id===b.dataset.pdf;})[0]; if(h) generarPDF(h); }
-  else if(b.dataset.hdel){ var id=b.dataset.hdel; askPass(function(){hDelete(id);}); }
+  else if(b.dataset.hdel){ var id=b.dataset.hdel; if(isExt()) hDelete(id); else askPass(function(){hDelete(id);}); }
 });
 
 /* ============ SELECCIÓN DE PLAZO DESDE LA COMPARATIVA ============ */
