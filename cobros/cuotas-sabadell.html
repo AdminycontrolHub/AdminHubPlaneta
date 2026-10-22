@@ -73,6 +73,9 @@ table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:10px;letter-spacing:1.1px;text-transform:uppercase;opacity:.65;text-align:right;padding:6px 8px}
 th:first-child,td:first-child{text-align:left}
 td{font-family:'JetBrains Mono',monospace;text-align:right;padding:8px;background:var(--row);border-top:2px solid var(--navy2)}
+#cmpBody tr{cursor:pointer;transition:.12s}
+#cmpBody tr:hover td{background:rgba(0,230,255,.14)}
+#cmpBody tr:focus-visible td{outline:1px dashed var(--cyan);outline-offset:-1px}
 tr.sel td{outline:1px solid var(--cyan);outline-offset:-1px;color:var(--cyan)}
 .valid{margin-top:18px;padding-top:16px;border-top:1px solid rgba(0,230,255,.18)}
 .valid label{color:var(--cyan);opacity:.85}
@@ -336,7 +339,7 @@ function calc(){
 
   $('cmpBody').innerHTML=DATA.plazos.map(function(p){
     var x=fin==null?null:cuotaPara(fin,p);
-    return '<tr class="'+(pl&&+p.meses===+pl.meses?'sel':'')+'"><td>'+p.meses+' m</td><td>'+(x?fmt(x.cuota):'—')+'</td><td>'+(x?fmt(x.apertura):'—')+'</td><td>'+(x?fmt(x.total):'—')+'</td></tr>';
+    return '<tr data-m="'+p.meses+'" tabindex="0" title="Seleccionar este plazo" class="'+(pl&&+p.meses===+pl.meses?'sel':'')+'"><td>'+p.meses+' m</td><td>'+(x?fmt(x.cuota):'—')+'</td><td>'+(x?fmt(x.apertura):'—')+'</td><td>'+(x?fmt(x.total):'—')+'</td></tr>';
   }).join('');
 
   last={cand:$('cand').value,fecha:$('fecha').value,validez:$('validez').value,camp:$('camp').options[$('camp').selectedIndex].text,prog:pi!==''?DATA.programas[+pi].nombre:'',pvp:pvp,totalDto:totalDto,neto:neto,inscPc:inscPc,insc:insc,fin:fin,pl:pl,r:r};
@@ -556,6 +559,16 @@ document.addEventListener('click',function(e){
   if(b.dataset.pdf){ var h=HIST.filter(function(x){return x.id===b.dataset.pdf;})[0]; if(h) generarPDF(h); }
   else if(b.dataset.hdel){ var id=b.dataset.hdel; askPass(function(){hDelete(id);}); }
 });
+
+/* ============ SELECCIÓN DE PLAZO DESDE LA COMPARATIVA ============ */
+function elegirPlazo(tr){
+  if(!tr||!tr.dataset.m) return;
+  $('meses').value=tr.dataset.m; calc();
+  var n=document.querySelector('#cmpBody tr.sel'); if(n) n.focus();
+}
+/* mousedown (no click): si venías de escribir en otro campo, su 'change' re-pinta la tabla entre mousedown y mouseup y se perdería el clic */
+$('cmpBody').addEventListener('mousedown',function(e){elegirPlazo(e.target.closest('tr'));});
+$('cmpBody').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();elegirPlazo(e.target.closest('tr'));}});
 
 /* ============ ENLACE EXTERNO ============ */
 function copiarLinkExterno(){
