@@ -182,12 +182,15 @@ table.ppl td.st{font-size:13.5px;white-space:nowrap}
 .pwd-btn.ok { background:#00D4F0; color:#031420; }
 #toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);background:#030E1E;color:#E0F7FF;border:1px solid rgba(0,212,240,0.5);padding:11px 18px;border-radius:10px;font-size:12.5px;line-height:1.5;z-index:650;display:none;max-width:min(680px,92vw);box-shadow:0 0 30px rgba(0,180,255,0.15)}
 #secret{position:fixed;right:16px;bottom:16px;background:none;border:0;font-size:22px;opacity:.3;cursor:pointer;z-index:700}
-#printRoot{display:none}
+/* Fuera de pantalla (no display:none): necesita tener tamaño real ANTES de imprimir, para poder
+   medir cada página y repartir las que no caben en una hoja (repaginarDesbordes), algo que con
+   display:none es imposible (todo mide 0). */
+#printRoot{position:fixed;top:0;left:-9999px;width:595.3pt;background:#fff}
 @media print{
  @page{size:A4;margin:0}
  html,body{background:#fff!important;width:595.3pt!important;margin:0!important}
  body>*:not(#printRoot){display:none!important}
- #printRoot{display:block!important;width:595.3pt!important;margin:0!important}
+ #printRoot{position:static!important;display:block!important;width:595.3pt!important;margin:0!important}
  #printRoot section{box-shadow:none!important;margin:0 auto!important;break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid}
 }
 </style>
@@ -455,6 +458,51 @@ function reubicarSaltosDePagina(xml){
     cursor=insertPos; // seguir buscando después de este punto (la marca recién insertada no queda pegada a <w:t, así que no vuelve a engancharse)
   }
   return xml;
+}
+// Cada "página" que genera docx-preview (una <section>, con su cabecera/pie y su margen propio ya
+// correcto) puede salir más alta que una hoja A4 real si cabe más contenido del que entra físicamente
+// en una hoja: al imprimir, el navegador reparte esa <section> en 2 hojas de papel, pero el margen de
+// arriba/abajo SOLO vive en el padding de la <section> (una vez por página de documento, no por hoja
+// física), así que la hoja de continuación sale con el texto pegado al borde de arriba y de abajo.
+// En vez de tocar el margen (eso descuadra la cabecera/pie, que ya está bien posicionada), partimos
+// de verdad esa <section> en varias, clonando su cabecera y pie en cada una, para que CADA hoja física
+// sea siempre el principio/final de una página real del documento y conserve su margen correcto.
+async function repaginarDesbordes(box){
+  var ALTO_PAGINA_PX=ptToPx(841.9); // alto de una hoja A4 completa (el mismo valor que usa docx-preview para el min-height de cada <section>)
+  await nextFrame();
+  var secciones=Array.from(box.querySelectorAll('section'));
+  for(var s=0;s<secciones.length;s++){
+    var sec=secciones[s];
+    var totalH=sec.getBoundingClientRect().height;
+    if(totalH<=ALTO_PAGINA_PX+1) continue; // cabe en una hoja, no hay que tocarla
+    var article=sec.querySelector('article');
+    if(!article||!article.children.length) continue;
+    var header=sec.querySelector('header'), footer=sec.querySelector('footer');
+    var huecoFijo=totalH-article.getBoundingClientRect().height; // lo que ocupan cabecera+pie+padding en esta página
+    var disponiblePorHoja=ALTO_PAGINA_PX-huecoFijo;
+    if(disponiblePorHoja<=0) continue; // caso extremo (cabecera/pie ya ocupan casi toda la hoja): dejarlo como está, mejor que romperlo
+    var hijos=Array.from(article.children);
+    // 1ª pasada: medir TODO antes de mover nada (mover un hijo reflota a los siguientes y falsearía su posición)
+    var inicioArticulo=article.getBoundingClientRect().top;
+    var finesRelativos=hijos.map(function(hijo){ return hijo.getBoundingClientRect().bottom-inicioArticulo; });
+    // 2ª pasada: decidir en qué hijo corta cada hoja y mover los nodos reales (nunca clonarlos: evita duplicar firmas/ids)
+    var nuevasSecciones=[], articuloActual=article, inicioHojaActual=0;
+    for(var h=0;h<hijos.length;h++){
+      if((finesRelativos[h]-inicioHojaActual)>disponiblePorHoja && articuloActual.children.length>0){
+        var nuevaSeccion=sec.cloneNode(false);
+        if(header) nuevaSeccion.appendChild(header.cloneNode(true));
+        var nuevoArticulo=article.cloneNode(false);
+        nuevaSeccion.appendChild(nuevoArticulo);
+        if(footer) nuevaSeccion.appendChild(footer.cloneNode(true));
+        nuevasSecciones.push(nuevaSeccion);
+        articuloActual=nuevoArticulo;
+        inicioHojaActual=(h>0?finesRelativos[h-1]:0);
+      }
+      articuloActual.appendChild(hijos[h]);
+    }
+    nuevasSecciones.forEach(function(ns){ sec.parentNode.insertBefore(ns,sec.nextSibling); sec=ns; });
+    await nextFrame();
+  }
 }
 function setMargins(xml, mm){
   return xml.replace(/<w:pgMar\b[^>]*\/>/g,function(tag){
@@ -1826,6 +1874,7 @@ async function printRows(list){
         box=el('div');root.appendChild(box);
         await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i+'_'+c,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
         await settleTextboxes(box,sizes);
+        await repaginarDesbordes(box);
         firstBox=box;
       }else{
         // mismo contenido para cada copia (solo cambia a quién se le entrega el papel impreso):
