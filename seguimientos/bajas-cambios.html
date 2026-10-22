@@ -564,13 +564,17 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 </div>
 
 <script>
-console.log('%cHub Bajas y Cambios — versión 2026-10-01-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
+console.log('%cHub Bajas y Cambios — versión 2026-10-22-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
 // ============================================================
 // CONFIGURACION
 // ============================================================
 const KV_BASE = 'https://seguimiento-correos.adminhubplaneta.workers.dev/kv';
 const KV_LIST = 'https://seguimiento-correos.adminhubplaneta.workers.dev/kv/list';
 const KV_KEY_CONFIG = 'config_mes_convocatoria';
+// Mes de convocatoria INDEPENDIENTE para cada tipo (CE, CC, CP). Se guarda
+// en una sola clave como {ce:'...', cc:'...', cp:'...'}. Si un tipo aun no
+// tiene mes propio, usa el mes general antiguo (config_mes_convocatoria).
+const KV_KEY_MES_POR_TIPO = 'config_mes_convocatoria_por_tipo';
 const KV_KEY_PLAZO_NACS = 'config_plazo_revisar_nacs';
 const KV_KEY_CRUCE_NACS = 'config_cruce_nacs';
 
@@ -698,12 +702,16 @@ Hecha GI en NACS`
 // ESTADO EN MEMORIA
 // ============================================================
 let casos = [];          // [{...macro, ...hub, key}]
-let mesConvocatoria = 'Abril 2027';
-async function editarMesConvocatoria(){
-  const nuevo = window.prompt('Mes de convocatoria (ej: Abril 2027):', mesConvocatoria);
+let mesConvocatoria = 'Abril 2027';   // mes general antiguo (solo como valor por defecto)
+let mesPorTipo = {};                  // { ce:'...', cc:'...', cp:'...' }
+function mesDe(catId){ return (catId && mesPorTipo[catId]) || mesConvocatoria; }
+async function editarMesConvocatoria(catId){
+  catId = catId || catActiva;
+  const nombre = (CATEGORIAS.find(x => x.id === catId) || {}).nombre || '';
+  const nuevo = window.prompt(`Mes de convocatoria para ${nombre} (ej: Abril 2027):`, mesDe(catId));
   if(!nuevo || !nuevo.trim()) return;
-  mesConvocatoria = nuevo.trim();
-  await kvSet(KV_KEY_CONFIG, mesConvocatoria);
+  mesPorTipo = Object.assign({}, mesPorTipo, { [catId]: nuevo.trim() });
+  await kvSet(KV_KEY_MES_POR_TIPO, mesPorTipo);
   renderNivel2();
   if(ateneaAbierta && catActiva){
     renderAteneaPopover(catActiva);
@@ -769,12 +777,13 @@ async function kvList(){
 // CARGA DE DATOS
 // ============================================================
 async function cargarTodo(){
-  const [keys, mesGuardado, plazoGuardado, cruceGuardado] = await Promise.all([kvList(), kvGet(KV_KEY_CONFIG), kvGet(KV_KEY_PLAZO_NACS), kvGet(KV_KEY_CRUCE_NACS)]);
+  const [keys, mesGuardado, plazoGuardado, cruceGuardado, mesTipoGuardado] = await Promise.all([kvList(), kvGet(KV_KEY_CONFIG), kvGet(KV_KEY_PLAZO_NACS), kvGet(KV_KEY_CRUCE_NACS), kvGet(KV_KEY_MES_POR_TIPO)]);
   if(mesGuardado) mesConvocatoria = mesGuardado;
+  if(mesTipoGuardado && typeof mesTipoGuardado === 'object') mesPorTipo = mesTipoGuardado;
   plazoNacs = plazoGuardado || finDeMesActual();
   const cruceNacs = cruceGuardado || {};
 
-  const idsClaves = keys.filter(k => k !== KV_KEY_CONFIG && k !== KV_KEY_PLAZO_NACS && k !== KV_KEY_CRUCE_NACS && !k.startsWith('hub_'));
+  const idsClaves = keys.filter(k => !k.startsWith('config_') && !k.startsWith('hub_') && !k.startsWith('bandeja_'));
 
   // AHORRO DE LECTURAS: la lista ya trae tambien las claves "hub_", asi que
   // sabemos de antemano que casos tienen datos propios del Hub. Solo se leen
@@ -822,7 +831,13 @@ async function cargarTodo(){
   actualizarBadgeNacsGeneral();
   poblarSelectsFiltro();
   const totalNivel1 = casos.filter(perteneceANivel1).length;
-  const pendientesNivel1 = casos.filter(c => perteneceANivel1(c) && esPendiente(c)).length;
+  // Mismo criterio que las pestañas y el Resumen semanal: en Devolucion
+  // cuenta su propio cierre (devolucion completada), no el estado general.
+  const pendientesNivel1 = casos.filter(c => {
+    if(!perteneceANivel1(c)) return false;
+    const cat = categoriaDeCaso(c);
+    return cat ? esPendienteParaCategoria(c, cat) : esPendiente(c);
+  }).length;
   document.getElementById('subHeader').textContent = `${totalNivel1} casos totales · ${pendientesNivel1} pendientes`;
 }
 
@@ -1228,7 +1243,8 @@ function cerrarAyuda(){
 
 function toggleAitor(){
   aitorAbierto = !aitorAbierto;
-  if(aitorAbierto) renderAitorPopover();
+  if(!aitorAbierto) pararLecturaAitor();
+  if(aitorAbierto){ renderAitorPopover(); rellenarSelectorVoces(); }
   document.getElementById('aitorOverlay').classList.toggle('show', aitorAbierto);
   document.body.style.overflow = aitorAbierto ? 'hidden' : '';
 }
@@ -1405,6 +1421,32 @@ function renderAitorPopover(){
 
   const textoPlano = intro + '\n\n' + bloquesTexto.join('\n\n') + bloqueSinTareasTexto + bloqueDevolucionTexto;
 
+  // --- Version hablada (lo que lee Aitor): corta, sin incidencias, y de
+  //     Devolucion solo el numero total, sin detalle por marca.
+  const NOMBRES_VOZ = { cc:'C C', bajacon:'bajas con devolución', bajasin:'bajas sin devolución', ce:'C E', cp:'C P', otro:'otros' };
+  const NOMBRES_VOZ_1 = { cc:'C C', bajacon:'baja con devolución', bajasin:'baja sin devolución', ce:'C E', cp:'C P', otro:'otro' };
+  const frasesVoz = [`Hola, soy Aitor. Este es el resumen de pendientes. Hay ${pendientes.length} pendiente${pendientes.length===1?'':'s'} de gestión.`];
+  conTareas.forEach(nombre => {
+    const catsDeMarca = porMarca[nombre];
+    const partes = catsOrdenadasDe(catsDeMarca).map(catId => {
+      const n = catsDeMarca[catId].length;
+      return `${n} ${n === 1 ? NOMBRES_VOZ_1[catId] : NOMBRES_VOZ[catId]}`;
+    });
+    const ultimo = partes.length > 1 ? partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1] : partes[0];
+    const totalMarca = totalDeMarca(nombre);
+    // Con un solo tipo no se repite la cifra ("ESDesign, 1 pendiente: 1 C E" sonaria raro)
+    if(partes.length > 1){
+      frasesVoz.push(`${nombre}, ${totalMarca} pendiente${totalMarca === 1 ? '' : 's'}: ${ultimo}.`);
+    } else {
+      frasesVoz.push(`${nombre}, ${totalMarca} pendiente${totalMarca === 1 ? '' : 's'} de ${ultimo.replace(/^\d+\s+(una\s+|un\s+)?/, '')}.`);
+    }
+  });
+  if(sinTareas.length) frasesVoz.push(`${sinTareas.join(' y ')}, sin pendientes.`);
+  const totalDevol = Object.values(devolucionPorMarca).reduce((t, l) => t + l.length, 0);
+  frasesVoz.push(totalDevol ? `Devoluciones pendientes: ${totalDevol}.` : 'No hay devoluciones pendientes.');
+  if(masAntiguoCaso) frasesVoz.push(`El más antiguo lleva ${masAntiguoDias} días.`);
+  const textoVoz = frasesVoz.join(' ');
+
   document.getElementById('aitorPopover').innerHTML = `
     <div class="atenea-head">
       <span class="atenea-titulo">Resumen de pendientes · por marca</span>
@@ -1415,13 +1457,126 @@ function renderAitorPopover(){
     ${htmlSinTareas}
     ${htmlDevolucion}
     <div class="atenea-texto" style="display:none;">${escHtml(textoPlano)}</div>
-    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+    <div class="aitor-texto-voz" style="display:none;">${escHtml(textoVoz)}</div>
+    <div id="aitorVideoWrap" style="display:none;justify-content:center;margin:14px 0 4px;">
+      <div style="position:relative;width:150px;height:200px;">
+        <img id="aitorFoto" src="${AITOR_FOTO}" alt="Aitor"
+          style="position:absolute;inset:0;width:150px;height:200px;object-fit:cover;object-position:top;border-radius:14px;border:1px solid #e4dccf;">
+        <video id="aitorVideo" src="aitor.mp4" muted loop playsinline preload="auto" poster="${AITOR_FOTO}"
+          onerror="this.style.display='none'"
+          style="position:absolute;inset:0;width:150px;height:200px;object-fit:cover;object-position:top;border-radius:14px;border:1px solid #e4dccf;"></video>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:10px;">
+      <span style="font-size:10px;color:#5a6e80;">Voz:</span>
+      <select id="aitorVoz" onchange="guardarVozAitor(this.value)" style="font-size:10.5px;max-width:210px;border:1px solid #d8cfc3;border-radius:8px;padding:3px 6px;background:#fff;color:#1a3a50;"></select>
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:8px;">
+      <button id="btnLeerAitor" onclick="leerResumenAitor()" title="Escuchar el resumen" style="border:1px solid #d8cfc3;background:#fff;color:#1a3a50;border-radius:10px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;">🔊 Escuchar</button>
       <button class="copy-btn" onclick="copiarTextoAitor(this)" title="Copiar texto">
         <span class="copy-icon-a"></span><span class="copy-icon-b"></span>
       </button>
     </div>
   `;
 }
+
+// ============================================================
+// AITOR LEE EL RESUMEN EN VOZ ALTA (voz del propio navegador, en
+// español; no envia nada a ningun sitio ni gasta lecturas del Worker).
+// ============================================================
+const AITOR_FOTO = 'data:image/jpeg;base64,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';
+function vocesEspanol(){
+  try{ return window.speechSynthesis.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith('es')); }catch(e){ return []; }
+}
+function vozGuardadaAitor(){ try{ return localStorage.getItem('aitorVoz') || ''; }catch(e){ return ''; } }
+function guardarVozAitor(nombre){ try{ localStorage.setItem('aitorVoz', nombre); }catch(e){} }
+function rellenarSelectorVoces(){
+  const sel = document.getElementById('aitorVoz');
+  if(!sel) return;
+  const voces = vocesEspanol();
+  const guardada = vozGuardadaAitor();
+  sel.innerHTML = voces.length
+    ? voces.map(v => `<option value="${escAttr(v.name)}" ${v.name === guardada ? 'selected' : ''}>${escHtml(v.name)} (${escHtml(v.lang)})</option>`).join('')
+    : '<option value="">(sin voces en español en este ordenador)</option>';
+}
+if('speechSynthesis' in window){
+  try{ window.speechSynthesis.onvoiceschanged = rellenarSelectorVoces; }catch(e){}
+}
+function textoParaVoz(t){
+  return t
+    .replace(/Baja C\/Dev/g, 'Baja con devolución')
+    .replace(/Baja S\/Dev/g, 'Baja sin devolución')
+    .replace(/\bDev\./g, 'Devolución')
+    .replace(/\bCE\b/g, 'C E').replace(/\bCC\b/g, 'C C').replace(/\bCP\b/g, 'C P')
+    .replace(/\bOBS\b/g, 'O B S')
+    // Pronunciacion de marcas: se escriben "como suenan" para que la voz las diga bien
+    .replace(/\bUCMA\b/g, 'Úcma')
+    .replace(/\bESDesign\b/gi, 'Es Disáin')
+    .replace(/⚠/g, '').replace(/·/g, ',').replace(/—/g, ',')
+    .replace(/\b(\d{2})\/(\d{2})\/\d{4}\b/g, (m, d, mes) => {
+      const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      return parseInt(d, 10) + ' de ' + (meses[parseInt(mes, 10) - 1] || mes);
+    })
+    .replace(/\n+/g, '. ');
+}
+function pararLecturaAitor(){
+  lecturaAitorId++;
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  const vid = document.getElementById('aitorVideo');
+  if(vid){ try{ vid.pause(); }catch(e){} }
+  const wrap = document.getElementById('aitorVideoWrap');
+  if(wrap) wrap.style.display = 'none';
+  const b = document.getElementById('btnLeerAitor');
+  if(b) b.textContent = '🔊 Escuchar';
+}
+let lecturaAitorId = 0; // evita que avisos de una lectura anterior paren la nueva
+function leerResumenAitor(){
+  if(!('speechSynthesis' in window)){
+    alert('Este navegador no permite leer en voz alta.');
+    return;
+  }
+  const btn = document.getElementById('btnLeerAitor');
+  if(window.speechSynthesis.speaking || window.speechSynthesis.pending){ pararLecturaAitor(); return; }
+  const pop = document.getElementById('aitorPopover');
+  const nodoVoz = pop.querySelector('.aitor-texto-voz');
+  const texto = textoParaVoz(nodoVoz ? nodoVoz.textContent : pop.querySelector('.atenea-texto').textContent);
+  const voces = window.speechSynthesis.getVoices();
+  const sel = document.getElementById('aitorVoz');
+  const elegida = (sel && sel.value) || vozGuardadaAitor();
+  const vozEs = voces.find(v => v.name === elegida)
+             || voces.find(v => v.lang === 'es-ES' && /male|pablo|alvaro|jorge|diego|raul/i.test(v.name))
+             || voces.find(v => v.lang === 'es-ES')
+             || voces.find(v => (v.lang || '').startsWith('es'));
+  // Se lee frase a frase: Chrome corta las lecturas largas (unos 15 s) si
+  // se mandan de una vez.
+  const frases = texto.split(/(?<=\.)\s+/).map(f => f.trim()).filter(f => f.length);
+  const miId = ++lecturaAitorId;
+  // Sin cancel() justo antes de hablar: en Chrome, cancelar y hablar en el
+  // mismo instante hace que a veces no se oiga nada. Y por si las voces aun
+  // no estaban cargadas, se espera un momento antes de empezar.
+  const empezar = () => { if(miId !== lecturaAitorId) return; frases.forEach((f, i) => {
+    const u = new SpeechSynthesisUtterance(f);
+    u.lang = 'es-ES';
+    u.rate = 1;
+    if(vozEs) u.voice = vozEs;
+    if(i === frases.length - 1) u.onend = () => { if(miId === lecturaAitorId) pararLecturaAitor(); };
+    u.onerror = (ev) => { if(miId === lecturaAitorId && ev.error !== 'interrupted' && ev.error !== 'canceled') pararLecturaAitor(); };
+    window.speechSynthesis.speak(u);
+  });
+  // Chrome a veces deja la voz en pausa: se reanuda por si acaso
+  try{ window.speechSynthesis.resume(); }catch(e){}
+  };
+  setTimeout(empezar, 150);
+  if(btn) btn.textContent = '⏹ Parar';
+  const wrap = document.getElementById('aitorVideoWrap');
+  const vid = document.getElementById('aitorVideo');
+  if(wrap && vid){
+    wrap.style.display = 'flex';
+    try{ vid.currentTime = 0; const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{}); }catch(e){}
+  }
+}
+// Algunos navegadores cargan las voces un poco despues de abrir la pagina
+if('speechSynthesis' in window){ try{ window.speechSynthesis.getVoices(); }catch(e){} }
 
 function copiarTextoAitor(btn){
   const texto = document.getElementById('aitorPopover').querySelector('.atenea-texto').textContent;
@@ -1545,7 +1700,7 @@ function toggleAtenea(catId){
 
 function renderAteneaPopover(catId){
   const cat = CATEGORIAS.find(c => c.id === catId);
-  const texto = TEXTOS_ATENEA[catId](mesConvocatoria);
+  const texto = TEXTOS_ATENEA[catId](mesDe(catId));
   document.getElementById('ateneaPopover').innerHTML = `
     <div class="atenea-head">
       <span class="atenea-titulo">Texto Atenea — ${cat.nombre}</span>
@@ -1558,9 +1713,9 @@ function renderAteneaPopover(catId){
     </div>
     <div class="atenea-texto">${escHtml(texto)}</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;">
-      <span style="font-size:9.5px;color:#5a6e80;">Mes de convocatoria:</span>
-      <span style="font-size:9.5px;font-weight:700;color:#1a3a50;">${escHtml(mesConvocatoria)}</span>
-      <button onclick="editarMesConvocatoria()">✎</button>
+      <span style="font-size:9.5px;color:#5a6e80;">Mes de convocatoria (${escHtml(cat.nombre)}):</span>
+      <span style="font-size:9.5px;font-weight:700;color:#1a3a50;">${escHtml(mesDe(catId))}</span>
+      <button onclick="editarMesConvocatoria('${catId}')">✎</button>
     </div>
   `;
 }
@@ -2243,7 +2398,7 @@ function renderCopyBox(c, cat, conf){
   const mostrarAbonadas = conf.tieneAbonadas && esConPago;
   const mostrarVencimiento = campos.includes('vencimiento') && !(mostrarAbonadas && abonadasSel === 'Sí');
   const datos = { motivo: c.textoMotivo||'', vencimiento: c.textoVencimiento||'' };
-  const texto = conf.generar(varSel, datos, mesConvocatoria, metodoSel, mostrarAbonadas ? abonadasSel : undefined);
+  const texto = conf.generar(varSel, datos, mesDe(cat && cat.id), metodoSel, mostrarAbonadas ? abonadasSel : undefined);
 
   return `
   <div class="copybox">
@@ -2300,7 +2455,7 @@ async function guardarCampoTexto(key, campo, valor){
       const esConPago = varSel === 'Con pago de tasas';
       const mostrarAbonadas = conf.tieneAbonadas && esConPago;
       const datos = { motivo: c.textoMotivo||'', vencimiento: c.textoVencimiento||'' };
-      const texto = conf.generar(varSel, datos, mesConvocatoria, metodoSel, mostrarAbonadas ? abonadasSel : undefined);
+      const texto = conf.generar(varSel, datos, mesDe(cat && cat.id), metodoSel, mostrarAbonadas ? abonadasSel : undefined);
       const row = document.getElementById('row_'+key);
       const textoEl = row ? row.querySelector('.copybox-text') : null;
       if(textoEl) textoEl.textContent = texto;
