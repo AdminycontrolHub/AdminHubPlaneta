@@ -622,6 +622,20 @@ body.ext-mode .imodal-bg{padding-top:40px;}
 </div>
 
 <script>
+/* Diagnóstico: si algo falla al cargar, se muestra el error en pantalla (para poder localizarlo) */
+(function(){
+  function banner(msg){
+    try{
+      let el=document.getElementById('mjDiagErr');
+      if(!el){ el=document.createElement('div'); el.id='mjDiagErr';
+        el.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#7A1F2B;color:#fff;padding:10px 14px;border-radius:10px;font:12px/1.4 monospace;white-space:pre-wrap;max-height:30vh;overflow:auto;';
+        (document.body||document.documentElement).appendChild(el); }
+      el.textContent='Error en Organízate: '+msg;
+    }catch(e){}
+  }
+  window.addEventListener('error',function(e){ banner((e.message||'')+(e.lineno?' (línea '+e.lineno+')':'')); });
+  window.addEventListener('unhandledrejection',function(e){ banner(String(e.reason&&e.reason.stack||e.reason)); });
+})();
 // ── BG CANVAS ──
 const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');
 function drawBg(){
