@@ -1,45 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bajas comisiones — Admin Hub</title>
-<style>
-  html, body { margin: 0; padding: 0; background: #060D17; }
-  #root { min-height: 100vh; }
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body>
-<div id="root"></div>
-
-<script type="text/babel">
-const { useState, useEffect, useMemo, useRef } = React;
-
-// ---------- almacenamiento compartido (KV en el Worker) ----------
-const WORKER_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
-const KV_KEY = 'adminhub_bajas_comisiones_v1';
-const RESET_PASSWORD = 'AdminHub';
-
-async function kvGet(key) {
-  const res = await fetch(`${WORKER_URL}/kv?key=${encodeURIComponent(key)}`);
-  if (!res.ok) throw new Error('kv get failed');
-  const d = await res.json();
-  if (!d.value) return null;
-  return typeof d.value === 'string' ? JSON.parse(d.value) : d.value;
-}
-async function kvSet(key, value) {
-  const res = await fetch(`${WORKER_URL}/kv`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key, value })
-  });
-  if (!res.ok) throw new Error('kv set failed');
-  return true;
-}
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import * as XLSX from "xlsx";
 
 // ---------- helpers ----------
 const STOPWORDS = new Set(["de", "del", "la", "las", "los", "y", "san", "santa"]);
@@ -117,6 +77,39 @@ function fmtMes(mes) {
   return `${names[idx] || m[2]} ${m[1]}`;
 }
 
+const MONTH_NAME_MAP = {
+  enero: "01", ene: "01",
+  febrero: "02", feb: "02",
+  marzo: "03", mar: "03",
+  abril: "04", abr: "04",
+  mayo: "05", may: "05",
+  junio: "06", jun: "06",
+  julio: "07", jul: "07",
+  agosto: "08", ago: "08",
+  septiembre: "09", setiembre: "09", sep: "09", sept: "09",
+  octubre: "10", oct: "10",
+  noviembre: "11", nov: "11",
+  diciembre: "12", dic: "12",
+};
+
+function parseMesFromFileName(fileName) {
+  if (!fileName) return null;
+  const base = fileName.replace(/\.[^.]+$/, "");
+  let m = base.match(/(20\d{2})[-_\/\.\s]?(0[1-9]|1[0-2])(?!\d)/);
+  if (m) return `${m[1]}-${m[2]}`;
+  m = base.match(/(0[1-9]|1[0-2])[-_\/\.\s](20\d{2})/);
+  if (m) return `${m[2]}-${m[1]}`;
+  const norm = normalize(base);
+  for (const [name, num] of Object.entries(MONTH_NAME_MAP)) {
+    const re = new RegExp(`(^|[^a-z])${name}($|[^a-z])`);
+    if (re.test(norm)) {
+      const y = norm.match(/20\d{2}/);
+      if (y) return `${y[0]}-${num}`;
+    }
+  }
+  return null;
+}
+
 function fmtEUR(n) {
   if (n === null || n === undefined) return "—";
   return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -157,9 +150,10 @@ function simpleHash(str) {
   return "gen-" + Math.abs(h).toString(36);
 }
 
+const STORAGE_KEY = "comisiones-db-v3";
 const emptyDb = { advisors: {}, bajas: [], aplicaOverrides: {}, lastUpdate: null };
 
-function App() {
+export default function App() {
   const [db, setDb] = useState(emptyDb);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
@@ -173,36 +167,14 @@ function App() {
   const [showTramos, setShowTramos] = useState(false);
   const fileRef = useRef(null);
   const bajasFileRef = useRef(null);
-  const [dragOver, setDragOver] = useState(null);
-
-  // arrastrar y soltar: cada botón actúa como zona de destino
-  function dropProps(kind, handler) {
-    return {
-      onDragOver: (e) => { e.preventDefault(); setDragOver(kind); },
-      onDragLeave: () => setDragOver(null),
-      onDrop: (e) => {
-        e.preventDefault();
-        setDragOver(null);
-        const file = e.dataTransfer.files && e.dataTransfer.files[0];
-        if (!file) return;
-        if (!/\.(xlsx|xls)$/i.test(file.name)) {
-          const setter = kind === "tramos" ? setStatus : setBajasStatus;
-          setter({ type: "error", text: "Solo se admiten archivos .xlsx o .xls." });
-          return;
-        }
-        handler(file);
-      },
-    };
-  }
 
   useEffect(() => {
     (async () => {
       try {
-        const saved = await kvGet(KV_KEY);
-        if (saved) setDb({ ...emptyDb, ...saved });
-      } catch (e) {
-        setStatus({ type: "error", text: "No se pudo cargar el histórico guardado. Recarga la página." });
-      } finally {
+        const res = await window.storage.get(STORAGE_KEY, false);
+        if (res && res.value) setDb({ ...emptyDb, ...JSON.parse(res.value) });
+      } catch (e) {}
+      finally {
         setReady(true);
       }
     })();
@@ -212,7 +184,7 @@ function App() {
     const withStamp = { ...newDb, lastUpdate: new Date().toISOString() };
     setDb(withStamp);
     try {
-      await kvSet(KV_KEY, withStamp);
+      await window.storage.set(STORAGE_KEY, JSON.stringify(withStamp), false);
     } catch (e) {
       setStatus({ type: "error", text: "No se pudo guardar. Inténtalo de nuevo." });
     }
@@ -313,6 +285,7 @@ function App() {
         let dupCount = 0;
         const existingIds = new Set((db.bajas || []).map((b) => b.id));
         const newBajas = [...(db.bajas || [])];
+        const fileMes = parseMesFromFileName(file.name);
 
         wb.SheetNames.forEach((sheetName) => {
           const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "" });
@@ -340,7 +313,7 @@ function App() {
             if (!asesorNombre) continue;
             const factNeta = parseNumber(row[idx.factNeta]);
             if (factNeta === null) continue;
-            const mesComisiones = idx.mesComisiones !== -1 && row[idx.mesComisiones] ? String(row[idx.mesComisiones]).trim() : fallbackMonth;
+            const mesComisiones = idx.mesComisiones !== -1 && row[idx.mesComisiones] ? String(row[idx.mesComisiones]).trim() : fileMes || fallbackMonth;
             if (!mesComisiones) continue;
             const mesComercialBaja = idx.mesComercialBaja !== -1 && row[idx.mesComercialBaja] ? String(row[idx.mesComercialBaja]).trim() : mesComisiones;
             const equipo = idx.equipo !== -1 ? String(row[idx.equipo] ?? "").trim() : "";
@@ -392,6 +365,7 @@ function App() {
           let text = `${matchedCount} bajas emparejadas.`;
           if (unmatchedCount > 0) text += ` ${unmatchedCount} sin asesor identificado.`;
           if (dupCount > 0) text += ` ${dupCount} ya existían (omitidas).`;
+          if (fileMes) text += ` Mes de comisión detectado en el archivo: ${fmtMes(fileMes)}.`;
           setBajasStatus({ type: unmatchedCount > 0 ? "warn" : "ok", text });
         }
       } catch (err) {
@@ -404,16 +378,13 @@ function App() {
     reader.readAsArrayBuffer(file);
   }
 
-  function toggleAplica(bajaId, checked) {
-    const newOverrides = { ...db.aplicaOverrides, [bajaId]: checked };
+  function toggleAplica(bajaId, role, checked) {
+    const current = db.aplicaOverrides[bajaId] || {};
+    const newOverrides = { ...db.aplicaOverrides, [bajaId]: { ...current, [role]: checked } };
     persist({ ...db, aplicaOverrides: newOverrides });
   }
 
   async function handleReset() {
-    // El histórico es compartido por todo el equipo: se protege con la misma contraseña que el resto de Admin Hub
-    const pwd = prompt("Contraseña para borrar el histórico de todo el equipo:");
-    if (pwd === null) return;
-    if (pwd !== RESET_PASSWORD) { alert("Contraseña incorrecta."); return; }
     if (!confirm("¿Borrar todo el histórico guardado (tramos y bajas)? No se puede deshacer.")) return;
     await persist(emptyDb);
     setStatus({ type: "ok", text: "Histórico borrado." });
@@ -461,7 +432,10 @@ function App() {
         const tramoAsesor = tramoFor(b.asesorCodigo, b.mesOrigen);
         const tramoJefe = tramoFor(b.jefeCodigo, b.mesOrigen);
         const tramoDirector = tramoFor(b.directorCodigo, b.mesOrigen);
-        const aplica = db.aplicaOverrides[b.id] !== false;
+        const overrides = db.aplicaOverrides[b.id] || {};
+        const aplicaAsesor = overrides.asesor !== false;
+        const aplicaJefe = overrides.jefe !== false;
+        const aplicaDirector = overrides.director !== false;
         return {
           ...b,
           asesorNombreFinal: nombreFor(b.asesorCodigo, b.asesorNombre),
@@ -473,7 +447,9 @@ function App() {
           descAsesor: tramoAsesor != null ? -(b.factNeta * (tramoAsesor / 100)) : null,
           descJefe: b.jefeCodigo && tramoJefe != null ? -(b.factNeta * (tramoJefe / 100)) : null,
           descDirector: b.directorCodigo && tramoDirector != null ? -(b.factNeta * (tramoDirector / 100)) : null,
-          aplica,
+          aplicaAsesor,
+          aplicaJefe,
+          aplicaDirector,
         };
       })
       .filter((b) => equipoFilter === "Todos" || b.equipo === equipoFilter)
@@ -492,10 +468,22 @@ function App() {
     return Object.entries(groups).sort((a, b) => a[1].nombre.localeCompare(b[1].nombre));
   }, [enrichedBajas]);
 
+  const asesorSummary = useMemo(() => {
+    const map = {};
+    enrichedBajas.forEach((b) => {
+      if (b.descAsesor == null || !b.aplicaAsesor) return;
+      const key = b.asesorCodigo || `sin-identificar:${b.asesorNombre}`;
+      if (!map[key]) map[key] = { nombre: b.asesorNombreFinal, total: 0, count: 0 };
+      map[key].total += b.descAsesor;
+      map[key].count += 1;
+    });
+    return Object.values(map).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [enrichedBajas]);
+
   const jefeSummary = useMemo(() => {
     const map = {};
     enrichedBajas.forEach((b) => {
-      if (!b.jefeCodigo || b.descJefe == null || !b.aplica) return;
+      if (!b.jefeCodigo || b.descJefe == null || !b.aplicaJefe) return;
       const key = b.jefeCodigo;
       if (!map[key]) map[key] = { nombre: b.jefeNombreFinal, total: 0, count: 0 };
       map[key].total += b.descJefe;
@@ -507,7 +495,7 @@ function App() {
   const directorSummary = useMemo(() => {
     const map = {};
     enrichedBajas.forEach((b) => {
-      if (!b.directorCodigo || b.descDirector == null || !b.aplica) return;
+      if (!b.directorCodigo || b.descDirector == null || !b.aplicaDirector) return;
       const key = b.directorCodigo;
       if (!map[key]) map[key] = { nombre: b.directorNombreFinal, total: 0, count: 0 };
       map[key].total += b.descDirector;
@@ -532,11 +520,17 @@ function App() {
   }, [db, search, equipoFilter, mesFilter]);
 
   const kpis = useMemo(() => {
-    const totalAdvisors = new Set(flatTramoRows.map((r) => r.codigo)).size;
+    const totalAdvisors = new Set((db.bajas || []).map((b) => b.asesorCodigo || `sin-identificar:${normalize(b.asesorNombre)}`)).size;
     const factNetaTotal = flatTramoRows.reduce((sum, r) => sum + (r.factNeta || 0), 0);
-    const deduccionTotal = enrichedBajas.reduce((sum, b) => sum + (b.aplica && b.descAsesor != null ? b.descAsesor : 0), 0);
+    const deduccionTotal = enrichedBajas.reduce((sum, b) => {
+      let t = 0;
+      if (b.aplicaAsesor && b.descAsesor != null) t += b.descAsesor;
+      if (b.aplicaJefe && b.descJefe != null) t += b.descJefe;
+      if (b.aplicaDirector && b.descDirector != null) t += b.descDirector;
+      return sum + t;
+    }, 0);
     return { totalAdvisors, factNetaTotal, deduccionTotal };
-  }, [flatTramoRows, enrichedBajas]);
+  }, [db, flatTramoRows, enrichedBajas]);
 
   const unmatched = enrichedBajas.filter((b) => !b.asesorCodigo);
   const lastUpdateStr = db.lastUpdate ? new Date(db.lastUpdate).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
@@ -558,16 +552,13 @@ function App() {
               <div style={styles.headerSub}>Administración comercial</div>
             </div>
           </div>
-          <div style={styles.headerRightWrap}>
-            <div style={styles.headerRight}>Actualizado: {lastUpdateStr}</div>
-            <a href="index.html" style={styles.backBtn}>‹ Volver a Comisiones</a>
-          </div>
+          <div style={styles.headerRight}>Actualizado: {lastUpdateStr}</div>
         </div>
 
         <div style={styles.row}>
           <div style={{ ...styles.panel, flex: 2 }}>
             <div style={styles.panelHead}>
-              <span style={styles.dot("#35D6E0")} />
+              <span style={styles.dot("#0A6D62")} />
               <span style={styles.panelHeadText}>FILTROS</span>
             </div>
             <div style={styles.filtersGrid}>
@@ -600,7 +591,7 @@ function App() {
 
           <div style={{ ...styles.panel, flex: 1.3 }}>
             <div style={styles.panelHead}>
-              <span style={styles.dot("#35D67B")} />
+              <span style={styles.dot("#2E7D32")} />
               <span style={styles.panelHeadText}>CARGA DE DATOS</span>
             </div>
             <div style={{ marginBottom: 10 }}>
@@ -609,17 +600,17 @@ function App() {
             </div>
             <div style={styles.uploadBtns}>
               <input ref={fileRef} type="file" accept=".xlsx,.xls" onChange={(e) => handleTramosFile(e.target.files[0])} style={{ display: "none" }} id="up-tramos" />
-              <label htmlFor="up-tramos" style={{ ...styles.btnPrimary, ...(dragOver === "tramos" ? styles.dropActive : {}) }} {...dropProps("tramos", handleTramosFile)}>
-                {busy ? "Procesando…" : dragOver === "tramos" ? "Suelta aquí" : "Subir tramos"}
+              <label htmlFor="up-tramos" style={styles.btnPrimary}>
+                {busy ? "Procesando…" : "Subir tramos"}
               </label>
               <input ref={bajasFileRef} type="file" accept=".xlsx,.xls" onChange={(e) => handleBajasFile(e.target.files[0])} style={{ display: "none" }} id="up-bajas" />
-              <label htmlFor="up-bajas" style={{ ...styles.btnGhost, ...(dragOver === "bajas" ? styles.dropActive : {}) }} {...dropProps("bajas", handleBajasFile)}>
-                {busy ? "Procesando…" : dragOver === "bajas" ? "Suelta aquí" : "Subir bajas"}
+              <label htmlFor="up-bajas" style={styles.btnGhost}>
+                {busy ? "Procesando…" : "Subir bajas"}
               </label>
             </div>
-            {status && <div style={{ ...styles.statusMsg, color: status.type === "error" ? "#FF6B81" : "#35D67B" }}>{status.text}</div>}
+            {status && <div style={{ ...styles.statusMsg, color: status.type === "error" ? "#C0392B" : "#2E7D32" }}>{status.text}</div>}
             {bajasStatus && (
-              <div style={{ ...styles.statusMsg, color: bajasStatus.type === "error" ? "#FF6B81" : bajasStatus.type === "warn" ? "#FFC24B" : "#35D67B" }}>
+              <div style={{ ...styles.statusMsg, color: bajasStatus.type === "error" ? "#C0392B" : bajasStatus.type === "warn" ? "#9A6A00" : "#2E7D32" }}>
                 {bajasStatus.text}
               </div>
             )}
@@ -628,29 +619,31 @@ function App() {
 
         <div style={styles.kpiRow}>
           <div style={styles.kpiCard}>
-            <div style={styles.kpiLabel}>ASESORES</div>
-            <div style={{ ...styles.kpiValue, color: "#35D6E0" }}>{kpis.totalAdvisors}</div>
+            <div style={styles.kpiLabel}>ASESORES (bajas)</div>
+            <div style={{ ...styles.kpiValue, color: "#0A6D62" }}>{kpis.totalAdvisors}</div>
           </div>
           <div style={styles.kpiCard}>
-            <div style={styles.kpiLabel}>MESES CARGADOS</div>
-            <div style={{ ...styles.kpiValue, color: "#B98CFF" }}>{meses.length}</div>
+            <div style={styles.kpiLabel}>MES DE COMISIÓN (bajas)</div>
+            <div style={{ ...styles.kpiValue, color: "#5A36B8", fontSize: mesesComisiones.length > 1 ? 16 : undefined }}>
+              {mesesComisiones.length === 0 ? "—" : mesesComisiones.map(fmtMes).join(" · ")}
+            </div>
           </div>
           <div style={styles.kpiCard}>
             <div style={styles.kpiLabel}>FACT. NETA (filtro)</div>
-            <div style={{ ...styles.kpiValue, color: "#35D67B" }}>{fmtEURShort(kpis.factNetaTotal)}</div>
+            <div style={{ ...styles.kpiValue, color: "#2E7D32" }}>{fmtEURShort(kpis.factNetaTotal)}</div>
           </div>
           <div style={styles.kpiCard}>
-            <div style={styles.kpiLabel}>A DESCONTAR ASESOR (filtro)</div>
-            <div style={{ ...styles.kpiValue, color: "#FF3D8A" }}>{fmtEURShort(kpis.deduccionTotal)}</div>
+            <div style={styles.kpiLabel}>A DESCONTAR TOTAL (filtro)</div>
+            <div style={{ ...styles.kpiValue, color: "#B01E58" }}>{fmtEURShort(kpis.deduccionTotal)}</div>
           </div>
         </div>
 
         {unmatched.length > 0 && (
           <div style={styles.warnPanel}>
             <button style={styles.warnHead} onClick={() => setShowUnmatched((v) => !v)}>
-              <span style={styles.dot("#FFC24B")} />
+              <span style={styles.dot("#9A6A00")} />
               <span style={styles.panelHeadText}>{unmatched.length} BAJAS SIN ASESOR IDENTIFICADO</span>
-              <span style={{ marginLeft: "auto", color: "#FFC24B" }}>{showUnmatched ? "−" : "+"}</span>
+              <span style={{ marginLeft: "auto", color: "#9A6A00" }}>{showUnmatched ? "−" : "+"}</span>
             </button>
             {showUnmatched && (
               <div style={styles.tableWrap}>
@@ -688,11 +681,11 @@ function App() {
         {/* DESGLOSE DE BAJAS */}
         <div style={styles.panelPink}>
           <div style={styles.panelHead}>
-            <span style={styles.dot("#FF3D8A")} />
-            <span style={{ ...styles.panelHeadText, color: "#FF3D8A" }}>DESGLOSE DE BAJAS</span>
+            <span style={styles.dot("#B01E58")} />
+            <span style={{ ...styles.panelHeadText, color: "#B01E58" }}>DESGLOSE DE BAJAS</span>
             <span style={styles.panelHeadCount}>{enrichedBajas.length} bajas</span>
           </div>
-          <div style={{ padding: "0 20px 10px 20px", fontSize: 11, color: "#7C93AE" }}>
+          <div style={{ padding: "0 20px 10px 20px", fontSize: 11, color: "#4B7364" }}>
             El tramo aplicado es el que tenía cada persona en el mes comercial de origen de la venta. Desmarca "APLICA" para
             excluir una línea del total.
           </div>
@@ -700,81 +693,83 @@ function App() {
             <table style={{ ...styles.table, minWidth: 1200 }}>
               <thead>
                 <tr>
-                  <th style={{ ...styles.th, width: 30 }}>APLICA</th>
                   <th style={styles.th}>ASESOR</th>
                   <th style={styles.th}>ID OPORTUNIDAD</th>
                   <th style={styles.th}>MES ORIGEN</th>
                   <th style={styles.th}>FACT. NETA</th>
-                  <th style={{ ...styles.th, color: "#FF3D8A" }}>TRAMO ASESOR</th>
-                  <th style={{ ...styles.th, color: "#FF3D8A" }}>DESC. ASESOR</th>
-                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(255,61,138,0.15)" }}>JEFE EQUIPO</th>
-                  <th style={{ ...styles.th, color: "#B98CFF" }}>TRAMO JEFE</th>
-                  <th style={{ ...styles.th, color: "#B98CFF" }}>DESC. JEFE</th>
-                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(255,61,138,0.15)" }}>DIRECTOR VENTAS</th>
-                  <th style={{ ...styles.th, color: "#35D6E0" }}>TRAMO DIR.</th>
-                  <th style={{ ...styles.th, color: "#35D6E0" }}>DESC. DIR.</th>
+                  <th style={{ ...styles.th, color: "#B01E58" }}>TRAMO ASESOR</th>
+                  <th style={{ ...styles.th, width: 26 }} title="Aplica al asesor">✓</th>
+                  <th style={{ ...styles.th, color: "#B01E58" }}>DESC. ASESOR</th>
+                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(176,30,88,0.15)" }}>JEFE EQUIPO</th>
+                  <th style={{ ...styles.th, color: "#5A36B8" }}>TRAMO JEFE</th>
+                  <th style={{ ...styles.th, width: 26 }} title="Aplica al jefe de equipo">✓</th>
+                  <th style={{ ...styles.th, color: "#5A36B8" }}>DESC. JEFE</th>
+                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(176,30,88,0.15)" }}>DIRECTOR VENTAS</th>
+                  <th style={{ ...styles.th, color: "#0A6D62" }}>TRAMO DIR.</th>
+                  <th style={{ ...styles.th, width: 26 }} title="Aplica al director de ventas">✓</th>
+                  <th style={{ ...styles.th, color: "#0A6D62" }}>DESC. DIR.</th>
                 </tr>
               </thead>
               <tbody>
                 {enrichedBajas.length === 0 && (
                   <tr>
-                    <td style={styles.td} colSpan={13}>
-                      {ready ? "Sube el Excel de bajas para ver el desglose aquí." : "Cargando histórico…"}
+                    <td style={styles.td} colSpan={15}>
+                      Sube el Excel de bajas para ver el desglose aquí.
                     </td>
                   </tr>
                 )}
                 {bajasByAdvisor.map(([key, group]) => (
                   <React.Fragment key={key}>
                     {group.rows.map((b) => (
-                      <tr key={b.id} style={{ opacity: b.aplica ? 1 : 0.4 }}>
-                        <td style={{ ...styles.td, textAlign: "center" }}>
-                          <input type="checkbox" checked={b.aplica} onChange={(e) => toggleAplica(b.id, e.target.checked)} style={{ width: 14, height: 14, accentColor: "#35D67B" }} />
-                        </td>
-                        <td style={{ ...styles.td, textDecoration: b.aplica ? "none" : "line-through" }}>{b.asesorNombreFinal}</td>
-                        <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#7CA9D6" }}>{b.idOportunidad || "—"}</td>
+                      <tr key={b.id}>
+                        <td style={{ ...styles.td, opacity: b.aplicaAsesor ? 1 : 0.4, textDecoration: b.aplicaAsesor ? "none" : "line-through" }}>{b.asesorNombreFinal}</td>
+                        <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#4B7364" }}>{b.idOportunidad || "—"}</td>
                         <td style={styles.td}>{fmtMes(b.mesOrigen)}</td>
                         <td style={styles.td}>{fmtEUR(b.factNeta)}</td>
-                        <td style={styles.td}>
+                        <td style={{ ...styles.td, opacity: b.aplicaAsesor ? 1 : 0.4 }}>
                           <TramoChip v={b.tramoAsesor} />
                         </td>
-                        <td style={{ ...styles.td, color: "#FF3D8A", fontWeight: 600 }}>{b.descAsesor != null ? fmtEUR(b.descAsesor) : "—"}</td>
-                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(255,61,138,0.08)" }}>{b.jefeNombreFinal || "—"}</td>
-                        <td style={styles.td}>{b.jefeCodigo ? <TramoChip v={b.tramoJefe} /> : "—"}</td>
-                        <td style={{ ...styles.td, color: "#B98CFF", fontWeight: 600 }}>{b.descJefe != null ? fmtEUR(b.descJefe) : "—"}</td>
-                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(255,61,138,0.08)" }}>{b.directorNombreFinal || "—"}</td>
-                        <td style={styles.td}>{b.directorCodigo ? <TramoChip v={b.tramoDirector} /> : "—"}</td>
-                        <td style={{ ...styles.td, color: "#35D6E0", fontWeight: 600 }}>{b.descDirector != null ? fmtEUR(b.descDirector) : "—"}</td>
+                        <td style={{ ...styles.td, textAlign: "center" }}>
+                          <input type="checkbox" checked={b.aplicaAsesor} onChange={(e) => toggleAplica(b.id, "asesor", e.target.checked)} style={{ width: 14, height: 14, accentColor: "#B01E58" }} title="Aplica al asesor" />
+                        </td>
+                        <td style={{ ...styles.td, color: "#B01E58", fontWeight: 600, opacity: b.aplicaAsesor ? 1 : 0.4 }}>{b.descAsesor != null ? fmtEUR(b.descAsesor) : "—"}</td>
+                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(176,30,88,0.08)", opacity: b.aplicaJefe ? 1 : 0.4, textDecoration: b.aplicaJefe ? "none" : "line-through" }}>{b.jefeNombreFinal || "—"}</td>
+                        <td style={{ ...styles.td, opacity: b.aplicaJefe ? 1 : 0.4 }}>{b.jefeCodigo ? <TramoChip v={b.tramoJefe} /> : "—"}</td>
+                        <td style={{ ...styles.td, textAlign: "center" }}>
+                          {b.jefeCodigo && (
+                            <input type="checkbox" checked={b.aplicaJefe} onChange={(e) => toggleAplica(b.id, "jefe", e.target.checked)} style={{ width: 14, height: 14, accentColor: "#5A36B8" }} title="Aplica al jefe de equipo" />
+                          )}
+                        </td>
+                        <td style={{ ...styles.td, color: "#5A36B8", fontWeight: 600, opacity: b.aplicaJefe ? 1 : 0.4 }}>{b.descJefe != null ? fmtEUR(b.descJefe) : "—"}</td>
+                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(176,30,88,0.08)", opacity: b.aplicaDirector ? 1 : 0.4, textDecoration: b.aplicaDirector ? "none" : "line-through" }}>{b.directorNombreFinal || "—"}</td>
+                        <td style={{ ...styles.td, opacity: b.aplicaDirector ? 1 : 0.4 }}>{b.directorCodigo ? <TramoChip v={b.tramoDirector} /> : "—"}</td>
+                        <td style={{ ...styles.td, textAlign: "center" }}>
+                          {b.directorCodigo && (
+                            <input type="checkbox" checked={b.aplicaDirector} onChange={(e) => toggleAplica(b.id, "director", e.target.checked)} style={{ width: 14, height: 14, accentColor: "#0A6D62" }} title="Aplica al director de ventas" />
+                          )}
+                        </td>
+                        <td style={{ ...styles.td, color: "#0A6D62", fontWeight: 600, opacity: b.aplicaDirector ? 1 : 0.4 }}>{b.descDirector != null ? fmtEUR(b.descDirector) : "—"}</td>
                       </tr>
                     ))}
-                    <tr style={{ background: "rgba(255,61,138,0.05)" }}>
-                      <td style={styles.td}></td>
-                      <td style={{ ...styles.td, fontWeight: 600, color: "#9FB4CC" }} colSpan={5}>
-                        Subtotal {group.nombre} ({group.rows.length} bajas)
-                      </td>
-                      <td style={{ ...styles.td, color: "#FF3D8A", fontWeight: 700 }}>
-                        {fmtEUR(group.rows.reduce((s, b) => s + (b.aplica && b.descAsesor != null ? b.descAsesor : 0), 0))}
-                      </td>
-                      <td style={{ ...styles.td, borderLeft: "1px solid rgba(255,61,138,0.08)" }} colSpan={5}></td>
-                    </tr>
                   </React.Fragment>
                 ))}
               </tbody>
               {enrichedBajas.length > 0 && (
                 <tfoot>
                   <tr>
-                    <td style={{ ...styles.th, borderTop: "1px solid rgba(255,61,138,0.3)" }} colSpan={6}>
+                    <td style={{ ...styles.th, borderTop: "1px solid rgba(176,30,88,0.3)" }} colSpan={6}>
                       TOTAL (LÍNEAS MARCADAS)
                     </td>
-                    <td style={{ ...styles.th, color: "#FF3D8A", fontSize: 13, borderTop: "1px solid rgba(255,61,138,0.3)" }}>
-                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplica && b.descAsesor != null ? b.descAsesor : 0), 0))}
+                    <td style={{ ...styles.th, color: "#B01E58", fontSize: 13, borderTop: "1px solid rgba(176,30,88,0.3)" }}>
+                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplicaAsesor && b.descAsesor != null ? b.descAsesor : 0), 0))}
                     </td>
-                    <td style={{ borderTop: "1px solid rgba(255,61,138,0.3)" }} colSpan={2}></td>
-                    <td style={{ ...styles.th, color: "#B98CFF", fontSize: 13, borderTop: "1px solid rgba(255,61,138,0.3)" }}>
-                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplica && b.descJefe != null ? b.descJefe : 0), 0))}
+                    <td style={{ borderTop: "1px solid rgba(176,30,88,0.3)" }} colSpan={3}></td>
+                    <td style={{ ...styles.th, color: "#5A36B8", fontSize: 13, borderTop: "1px solid rgba(176,30,88,0.3)" }}>
+                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplicaJefe && b.descJefe != null ? b.descJefe : 0), 0))}
                     </td>
-                    <td style={{ borderTop: "1px solid rgba(255,61,138,0.3)" }} colSpan={2}></td>
-                    <td style={{ ...styles.th, color: "#35D6E0", fontSize: 13, borderTop: "1px solid rgba(255,61,138,0.3)" }}>
-                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplica && b.descDirector != null ? b.descDirector : 0), 0))}
+                    <td style={{ borderTop: "1px solid rgba(176,30,88,0.3)" }} colSpan={3}></td>
+                    <td style={{ ...styles.th, color: "#0A6D62", fontSize: 13, borderTop: "1px solid rgba(176,30,88,0.3)" }}>
+                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplicaDirector && b.descDirector != null ? b.descDirector : 0), 0))}
                     </td>
                   </tr>
                 </tfoot>
@@ -783,18 +778,38 @@ function App() {
           </div>
         </div>
 
+        {asesorSummary.length > 0 && (
+          <div style={styles.row}>
+            <div style={{ ...styles.panelPink, flex: 1 }}>
+              <div style={styles.panelHead}>
+                <span style={styles.dot("#B01E58")} />
+                <span style={{ ...styles.panelHeadText, color: "#B01E58" }}>RESUMEN POR ASESOR</span>
+              </div>
+              <div style={{ padding: "0 18px 16px 18px" }}>
+                {asesorSummary.map((a) => (
+                  <div key={a.nombre} style={styles.summaryRow}>
+                    <span>{a.nombre}</span>
+                    <span style={{ color: "#B01E58", fontWeight: 700 }}>{fmtEUR(a.total)}</span>
+                  </div>
+                ))}
+                {asesorSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
         {(jefeSummary.length > 0 || directorSummary.length > 0) && (
           <div style={styles.row}>
             <div style={{ ...styles.panelPurple, flex: 1 }}>
               <div style={styles.panelHead}>
-                <span style={styles.dot("#B98CFF")} />
-                <span style={{ ...styles.panelHeadText, color: "#B98CFF" }}>RESUMEN POR JEFE DE EQUIPO</span>
+                <span style={styles.dot("#5A36B8")} />
+                <span style={{ ...styles.panelHeadText, color: "#5A36B8" }}>RESUMEN POR JEFE DE EQUIPO</span>
               </div>
               <div style={{ padding: "0 18px 16px 18px" }}>
                 {jefeSummary.map((j) => (
                   <div key={j.nombre} style={styles.summaryRow}>
                     <span>{j.nombre}</span>
-                    <span style={{ color: "#B98CFF", fontWeight: 700 }}>{fmtEUR(j.total)}</span>
+                    <span style={{ color: "#5A36B8", fontWeight: 700 }}>{fmtEUR(j.total)}</span>
                   </div>
                 ))}
                 {jefeSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
@@ -802,14 +817,14 @@ function App() {
             </div>
             <div style={{ ...styles.panelCyan, flex: 1 }}>
               <div style={styles.panelHead}>
-                <span style={styles.dot("#35D6E0")} />
-                <span style={{ ...styles.panelHeadText, color: "#35D6E0" }}>RESUMEN POR DIRECTOR DE VENTAS</span>
+                <span style={styles.dot("#0A6D62")} />
+                <span style={{ ...styles.panelHeadText, color: "#0A6D62" }}>RESUMEN POR DIRECTOR DE VENTAS</span>
               </div>
               <div style={{ padding: "0 18px 16px 18px" }}>
                 {directorSummary.map((d) => (
                   <div key={d.nombre} style={styles.summaryRow}>
                     <span>{d.nombre}</span>
-                    <span style={{ color: "#35D6E0", fontWeight: 700 }}>{fmtEUR(d.total)}</span>
+                    <span style={{ color: "#0A6D62", fontWeight: 700 }}>{fmtEUR(d.total)}</span>
                   </div>
                 ))}
                 {directorSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
@@ -821,10 +836,10 @@ function App() {
         {/* DETALLE DE TRAMOS */}
         <div style={styles.panel}>
           <button style={{ ...styles.warnHead, padding: 0 }} onClick={() => setShowTramos((v) => !v)}>
-            <span style={styles.dot("#35D6E0")} />
+            <span style={styles.dot("#0A6D62")} />
             <span style={styles.panelHeadText}>DETALLE DE TRAMOS POR ASESOR Y MES</span>
             <span style={styles.panelHeadCount}>{flatTramoRows.length} registros</span>
-            <span style={{ marginLeft: 8, color: "#35D6E0" }}>{showTramos ? "−" : "+"}</span>
+            <span style={{ marginLeft: 8, color: "#0A6D62" }}>{showTramos ? "−" : "+"}</span>
           </button>
           {showTramos && (
             <div style={{ ...styles.tableWrap, marginTop: 14 }}>
@@ -850,8 +865,8 @@ function App() {
                   {flatTramoRows.map((r) => (
                     <tr key={r.codigo + r.mes}>
                       <td style={styles.td}>{fmtMes(r.mes)}</td>
-                      <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#7C93AE" }}>{r.codigo}</td>
-                      <td style={{ ...styles.td, color: "#E8F1FA" }}>{r.nombre}</td>
+                      <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#4B7364" }}>{r.codigo}</td>
+                      <td style={{ ...styles.td, color: "#12302A" }}>{r.nombre}</td>
                       <td style={styles.td}>{r.equipo || "—"}</td>
                       <td style={styles.td}>{fmtEUR(r.factNeta)}</td>
                       <td style={styles.td}>
@@ -876,61 +891,53 @@ function App() {
 }
 
 const styles = {
-  app: { position: "relative", minHeight: "100vh", background: "radial-gradient(ellipse at 30% 0%, #0E2438 0%, #081422 55%, #060D17 100%)", color: "#E8F1FA", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
-  bgGrid: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(79,216,232,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(79,216,232,0.035) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none" },
+  app: { position: "relative", minHeight: "700px", background: "#D2E8DE", color: "#12302A", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
+  bgGrid: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(10,109,98,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(10,109,98,0.04) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none" },
   shell: { position: "relative", maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 },
-  headerPanel: { background: "rgba(15,31,53,0.65)", border: "1px solid rgba(79,216,232,0.25)", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
+  headerPanel: { background: "#E9F5EF", border: "1px solid #A9CDBD", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
   headerLeft: { display: "flex", alignItems: "center", gap: 14 },
-  headerIcon: { width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #FF3D8A", color: "#FF3D8A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, fontFamily: "'IBM Plex Mono', monospace" },
+  headerIcon: { width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #B01E58", color: "#B01E58", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, fontFamily: "'IBM Plex Mono', monospace" },
   headerTitle: { fontSize: 18, fontWeight: 700 },
-  headerSub: { fontSize: 11.5, color: "#7C93AE", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
-  headerRightWrap: { display: "flex", alignItems: "center", gap: 16 },
-  headerRight: { fontSize: 12, color: "#7C93AE", fontFamily: "'IBM Plex Mono', monospace" },
-  backBtn: { background: "rgba(0,90,130,0.15)", border: "1px solid rgba(0,212,240,0.25)", borderRadius: 10, padding: "7px 14px", color: "rgba(0,212,240,0.85)", fontSize: 12, textDecoration: "none", whiteSpace: "nowrap" },
+  headerSub: { fontSize: 11.5, color: "#4B7364", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
+  headerRight: { fontSize: 12, color: "#4B7364", fontFamily: "'IBM Plex Mono', monospace" },
   row: { display: "flex", gap: 16, flexWrap: "wrap" },
-  panel: { background: "rgba(15,31,53,0.55)", border: "1px solid rgba(79,216,232,0.2)", borderRadius: 16, padding: 20, minWidth: 260 },
-  panelPink: { background: "rgba(15,31,53,0.55)", border: "1px solid rgba(255,61,138,0.3)", borderRadius: 16, padding: "20px 0" },
-  panelPurple: { background: "rgba(184,140,255,0.06)", border: "1px solid rgba(184,140,255,0.3)", borderRadius: 16, padding: "16px 0" },
-  panelCyan: { background: "rgba(53,214,224,0.06)", border: "1px solid rgba(53,214,224,0.3)", borderRadius: 16, padding: "16px 0" },
+  panel: { background: "#E9F5EF", border: "1px solid #B4D3C5", borderRadius: 16, padding: 20, minWidth: 260 },
+  panelPink: { background: "#E9F5EF", border: "1px solid rgba(176,30,88,0.35)", borderRadius: 16, padding: "20px 0" },
+  panelPurple: { background: "#EAF1F0", border: "1px solid rgba(90,54,184,0.35)", borderRadius: 16, padding: "16px 0" },
+  panelCyan: { background: "#E3F3EE", border: "1px solid rgba(10,109,98,0.4)", borderRadius: 16, padding: "16px 0" },
   panelHead: { display: "flex", alignItems: "center", gap: 9, marginBottom: 14, padding: "0 20px" },
-  panelHeadText: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, color: "#35D6E0" },
-  panelHeadCount: { marginLeft: "auto", fontSize: 11, color: "#7C93AE", fontFamily: "'IBM Plex Mono', monospace" },
-  dot: (color) => ({ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 8px ${color}`, display: "inline-block" }),
+  panelHeadText: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, color: "#0A6D62" },
+  panelHeadCount: { marginLeft: "auto", fontSize: 11, color: "#4B7364", fontFamily: "'IBM Plex Mono', monospace" },
+  dot: (color) => ({ width: 7, height: 7, borderRadius: "50%", background: color, display: "inline-block" }),
   filtersGrid: { display: "flex", gap: 14, flexWrap: "wrap" },
-  fieldLabel: { fontSize: 10.5, color: "#7C93AE", letterSpacing: 1, fontWeight: 600, marginBottom: 6 },
-  select: { width: "100%", background: "#0D1B2E", border: "1px solid rgba(79,216,232,0.25)", borderRadius: 8, color: "#E8F1FA", padding: "8px 10px", fontSize: 13, fontFamily: "'Inter', sans-serif", boxSizing: "border-box" },
+  fieldLabel: { fontSize: 10.5, color: "#4B7364", letterSpacing: 1, fontWeight: 600, marginBottom: 6 },
+  select: { width: "100%", background: "#F5FBF8", border: "1px solid #A9CDBD", borderRadius: 8, color: "#12302A", padding: "8px 10px", fontSize: 13, fontFamily: "'Inter', sans-serif", boxSizing: "border-box" },
   uploadBtns: { display: "flex", gap: 10, marginBottom: 6 },
-  btnPrimary: { flex: 1, background: "linear-gradient(135deg,#35D6E0,#2AB8C9)", color: "#06131F", textAlign: "center", padding: "9px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-  btnGhost: { flex: 1, background: "transparent", border: "1.5px solid #FF3D8A", color: "#FF3D8A", textAlign: "center", padding: "8px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-  dropActive: { boxShadow: "0 0 0 2px #fff, 0 0 18px rgba(53,214,224,0.7)", transform: "scale(1.03)" },
+  btnPrimary: { flex: 1, background: "#0A6D62", color: "#FFFFFF", textAlign: "center", padding: "9px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  btnGhost: { flex: 1, background: "transparent", border: "1.5px solid #B01E58", color: "#B01E58", textAlign: "center", padding: "8px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
   statusMsg: { fontSize: 11.5, lineHeight: 1.4, marginTop: 4 },
   kpiRow: { display: "flex", gap: 16, flexWrap: "wrap" },
-  kpiCard: { flex: "1 1 200px", background: "rgba(15,31,53,0.55)", border: "1px solid rgba(79,216,232,0.2)", borderRadius: 14, padding: "16px 18px" },
-  kpiLabel: { fontSize: 10.5, color: "#7C93AE", letterSpacing: 1, fontWeight: 600, marginBottom: 8 },
+  kpiCard: { flex: "1 1 200px", background: "#E9F5EF", border: "1px solid #B4D3C5", borderRadius: 14, padding: "16px 18px" },
+  kpiLabel: { fontSize: 10.5, color: "#4B7364", letterSpacing: 1, fontWeight: 600, marginBottom: 8 },
   kpiValue: { fontSize: 26, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace" },
-  warnPanel: { background: "rgba(255,194,75,0.06)", border: "1px solid rgba(255,194,75,0.3)", borderRadius: 14, overflow: "hidden" },
+  warnPanel: { background: "#F6EFD8", border: "1px solid rgba(154,106,0,0.4)", borderRadius: 14, overflow: "hidden" },
   warnHead: { width: "100%", display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "none", padding: "14px 20px", cursor: "pointer", textAlign: "left" },
   tableWrap: { overflowX: "auto", padding: "0 20px 16px 20px" },
   table: { width: "100%", borderCollapse: "collapse" },
-  th: { textAlign: "left", fontSize: 10, color: "#7C93AE", fontWeight: 700, letterSpacing: 0.5, padding: "8px 10px", borderBottom: "1px solid rgba(79,216,232,0.2)", whiteSpace: "nowrap" },
-  td: { fontSize: 12.5, padding: "8px 10px", borderBottom: "1px solid rgba(79,216,232,0.08)", color: "#C6D4E3", whiteSpace: "nowrap" },
-  chip: { color: "#06131F", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontFamily: "'IBM Plex Mono', monospace" },
-  summaryRow: { display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13, borderBottom: "1px solid rgba(255,255,255,0.06)" },
-  emptyHint: { color: "#7C93AE", fontSize: 12, padding: "6px 0" },
-  smallHint: { fontSize: 12, color: "#8893AC", marginTop: 10, lineHeight: 1.5 },
-  resetBtn: { alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(255,107,129,0.35)", color: "#FF6B81", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer" },
+  th: { textAlign: "left", fontSize: 10, color: "#4B7364", fontWeight: 700, letterSpacing: 0.5, padding: "8px 10px", borderBottom: "1px solid #B4D3C5", whiteSpace: "nowrap" },
+  td: { fontSize: 12.5, padding: "8px 10px", borderBottom: "1px solid rgba(10,109,98,0.12)", color: "#12302A", whiteSpace: "nowrap" },
+  chip: { color: "#FFFFFF", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontFamily: "'IBM Plex Mono', monospace" },
+  summaryRow: { display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13, borderBottom: "1px solid rgba(10,109,98,0.15)" },
+  emptyHint: { color: "#4B7364", fontSize: 12, padding: "6px 0" },
+  smallHint: { fontSize: 12, color: "#4B7364", marginTop: 10, lineHeight: 1.5 },
+  resetBtn: { alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(192,57,43,0.45)", color: "#C0392B", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer" },
 };
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
   * { box-sizing: border-box; }
-  label:hover, button:hover { filter: brightness(1.08); }
-  input:focus, select:focus { outline: 2px solid #35D6E0; outline-offset: 1px; }
+  label:hover, button:hover { filter: brightness(1.06); }
+  input:focus, select:focus { outline: 2px solid #0A6D62; outline-offset: 1px; }
   ::-webkit-scrollbar { height: 8px; width: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(79,216,232,0.25); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(10,109,98,0.3); border-radius: 8px; }
 `;
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-</script>
-</body>
-</html>
