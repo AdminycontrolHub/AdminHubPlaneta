@@ -13,9 +13,37 @@
 <body>
 <div id="root"></div>
 <script>
+// Almacenamiento compartido: el histórico vive en el KV del Worker (/kv), igual que el resto de Admin Hub.
+// Se mantiene la interfaz window.storage.get/set para no tocar el código de la app.
+const WORKER_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
+const KV_KEY = 'adminhub_bajas_comisiones_v1';
+const LOCAL_KEY = 'comisiones-db-v3'; // clave antigua en localStorage (solo para migrar datos existentes una vez)
+
 window.storage = {
-  async get(key) { const v = localStorage.getItem(key); return v === null ? null : { key, value: v }; },
-  async set(key, value) { localStorage.setItem(key, value); return { key, value }; },
+  async get(key) {
+    const res = await fetch(`${WORKER_URL}/kv?key=${encodeURIComponent(KV_KEY)}`);
+    if (!res.ok) throw new Error('kv get failed');
+    const d = await res.json();
+    if (d.value) return { key, value: d.value };
+
+    // KV vacío: si este navegador tenía datos guardados en local, se suben al KV (migración única)
+    let local = null;
+    try { local = localStorage.getItem(LOCAL_KEY); } catch (e) {}
+    if (local) {
+      try { await this.set(key, local); } catch (e) {}
+      return { key, value: local };
+    }
+    return null;
+  },
+  async set(key, value) {
+    const res = await fetch(`${WORKER_URL}/kv`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: KV_KEY, value: JSON.parse(value) })
+    });
+    if (!res.ok) throw new Error('kv set failed');
+    return { key, value };
+  },
 };
 </script>
 <script type="text/babel" data-presets="react">
@@ -171,6 +199,7 @@ function simpleHash(str) {
 }
 
 const STORAGE_KEY = "comisiones-db-v3";
+const RESET_PASSWORD = "AdminHub";
 const emptyDb = { advisors: {}, bajas: [], aplicaOverrides: {}, lastUpdate: null };
 
 function App() {
@@ -187,20 +216,35 @@ function App() {
   const [showTramos, setShowTramos] = useState(false);
   const fileRef = useRef(null);
   const bajasFileRef = useRef(null);
+  const loadFailedRef = useRef(false);
 
   useEffect(() => {
-    (async () => {
+    async function load(first) {
       try {
         const res = await window.storage.get(STORAGE_KEY, false);
         if (res && res.value) setDb({ ...emptyDb, ...JSON.parse(res.value) });
-      } catch (e) {}
-      finally {
-        setReady(true);
+        loadFailedRef.current = false;
+      } catch (e) {
+        if (first) {
+          loadFailedRef.current = true;
+          setStatus({ type: "error", text: "No se pudo cargar el histórico compartido. Recarga la página antes de subir nada." });
+        }
+      } finally {
+        if (first) setReady(true);
       }
-    })();
+    }
+    load(true);
+    // al volver a la pestaña se refrescan los datos, por si otra persona ha subido algo entretanto
+    const onFocus = () => load(false);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
   async function persist(newDb) {
+    if (loadFailedRef.current) {
+      setStatus({ type: "error", text: "No se guarda: el histórico compartido no se cargó. Recarga la página." });
+      return;
+    }
     const withStamp = { ...newDb, lastUpdate: new Date().toISOString() };
     setDb(withStamp);
     try {
@@ -405,6 +449,10 @@ function App() {
   }
 
   async function handleReset() {
+    // El histórico es compartido por todo el equipo: se protege con la misma contraseña que el resto de Admin Hub
+    const pwd = prompt("Contraseña para borrar el histórico de todo el equipo:");
+    if (pwd === null) return;
+    if (pwd !== RESET_PASSWORD) { alert("Contraseña incorrecta."); return; }
     if (!confirm("¿Borrar todo el histórico guardado (tramos y bajas)? No se puede deshacer.")) return;
     await persist(emptyDb);
     setStatus({ type: "ok", text: "Histórico borrado." });
@@ -734,7 +782,7 @@ function App() {
                 {enrichedBajas.length === 0 && (
                   <tr>
                     <td style={styles.td} colSpan={15}>
-                      Sube el Excel de bajas para ver el desglose aquí.
+                      {ready ? "Sube el Excel de bajas para ver el desglose aquí." : "Cargando histórico…"}
                     </td>
                   </tr>
                 )}
