@@ -64,6 +64,7 @@ input:focus,select:focus{border-color:var(--cyan-d);box-shadow:0 0 0 3px rgba(0,
 .line{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:9px;background:var(--row);margin-bottom:7px;font-size:13.5px}
 .line span:first-child{opacity:.8}
 .line b{font-family:'JetBrains Mono',monospace;font-weight:500}
+.line .hm{font-style:normal;font-size:11.5px;color:rgba(255,255,255,.5);margin-left:4px}
 .line.neg b{color:var(--amber)}
 .line.hl{border:1px solid rgba(0,230,255,.5)}
 .line.hl b{color:var(--cyan);font-weight:700}
@@ -105,6 +106,11 @@ body.ext #btnVolver,body.ext #btnTarifas,body.ext #mask,body.ext #pmask{display:
 .hempty{padding:30px;text-align:center;color:var(--muted);font-size:13px}
 .btn.dark{color:#0B6E7C;background:#fff;border-color:#0B6E7C}
 .status{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.toast.on{z-index:90}
+#pdfFallback{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);display:none;align-items:center;gap:10px;background:var(--navy2);color:#fff;border:1px solid var(--cyan);border-radius:10px;padding:10px 14px;font-size:13px;z-index:85;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#pdfFallback.on{display:flex}
+#pdfFallback a{color:var(--cyan);font-weight:600}
+#pdfFallback button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--navy);border:1px solid var(--cyan);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 18px;border-radius:10px;transition:.25s;z-index:80;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -170,7 +176,7 @@ body.ext #btnVolver,body.ext #btnTarifas,body.ext #mask,body.ext #pmask{display:
       <div class="line neg"><span>Descuentos totales</span><b id="rDto">—</b></div>
       <div class="line hl"><span>Precio neto</span><b id="rNeto">—</b></div>
       <div class="line"><span>Inscripción</span><b id="rInsc">—</b></div>
-      <div class="line hl"><span>Precio a financiar</span><b id="rFin">—</b></div>
+      <div class="line hl"><span>Precio a financiar <em class="hm">(cantidad a incluir en HM)</em></span><b id="rFin">—</b></div>
       <div class="line"><span>Cuota de apertura</span><b id="rAper">—</b></div>
       <div class="line"><span>Total a pagar en cuotas</span><b id="rTotal">—</b></div>
 
@@ -325,7 +331,7 @@ function calc(){
   var fin=neto==null?null:neto-insc;
 
   $('rPvp').textContent=fmt(pvp);
-  $('rDto').textContent=pvp==null?'—':'− '+fmt(totalDto);
+  $('rDto').textContent=pvp==null?'—':(totalDto>0?'− ':'')+fmt(totalDto);
   $('rNeto').textContent=fmt(neto);
   $('rInsc').textContent=fmt(insc);
   $('rFin').textContent=fmt(fin);
@@ -425,11 +431,23 @@ function descargarPDF(){
   if(!last||!last.r){toast('Completa campaña y programa primero');return;}
   if(!window.jspdf){toast('No se pudo cargar el generador de PDF (revisa la conexión)');return;}
   var snap=JSON.parse(JSON.stringify(last));
-  generarPDF(snap);
-  registrarHist(snap);
+  if(generarPDF(snap)) registrarHist(snap);
 }
 function generarPDF(L){
-  if(!window.jspdf){toast('No se pudo cargar el generador de PDF (revisa la conexión)');return;}
+  try{ return _generarPDF(L); }
+  catch(err){ console.error(err); toast('No se pudo generar el PDF: '+(err&&err.message?err.message:err)); return false; }
+}
+function entregarPDF(doc,name){
+  var url=URL.createObjectURL(doc.output('blob'));
+  var a=document.createElement('a'); a.href=url; a.download=name; a.style.display='none';
+  document.body.appendChild(a); a.click(); setTimeout(function(){a.remove();},600);
+  var box=$('pdfFallback'); if(!box){ box=document.createElement('div'); box.id='pdfFallback'; document.body.appendChild(box); }
+  box.innerHTML='¿No se ha descargado? <a href="'+url+'" download="'+name+'" target="_blank" rel="noopener">Pulsa aquí para abrir el PDF</a> <button type="button" id="pdfFbX" aria-label="Cerrar">×</button>';
+  box.classList.add('on'); $('pdfFbX').onclick=function(){box.classList.remove('on');};
+  clearTimeout(box._t); box._t=setTimeout(function(){box.classList.remove('on');},20000);
+}
+function _generarPDF(L){
+  if(!window.jspdf){toast('No se pudo cargar el generador de PDF (revisa la conexión)');return false;}
   var doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
   var W=210, M=18, R=W-M, NAVY=[11,43,69], BLUE=[14,127,193], GREY=[110,120,130], LIGHT=[243,245,247], LINE=[220,225,230];
   function T(txt,x,y,o){doc.text(txt,x,y,o||{});}
@@ -506,8 +524,9 @@ function generarPDF(L){
   T(emision,R,286,{align:'right'});
 
   var nom=(L.cand||'candidato').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
-  doc.save('Propuesta_financiacion_'+nom+'.pdf');
-  toast('Propuesta descargada');
+  entregarPDF(doc,'Propuesta_financiacion_'+nom+'.pdf');
+  toast('Propuesta generada');
+  return true;
 }
 
 
