@@ -133,6 +133,7 @@ body.ext #btnVolver,body.ext #btnTarifas,body.ext #mask,body.ext #pmask{display:
       <button class="btn solid" id="btnCopiar">⧉ Copiar resumen</button>
       <button class="btn ico" id="btnLink" title="Copiar enlace externo para compartir" aria-label="Copiar enlace externo para compartir"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></button>
       <button class="btn solid ico" id="btnPdf" title="Descargar propuesta (PDF)" aria-label="Descargar propuesta en PDF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="M6 11l6 6 6-6"/><path d="M5 20h14"/></svg></button>
+      <button class="btn ico" id="btnHtml" title="Descargar la calculadora (archivo HTML con las tarifas vigentes)" aria-label="Descargar la calculadora en HTML"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="19" height="13" rx="2"/><path d="M8 20.5h8M12 16.5v4"/><path d="M12 6.5v5M9.5 9.2l2.5 2.5 2.5-2.5"/></svg></button>
     </div>
   </header>
 
@@ -234,11 +235,15 @@ body.ext #btnVolver,body.ext #btnTarifas,body.ext #mask,body.ext #pmask{display:
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+var SRC0='<!DOCTYPE html>\n'+document.documentElement.outerHTML; /* copia del código original para poder generar la versión externa */
 /* ============ CONFIG ============ */
 var KV_BASE = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv';
 var KV_KEY  = 'adminhub_cuotas_sabadell_v1';
 var EDIT_PASS = 'AdminHub'; // Contraseña para abrir «Tarifas y plazos».
 var N_DTOS = 3;
+var BRAND = 'OBS';
+var FORCE_EXT = false;   /* true en la versión externa descargable */
+var TARIFAS_FECHA = '';  /* se rellena al descargar la versión externa */
 
 /* Valores por defecto: tomados del Excel "2. Cálculo cuotas Banc Sabadell 2027" (hoja Datos) */
 var DEFAULTS = {
@@ -540,7 +545,7 @@ function kvGetKey(k){
 function kvSetKey(k,v){
   return fetch(KV_BASE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,value:v})}).then(function(r){return r.ok;});
 }
-function isExt(){return /^#externo$/i.test(location.hash);}
+function isExt(){return FORCE_EXT||/^#externo$/i.test(location.hash);}
 var HIST_LOCAL_KEY='adminhub_cuotas_sabadell_hist_local_v1', HIST_LOCAL_MAX=200;
 function locGet(){try{var v=JSON.parse(localStorage.getItem(HIST_LOCAL_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}}
 function locSet(a){try{localStorage.setItem(HIST_LOCAL_KEY,JSON.stringify(a));return true;}catch(e){return false;}}
@@ -607,6 +612,40 @@ function elegirPlazo(tr){
 $('cmpBody').addEventListener('mousedown',function(e){elegirPlazo(e.target.closest('tr'));});
 $('cmpBody').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();elegirPlazo(e.target.closest('tr'));}});
 
+/* ============ DESCARGAR LA CALCULADORA (HTML externo con las tarifas vigentes) ============ */
+var JSPDF_URL='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+function hoyISO2(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function descargarHTML(){
+  var html=SRC0, libTag='<scr'+'ipt src="'+JSPDF_URL+'"><\/scr'+'ipt>', necesitaLib=html.indexOf(libTag)>=0;
+  toast('Preparando el archivo…');
+  var pLib=necesitaLib
+    ? fetch(JSPDF_URL).then(function(r){if(!r.ok)throw 0;return r.text();}).then(function(t){return t.replace(/\/\/# sourceMappingURL=.*$/m,'');}).catch(function(){return null;})
+    : Promise.resolve(null);
+  pLib.then(function(lib){
+    var hoy=hoyISO2(), rnd=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+    if(necesitaLib && lib){ html=html.split(libTag).join('<scr'+'ipt>/* jsPDF 2.5.1 (MIT) incluido para funcionar sin conexión */\n'+lib+'\n<\/scr'+'ipt>'); }
+    var datos=JSON.stringify(DATA).replace(/</g,'\\u003c');
+    html=html
+      .replace(/var KV_BASE = '[^']*';/,function(){return "var KV_BASE = '';";})
+      .replace(/var KV_KEY\s*=\s*'[^']*';/,function(){return "var KV_KEY  = '';";})
+      .replace(/var EDIT_PASS = '[^']*';/,function(){return "var EDIT_PASS = '"+rnd+"';";})
+      .replace(/var FORCE_EXT\s*=\s*false;/,function(){return 'var FORCE_EXT=true;';})
+      .replace(/var TARIFAS_FECHA\s*=\s*'[^']*';/,function(){return "var TARIFAS_FECHA='"+hoy+"';";})
+      .replace(/<body[^>]*>/,function(){return '<body class="ext">';})
+      .replace(/var DEFAULTS = \{[\s\S]*?\n\};/,function(){return 'var DEFAULTS = '+datos+';';})
+      .replace(/kvGet\(\)\.then\(/,function(){return 'Promise.resolve(null).then(';});
+    var mk='/*sin-'+'link*/';
+    if(html.indexOf(mk)<0) html=html.replace('</style>',function(){return mk+'#btnLink{display:none!important}\n</style>';});
+    var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    var url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download='Calculadora_Sabadell_'+BRAND+'_'+hoy+'.html'; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){a.remove();URL.revokeObjectURL(url);},4000);
+    toast(necesitaLib&&!lib?'Descargado (necesita internet para generar el PDF)':'Calculadora descargada con las tarifas actuales');
+  });
+}
+$('btnHtml').onclick=descargarHTML;
+
 /* ============ ENLACE EXTERNO ============ */
 function copiarLinkExterno(){
   var url=location.origin+location.pathname+'#externo';
@@ -620,9 +659,9 @@ $('btnLink').onclick=copiarLinkExterno;
 
 /* ============ MODO EXTERNO (#externo): solo la calculadora, sin Hub ni edición de tarifas ============ */
 function aplicarModo(){
-  var ext=/^#externo$/i.test(location.hash);
+  var ext=FORCE_EXT||/^#externo$/i.test(location.hash);
   document.body.classList.toggle('ext',ext);
-  $('subTitle').textContent=ext?'Financiación de matrícula':'Admin Hub · Financiación de matrícula';
+  $('subTitle').textContent=ext?('Financiación de matrícula'+(TARIFAS_FECHA?' · tarifas a '+dmy(TARIFAS_FECHA):'')):'Admin Hub · Financiación de matrícula';
   document.title=ext?'Cálculo de cuotas · Banc Sabadell 2027':'Cálculo cuotas Banc Sabadell 2027 · Admin Hub';
 }
 window.addEventListener('hashchange',aplicarModo);
