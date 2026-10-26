@@ -245,6 +245,7 @@ var N_DTOS = 3;
 var BRAND = 'OBS';
 var FORCE_EXT = false;   /* true en la versión externa descargable */
 var TARIFAS_FECHA = '';  /* se rellena al descargar la versión externa */
+var URL_WEB = '';        /* en el archivo descargado: dirección de la web donde bajar la versión actualizada */
 
 /* Valores por defecto: tomados del Excel "2. Cálculo cuotas Banc Sabadell 2027" (hoja Datos) */
 var DEFAULTS = {
@@ -617,6 +618,7 @@ $('cmpBody').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===
 var JSPDF_URL='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 function hoyISO2(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function descargarHTML(){
+  if(URL_WEB){ window.open(URL_WEB,'_blank'); toast('Descarga la versión actualizada desde la web que se acaba de abrir'); return; }
   var html=SRC0, libTag='<scr'+'ipt src="'+JSPDF_URL+'"><\/scr'+'ipt>', necesitaLib=html.indexOf(libTag)>=0;
   toast('Preparando el archivo…');
   var pLib=necesitaLib
@@ -631,6 +633,7 @@ function descargarHTML(){
       .replace(/var KV_KEY\s*=\s*'[^']*';/,function(){return "var KV_KEY  = '';";})
       .replace(/var EDIT_PASS = '[^']*';/,function(){return "var EDIT_PASS = '"+rnd+"';";})
       .replace(/var FORCE_EXT\s*=\s*false;/,function(){return 'var FORCE_EXT=true;';})
+      .replace(/var URL_WEB\s*=\s*'[^']*';/,function(m){return /^https?:$/.test(location.protocol)?("var URL_WEB='"+(location.origin+location.pathname+'#externo').replace(/'/g,'%27')+"';"):m;})
       .replace(/var TARIFAS_FECHA\s*=\s*'[^']*';/,function(){return "var TARIFAS_FECHA='"+hoy+"';";})
       .replace(/<body[^>]*>/,function(){return '<body class="ext">';})
       .replace(/var DEFAULTS = \{[\s\S]*?\n\};/,function(){return 'var DEFAULTS = '+datos+';';})
@@ -646,6 +649,7 @@ function descargarHTML(){
   });
 }
 $('btnHtml').onclick=descargarHTML;
+if(URL_WEB){ $('btnHtml').title='Abrir la versión web para descargar la calculadora actualizada'; $('btnHtml').setAttribute('aria-label','Abrir la versión web para descargar la calculadora actualizada'); }
 
 /* ============ ENLACE EXTERNO ============ */
 function copiarLinkExterno(){
