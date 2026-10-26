@@ -833,6 +833,10 @@ function bmBubbleClick(id, nodeEl){
   if(nodeEl) nodeEl.classList.add('active');
   const b = bmBubbles.find(x=>x.id===id);
   if(!b) return;
+  /* Cualquier burbuja "Sabadell…" (creada a mano con enlace, integrada o con la acción vacía) abre el selector de marca */
+  if(b.id==='sabadell' || /sabadell/i.test(b.name||'') || (b.action && b.action.type==='url' && /cuotas-sabadell/i.test(b.action.value||''))){
+    goSabadell(); return;
+  }
   if(b.action && b.action.type==='builtin'){
     if(b.action.value==='cobros') goCobros();
     else if(b.action.value==='sabadell') goSabadell();
