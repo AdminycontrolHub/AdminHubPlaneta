@@ -102,8 +102,29 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .anexos-bubble-wrap.inesdi .anexos-bubble-label { color:#a878f0; }
 .anexos-bubble-wrap.esdesign .anexos-bubble-label { color:#f0a830; }
 .anexos-bubble-wrap.ucma .anexos-bubble-label   { color:#3aabf0; }
-.anexos-bubble-wrap.is-disabled { opacity:0.38; cursor:not-allowed; pointer-events:none; }
-.anexos-soon { font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-top:-6px; }
+/* Modal Bajas: tema claro */
+#bajasOverlay .anexos-modal { background:#F4F9FC; border:1px solid rgba(20,60,90,0.18); box-shadow:0 10px 50px rgba(0,20,40,0.35); }
+#bajasOverlay .anexos-header { border-bottom:1px solid rgba(20,60,90,0.12); }
+#bajasOverlay .anexos-header-icon { border-color:#C93B3B !important; }
+#bajasOverlay .anexos-header-icon svg { stroke:#C93B3B; }
+#bajasOverlay .anexos-title { color:#C93B3B !important; }
+#bajasOverlay .anexos-sub { color:rgba(20,50,75,0.55); }
+#bajasOverlay .anexos-close { border-color:rgba(20,60,90,0.25); color:rgba(20,50,75,0.55); }
+#bajasOverlay .anexos-close:hover { border-color:#C93B3B; color:#C93B3B; }
+#bajasOverlay .anexos-bubble { background:#FFFFFF; }
+#bajasOverlay .anexos-bubble-wrap.obs .anexos-bubble    { border-color:rgba(14,159,104,0.55); }
+#bajasOverlay .anexos-bubble-wrap.inesdi .anexos-bubble { border-color:rgba(124,77,219,0.55); }
+#bajasOverlay .anexos-bubble-wrap.esdesign .anexos-bubble { border-color:rgba(199,127,10,0.55); }
+#bajasOverlay .anexos-bubble-wrap.ucma .anexos-bubble   { border-color:rgba(31,134,200,0.55); }
+#bajasOverlay .anexos-bubble-wrap.obs:hover .anexos-bubble    { border-color:#0E9F68; box-shadow:0 4px 18px rgba(14,159,104,0.28); }
+#bajasOverlay .anexos-bubble-wrap.inesdi:hover .anexos-bubble { border-color:#7C4DDB; box-shadow:0 4px 18px rgba(124,77,219,0.28); }
+#bajasOverlay .anexos-bubble-wrap.esdesign:hover .anexos-bubble { border-color:#C77F0A; box-shadow:0 4px 18px rgba(199,127,10,0.28); }
+#bajasOverlay .anexos-bubble-wrap.ucma:hover .anexos-bubble   { border-color:#1F86C8; box-shadow:0 4px 18px rgba(31,134,200,0.28); }
+#bajasOverlay .anexos-bubble-wrap.obs .anexos-bubble-label    { color:#0E9F68; }
+#bajasOverlay .anexos-bubble-wrap.inesdi .anexos-bubble-label { color:#7C4DDB; }
+#bajasOverlay .anexos-bubble-wrap.esdesign .anexos-bubble-label { color:#C77F0A; }
+#bajasOverlay .anexos-bubble-wrap.ucma .anexos-bubble-label   { color:#1F86C8; }
+#bajasOverlay .anexos-hint { color:rgba(20,50,75,0.4); }
 .anexos-hint { text-align:center; color:rgba(255,255,255,0.2); font-size:10px; margin:24px 0 0; }
 
 /* ===== GESTOR COMÚN DE BURBUJAS ===== */
@@ -709,10 +730,17 @@ function closeBajasModal() {
 function bajasOverlayClick(e) {
   if(e.target === document.getElementById('bajasOverlay')) closeBajasModal();
 }
+function bajasGo(e, el) {
+  e.preventDefault();
+  const url = (el.dataset.url || '').trim();
+  if(!url) { alert('La herramienta de bajas de ' + el.dataset.marca + ' todavía no está disponible.'); return; }
+  closeBajasModal();
+  window.location.href = url;
+}
 </script>
 
 <!-- ===== MODAL BAJAS COMISIONES ===== -->
-<!-- Para activar una marca: cambia href="#" por la ruta de su herramienta y quita la clase "is-disabled" y el texto "Próximamente". -->
+<!-- Para activar una marca: rellena su data-url con la ruta de su herramienta (por ejemplo data-url="bajas-inesdi.html"). Mientras esté vacío, avisa de que aún no está disponible. -->
 <div class="anexos-overlay" id="bajasOverlay" onclick="bajasOverlayClick(event)">
   <div class="anexos-modal">
 
@@ -732,7 +760,7 @@ function bajasOverlayClick(e) {
     <div class="anexos-body">
       <div class="anexos-bubbles">
 
-        <a class="anexos-bubble-wrap obs" href="bajas-comisiones.html" onclick="closeBajasModal()">
+        <a class="anexos-bubble-wrap obs" href="#" data-marca="OBS" data-url="bajas-comisiones.html" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#1dcc84" stroke-width="1.5"/>
@@ -743,7 +771,7 @@ function bajasOverlayClick(e) {
           <span class="anexos-bubble-label">OBS</span>
         </a>
 
-        <a class="anexos-bubble-wrap inesdi is-disabled" href="#">
+        <a class="anexos-bubble-wrap inesdi" href="#" data-marca="INESDI" data-url="" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#a878f0" stroke-width="1.5"/>
@@ -752,10 +780,9 @@ function bajasOverlayClick(e) {
             </svg>
           </div>
           <span class="anexos-bubble-label">INESDI</span>
-          <span class="anexos-soon">Próximamente</span>
         </a>
 
-        <a class="anexos-bubble-wrap esdesign is-disabled" href="#">
+        <a class="anexos-bubble-wrap esdesign" href="#" data-marca="ESDesign" data-url="" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#f0a830" stroke-width="1.5"/>
@@ -764,10 +791,9 @@ function bajasOverlayClick(e) {
             </svg>
           </div>
           <span class="anexos-bubble-label">ESDesign</span>
-          <span class="anexos-soon">Próximamente</span>
         </a>
 
-        <a class="anexos-bubble-wrap ucma is-disabled" href="#">
+        <a class="anexos-bubble-wrap ucma" href="#" data-marca="UCMA" data-url="" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#3aabf0" stroke-width="1.5"/>
@@ -776,7 +802,6 @@ function bajasOverlayClick(e) {
             </svg>
           </div>
           <span class="anexos-bubble-label">UCMA</span>
-          <span class="anexos-soon">Próximamente</span>
         </a>
 
       </div>
