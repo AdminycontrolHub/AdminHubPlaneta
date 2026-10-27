@@ -1,6 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script>
+/* Puente de Google: si la red bloquea workers.dev, las peticiones a los Workers
+   van por Google Apps Script (agrupadas en lotes) y llegan a los mismos datos. */
+(function(){
+  var GAS='https://script.google.com/macros/s/AKfycbxpfIFpo2zdolYYOQho2dKI3d56_11BFD51iWaqoMbCxfwlo6Zm8qF154Xl96bWlV0/exec';
+  var MAP=[['https://seguimiento-correos.adminhubplaneta.workers.dev',''],
+           ['https://lucky-shadow-44ed.veronica-zueras.workers.dev','/org']];
+  var orig=window.fetch.bind(window), puente=false, cola=[], temporizador=null;
+  try{puente=sessionStorage.getItem('usarPuente')==='1';}catch(e){}
+  function marcar(v){puente=v;try{sessionStorage.setItem('usarPuente',v?'1':'0');}catch(e){}}
+  function ruta(u){for(var i=0;i<MAP.length;i++){if(u.indexOf(MAP[i][0])===0){var r=u.slice(MAP[i][0].length),k=r.indexOf('?');return {p:MAP[i][1]+(k<0?r:r.slice(0,k)),q:k<0?'':r.slice(k+1)};}}return null;}
+  function vaciar(){
+    temporizador=null; var lote=cola.splice(0,60); if(!lote.length) return;
+    orig(GAS,{method:'POST',body:JSON.stringify({lote:lote.map(function(x){return x.r;})})})
+      .then(function(res){return res.json();})
+      .then(function(d){lote.forEach(function(x,i){var o=d.r&&d.r[i];if(!o){x.no(new TypeError('puente'));return;}
+        x.si(new Response(o.t,{status:o.s,headers:{'Content-Type':'application/json'}}));});})
+      .catch(function(e){lote.forEach(function(x){x.no(e);});});
+    if(cola.length) temporizador=setTimeout(vaciar,0);
+  }
+  function porGoogle(r){return new Promise(function(si,no){cola.push({r:r,si:si,no:no});if(cola.length>=60){clearTimeout(temporizador);vaciar();}else if(!temporizador)temporizador=setTimeout(vaciar,25);});}
+  window.fetch=function(input,init){
+    var u=(typeof input==='string')?input:(input&&input.url)?input.url:String(input);
+    var rt=ruta(u); if(!rt) return orig(input,init);
+    init=init||{}; var r={m:(init.method||'GET').toUpperCase(),p:rt.p,q:rt.q};
+    if(init.body!=null) r.b=String(init.body);
+    if(puente) return porGoogle(r).catch(function(){return orig(u,init).then(function(x){marcar(false);return x;});});
+    return orig(u,init).catch(function(){return porGoogle(r).then(function(x){marcar(true);return x;});});
+  };
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bajas y Cambios — Admin Hub</title>
