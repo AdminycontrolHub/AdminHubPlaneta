@@ -10,10 +10,11 @@
            ['https://lucky-shadow-44ed.veronica-zueras.workers.dev','/org']];
   var orig=window.fetch.bind(window), puente=false, cola=[], temporizador=null;
   try{puente=sessionStorage.getItem('usarPuente')==='1';}catch(e){}
+  window.__puenteActivo=function(){return puente;};
   function marcar(v){puente=v;try{sessionStorage.setItem('usarPuente',v?'1':'0');}catch(e){}}
   function ruta(u){for(var i=0;i<MAP.length;i++){if(u.indexOf(MAP[i][0])===0){var r=u.slice(MAP[i][0].length),k=r.indexOf('?');return {p:MAP[i][1]+(k<0?r:r.slice(0,k)),q:k<0?'':r.slice(k+1)};}}return null;}
   function vaciar(){
-    temporizador=null; var lote=cola.splice(0,60); if(!lote.length) return;
+    temporizador=null; var lote=cola.splice(0,100); if(!lote.length) return;
     orig(GAS,{method:'POST',body:JSON.stringify({lote:lote.map(function(x){return x.r;})})})
       .then(function(res){return res.json();})
       .then(function(d){lote.forEach(function(x,i){var o=d.r&&d.r[i];if(!o){x.no(new TypeError('puente'));return;}
@@ -21,7 +22,7 @@
       .catch(function(e){lote.forEach(function(x){x.no(e);});});
     if(cola.length) temporizador=setTimeout(vaciar,0);
   }
-  function porGoogle(r){return new Promise(function(si,no){cola.push({r:r,si:si,no:no});if(cola.length>=60){clearTimeout(temporizador);vaciar();}else if(!temporizador)temporizador=setTimeout(vaciar,25);});}
+  function porGoogle(r){return new Promise(function(si,no){cola.push({r:r,si:si,no:no});if(cola.length>=100){clearTimeout(temporizador);vaciar();}else if(!temporizador)temporizador=setTimeout(vaciar,25);});}
   window.fetch=function(input,init){
     var u=(typeof input==='string')?input:(input&&input.url)?input.url:String(input);
     var rt=ruta(u); if(!rt) return orig(input,init);
@@ -807,6 +808,26 @@ async function kvList(){
 // ============================================================
 // CARGA DE DATOS
 // ============================================================
+const CACHE_CERRADOS = 'hubCerradosPuente_v2';
+function leerCacheCerrados(){
+  try{
+    if(sessionStorage.getItem('hubRecargarTodo') === '1'){ sessionStorage.removeItem('hubRecargarTodo'); return null; }
+    const c = JSON.parse(localStorage.getItem(CACHE_CERRADOS) || 'null');
+    if(!c || !c.items) return null;
+    return c;
+  }catch(e){ return null; }
+}
+function guardarCacheCerrados(macroPorClave){
+  try{
+    const items = {};
+    Object.keys(macroPorClave).forEach(k => { const m = macroPorClave[k]; if(m && m.estado === 'Cerrado') items[k] = m; });
+    localStorage.setItem(CACHE_CERRADOS, JSON.stringify({ items }));
+  }catch(e){}
+}
+function recargarTodoSinCache(){
+  try{ localStorage.removeItem(CACHE_CERRADOS); }catch(e){}
+  location.reload();
+}
 async function cargarTodo(){
   const [keys, mesGuardado, plazoGuardado, cruceGuardado, mesTipoGuardado] = await Promise.all([kvList(), kvGet(KV_KEY_CONFIG), kvGet(KV_KEY_PLAZO_NACS), kvGet(KV_KEY_CRUCE_NACS), kvGet(KV_KEY_MES_POR_TIPO)]);
   if(mesGuardado) mesConvocatoria = mesGuardado;
@@ -822,24 +843,34 @@ async function cargarTodo(){
   // volvia vacia, pero Cloudflare la contaba contra el limite diario).
   const clavesExistentes = new Set(keys);
 
+
   // Se piden en tandas (no todos a la vez) para evitar que el navegador
   // sature de conexiones simultaneas cuando hay muchos casos (por ejemplo,
   // tras cargar un historico grande) — cada tanda espera a la anterior, con
   // una pausa breve entre tandas para no forzar al Worker.
-  const TAMANO_TANDA = 40;
+  // PUENTE DE GOOGLE: los datos que manda la macro de un caso CERRADO ya no
+  // cambian, asi que se guardan en este navegador y no se vuelven a pedir.
+  // Lo que se edita en el Hub (comentarios, NACS, cierre manual...) vive en
+  // las claves "hub_" y esas SIEMPRE se leen frescas.
+  const viaPuente = !!(window.__puenteActivo && window.__puenteActivo());
+  const cacheCerrados = viaPuente ? leerCacheCerrados() : null;
+  const macroPorClave = {};
   const resultados = [];
+  const TAMANO_TANDA = 40;
   for(let i = 0; i < idsClaves.length; i += TAMANO_TANDA){
     const tanda = idsClaves.slice(i, i + TAMANO_TANDA);
     const parcial = await Promise.all(tanda.map(async key => {
       const tieneHub = clavesExistentes.has('hub_' + key);
-      const [macroData, hubData] = await Promise.all([kvGet(key), tieneHub ? kvGet('hub_' + key) : Promise.resolve(null)]);
+      const enCache = cacheCerrados ? cacheCerrados.items[key] : null;
+      const [macroData, hubData] = await Promise.all([enCache ? Promise.resolve(enCache) : kvGet(key), tieneHub ? kvGet('hub_' + key) : Promise.resolve(null)]);
       if(!macroData) return null;
+      macroPorClave[key] = macroData;
       return Object.assign({ key }, macroData, hubData || {});
     }));
     resultados.push(...parcial);
     const hasta = Math.min(i + TAMANO_TANDA, idsClaves.length);
     document.getElementById('subHeader').textContent = `Cargando casos... (${hasta}/${idsClaves.length})`;
-    if(hasta < idsClaves.length) await new Promise(r => setTimeout(r, 20));
+    if(hasta < idsClaves.length && !cacheCerrados) await new Promise(r => setTimeout(r, 20));
   }
 
   casos = resultados.filter(c => c !== null);
@@ -854,6 +885,7 @@ async function cargarTodo(){
       pendientesDeGuardar.push(c);
     }
   });
+  if(viaPuente) guardarCacheCerrados(macroPorClave);
   if(pendientesDeGuardar.length > 0){
     Promise.all(pendientesDeGuardar.map(c => guardarHubData(c.key, c)));
   }
