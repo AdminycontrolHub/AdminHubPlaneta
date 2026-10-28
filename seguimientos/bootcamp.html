@@ -737,8 +737,9 @@ select.inp{cursor:pointer}
 
   <!-- ================= REUNIONES DE SEGUIMIENTO ================= -->
   <sc-if value="{{isReu}}" hint-placeholder-val="{{false}}">
+   <div style="display:flex;flex-direction:column;gap:18px">
     <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
-      <div class="panel" style="flex:1 1 380px;min-width:0;background:#FCEBF5;border-color:#EFC3DC;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div class="panel" style="flex:1 1 380px;min-width:0;background:#E4EEFD;border-color:#BCD0F5;padding:20px;display:flex;flex-direction:column;gap:12px">
         <div>
           <h2 style="margin:0;font-size:18px;font-weight:700">Temas a tratar en la próxima reunión</h2>
           <div style="color:var(--mut);font-size:13px;margin-top:2px">Cualquier departamento puede añadir temas</div>
@@ -758,7 +759,7 @@ select.inp{cursor:pointer}
         </div>
       </div>
 
-      <div class="panel" style="flex:1.4 1 460px;min-width:0;background:#FCEBF5;border-color:#EFC3DC;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div class="panel" style="flex:1.4 1 460px;min-width:0;background:#E1F3F7;border-color:#B2DCE5;padding:20px;display:flex;flex-direction:column;gap:12px">
         <div>
           <h2 style="margin:0;font-size:18px;font-weight:700">Tareas derivadas de la reunión</h2>
           <div style="color:var(--mut);font-size:13px;margin-top:2px">Cada tarea llega a «Gestiones urgentes» del departamento asignado</div>
@@ -791,6 +792,54 @@ select.inp{cursor:pointer}
         </div>
       </div>
     </div>
+
+    <div class="panel" style="background:#ECE6FC;border-color:#CFC3F2;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px">
+        <div>
+          <h2 style="margin:0;font-size:18px;font-weight:700">Tareas a revisar hoy</h2>
+          <div style="color:var(--mut);font-size:13px;margin-top:2px">Tareas cuya fecha de revisión es hoy o ya ha pasado. Escribe cómo se ha resuelto y guárdala: pasa al histórico.</div>
+        </div>
+        <span class="chip" style="background:#fff;color:var(--ink)">Hoy · {{todayLabel}}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{dueList}}" as="x" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:8px;background:#fff;border-radius:10px;padding:12px">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+              <div style="flex:1 1 220px;font-size:14px;font-weight:600">{{x.text}}</div>
+              <span class="chip" style="{{x.deptStyle}}">{{x.dept}}</span>
+              <span class="chip" style="{{x.lateStyle}}">{{x.lateTxt}} · revisión {{x.rev}}</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+              <textarea class="inp" aria-label="Comentario de resolución" placeholder="Comentario de resolución…" value="{{x.draft}}" onChange="{{x.onDraft}}" rows="2" style="flex:1 1 320px;resize:vertical"></textarea>
+              <button onClick="{{x.save}}" style="background:var(--reu);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:800;font-size:13px;white-space:nowrap">Guardar resolución</button>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{noDue}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">No hay tareas para revisar hoy.</div></sc-if>
+      </div>
+    </div>
+
+    <div class="panel" style="background:#FCEBF5;border-color:#EFC3DC;padding:20px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <h2 style="margin:0;font-size:18px;font-weight:700">Histórico de tareas</h2>
+        <div style="color:var(--mut);font-size:13px;margin-top:2px">Tareas resueltas, con su comentario de resolución</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{histList}}" as="h" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:10px;padding:12px">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+              <div style="flex:1 1 220px;font-size:14px;font-weight:600">{{h.text}}</div>
+              <span class="chip" style="{{h.deptStyle}}">{{h.dept}}</span>
+              <span class="chip" style="background:#DDF5E6;color:#176B3A">Resuelta el {{h.resDate}}</span>
+            </div>
+            <div class="mono" style="font-size:11px;color:var(--mut)">Asignada el {{h.date}}{{h.revTxt}}</div>
+            <div style="font-size:13px;line-height:1.45;white-space:pre-wrap">{{h.comment}}</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{noHist}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Todavía no hay tareas resueltas.</div></sc-if>
+      </div>
+    </div>
+   </div>
   </sc-if>
 
   </div>
@@ -967,7 +1016,7 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -1611,7 +1660,25 @@ class Component extends DCLogic {
 
     // ---------- reuniones
     const topicList = s.topics.map(x => ({text:x.text, rm:() => set({topics:s.topics.filter(y => y.id !== x.id)})}));
-    const taskList = s.tasks.map(x => ({
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const todayIso = NOW.getFullYear() + '-' + pad2(NOW.getMonth() + 1) + '-' + pad2(NOW.getDate());
+    const isoTxt = (v) => v ? v.split('-').reverse().join('/') : '';
+    const dueList = s.tasks.filter(x => !x.resolved && x.review && x.review <= todayIso).map(x => ({
+      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], rev:isoTxt(x.review),
+      lateTxt:x.review < todayIso ? 'Vencida' : 'Hoy', lateStyle:x.review < todayIso ? 'background:#FDECEF;color:#B0203C;font-weight:700' : 'background:#FFF4D6;color:#8A5A00;font-weight:700',
+      draft:s.resDraft[x.id] || '',
+      onDraft:(e) => { const o = Object.assign({}, s.resDraft); o[x.id] = e.target.value; set({resDraft:o}); },
+      save:() => {
+        const c = (s.resDraft[x.id] || '').trim();
+        if (!c) { set({toast:'Escribe el comentario de resolución antes de guardar.', toastTo:role}); return; }
+        const o = Object.assign({}, s.resDraft); delete o[x.id];
+        set({resDraft:o, tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {resolved:true, resolution:c, resolvedDate:todayTxt, resolvedAt:Date.now(), done:true, doneDate:y.done ? y.doneDate : todayTxt}) : y), toast:'Tarea resuelta y guardada en el histórico.', toastTo:role});
+      }
+    }));
+    const histList = s.tasks.filter(x => x.resolved).sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0)).map(x => ({
+      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, revTxt:x.review ? ' · Revisión prevista ' + isoTxt(x.review) : '', resDate:x.resolvedDate, comment:x.resolution
+    }));
+    const taskList = s.tasks.filter(x => !x.resolved).map(x => ({
       text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, rev:x.review || '', onRev:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:e.target.value}) : y)}),
       status:x.done ? 'Gestionada el ' + x.doneDate : 'Pendiente', statusStyle:x.done ? 'background:#DDF5E6;color:#176B3A' : 'background:#FFF4D6;color:#8A5A00',
       rm:() => set({tasks:s.tasks.filter(y => y.id !== x.id)})
@@ -1662,6 +1729,7 @@ class Component extends DCLogic {
       lockAgain:() => set({unlocked:false}),
       changeProfile:() => { lsSet('adminhub_bootcamp_profile', null); set({profile:null, unlocked:false, pwdIn:'', pwdErr:false}); },
       comViewTabs, isComAlumnos:s.comView === 'alumnos', isComRooms:s.comView === 'habitaciones', rooms:roomList, roomStats,
+      dueList, noDue:dueList.length === 0, histList, noHist:histList.length === 0, todayLabel:todayTxt,
       topicList, noTopics:topicList.length === 0, taskList, noTasks:taskList.length === 0, deptOpts,
       topicIn:s.topicIn, taskIn:s.taskIn,
       onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
