@@ -76,6 +76,9 @@ select.inp{cursor:pointer}
       <span class="chip" style="{{profileChip}}">{{profileLbl}}</span>
       <span style="font-size:13px;color:var(--mut)">{{profileHelp}}</span>
       <span class="chip" style="{{syncStyle}}">{{syncTxt}}</span>
+      <sc-if value="{{canLinks}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{copyLink}}" title="Copiar el enlace externo para Marketing y Admisiones" style="background:#fff;color:#0A6573;border:1px solid var(--inpline);border-radius:8px;padding:7px 11px;font-weight:700;font-size:12px;display:inline-flex;gap:6px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>Copiar enlace externo</button>
+      </sc-if>
       <span style="flex:1 1 auto"></span>
       <sc-if value="{{canAskPwd}}" hint-placeholder-val="{{false}}">
         <input type="password" class="inp" aria-label="Contraseña de edición total" placeholder="Contraseña" value="{{pwdVal}}" onChange="{{onPwd}}" style="width:170px">
@@ -956,11 +959,12 @@ class Component extends DCLogic {
     super(props);
     let __hash = null; try { __hash = ROUTES[(location.hash || '').replace('#','')] || null; } catch (e) {}
     const __sv = lsGet('adminhub_bootcamp_profile');
-    const __prof = __hash || (['mkt','adm','com'].indexOf(__sv) >= 0 ? __sv : null);
+    const __ext = (function(){ try { return (location.hash || '') === '#bootcamp-ext'; } catch (e) { return false; } })();
+    const __prof = __hash || (['mkt','adm','com'].indexOf(__sv) >= 0 && !(__ext && __sv === 'com') ? __sv : null);
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -1088,6 +1092,7 @@ class Component extends DCLogic {
       };
     };
     const copy = (txt, what) => () => { try { navigator.clipboard.writeText(txt); } catch (err) {} set({toast:'Copiado ' + what + ': ' + txt, toastTo:role}); };
+    const copyExt = () => { let base = ''; try { base = location.href.split('#')[0].split('?')[0]; } catch (e) {} const url = base + '#bootcamp-ext'; let ok = false; try { navigator.clipboard.writeText(url); ok = true; } catch (e) {} if (!ok) { try { const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {} } set({toast:'Enlace externo copiado (válido para Marketing y Admisiones): ' + url, toastTo:role}); };
     const setPrice = (id, pt) => { const o = Object.assign({}, s.prices); o[id] = Object.assign({}, o[id], pt); set({prices:o}); };
     const nameById = {};
     LEADS.forEach(l => { nameById[l.id] = l.name; });
@@ -1618,7 +1623,7 @@ class Component extends DCLogic {
       ['mkt', 'Marketing', 'Añades leads y costes. Ves Admisiones y Administración comercial en solo lectura.'],
       ['adm', 'Admisiones', 'Gestionas estados, tarifas, descuentos y parejas. Ves el resto en solo lectura.'],
       ['com', 'Administración comercial', 'Gestionas documentación, cobros y habitaciones. Con la contraseña de administración puedes modificar todo.']
-    ].map(p => ({
+    ].filter(p => !s.ext || p[0] !== 'com').map(p => ({
       label:p[1], desc:p[2], go:() => { lsSet('adminhub_bootcamp_profile', p[0]); set({profile:p[0], role:p[0], unlocked:false, pwdIn:'', pwdErr:false}); },
       style:'flex:1 1 220px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;background:' + TINT[p[0]] + ';border:2px solid ' + ACC[p[0]] + ';border-radius:14px;padding:16px;color:#1B2150',
       dot:'width:12px;height:12px;border-radius:50%;background:' + ACC[p[0]]
@@ -1640,6 +1645,8 @@ class Component extends DCLogic {
       roBanner:!!profile && !canEdit,
       roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (profile === 'com' ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
+      canLinks:profile === 'com',
+      copyLink:() => copyExt(),
       syncTxt:s.syncOk === null ? 'Conectando…' : (s.syncOk ? 'Sincronizado · ' + s.syncAt : 'Sin conexión · reintentando'),
       syncStyle:'font-weight:700;' + (s.syncOk === null ? 'background:#EEF1FD;color:#5A6393' : (s.syncOk ? 'background:#E3F6EA;color:#176B3A' : 'background:#FDECEF;color:#B0203C')),
       needProfile:!profile, profileOpts, hasProfile:!!profile,
