@@ -87,7 +87,7 @@ select.inp{cursor:pointer}
       </sc-if>
       <sc-if value="{{unlocked}}" hint-placeholder-val="{{false}}">
         <span class="chip" style="background:var(--grnbg);color:var(--grntx)">Edición total activa</span>
-        <button onClick="{{lockAgain}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Bloquear</button>
+        <button onClick="{{resetAll}}" style="background:#fff;color:#B0203C;border:1px solid #F2A3B4;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Borrar todos los datos</button>
       </sc-if>
       <sc-if value="{{canChange}}" hint-placeholder-val="{{true}}"><button onClick="{{changeProfile}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Cambiar perfil</button></sc-if>
     </div>
@@ -137,7 +137,7 @@ select.inp{cursor:pointer}
   <!-- DATOS MODIFICADOS POR LA HM (línea simple, sin tarjeta) -->
   <sc-if value="{{hasHm}}" hint-placeholder-val="{{false}}">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px">
-      <span class="lbl" style="color:var(--redtx)">Datos modificados por la HM</span>
+      <span class="lbl" style="color:var(--redtx)">La HM ha modificado datos · pendiente de validar por Admisiones</span>
       <sc-for list="{{hmChips}}" as="m" hint-placeholder-count="2">
         <button onClick="{{goCom}}" style="background:#fff;color:var(--redtx);border:1px solid var(--red);border-radius:999px;padding:4px 10px;font:700 12px 'Manrope',sans-serif">{{m.name}} · {{m.n}}</button>
       </sc-for>
@@ -201,14 +201,12 @@ select.inp{cursor:pointer}
         <div onDragOver="{{onDragOver}}" onDragLeave="{{onDragLeave}}" onDrop="{{onDrop}}" style="{{dropStyle}}">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#7C5CE6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
           <h2 style="margin:0;font-size:24px;font-weight:800">Arrastra aquí los leads nuevos</h2>
-          <div style="color:#454E80;font-size:15px;line-height:1.6;max-width:520px;text-align:center">Un archivo por lead, o un Excel con varios. Solo se añaden los casos nuevos: la base inicial no se modifica.</div>
+          <div style="color:#454E80;font-size:15px;line-height:1.6;max-width:520px;text-align:center">Un archivo por lead, o un Excel con varios (se lee la pestaña «Leads»). Solo se añaden los casos nuevos: los leads ya cargados no se modifican.</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:6px">
             <label class="pick" style="position:relative;display:inline-block;background:var(--mkt);color:#fff;border-radius:10px;padding:12px 18px;font-weight:800;font-size:14px;cursor:pointer">
               Elegir archivos
               <input type="file" multiple aria-label="Elegir archivos de leads" onChange="{{onPick}}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
             </label>
-            <button onClick="{{simExcel}}" style="background:#fff;color:var(--ink);border:1px solid var(--mkt);border-radius:10px;padding:12px 16px;font-weight:700;font-size:13px">Simular Excel</button>
-            <button onClick="{{simOne}}" style="background:#fff;color:var(--ink);border:1px solid var(--mkt);border-radius:10px;padding:12px 16px;font-weight:700;font-size:13px">Simular archivo individual</button>
           </div>
         </div>
 
@@ -224,12 +222,13 @@ select.inp{cursor:pointer}
             </div>
             <div class="scroll" style="background:#fff;border-radius:12px;padding:4px 6px">
               <table>
-                <thead><tr><th>Lead</th><th>País</th><th>Archivo</th><th>Resultado</th></tr></thead>
+                <thead><tr><th>Lead</th><th>País</th><th>Estado</th><th>Archivo</th><th>Resultado</th></tr></thead>
                 <tbody>
                   <sc-for list="{{drop.rows}}" as="p" hint-placeholder-count="4">
                     <tr>
                       <td style="font-weight:600">{{p.name}}</td>
                       <td class="mono" style="font-size:13px">{{p.pais}}</td>
+                      <td style="font-size:13px">{{p.estado}}</td>
                       <td style="color:var(--mut);font-size:13px">{{p.src}}</td>
                       <td><span class="chip" style="{{p.chip}}">{{p.result}}</span></td>
                     </tr>
@@ -250,14 +249,22 @@ select.inp{cursor:pointer}
         <div class="panel" style="background:{{mktBg}};border-color:#CFC3F6;padding:20px;display:flex;flex-direction:column;gap:14px">
           <h2 style="margin:0;font-size:16px;font-weight:700">Estado de la base</h2>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:12px 14px">
-            <div><div style="font-weight:700;font-size:14px">Base inicial</div><div style="color:var(--mut);font-size:12px">Solo lectura · no se modifica</div></div>
-            <span class="mono" style="font-size:24px;font-weight:700">304</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:12px 14px">
-            <div><div style="font-weight:700;font-size:14px">Añadidos con la herramienta</div><div style="color:var(--mut);font-size:12px">Entran como «Pendiente de contactar»</div></div>
+            <div><div style="font-weight:700;font-size:14px">Leads cargados</div><div style="color:var(--mut);font-size:12px">Total en la herramienta</div></div>
             <span class="mono" style="font-size:24px;font-weight:700;color:#5B3FC4">{{addedCount}}</span>
           </div>
         </div>
+        <div style="display:flex;justify-content:flex-end"><button onClick="{{toggleTools}}" style="background:none;border:0;color:var(--mut);font-size:12px;text-decoration:underline;padding:2px 4px">{{toolsLbl}}</button></div>
+        <sc-if value="{{mktTools}}" hint-placeholder-val="{{false}}">
+        <div class="panel" style="background:#FDECEF;border-color:#F2A3B4;padding:20px;display:flex;flex-direction:column;gap:10px">
+          <h2 style="margin:0;font-size:16px;font-weight:700;color:#B0203C">Pruebas · empezar de cero</h2>
+          <div style="color:#6B2A38;font-size:13px;line-height:1.5">Borra los leads cargados y todos los datos de la herramienta (Admisiones, Administración comercial y Reuniones) para todos los usuarios. No se puede deshacer.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="password" class="inp" aria-label="Contraseña para borrar" placeholder="Contraseña" value="{{mktPwdVal}}" onChange="{{onMktPwd}}" style="flex:1 1 140px;width:auto">
+            <button onClick="{{mktReset}}" style="background:#D32F4B;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px">Borrar todo y poner a 0</button>
+          </div>
+          <sc-if value="{{mktPwdErr}}" hint-placeholder-val="{{false}}"><span style="font-size:12px;color:#B0203C;font-weight:700">Contraseña incorrecta</span></sc-if>
+        </div>
+        </sc-if>
       </div>
     </div>
 
@@ -265,7 +272,7 @@ select.inp{cursor:pointer}
     <div class="panel" style="background:{{mktBg}};border-color:#CFC3F6;padding:22px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <h2 style="margin:0;font-size:18px;font-weight:700">Leads</h2>
-        <span class="lbl">Muestra de la base · el estado se actualiza desde Admisiones</span>
+        <span class="lbl">El estado se actualiza desde Admisiones</span>
       </div>
       <div style="background:#fff;border-radius:12px;padding:4px 6px">
         <table class="tight" style="table-layout:fixed">
@@ -334,12 +341,12 @@ select.inp{cursor:pointer}
     <div class="panel" style="background:#E9F0FE;border-color:#C5D6F7;padding:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
         <h2 style="margin:0;font-size:18px;font-weight:700">Seguimiento de leads</h2>
-        <span class="lbl">Muestra de la base · estado y último seguimiento editables</span>
+        <span class="lbl">Estado y último seguimiento editables</span>
       </div>
       <div style="background:#fff;border-radius:12px;padding:4px 6px">
         <table class="tight" style="table-layout:fixed">
-          <colgroup><col style="width:13%"><col style="width:11%"><col style="width:13%"><col style="width:14%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:7%"><col style="width:17%"></colgroup>
-          <thead><tr><th>Lead</th><th>Asesor</th><th>Estado</th><th>Tarifa</th><th>Descuento</th><th>Precio final</th><th>Forma de pago</th><th>MES primera cuota</th><th>Último seguimiento</th></tr></thead>
+          <colgroup><col style="width:12%"><col style="width:10%"><col style="width:12%"><col style="width:12%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:7%"><col style="width:15%"></colgroup>
+          <thead><tr><th>Lead</th><th>Asesor</th><th>Estado</th><th>Tarifa</th><th>Descuento</th><th>Precio final</th><th>Forma de pago</th><th>Forma de facturación</th><th>MES primera cuota</th><th>Último seguimiento</th></tr></thead>
           <tbody>
             <sc-for list="{{admRows}}" as="l" hint-placeholder-count="6">
               <tr style="{{l.rowStyle}}">
@@ -352,7 +359,7 @@ select.inp{cursor:pointer}
                   <sc-if value="{{l.isNew}}" hint-placeholder-val="{{false}}"> <span class="chip" style="background:var(--mkt);color:#fff">Nuevo</span></sc-if>
                   <sc-if value="{{l.mora}}" hint-placeholder-val="{{false}}"><div><span class="chip" style="background:var(--redbg);color:var(--redtx);border:1px solid var(--red)">Cuotas vencidas · {{l.moraAmt}}</span></div></sc-if>
                   <sc-if value="{{l.hasClaim}}" hint-placeholder-val="{{false}}"><div><span class="chip" style="background:var(--amberbg);color:var(--ambertx);border:1px solid var(--amberline)">Reclamación abierta</span></div></sc-if>
-                  <sc-if value="{{l.hasMod}}" hint-placeholder-val="{{false}}"><div><span class="chip" style="background:#fff;color:var(--redtx);border:1px solid var(--red)">HM · {{l.modN}} modificados</span></div></sc-if>
+                  <sc-if value="{{l.hasMod}}" hint-placeholder-val="{{false}}"><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start"><span class="chip" style="background:#fff;color:var(--redtx);border:1px solid var(--red)">HM modificó · {{l.modN}}</span><span style="font-size:11px;color:var(--redtx);line-height:1.3">{{l.hmTxt}}</span><button onClick="{{l.onValidate}}" style="background:var(--red);color:#fff;border:0;border-radius:8px;padding:5px 10px;font-weight:800;font-size:12px">Validar HM</button></div></sc-if>
                 </td>
                 <td style="color:var(--mut);font-size:13px">
                   <select class="inp" aria-label="Asesor" onChange="{{l.onAses}}">
@@ -417,7 +424,7 @@ select.inp{cursor:pointer}
                 </td>
                 <td>
                   <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
-                    <select class="inp" aria-label="Forma de pago" onChange="{{l.onPago}}">
+                    <select class="inp" aria-label="Forma de pago" onChange="{{l.onPago}}" style="{{l.pagoStyle}}">
                       <sc-for list="{{l.pagoOpts}}" as="o" hint-placeholder-count="3">
                         <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
                       </sc-for>
@@ -427,7 +434,17 @@ select.inp{cursor:pointer}
                 </td>
                 <td>
                   <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
-                    <select class="inp" aria-label="Mes de la primera cuota" onChange="{{l.onIni}}">
+                    <select class="inp" aria-label="Forma de facturación" onChange="{{l.onBill}}" style="{{l.billStyle}}">
+                      <sc-for list="{{l.billOpts}}" as="o" hint-placeholder-count="3">
+                        <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
+                      </sc-for>
+                    </select>
+                  </sc-if>
+                  <sc-if value="{{l.noPrice}}" hint-placeholder-val="{{false}}"><span style="color:var(--mut)">—</span></sc-if>
+                </td>
+                <td>
+                  <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
+                    <select class="inp" aria-label="Mes de la primera cuota" onChange="{{l.onIni}}" style="{{l.iniStyle}}">
                       <sc-for list="{{l.iniOpts}}" as="o" hint-placeholder-count="5">
                         <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
                       </sc-for>
@@ -470,6 +487,8 @@ select.inp{cursor:pointer}
           <span class="lbl">Vencido a hoy</span>
           <span class="mono" style="font-weight:700;font-size:15px;background:#fff;border:1px solid #BFE0E8;border-radius:8px;padding:8px 12px">{{todayTxt}}</span>
           <button onClick="{{openExport}}" style="background:var(--com);color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:800;font-size:14px">Exportar resumen</button>
+          <button onClick="{{openHist}}" style="background:#fff;color:var(--com);border:1.5px solid var(--com);border-radius:10px;padding:10px 16px;font-weight:800;font-size:14px">Histórico</button>
+          <sc-if value="{{unlocked}}" hint-placeholder-val="{{true}}"><button onClick="{{openCyc}}" style="background:#1B2150;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:800;font-size:14px">Cerrar ciclo</button></sc-if>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:10px">
@@ -513,7 +532,7 @@ select.inp{cursor:pointer}
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
               <sc-if value="{{k.mora}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:var(--redbg);color:var(--redtx);border:1px solid var(--red)">Cuotas vencidas · {{k.moraAmt}}</span></sc-if>
               <sc-if value="{{k.anyClaim}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:var(--amberbg);color:var(--ambertx);border:1px solid var(--amberline)">Reclamación abierta</span></sc-if>
-              <sc-if value="{{k.hasMod}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:#fff;color:var(--redtx);border:1px solid var(--red)">HM · {{k.modN}} modificados</span></sc-if>
+              <sc-if value="{{k.hasMod}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:#fff;color:var(--redtx);border:1px solid var(--red)">HM modificó · {{k.modN}}</span></sc-if>
               <span class="chip" style="{{k.chip}}">{{k.status}}</span>
               </div>
             </div>
@@ -527,9 +546,25 @@ select.inp{cursor:pointer}
               <button onClick="{{k.flagGo}}" aria-pressed="{{k.flag}}" style="{{k.flagStyle}}">Marcar impago a mano</button>
             </div>
             <div onDragOver="{{k.onDragOver}}" onDragLeave="{{k.onDragLeave}}" onDrop="{{k.onDrop}}" style="{{k.hmStyle}}">
-              <span style="font-size:13px;color:var(--ink)">Arrastra aquí la HM: se compara y se sobrescribe (la HM manda)</span>
-              <button onClick="{{k.simHm}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:6px 11px;font-weight:700;font-size:12px;white-space:nowrap">Simular HM</button>
+              <span style="font-size:13px;color:var(--ink)">Arrastra aquí la HM: se cruza con Admisiones (precio final, forma de pago, facturación y fecha de la primera cuota)</span>
+              <label class="pick" style="position:relative;display:inline-block;background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:6px 11px;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer">
+                Elegir HM
+                <input type="file" accept=".pdf,.xlsx,.xls,.csv" aria-label="Elegir la HM" onChange="{{k.onPickHm}}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+              </label>
             </div>
+            <sc-if value="{{k.hasHmc}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+                <div style="{{k.hmcHeadStyle}}">{{k.hmcHead}}</div>
+                <sc-for list="{{k.hmcRows}}" as="r" hint-placeholder-count="4">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px">
+                    <span class="lbl" style="min-width:150px">{{r.label}}</span>
+                    <span>Admisiones: <strong>{{r.adm}}</strong></span>
+                    <span>HM: <strong>{{r.hm}}</strong></span>
+                    <span class="chip" style="{{r.chip}}">{{r.stTxt}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
             <div style="display:flex;flex-direction:column;gap:4px">
               <span class="lbl">Último seguimiento</span>
               <div title="{{k.lastFull}}" style="font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{k.lastShort}}</div>
@@ -845,6 +880,92 @@ select.inp{cursor:pointer}
   </div>
 
   <!-- ELEGIR PERFIL (primera entrada) -->
+  <sc-if value="{{hmOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:55">
+      <div role="dialog" aria-label="Cruce de la HM" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:820px;max-height:94vh;overflow:auto;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(40,50,120,.35)">
+        <div>
+          <div class="lbl">Cruce de la HM</div>
+          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800">{{hmName}}</h2>
+          <div style="color:var(--mut);font-size:13px;margin-top:4px">{{hmFile}} · {{hmRead}}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{hmRows}}" as="r" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(120px,1fr) minmax(160px,1.3fr) minmax(150px,1fr);gap:10px;align-items:center;background:#F3F5FE;border-radius:10px;padding:10px 12px">
+              <span class="lbl">{{r.label}}</span>
+              <span style="font-size:14px"><span style="color:var(--mut);font-size:11px">Admisiones</span><br><strong>{{r.adm}}</strong></span>
+              <label style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--mut);font-size:11px">Dato en la HM (editable)</span><input class="inp" aria-label="{{r.label}} en la HM" value="{{r.val}}" onChange="{{r.on}}" placeholder="{{r.ph}}"></label>
+              <span class="chip" style="{{r.chip}}">{{r.stTxt}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="color:var(--mut);font-size:12px">Si algún dato no se ha leído bien del archivo, escríbelo a mano antes de guardar. Al guardar, los datos que no coinciden se sustituyen por los de la HM (en rojo) y Admisiones recibe un botón para validarlos.</div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{hmCancel}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px">Cancelar</button>
+          <button onClick="{{hmSave}}" style="background:var(--com);color:#fff;border:0;border-radius:10px;padding:11px 18px;font-weight:800;font-size:14px">Guardar cruce</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{cycOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:58">
+      <div role="dialog" aria-label="Cerrar ciclo" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:520px;max-height:94vh;overflow:auto;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(40,50,120,.3)">
+        <div>
+          <div class="lbl">Administración comercial</div>
+          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800">Cerrar ciclo</h2>
+          <div style="color:var(--mut);font-size:13px;margin-top:6px;line-height:1.5">Se guardará el resumen final en el histórico y la herramienta se pondrá a 0 para todos los usuarios. No se puede deshacer.</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span class="chip" style="background:#ECE6FC;color:#4A31A8">{{cycLeads}} leads</span>
+          <span class="chip" style="background:#DCEBFE;color:#1D58C0">{{cycAcc}} aceptados</span>
+          <span class="chip" style="background:#DDF3F6;color:#075E6D">{{cycNeta}} facturación recibida</span>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:5px"><span class="lbl">Nombre del ciclo</span><input type="text" class="inp" value="{{cycName}}" onChange="{{onCycName}}" maxlength="50"></label>
+        <label style="display:flex;flex-direction:column;gap:5px"><span class="lbl">Contraseña</span><input type="password" class="inp" aria-label="Contraseña para cerrar el ciclo" value="{{cycPwdVal}}" onChange="{{onCycPwd}}"></label>
+        <sc-if value="{{cycErr}}" hint-placeholder-val="{{false}}"><span style="font-size:12px;color:#B0203C;font-weight:700">{{cycErr}}</span></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{closeCyc}}" style="background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px">Cancelar</button>
+          <button onClick="{{confirmCyc}}" style="background:#D32F4B;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;font-size:14px">{{cycBtn}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{histOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:57">
+      <div role="dialog" aria-label="Histórico de ciclos" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:900px;max-height:94vh;overflow:auto;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(40,50,120,.3)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div>
+            <div class="lbl">Admin Hub · Bootcamps</div>
+            <h2 style="margin:4px 0 0;font-size:22px;font-weight:800">Histórico de ciclos</h2>
+            <div style="color:var(--mut);font-size:13px;margin-top:4px">Resumen final de cada ciclo cerrado</div>
+          </div>
+          <button onClick="{{closeHist}}" style="background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px">{{histCloseLbl}}</button>
+        </div>
+        <sc-if value="{{noHist2}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:14px;padding:18px;background:#F5F7FE;border-radius:12px">Aún no hay ciclos cerrados.</div></sc-if>
+        <sc-for list="{{histCycles}}" as="c" hint-placeholder-count="2">
+          <div style="border:1px solid #D7DCF5;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#FAFBFF">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <div><div style="font-weight:800;font-size:17px">{{c.name}}</div><div class="mono" style="font-size:11px;color:var(--mut)">Cerrado el {{c.closedTxt}}</div></div>
+              <button onClick="{{c.toggle}}" style="background:#fff;border:1px solid var(--inpline);border-radius:8px;padding:7px 12px;font-weight:700;font-size:12px">{{c.toggleLbl}}</button>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{c.kpis}}" as="k" hint-placeholder-count="5"><div style="flex:1 1 130px;background:#fff;border:1px solid #E3E7F8;border-radius:10px;padding:10px 12px"><div class="lbl" style="font-size:10px">{{k.l}}</div><div class="mono" style="font-weight:700;font-size:18px;margin-top:4px">{{k.v}}</div></div></sc-for>
+            </div>
+            <sc-if value="{{c.open}}" hint-placeholder-val="{{false}}">
+              <div class="scroll" style="background:#F5F7FE;border-radius:12px;padding:4px 6px"><table>
+                <thead><tr><th>Alumno</th><th>Tipo</th><th style="text-align:right">Esperado</th><th style="text-align:right">Recibido</th><th style="text-align:right">Devolución</th><th>Estado</th></tr></thead>
+                <tbody><sc-for list="{{c.rows}}" as="r" hint-placeholder-count="3"><tr><td>{{r.name}}</td><td>{{r.tipo}}</td><td class="mono" style="text-align:right">{{r.esperado}}</td><td class="mono" style="text-align:right">{{r.recibido}}</td><td class="mono" style="text-align:right">{{r.devuelta}}</td><td>{{r.status}}</td></tr></sc-for></tbody>
+              </table></div>
+              <sc-if value="{{c.hasTasks}}" hint-placeholder-val="{{false}}">
+                <div class="lbl">Tareas resueltas</div>
+                <sc-for list="{{c.tasks}}" as="t" hint-placeholder-count="2"><div style="font-size:13px;line-height:1.45;background:#fff;border:1px solid #E3E7F8;border-radius:10px;padding:9px 12px"><b>{{t.text}}</b> <span style="color:var(--mut)">· {{t.dept}} · resuelta el {{t.resolvedDate}}</span><div style="color:var(--mut)">{{t.resolution}}</div></div></sc-for>
+              </sc-if>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
   <sc-if value="{{needProfile}}" hint-placeholder-val="{{false}}">
     <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60">
       <div role="dialog" aria-label="Elige tu perfil" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:820px;max-height:94vh;overflow:auto;padding:30px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 60px rgba(40,50,120,.35)">
@@ -852,7 +973,7 @@ select.inp{cursor:pointer}
           <div class="lbl">Seguimiento Bootcamp Silicon Valley</div>
           <h2 style="margin:6px 0 0;font-size:28px;font-weight:800">¿Con qué perfil vas a trabajar?</h2>
         </div>
-        <div style="font-size:14px;line-height:1.6;color:#454E80">Podrás <strong>editar tu pestaña</strong>. Las demás las verás en <strong>solo lectura</strong>. La excepción es Administración comercial, que puede modificar todo introduciendo la contraseña de administración. «Reuniones de seguimiento» la editan todos los perfiles.</div>
+        <div style="font-size:14px;line-height:1.6;color:#454E80">Podrás <strong>editar tu pestaña</strong>. Las demás las verás en <strong>solo lectura</strong>. Para modificar todas las pestañas hace falta la contraseña de administración. «Reuniones de seguimiento» la editan todos los perfiles.</div>
         <div style="display:flex;flex-wrap:wrap;gap:12px">
           <sc-for list="{{profileOpts}}" as="p" hint-placeholder-count="3">
             <button onClick="{{p.go}}" style="{{p.style}}">
@@ -870,6 +991,127 @@ select.inp{cursor:pointer}
 </x-dc>
 
 <script type="text/x-dc" data-dc-script data-props='{"mktBg":{"editor":"color","default":"#ECE6FC","options":["#ECE6FC","#E4EEFD","#E1F3F7","#F3E7FA"]},"$preview":{"width":1440,"height":2200}}'>
+
+const nz = (v) => String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+const pad0 = (n) => String(n).padStart(2, '0');
+const fmtDate = (v) => {
+  if (typeof v === 'number' && v > 20000) { const d = new Date(Math.round((v - 25569) * 86400000)); return pad0(d.getUTCDate()) + '/' + pad0(d.getUTCMonth() + 1) + '/' + d.getUTCFullYear(); }
+  return String(v == null ? '' : v).trim();
+};
+const titleCase = (t) => (t === t.toLowerCase() || t === t.toUpperCase()) ? t.toLowerCase().replace(/(^|[\s'-])([a-záéíóúñü])/g, (m, a, b) => a + b.toUpperCase()) : t;
+const mapEstado = (raw, matric) => {
+  const t = nz(raw);
+  if (matric) return 'Aceptado';
+  if (!t) return 'Pendiente de contactar';
+  if (/matricul|acept|inscrit/.test(t)) return 'Aceptado';
+  if (/no interes|rechaz|baja|descart|no puede|sin interes/.test(t)) return 'Rechazado';
+  if (/iloc|no contest|no responde|sin respuesta|erroneo/.test(t)) return 'No contesta';
+  if (/pendiente de contact|sin contact|nuevo/.test(t)) return 'Pendiente de contactar';
+  return ST_CONT;
+};
+const loadXlsx = () => window.XLSX ? Promise.resolve() : new Promise((ok, ko) => {
+  const sc = document.createElement('script');
+  sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  sc.onload = () => ok(); sc.onerror = () => ko(new Error('xlsx'));
+  document.head.appendChild(sc);
+});
+async function parseLeadFile(f) {
+  await loadXlsx();
+  const wb = /\.csv$/i.test(f.name) ? XLSX.read(await f.text(), {type:'string'}) : XLSX.read(await f.arrayBuffer(), {type:'array'});
+  const sn = wb.SheetNames.filter(n => nz(n) === 'leads')[0] || wb.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
+  const hi = rows.findIndex(r => r.some(c => /nombre/.test(nz(c))));
+  if (hi < 0) return {list:[], err:'«' + f.name + '»: no encuentro la columna de nombre.'};
+  const H = rows[hi].map(nz);
+  const col = (names) => { for (let k = 0; k < names.length; k++) { const i = H.indexOf(names[k]); if (i >= 0) return i; } return -1; };
+  let iName = col(['nombre y apellidos', 'nombre completo', 'nombre']); if (iName < 0) iName = H.findIndex(h => /nombre/.test(h));
+  const iMail = col(['email', 'e-mail', 'correo', 'correo electronico']), iPais = col(['pais']), iTel = col(['telefono', 'tel', 'movil']), iPref = col(['prefijo']);
+  const iFecha = col(['fecha lead', 'fecha']), iAses = col(['asesor']), iEst = col(['estado']), iMat = col(['matriculado']);
+  const iSeg = col(['seguimiento']), iCom = col(['comentarios']);
+  const get = (r, i) => i >= 0 ? r[i] : '';
+  const list = [];
+  rows.slice(hi + 1).forEach(r => {
+    const full = String(get(r, iName)).trim();
+    if (!full) return;
+    const pref = String(get(r, iPref)).trim(), tel = String(get(r, iTel)).trim();
+    list.push({
+      full:titleCase(full), pais:String(get(r, iPais)).trim().toUpperCase() || '—', email:String(get(r, iMail)).trim().toLowerCase(),
+      tel:tel ? (pref ? '+' + pref + ' ' : '') + tel : '', fecha:fmtDate(get(r, iFecha)),
+      asesor:String(get(r, iAses)).trim(), estado:mapEstado(get(r, iEst), iMat >= 0 && nz(get(r, iMat)) === 'si'),
+      last:String(get(r, iSeg)).trim() || String(get(r, iCom)).trim()
+    });
+  });
+  return {list, err:list.length ? '' : '«' + f.name + '»: no hay filas con nombre.'};
+}
+
+
+const MNUM = {dic:12, ene:1, feb:2, mar:3};
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const parseEuro = (t) => {
+  const m = String(t == null ? '' : t).replace(/[€\s]|eur(os)?/gi, '').match(/-?\d[\d.,]*/);
+  if (!m) return null;
+  let x = m[0];
+  if (x.indexOf(',') >= 0 && x.indexOf('.') >= 0) x = x.lastIndexOf(',') > x.lastIndexOf('.') ? x.replace(/\./g, '').replace(',', '.') : x.replace(/,/g, '');
+  else if (x.indexOf(',') >= 0) x = x.replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(x)) x = x.replace(/\./g, '');
+  const n = parseFloat(x);
+  return isFinite(n) ? n : null;
+};
+const parsePago = (t) => { const x = nz(t); if (/contado|unico|unica|completo/.test(x)) return 'Contado'; if (/aplaz|fraccion|financ|cuota|plazo/.test(x)) return 'Aplazado'; return null; };
+const parseFact = (t) => { const x = nz(t); if (/empresa|sociedad|s\.?l\.?|s\.?a\.?|compan/.test(x)) return 'Empresa'; if (/alumno|estudiante|particular|persona fisica/.test(x)) return 'Alumno'; return null; };
+const parseMes = (t) => {
+  const x = nz(t); if (!x) return null;
+  let m = x.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (m) return +m[2];
+  m = x.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return +m[2];
+  for (let i = 0; i < 12; i++) if (x.indexOf(MESES[i]) >= 0) return i + 1;
+  const ab = {ene:1, feb:2, mar:3, dic:12}; m = x.match(/\b(ene|feb|mar|dic)\b/); if (m) return ab[m[1]];
+  return null;
+};
+const loadScript = (src) => new Promise((ok, ko) => { const sc = document.createElement('script'); sc.src = src; sc.onload = () => ok(); sc.onerror = () => ko(new Error(src)); document.head.appendChild(sc); });
+const loadPdfJs = async () => {
+  if (window.pdfjsLib) return;
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'); } catch (e) {}
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+};
+async function hmText(f) {
+  if (/\.pdf$/i.test(f.name)) {
+    await loadPdfJs();
+    const pdf = await window.pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise;
+    const out = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const items = (await (await pdf.getPage(p)).getTextContent()).items;
+      const rows = {};
+      items.forEach(it => { const y = Math.round(it.transform[5] / 3); (rows[y] = rows[y] || []).push(it); });
+      Object.keys(rows).map(Number).sort((a, b) => b - a).forEach(y => { out.push(rows[y].sort((a, b) => a.transform[4] - b.transform[4]).map(i => i.str).join(' ')); });
+    }
+    return out.join('\n');
+  }
+  if (/\.(xlsx|xls|csv)$/i.test(f.name)) {
+    await loadXlsx();
+    const wb = /\.csv$/i.test(f.name) ? XLSX.read(await f.text(), {type:'string'}) : XLSX.read(await f.arrayBuffer(), {type:'array'});
+    const out = [];
+    wb.SheetNames.forEach(n => { XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, raw:false, defval:''}).forEach(r => { const l = r.filter(c => String(c).trim() !== '').join(' | '); if (l) out.push(l); }); });
+    return out.join('\n');
+  }
+  throw new Error('formato');
+}
+async function parseHmFile(f) {
+  const text = await hmText(f);
+  const vals = {precio:'', pago:'', fact:'', fecha:''};
+  const AMT = '(\\d{1,3}(?:[.\\s]\\d{3})*(?:,\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)';
+  let m;
+  const pr = new RegExp('(precio\\s*(?:final|total|de\\s*venta|del\\s*programa|matr[ií]cula)?|importe\\s*(?:total|final|a\\s*pagar|matr[ií]cula)?|total\\s*(?:a\\s*pagar|matr[ií]cula)?)[^\\n\\d]{0,40}' + AMT + '\\s*(?:€|eur)?', 'ig');
+  while ((m = pr.exec(text))) { const n = parseEuro(m[2]); if (n != null && n >= 500) { vals.precio = String(m[2]); break; } }
+  m = text.match(/forma\s*de\s*pago[^\n]{0,60}?(contado|aplazad\w*|fraccionad\w*|financiad\w*|cuotas?)/i) || text.match(/(pago\s*(?:al\s*)?contado|pago\s*aplazado|aplazado|contado)/i);
+  if (m) vals.pago = m[1];
+  m = text.match(/(?:forma\s*de\s*)?factur\w*[^\n]{0,60}?(empresa|alumno|estudiante|particular)/i) || text.match(/(?:a\s*nombre\s*de|facturar\s*a)[^\n]{0,30}?(empresa|alumno|estudiante)/i);
+  if (m) vals.fact = m[1];
+  m = text.match(/(?:primer[a]?\s*cuota|1\s*[ªa]?\s*cuota|inicio\s*(?:del\s*)?(?:pago|financiaci\w+))[^\n\d]{0,40}(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:enero|febrero|marzo|diciembre)(?:\s*(?:de\s*)?\d{4})?)/i);
+  if (m) vals.fecha = m[1];
+  return {vals, chars:text.replace(/\s/g, '').length};
+}
+
 // ===== Sincronización compartida (Cloudflare Worker lucky-shadow · KV) =====
 const KV_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev/kv';
 const KV_KEYS = {
@@ -941,41 +1183,11 @@ const EST_COL = {
   'Aceptado':['#DDF5E6','#176B3A'],
   'Rechazado':['#FDECEF','#B3203D']
 };
-const BASE = {'Pendiente de contactar':6,'Contactado, falta decisión':36,'No contesta':148,'Aceptado':22,'Rechazado':89};
-const LEADS = [
-  {id:1,full:'Carlos Mosquera',name:'Carlos M.',pais:'PA',asesor:'Ivonne Rose',canal:'WhatsApp',estado:ST_CONT,last:'Quiere que le llamemos: duda sobre formas de pago y cuotas'},
-  {id:2,full:'Ramiro Parias',name:'Ramiro P.',pais:'CO',asesor:'Ivonne Rose',canal:'Email',estado:ST_CONT,last:'19/12 · Mail Last Call. No llamar, solo email'},
-  {id:3,full:'Angie Carolina Cañas',name:'Angie C.',pais:'ES',asesor:'Daniel Audrines',canal:'WhatsApp',estado:ST_CONT,last:'18/11 · Por coste no puede, otras prioridades'},
-  {id:4,full:'Gerardo Nole',name:'Gerardo N.',pais:'PE',asesor:'Rocío Alonso',canal:'WhatsApp',estado:ST_CONT,last:'10/11 · WhatsApp tras brochure; espera respuesta'},
-  {id:5,full:'Ivania Ferrada',name:'Ivania F.',pais:'CL',asesor:'María Gabriela Pan',canal:'WhatsApp',estado:ST_CONT,last:'25/11 · Revisa la información'},
-  {id:6,full:'Nora Figueroa',name:'Nora F.',pais:'EC',asesor:'María Gabriela Pan',canal:'WhatsApp',estado:'No contesta',last:'13/02 · Ilocalizada + WhatsApp'},
-  {id:7,full:'Marta Cruanas',name:'Marta C.',pais:'ES',asesor:'María Gabriela Pan',canal:'WhatsApp',estado:'No contesta',last:'16/02 · Número erróneo'},
-  {id:8,full:'Patricia Chadarevian',name:'Patricia C.',pais:'UY',asesor:'Ivonne Rose',canal:'WhatsApp',estado:'No contesta',last:'19/12 · Mail Last Call'},
-  {id:9,full:'Johanna Pérez Peralta',name:'Johanna P.',pais:'EC',asesor:'Sin asignar',canal:'—',estado:'Pendiente de contactar',last:'Sin gestiones todavía'},
-  {id:10,full:'Juan Pablo Tovar',name:'Juan Pablo T.',pais:'CO',asesor:'Daniel Audrines',canal:'WhatsApp',estado:'Pendiente de contactar',last:'27/11 · Doble llamada sin contacto + WhatsApp'},
-  {id:11,full:'Sandra Fajn',name:'Sandra F.',pais:'AR',asesor:'Ivonne Rose',canal:'WhatsApp',estado:'Rechazado',last:'No está interesada en esta nueva fecha'},
-  {id:12,full:'Ximena Espada',name:'Ximena E.',pais:'BO',asesor:'Ivonne Rose',canal:'WhatsApp',estado:'Rechazado',last:'07/11 · No puede pagarlo'}
-];
-const SIM_EXCEL = [
-  {full:'Andrea Salazar',pais:'CO'},{full:'Mateo Rincón',pais:'MX'},{full:'Valeria Ortiz',pais:'CL'},
-  {full:'Jorge Paredes',pais:'PE'},{full:'Camila Duarte',pais:'EC'},{full:'Carlos Mosquera',pais:'PA'},{full:'Nora Figueroa',pais:'EC'}
-];
+const BASE = {'Pendiente de contactar':0,'Contactado, falta decisión':0,'No contesta':0,'Aceptado':0,'Rechazado':0};
+const LEADS = [];
+const SIM_EXCEL = [];
 const D0 = {ccgg:1,pi:1,hm:1};
-const COM = [
-  {id:'jc',name:'Jose Carlos S.',full:'Jose Carlos Sanchez',pais:'MX',asesor:'Ivonne Rose',canal:'WhatsApp',last:'Todo OK - condiciones especiales 6 cuotas y dto. 50 %',hab:'Individual',acomp:'—',tel:'+52 55 4821 0561',email:'josecarlos.s@example.com',sub:'Individual · 2.495 € (dto. 50 %)',tipo:'Aplazado',amt:{pi:500,dic:0,ene:332.5,feb:332.5,mar:332.5},extraAmt:997.5,extra:'Quedan 3 cuotas más: abril, mayo y junio (332,50 € cada una).',docs:D0,paid:{pi:1},hm:{nombre:'José Carlos Sánchez',tel:'+52 55 4821 0584'}},
-  {id:'mu',name:'Murena L.',full:'Murena Myrope Lavin Martinez',pais:'MX',asesor:'Daniel Audrines',canal:'—',last:'Falta completar datos desde Admisiones',hab:'Individual',acomp:'—',tel:'+52 33 1250 4779',email:'murena.l@example.com',sub:'Individual · 4.491 € (dto. 10 %)',tipo:'Contado',amt:{pi:500,dic:0,ene:0,feb:3991,mar:0},extraAmt:0,docs:{ccgg:1,pi:1,hm:0},paid:{pi:1},hm:{email:'murena.l@example.org'}},
-  {id:'no',name:'Noemi R.',full:'Noemi Rubio',pais:'MX',asesor:'María Gabriela Pan',canal:'—',last:'Todo OK - Admisiones seguimiento contado',hab:'Individual',acomp:'—',tel:'+52 81 3344 0660',email:'noemi.r@example.com',sub:'Individual · 4.241,50 € (dto. 15 %)',tipo:'Contado',amt:{pi:500,dic:0,ene:3741.5,feb:0,mar:0},extraAmt:0,docs:D0,paid:{pi:1},hm:{nombre:'Noemi Rubio Salas'}},
-  {id:'mb',name:'Marcela B.',full:'Marcela Beltran',pais:'CO',asesor:'Rocío Alonso',canal:'—',last:'Todo OK',hab:'Individual',acomp:'—',tel:'+57 310 555 0898',email:'marcela.b@example.com',sub:'Individual · 4.990 €',tipo:'Aplazado',amt:{pi:500,dic:0,ene:1496.66,feb:1496.66,mar:1496.68},extraAmt:0,docs:D0,paid:{pi:1},hm:{tel:'+57 310 555 0902'}},
-  {id:'jp',name:'Josue P.',full:'Josue Perez',pais:'PA',asesor:'María Gabriela Pan',canal:'WhatsApp',last:'Todo OK',hab:'Doble',acomp:'Sixto',tel:'+507 6612 5625',email:'josue.p@example.com',sub:'Doble · 3.591 € (dto. 10 %) · con Sixto A.',tipo:'Aplazado',amt:{pi:500,dic:1030.33,ene:1030.33,feb:1030.33,mar:0},extraAmt:0,docs:D0,paid:{pi:1,dic:1,ene:1,feb:1},hm:{acomp:'Sixto Abrego'}},
-  {id:'dl',name:'Diana L.',full:'Diana Milena López sierra',pais:'CO',asesor:'Ivonne Rose',canal:'WhatsApp',last:'5 cuotas',hab:'Doble',acomp:'Marcela Guaba',tel:'+57 300 555 0721',email:'diana.l@example.com',sub:'Doble · 3.990 € · con Marcela G.',tipo:'Aplazado',amt:{pi:500,dic:698,ene:698,feb:698,mar:698},extraAmt:698,extra:'Queda 1 cuota más: abril (698 €).',docs:D0,paid:{pi:1,dic:1,ene:1,feb:1,mar:1},hm:{nombre:'Diana Milena López Sierra'}},
-  {id:'sl',name:'Sonia L.',full:'Sonia Lopez Gabarron',pais:'DE',asesor:'María Gabriela Pan',canal:'WhatsApp',last:'Todo OK - Admisiones seguimiento contado - reclamado pago',hab:'Individual',acomp:'—',tel:'+49 151 2345 6591',email:'sonia.l@example.com',sub:'Individual · 4.241,50 € (dto. 15 %)',tipo:'Contado',amt:{pi:500,dic:3741.5,ene:0,feb:0,mar:0},extraAmt:0,docs:D0,paid:{pi:1,dic:1},hm:{email:'sonia.l@example.de'}},
-  {id:'ac',name:'Angelo C.',full:'Angelo Alexander Calix Bernardez',pais:'HN',asesor:'María Gabriela Pan',canal:'—',last:'Pago',hab:'Doble',acomp:'Nuno Sinde',tel:'+504 9876 5950',email:'angelo.c@example.com',sub:'Doble · 3.192 € (dto. 20 %) · con Nuno S.',tipo:'Aplazado',amt:{pi:936,dic:0,ene:0,feb:0,mar:1128},extraAmt:1128,extra:'Queda 1 cuota más: abril (1.128 €).',docs:D0,paid:{pi:1,mar:1},hm:{acomp:'Sin acompañante'}},
-  {id:'da',name:'Dannash R.',full:'Dannash Rolon',pais:'PR',asesor:'María Gabriela Pan',canal:'—',last:'Todo OK - Admisiones seguimiento contado',hab:'Individual',acomp:'—',tel:'+1 787 555 0188',email:'dannash.r@example.com',sub:'Individual · 4.241,50 € (dto. 15 %)',tipo:'Contado',amt:{pi:500,dic:0,ene:0,feb:3741.5,mar:0},extraAmt:0,docs:D0,paid:{pi:1,feb:1},hm:{tel:'+1 787 555 0192'}},
-  {id:'sb',name:'Sara B.',full:'Sara B Pabon',pais:'PR',asesor:'María Gabriela Pan',canal:'WhatsApp',last:'Baja',hab:'Doble',acomp:'—',tel:'+1 787 555 0070',email:'sara.b@example.com',sub:'Doble · baja',tipo:'Cancelación',amt:{pi:500,dic:0,ene:0,feb:0,mar:0},extraAmt:0,refund:500,docs:{ccgg:0,pi:1,hm:0},paid:{pi:1}},
-  {id:'pd',name:'Paola D.',full:'Paola Dodero',pais:'CR',asesor:'María Gabriela Pan',canal:'WhatsApp',last:'Baja y devolución',hab:'Doble',acomp:'—',tel:'+506 8456 0380',email:'paola.d@example.com',sub:'Doble · baja y devolución',tipo:'Cancelación',amt:{pi:500,dic:0,ene:0,feb:0,mar:0},extraAmt:0,refund:500,docs:{ccgg:0,pi:1,hm:0},paid:{pi:1}},
-  {id:'pv',name:'Péricles V.',full:'Péricles Veríssimo Furtado Tavares',pais:'CV',asesor:'Rocío Alonso',canal:'—',last:'Baja y devolución',hab:'Individual',acomp:'—',tel:'+238 991 2407',email:'pericles.v@example.com',sub:'Individual · baja y devolución',tipo:'Cancelación',amt:{pi:500,dic:0,ene:0,feb:0,mar:0},extraAmt:0,refund:500,docs:D0,paid:{pi:1}},
-  {id:'nf',name:'Nuria F.',full:'Nuria Fernández García',pais:'ES',asesor:'Rocío Alonso',canal:'—',last:'Devolución 500 €. No viaja',hab:'Individual',acomp:'—',tel:'+34 612 345 038',email:'nuria.f@example.com',sub:'Individual · no viaja',tipo:'Cancelación',amt:{pi:500,dic:0,ene:0,feb:0,mar:0},extraAmt:0,refund:500,docs:D0,paid:{pi:1}}
-];
+const COM = [];
 const BASEP = {Individual:4990, Doble:3990};
 const PAL = [['#ECE6FC','#7C5CE6','#4A31A8'],['#DCEBFE','#2F6FE0','#1D58C0'],['#DDF5E6','#2E9E5B','#176B3A'],['#FCE4F1','#D6409F','#9B2275'],['#FFF1D6','#E0A100','#8A5A00']];
 const FIN = {jc:2495, mu:4491, no:4241.5, mb:4990, jp:3591, dl:3990, sl:4241.5, ac:3192, da:4241.5};
@@ -984,9 +1196,9 @@ const DTO_OPTS = [5, 10];
 const ASESORES = ['Ivonne Rose', 'Daniel Audrines', 'Rocío Alonso', 'María Gabriela Pan', 'Sin asignar'];
 const MONTHS = ['dic', 'ene', 'feb', 'mar'];
 const MONTH_LBL = {dic:'DIC', ene:'ENE', feb:'FEB', mar:'MAR'};
-const INI_SEED = {jc:'ene', mu:'feb', no:'ene', mb:'ene', jp:'dic', dl:'dic', sl:'dic', ac:'mar', da:'feb'};
-const CONTACT = {1:['+507 6123 4312','carlos.m@example.com'],2:['+57 310 555 0440','ramiro.p@example.com'],3:['+34 612 345 215','angie.c@example.com'],4:['+51 987 654 608','gerardo.n@example.com'],5:['+56 9 8765 4173','ivania.f@example.com'],6:['+593 98 765 4529','nora.f@example.com'],7:['+34 623 456 881','marta.c@example.com'],8:['+598 94 567 264','patricia.c@example.com'],9:['+593 99 876 5097','johanna.p@example.com'],10:['+57 320 555 0735','juanpablo.t@example.com'],11:['+54 11 5555 0412','sandra.f@example.com'],12:['+591 7 654 3356','ximena.e@example.com']};
-const FECHA = {1:'12/10/2025',2:'14/10/2025',3:'20/10/2025',4:'03/11/2025',5:'05/11/2025',6:'18/11/2025',7:'21/11/2025',8:'24/11/2025',9:'02/12/2025',10:'09/12/2025',11:'15/12/2025',12:'19/12/2025'};
+const INI_SEED = {};
+const CONTACT = {};
+const FECHA = {};
 LEADS.forEach(l => { const k = CONTACT[l.id]; l.tel = k[0]; l.email = k[1]; l.fecha = FECHA[l.id]; });
 COM.forEach(c => { c.fin = FIN[c.id] === undefined ? null : FIN[c.id]; c.dto = DTO[c.id] === undefined ? null : DTO[c.id]; });
 const SLOTS = [['pi','PI'],['dic','CUOTA DIC'],['ene','CUOTA ENE'],['feb','CUOTA FEB'],['mar','CUOTA MAR']];
@@ -1016,17 +1228,20 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', resDraft:{}, nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
     };
   }
 
+  async loadHist(){
+    try { const cur = await kvGet('adminhub_bootcamp_historico_v1'); if (cur && Array.isArray(cur.items)) this.setState({hist:cur.items}); } catch (e) {}
+  }
   componentDidMount(){
     this._base = {};
     Object.keys(KV_KEYS).forEach(k => { this._base[k] = {}; KV_KEYS[k].forEach(f => { this._base[k][f] = jclone(this.state[f]); }); });
-    this.pull();
+    this.pull(); this.loadHist();
     this._timer = setInterval(() => this.pull(), 15000);
     this._onVis = () => { if (!document.hidden) this.pull(); };
     document.addEventListener('visibilitychange', this._onVis);
@@ -1100,12 +1315,12 @@ class Component extends DCLogic {
     const s = this.state;
     const set = (o) => this.setState(o);
     const role = s.role;
-    const profile = s.profile, unlocked = s.unlocked;
+    const profile = s.profile, unlocked = s.unlocked || !!s.hub;
     const canEdit = role === 'reu' || profile === role || unlocked;
     const NOW = new Date(); const NOWT = NOW.getTime(); const todayTxt = NOW.toLocaleDateString('es-ES');
     const mktBg = this.props.mktBg || '#ECE6FC';
     const eff = (l) => s.estados[l.id] || l.estado;
-    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:'Sin asignar', canal:'—', estado:'Pendiente de contactar', last:'Alta nueva · ' + a.src, fecha:a.fecha, isNew:true})).concat(LEADS);
+    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'Pendiente de contactar', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado})).concat(LEADS);
     const noteOf = (id, def) => (s.notes[id] !== undefined ? s.notes[id] : def);
     const setNote = (id, v) => { const n = Object.assign({}, s.notes); n[id] = v; set({notes:n}); };
     const priceOf = (id, seedHab, seedDto, seedPar, seedIni, seedTipo) => {
@@ -1114,8 +1329,10 @@ class Component extends DCLogic {
       const pareja = p.pareja !== undefined ? p.pareja : (seedPar || '');
       const dto = p.dto !== undefined ? p.dto : seedDto;
       const bp = BASEP[hab];
-      return {hab, dto, fin:(bp && dto != null) ? Math.round(bp * (1 - dto / 100) * 100) / 100 : null, pareja, grp:p.grp, tipo:(p.tipo !== undefined ? p.tipo : (seedTipo || null)), ini:(p.ini !== undefined ? p.ini : (seedIni || null)), iniSet:p.ini !== undefined, ok:hab === 'Individual' || (hab === 'Doble' && pareja.trim() !== '')};
+      return {hab, dto, fin:p.finOv != null ? p.finOv : ((bp && dto != null) ? Math.round(bp * (1 - dto / 100) * 100) / 100 : null), pareja, grp:p.grp, tipo:(p.tipo !== undefined ? p.tipo : (seedTipo || null)), ini:(p.ini !== undefined ? p.ini : (seedIni || null)), iniSet:p.ini !== undefined, bill:p.bill || null, hmv:p.hmv || null, ok:hab === 'Individual' || (hab === 'Doble' && pareja.trim() !== '')};
     };
+    const hmN = (id) => { const h = (s.prices[id] || {}).hmv; return h && !h.validated ? h.keys.length : 0; };
+    const hmState = (id) => { const h = (s.prices[id] || {}).hmv; if (!h || !h.keys.length) return ''; return h.validated ? ' · validado por Admisiones el ' + (h.vdate || '') : ' · pisados por la HM, pendiente de validar por Admisiones'; };
     const asesView = (id, seed) => {
       const cur = s.asesores[id] !== undefined ? s.asesores[id] : seed;
       return {asesor:cur, asesOpts:ASESORES.map(a => ({v:a, label:a, sel:cur === a})), onAses:(e) => { const o = Object.assign({}, s.asesores); o[id] = e.target.value; set({asesores:o}); }};
@@ -1145,7 +1362,7 @@ class Component extends DCLogic {
     };
     const copy = (txt, what) => () => { try { navigator.clipboard.writeText(txt); } catch (err) {} set({toast:'Copiado ' + what + ': ' + txt, toastTo:role}); };
     const copyExt = () => { let base = ''; try { base = location.href.split('#')[0].split('?')[0]; } catch (e) {} const url = base + '#bootcamp-ext'; let ok = false; try { navigator.clipboard.writeText(url); ok = true; } catch (e) {} if (!ok) { try { const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {} } set({toast:'Enlace externo copiado (válido para Marketing y Admisiones): ' + url, toastTo:role}); };
-    const setPrice = (id, pt) => { const o = Object.assign({}, s.prices); o[id] = Object.assign({}, o[id], pt); set({prices:o}); };
+    const setPrice = (id, pt) => { if ('hab' in pt || 'dto' in pt) pt = Object.assign({finOv:null}, pt); const o = Object.assign({}, s.prices); o[id] = Object.assign({}, o[id], pt); set({prices:o}); };
     const nameById = {};
     LEADS.forEach(l => { nameById[l.id] = l.name; });
     s.added.forEach(x => { nameById[x.id] = x.name; });
@@ -1163,6 +1380,9 @@ class Component extends DCLogic {
     };
     const priceView = (id, pr, show) => {
       const hab = pr.hab, fin = pr.fin;
+      const pend = pr.hmv && !pr.hmv.validated ? pr.hmv.keys : [];
+      const redSel = 'border-color:#D32F4B;background:#FDECEF;color:#B0203C;font-weight:700;';
+      const HLBL = {precio:'precio final', pago:'forma de pago', fact:'forma de facturación', fecha:'mes de la primera cuota'};
       const base = BASEP[hab];
       const isDoble = hab === 'Doble';
       const col = pr.grp !== undefined && isDoble ? PAL[pr.grp] : null;
@@ -1171,7 +1391,7 @@ class Component extends DCLogic {
         showPrice:show, noPrice:!show,
         base:base ? fmt(base) : 'Elige tarifa',
         finTxt:fin == null ? 'Por definir' : fmt(fin),
-        finStyle:'font-size:15px;font-weight:700;color:' + (fin == null ? '#5A6393' : INK),
+        finStyle:'font-size:15px;font-weight:700;color:' + (fin == null ? '#5A6393' : (pend.indexOf('precio') >= 0 ? RED : INK)),
         dtoOpts:[{v:'', label:'Elige descuento', sel:pr.dto == null}].concat((pr.dto != null && DTO_OPTS.indexOf(pr.dto) < 0 ? [pr.dto] : []).concat(DTO_OPTS).map(d => ({v:String(d), label:d === 0 ? 'Sin descuento' : d + ' %', sel:pr.dto === d}))),
         onDto:(e) => { const v = e.target.value; setPrice(id, {dto:v === '' ? null : Number(v)}); },
         tarOpts:[{v:'', label:'Elige tarifa', sel:hab !== 'Individual' && hab !== 'Doble'}, {v:'Individual', label:'Tarifa 1 · Individual', sel:hab === 'Individual'}, {v:'Doble', label:'Tarifa 2 · Doble', sel:hab === 'Doble'}],
@@ -1179,6 +1399,11 @@ class Component extends DCLogic {
         onIni:(e) => setPrice(id, {ini:e.target.value || null}),
         pagoOpts:[{v:'', label:'Elige forma', sel:pr.tipo !== 'Contado' && pr.tipo !== 'Aplazado'}, {v:'Contado', label:'Contado', sel:pr.tipo === 'Contado'}, {v:'Aplazado', label:'Aplazado', sel:pr.tipo === 'Aplazado'}],
         onPago:(e) => setPrice(id, {tipo:e.target.value || null}),
+        billOpts:[{v:'', label:'Elige', sel:!pr.bill}, {v:'Alumno', label:'Alumno', sel:pr.bill === 'Alumno'}, {v:'Empresa', label:'Empresa', sel:pr.bill === 'Empresa'}],
+        onBill:(e) => setPrice(id, {bill:e.target.value || null}),
+        pagoStyle:pend.indexOf('pago') >= 0 ? redSel : '', billStyle:pend.indexOf('fact') >= 0 ? redSel : '', iniStyle:pend.indexOf('fecha') >= 0 ? redSel : '',
+        hmTxt:pend.length ? 'La HM ha modificado: ' + pend.map(k => HLBL[k] + (pr.hmv.was && pr.hmv.was[k] ? ' (antes ' + pr.hmv.was[k] + ')' : '')).join(' · ') : '',
+        onValidate:() => setPrice(id, {hmv:Object.assign({}, pr.hmv, {validated:true, vdate:new Date().toLocaleDateString('es-ES')})}),
         onTar:(e) => setPrice(id, {hab:e.target.value || '—'}),
         habOpts:[['Individual', 'Tarifa 1 · Individual'], ['Doble', 'Tarifa 2 · Doble']].map(h => ({label:h[1], go:() => setPrice(id, {hab:h[0]}), style:'border-radius:7px;padding:4px 8px;font-size:12px;font-weight:700;border:1px solid ' + (hab === h[0] ? ACC.adm : LINE) + ';background:' + (hab === h[0] ? ACC.adm : '#FFFFFF') + ';color:' + (hab === h[0] ? '#FFFFFF' : INK)})),
         isDoble:isDoble, parejaVal:pr.pareja, parejaMissing:miss,
@@ -1196,9 +1421,8 @@ class Component extends DCLogic {
 
     // ---------- contadores
     const counts = Object.assign({}, BASE);
-    LEADS.forEach(l => { const cur = eff(l); if (cur !== l.estado) { counts[l.estado]--; counts[cur]++; } });
-    s.added.forEach(a => { counts[s.estados[a.id] || 'Pendiente de contactar']++; });
-    const nLeads = 304 + s.added.length;
+    allLeads.forEach(l => { counts[eff(l)]++; });
+    const nLeads = allLeads.length;
 
     // ---------- alumnos (Admisiones -> Adm. comercial)
     const fresh = allLeads.filter(l => eff(l) === 'Aceptado').map(l => ({
@@ -1237,7 +1461,7 @@ class Component extends DCLogic {
       const vencRec = cancel ? 0 : withAmt.filter(x => x.due && x.on).reduce((a, x) => a + x.amount, 0);
       const pend = Math.max(0, vencido - vencRec);
       const mora = !cancel && (pend > 0 || !!st.flag);
-      const modN = Object.keys(st.mod).length;
+      const modN = hmN(c.id);
       const devuelta = cancel && st.devuelto ? c.refund : 0;
       const devPend = cancel && !st.devuelto ? c.refund : 0;
       let status, chip;
@@ -1268,6 +1492,24 @@ class Component extends DCLogic {
     const dot = (d) => 'width:9px;height:9px;border-radius:50%;display:inline-block;background:' + ACC[d];
     const alertBox = (on) => 'border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;border:1px solid ' + (on ? RED : '#D7DCF5') + ';background:' + (on ? '#FDECEF' : '#FFFFFF');
 
+    const HIST_KEY = 'adminhub_bootcamp_historico_v1';
+    const cycSnapshot = (name) => ({
+      id:'c' + Date.now().toString(36), name, closedAt:Date.now(), closedTxt:todayTxt,
+      leads:nLeads, aceptados:counts['Aceptado'] || 0, docsInc, cerrados:model.filter(m => m.closed).length,
+      esperado:T.esperado, recibido:T.recibido, devuelta:T.devuelta, devPend:T.devPend, pend:T.pend, neta,
+      counts:Object.assign({}, counts),
+      costs:s.costs.map(x => ({label:x.label, v:x.v})),
+      rows:model.map(m => ({name:m.c.full, tipo:m.tipo || '-', total:m.total == null ? null : m.total, esperado:m.esperado, recibido:m.recibido, devuelta:m.cancel ? (m.c.refund || 0) : 0, status:m.status})),
+      tasks:s.tasks.filter(x => x.resolved).map(x => ({text:x.text, dept:DEPT[x.dept], resolvedDate:x.resolvedDate || '', resolution:x.resolution || ''}))
+    });
+    const histCycles = (s.hist || []).slice().sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0)).map(c => ({
+      name:c.name, closedTxt:c.closedTxt, open:s.histSel === c.id, toggleLbl:s.histSel === c.id ? 'Ocultar detalle' : 'Ver detalle',
+      toggle:() => set({histSel:s.histSel === c.id ? '' : c.id}),
+      kpis:[{l:'Leads', v:c.leads}, {l:'Aceptados', v:c.aceptados}, {l:'Casos cerrados', v:c.cerrados}, {l:'Facturación recibida', v:fmt(c.neta)}, {l:'Devoluciones', v:fmt(c.devuelta)}],
+      rows:(c.rows || []).map(r => ({name:r.name, tipo:r.tipo, esperado:fmt(r.esperado), recibido:fmt(r.recibido), devuelta:r.devuelta ? fmt(r.devuelta) : '-', status:r.status})),
+      tasks:c.tasks || [], hasTasks:(c.tasks || []).length > 0
+    }));
+    const cycReset = {estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, hmM:null, resDraft:{}};
     const roleButtons = [['mkt','Marketing'],['adm','Admisiones'],['com','Administración comercial'],['reu','Reuniones de seguimiento']].map(r => ({
       label:r[1], active:role === r[0], go:() => set({role:r[0]}),
       style:btn(role === r[0], ACC[r[0]]) + 'display:inline-flex;align-items:center;gap:8px;padding:11px 18px;font-size:14px',
@@ -1286,8 +1528,8 @@ class Component extends DCLogic {
     };
     const docsInc = active.filter(m => !m.docsAll).length;
     const funnel = [
-      tile('mkt','Leads', nLeads, '304 base + ' + s.added.length + ' nuevos'),
-      tile('adm','Aceptados', counts['Aceptado'], Math.round(counts['Aceptado'] / nLeads * 100) + ' % de los leads'),
+      tile('mkt','Leads', nLeads, 'cargados con la herramienta'),
+      tile('adm','Aceptados', counts['Aceptado'], (nLeads ? Math.round(counts['Aceptado'] / nLeads * 100) : 0) + ' % de los leads'),
       tile('com','Doc. incompleta', docsInc, 'sin CCGG, PI o HM', {warn:docsInc > 0}),
       tile('com','Casos cerrados', model.filter(m => m.closed).length, 'cobro o devolución', {small:true}),
       tile('com','Facturación recibida', fmt(neta), 'cuotas pagadas' + (T.devuelta > 0 ? ' · tras devolver ' + fmt(T.devuelta) : ''))
@@ -1295,29 +1537,43 @@ class Component extends DCLogic {
 
     // ---------- MARKETING
     const buildDrop = (files) => {
-      const known = allLeads.map(l => l.full.toLowerCase());
-      const seen = [];
-      const rows = [];
+      const known = {};
+      allLeads.forEach(l => { known[l.full.toLowerCase()] = 1; if (l.email) known[l.email.toLowerCase()] = 1; });
+      const seen = {};
+      const rows = [], errs = [];
       files.forEach(f => {
-        const list = f.excel ? SIM_EXCEL.map(r => ({full:r.full, pais:r.pais, src:f.name})) : [{full:f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim(), pais:'—', src:f.name}];
+        if (f.err) errs.push(f.err);
+        const list = f.excel ? (f.list || []).map(r => Object.assign({}, r, {src:f.name})) : [{full:f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim(), pais:'—', src:f.name}];
         list.forEach(r => {
-          const k = r.full.toLowerCase();
-          const dupe = known.indexOf(k) >= 0 || seen.indexOf(k) >= 0;
-          seen.push(k);
-          rows.push({full:r.full, name:shortName(r.full), pais:r.pais, src:r.src, dupe});
+          const kn = r.full.toLowerCase(), ke = (r.email || '').toLowerCase();
+          const dupe = !!(known[kn] || (ke && known[ke]) || seen[kn] || (ke && seen[ke]));
+          seen[kn] = 1; if (ke) seen[ke] = 1;
+          rows.push(Object.assign({}, r, {name:shortName(r.full), dupe}));
         });
       });
-      set({drop:{rows, excel:files.some(f => f.excel)}, msg:'', drag:false});
+      set({drop:rows.length ? {rows, excel:files.some(f => f.excel)} : null, msg:errs.length ? errs.join(' ') : (rows.length ? '' : 'No se ha encontrado ningún lead en los archivos.'), drag:false});
     };
-    const toFiles = (list) => Array.prototype.slice.call(list || []).map(f => ({name:f.name, excel:/\.(xlsx|xls|csv)$/i.test(f.name)}));
+    const handleFiles = async (fileList) => {
+      const arr = Array.prototype.slice.call(fileList || []);
+      if (!arr.length) { set({drag:false}); return; }
+      set({msg:'Leyendo archivos…', drag:false});
+      const files = [];
+      for (const f of arr) {
+        if (/\.(xlsx|xls|csv)$/i.test(f.name)) {
+          try { const r = await parseLeadFile(f); files.push({name:f.name, excel:true, list:r.list, err:r.err}); }
+          catch (err) { files.push({name:f.name, excel:true, list:[], err:'«' + f.name + '»: no se ha podido leer el archivo.'}); }
+        } else files.push({name:f.name, excel:false});
+      }
+      buildDrop(files);
+    };
     let drop = null;
     if (s.drop) {
       const nNew = s.drop.rows.filter(r => !r.dupe).length;
       const nDup = s.drop.rows.length - nNew;
       drop = {
-        rows:s.drop.rows.map(r => ({name:r.name, pais:r.pais, src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
+        rows:s.drop.rows.map(r => ({name:r.name, pais:r.pais, estado:r.estado || 'Pendiente de contactar', src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
         summary:nNew + ' nuevos · ' + nDup + ' duplicados',
-        note:s.drop.excel ? 'Vista previa simulada: aquí se leerían las filas reales del Excel y se compararían con toda la base.' : 'Se crea un lead por archivo, con el nombre del archivo.',
+        note:s.drop.excel ? 'Se comparan por email y por nombre con los leads ya cargados: los duplicados se omiten. Comprueba que el estado se ha leído bien antes de añadir.' : 'Se crea un lead por archivo, con el nombre del archivo.',
         none:nNew === 0, btnLabel:nNew === 0 ? 'No hay casos nuevos' : 'Añadir ' + nNew + (nNew === 1 ? ' lead nuevo' : ' leads nuevos'),
         btnStyle:'border:0;border-radius:10px;padding:11px 18px;font-weight:800;font-size:14px;background:' + (nNew === 0 ? '#D7DCF5' : ACC.mkt) + ';color:' + (nNew === 0 ? '#5A6393' : '#FFFFFF')
       };
@@ -1330,7 +1586,7 @@ class Component extends DCLogic {
     const costTotal = s.costs.reduce((a, c) => a + num(c.v), 0);
     const costKpis = [
       {label:'Total invertido', sub:'Suma de todos los conceptos', value:costTotal > 0 ? fmt(costTotal) : '—'},
-      {label:'Coste por lead', sub:'Total ÷ ' + nLeads + ' leads', value:costTotal > 0 ? fmt(costTotal / nLeads) : '—'},
+      {label:'Coste por lead', sub:'Total ÷ ' + nLeads + ' leads', value:costTotal > 0 && nLeads > 0 ? fmt(costTotal / nLeads) : '—'},
       {label:'Coste por aceptado', sub:'Total ÷ ' + counts['Aceptado'] + ' aceptados', value:costTotal > 0 && counts['Aceptado'] > 0 ? fmt(costTotal / counts['Aceptado']) : '—'}
     ];
 
@@ -1367,7 +1623,7 @@ class Component extends DCLogic {
         tel:l.tel || '—', email:l.email || '—', copyTel:copy(l.tel || '—', 'teléfono'), copyEmail:copy(l.email || '—', 'email'),
         name:l.name, pais:l.pais, asesor:av.asesor, asesOpts:av.asesOpts, onAses:av.onAses, canal:l.canal, isNew:!!l.isNew, isLead:true, isStudent:false,
         last:noteOf(l.id, l.last), onLast:(e) => setNote(l.id, e.target.value),
-        mora:false, moraAmt:'', hasMod:false, modN:0, hasClaim:!!openClaimOf(l.id), nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
+        mora:false, moraAmt:'', hasMod:hmN(l.id) > 0, modN:hmN(l.id), hasClaim:!!openClaimOf(l.id), nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
         rowStyle:cur === 'Aceptado' ? 'background:#F0FAF4' : (l.isNew ? 'background:#F5F1FE' : ''),
         estOpts:ESTADOS.map(e => ({v:e, label:e, sel:cur === e})),
         estStyle:'font-weight:700;color:' + EST_COL[cur][1] + ';background:' + EST_COL[cur][0] + ';border-color:' + EST_COL[cur][1],
@@ -1495,22 +1751,61 @@ class Component extends DCLogic {
       if (!st.data.hab || st.data.hab === '—') h.hab = 'Individual';
       return h;
     };
-    const applyHm = (c) => {
-      const st = get(c);
-      const hmv = c.hm || genericHm(c, st);
-      const data = Object.assign({}, st.data), mod = Object.assign({}, st.mod);
-      let changed = 0;
-      Object.keys(hmv).forEach(k => {
-        if (hmv[k] === data[k]) return;
-        const had = data[k] && data[k] !== '—';
-        if (had) { if (mod[k] === undefined) mod[k] = data[k]; changed++; }
-        data[k] = hmv[k];
-      });
-      patch(c, {data, mod, docs:Object.assign({}, st.docs, {hm:true})}, {
-        hmDrag:'', toastTo:'com',
-        toast:'HM de ' + c.name + ' cargada: ' + (changed ? changed + (changed === 1 ? ' dato modificado (en rojo)' : ' datos modificados (en rojo)') + ' y sobrescritos con la HM.' : 'sin diferencias con Admisiones.')
+    const HM_FIELDS = [['precio', 'Precio final', '4.990,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fact', 'Forma de facturación', 'Alumno / Empresa'], ['fecha', 'Fecha de la primera cuota', 'dd/mm/aaaa']];
+    const cmpHm = (mc, vals) => {
+      const pr = priceOf(mc.id, '—', null, '');
+      return HM_FIELDS.map(f => {
+        const k = f[0], v = (vals[k] || '').trim();
+        let adm, hm, ok = null, admEmpty = false;
+        if (k === 'precio') { adm = pr.fin != null ? fmt(pr.fin) : null; const n = parseEuro(v); hm = n != null ? fmt(n) : (v ? v + ' (?)' : null); if (adm && n != null) ok = Math.abs(pr.fin - n) < 0.5; }
+        if (k === 'pago') { adm = pr.tipo || null; const x = parsePago(v); hm = x || (v ? v + ' (?)' : null); if (adm && x) ok = adm === x; }
+        if (k === 'fact') { adm = pr.bill || null; const x = parseFact(v); hm = x || (v ? v + ' (?)' : null); if (adm && x) ok = adm === x; }
+        if (k === 'fecha') { adm = pr.ini ? MONTH_LBL[pr.ini] : null; const mn = parseMes(v); hm = mn ? v + ' · ' + MESES[mn - 1].toUpperCase().slice(0, 3) : (v ? v + ' (?)' : null); if (adm && mn) ok = MNUM[pr.ini] === mn; }
+        let st = 'ok';
+        if (!hm) st = 'nohm'; else if (!adm) st = 'noadm'; else if (ok === null) st = 'nohm'; else if (!ok) st = 'diff';
+        const chips = {ok:['Coincide', 'background:#DDF5E6;color:#176B3A;font-weight:700'], diff:['No coincide · lo pisa la HM', 'background:#FDECEF;color:#B0203C;font-weight:700'], nohm:['Falta el dato de la HM', 'background:#FFF4D6;color:#8A5A00;font-weight:700'], noadm:['Falta en Admisiones', 'background:#FFF4D6;color:#8A5A00;font-weight:700']};
+        return {key:k, label:f[1], ph:f[2], val:vals[k] || '', admTxt:adm || 'Sin rellenar', hmTxt:hm || '—', st, stTxt:chips[st][0], chip:chips[st][1]};
       });
     };
+    const openHm = async (c, file) => {
+      if (!file) return;
+      const base = {id:c.id, name:c.name, file:file.name, vals:{precio:'', pago:'', fact:'', fecha:''}, read:'Leyendo el archivo…'};
+      set({hmM:base, hmDrag:''});
+      try {
+        const r = await parseHmFile(file);
+        const got = Object.keys(r.vals).filter(k => r.vals[k]).length;
+        set({hmM:Object.assign({}, base, {vals:r.vals, read:r.chars < 20 ? 'No he podido leer texto del archivo (¿es una imagen o un PDF escaneado?): escribe los datos a mano.' : 'He leído ' + got + ' de 4 datos: revisa y completa los que falten.'})});
+      } catch (err) {
+        set({hmM:Object.assign({}, base, {read:'No he podido leer este archivo (usa PDF o Excel): escribe los datos a mano.'})});
+      }
+    };
+
+    let hmModal = {hmOpen:false, hmRows:[], hmName:'', hmFile:'', hmRead:'', hmCancel:() => {}, hmSave:() => {}};
+    if (s.hmM && byId[s.hmM.id]) {
+      const mm = s.hmM, mc = byId[mm.id].c;
+      const rows0 = cmpHm(mc, mm.vals);
+      hmModal = {
+        hmOpen:true, hmName:mm.name, hmFile:mm.file, hmRead:mm.read,
+        hmRows:rows0.map(r => Object.assign({}, r, {adm:r.admTxt, on:(e) => set({hmM:Object.assign({}, mm, {vals:Object.assign({}, mm.vals, {[r.key]:e.target.value})})})})),
+        hmCancel:() => set({hmM:null}),
+        hmSave:() => {
+          const st0 = get(mc), pp = {}, was = {}, keys = [];
+          rows0.forEach(r => {
+            if (r.st !== 'diff') return;
+            const v = (mm.vals[r.key] || '').trim();
+            if (r.key === 'precio') { pp.finOv = parseEuro(v); }
+            else if (r.key === 'pago') { pp.tipo = parsePago(v); }
+            else if (r.key === 'fact') { pp.bill = parseFact(v); }
+            else if (r.key === 'fecha') { const mn = parseMes(v); const k = Object.keys(MNUM).filter(x => MNUM[x] === mn)[0]; if (k) pp.ini = k; }
+            keys.push(r.key); was[r.key] = r.admTxt;
+          });
+          pp.hmv = {keys, was, validated:keys.length === 0, file:mm.file, date:todayTxt};
+          const po = Object.assign({}, s.prices); po[mc.id] = Object.assign({}, po[mc.id], pp);
+          const nd = keys.length;
+          patch(mc, {docs:Object.assign({}, st0.docs, {hm:true}), hmc:{file:mm.file, date:todayTxt, rows:rows0.map(r => ({label:r.label, adm:r.admTxt, hm:r.hmTxt, st:r.st}))}}, {prices:po, hmM:null, toastTo:'adm', toast:'HM de ' + mm.name + ' cruzada: ' + (nd ? nd + (nd === 1 ? ' dato pisado' : ' datos pisados') + ' por la HM (en rojo). Admisiones debe validarlos.' : (rows0.every(r => r.st === 'ok') ? 'todos los datos coinciden con Admisiones.' : 'sin diferencias, pero faltan datos por comparar.'))});
+        }
+      };
+    }
 
     const memberCards = model.filter(passes).map(m => {
       const c = m.c, st = m.st;
@@ -1564,8 +1859,12 @@ class Component extends DCLogic {
         hmStyle:'display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-radius:10px;padding:10px 12px;border:1.5px dashed ' + (hot ? ACC.com : '#9AA3D6') + ';background:' + (hot ? '#E1F3F7' : '#FFFFFF'),
         onDragOver:(e) => { e.preventDefault(); if (s.hmDrag !== String(c.id)) set({hmDrag:String(c.id)}); },
         onDragLeave:() => set({hmDrag:''}),
-        onDrop:(e) => { e.preventDefault(); applyHm(c); },
-        simHm:() => applyHm(c),
+        onDrop:(e) => { e.preventDefault(); openHm(c, e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); },
+        onPickHm:(e) => { openHm(c, e.target.files && e.target.files[0]); },
+        hasHmc:!!st.hmc,
+        hmcHead:st.hmc ? 'Cruce con la HM · ' + st.hmc.file + ' · ' + st.hmc.date + ' · ' + st.hmc.rows.filter(r => r.st === 'ok').length + ' de ' + st.hmc.rows.length + ' coinciden' + hmState(c.id) : '',
+        hmcHeadStyle:'font-size:13px;font-weight:800;color:' + (st.hmc && st.hmc.rows.every(r => r.st === 'ok') ? '#176B3A' : (st.hmc && st.hmc.rows.some(r => r.st === 'diff') ? '#B0203C' : '#8A5A00')),
+        hmcRows:st.hmc ? st.hmc.rows.map(r => ({label:r.label, adm:r.adm, hm:r.hm, stTxt:({ok:'Coincide', diff:'No coincide', nohm:'Falta el dato de la HM', noadm:'Falta en Admisiones'})[r.st], chip:({ok:'background:#DDF5E6;color:#176B3A;font-weight:700', diff:'background:#FDECEF;color:#B0203C;font-weight:700'})[r.st] || 'background:#FFF4D6;color:#8A5A00;font-weight:700'})) : [],
         facOn:!!s.fact[c.id], facGo:() => { const o = Object.assign({}, s.fact); o[c.id] = !o[c.id]; set({fact:o}); },
         facStyle:'display:flex;align-items:center;gap:8px;border-radius:9px;padding:6px 11px;border:1px solid ' + (s.fact[c.id] ? '#8FD3AB' : LINE) + ';background:' + (s.fact[c.id] ? '#DDF5E6' : '#FFFFFF') + ';color:' + (s.fact[c.id] ? '#176B3A' : INK),
         facBox:'width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:0 0 18px;border:1.5px solid ' + (s.fact[c.id] ? '#2E9E5B' : '#8B94C4') + ';background:' + (s.fact[c.id] ? '#2E9E5B' : '#FFFFFF') + ';color:#FFFFFF',
@@ -1713,17 +2012,52 @@ class Component extends DCLogic {
       mktBg,
       isReu:role === 'reu', roStyle:'display:flex;flex-direction:column;gap:22px;' + (canEdit ? '' : 'pointer-events:none;'),
       roBanner:!!profile && !canEdit,
-      roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (profile === 'com' ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
+      roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (!s.hub ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
+      histOpen:s.histOpen, histCycles, noHist2:histCycles.length === 0,
+      openHist:() => { set({histOpen:true}); this.loadHist(); },
+      closeHist:() => { if (s.ext || (location.hash || '') === '#historico') { location.href = '../index.html'; } else set({histOpen:false}); },
+      histCloseLbl:(location.hash || '') === '#historico' ? 'Volver al AdminHub' : 'Cerrar',
+      cycOpen:s.cycOpen, cycName:s.cycName, cycErr:s.cycErr, cycPwdVal:s.cycPwd,
+      cycLeads:nLeads, cycAcc:counts['Aceptado'] || 0, cycNeta:fmt(neta),
+      cycBtn:s.cycBusy ? 'Guardando…' : 'Cerrar ciclo y poner a 0',
+      openCyc:() => set({cycOpen:true, cycPwd:'', cycErr:'', cycBusy:false}),
+      closeCyc:() => set({cycOpen:false, cycPwd:'', cycErr:''}),
+      onCycName:(e) => set({cycName:e.target.value}),
+      onCycPwd:(e) => set({cycPwd:e.target.value, cycErr:''}),
+      confirmCyc:async () => {
+        if (s.cycBusy) return;
+        if (s.cycPwd !== 'AdminHub') { set({cycErr:'Contraseña incorrecta'}); return; }
+        const snap = cycSnapshot((s.cycName || '').trim() || 'Silicon Valley');
+        set({cycBusy:true, cycErr:''});
+        let items;
+        try {
+          const cur = await kvGet(HIST_KEY);
+          items = ((cur && cur.items) || []).concat([snap]);
+          await kvSet(HIST_KEY, {items});
+        } catch (e) { set({cycBusy:false, cycErr:'No se ha podido guardar el histórico (sin conexión). No se ha borrado nada.'}); return; }
+        set(Object.assign({}, cycReset, {hist:items, cycOpen:false, cycBusy:false, cycPwd:'', cycErr:'', mktPwd:'', msg:'Herramienta a cero.', toast:'Ciclo cerrado y guardado en el histórico.', toastTo:role}));
+      },
+      mktTools:s.mktTools, toolsLbl:s.mktTools ? 'Ocultar herramientas de prueba' : 'Herramientas de prueba', toggleTools:() => set({mktTools:!s.mktTools, mktPwd:'', mktPwdErr:false}),
+      mktPwdVal:s.mktPwd, mktPwdErr:s.mktPwdErr,
+      onMktPwd:(e) => set({mktPwd:e.target.value, mktPwdErr:false}),
+      mktReset:() => {
+        if (s.mktPwd !== 'MKT') { set({mktPwdErr:true}); return; }
+        let ok = true; try { ok = confirm('¿Borrar los leads y TODOS los datos de la herramienta para todos los usuarios? No se puede deshacer.'); } catch (e) {}
+        if (!ok) return;
+        set({estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, hmM:null, resDraft:{}, mktPwd:'', mktPwdErr:false, msg:'Herramienta a cero. Ya puedes cargar de nuevo.', toast:'Todos los datos se han borrado.', toastTo:role});
+      },
+      hmOpen:hmModal.hmOpen, hmRows:hmModal.hmRows, hmName:hmModal.hmName, hmFile:hmModal.hmFile, hmRead:hmModal.hmRead, hmCancel:hmModal.hmCancel, hmSave:hmModal.hmSave,
+      resetAll:() => { let ok = true; try { ok = confirm('¿Borrar TODOS los datos de la herramienta (leads, estados, tarifas, cobros, reuniones…) para todos los usuarios? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, msg:'Herramienta a cero.', toast:'Todos los datos se han borrado.', toastTo:role}); },
       fromHub:!!s.hub,
       canLinks:profile === 'com',
       copyLink:() => copyExt(),
       syncTxt:s.syncOk === null ? 'Conectando…' : (s.syncOk ? 'Sincronizado · ' + s.syncAt : 'Sin conexión · reintentando'),
       syncStyle:'font-weight:700;' + (s.syncOk === null ? 'background:#EEF1FD;color:#5A6393' : (s.syncOk ? 'background:#E3F6EA;color:#176B3A' : 'background:#FDECEF;color:#B0203C')),
-      needProfile:!profile, profileOpts, hasProfile:!!profile,
+      needProfile:!profile && !s.histOpen, profileOpts, hasProfile:!!profile,
       profileLbl:profile ? DEPT[profile] : '', profileChip:profile ? DEPT_CHIP[profile] : '',
       profileHelp:unlocked ? 'Puedes editar todas las pestañas.' : 'Editas tu pestaña y «Reuniones de seguimiento»; el resto, solo lectura.',
-      canAskPwd:profile === 'com' && !unlocked, unlocked, pwdVal:s.pwdIn, pwdErr:s.pwdErr,
+      canAskPwd:!s.hub && !unlocked, unlocked, pwdVal:s.pwdIn, pwdErr:s.pwdErr,
       onPwd:(e) => set({pwdIn:e.target.value, pwdErr:false}),
       tryUnlock:() => { if (s.pwdIn === PASSWORD) set({unlocked:true, pwdIn:'', pwdErr:false}); else set({pwdErr:true}); },
       lockAgain:() => set({unlocked:false}),
@@ -1758,20 +2092,18 @@ class Component extends DCLogic {
       dropStyle:'padding:44px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;border-radius:16px;color:#1B2150;background:' + mktBg + ';border:2px dashed ' + (s.drag ? '#5B3FC4' : '#A99BEF') + ';' + (s.drag ? 'box-shadow:0 0 0 4px rgba(124,92,230,.22);' : ''),
       onDragOver:(e) => { e.preventDefault(); if (!s.drag) set({drag:true}); },
       onDragLeave:() => set({drag:false}),
-      onDrop:(e) => { e.preventDefault(); const f = toFiles(e.dataTransfer && e.dataTransfer.files); if (f.length) buildDrop(f); else set({drag:false}); },
-      onPick:(e) => { const f = toFiles(e.target.files); if (f.length) buildDrop(f); },
-      simExcel:() => buildDrop([{name:'Leads_semana_44.xlsx', excel:true}]),
-      simOne:() => buildDrop([{name:'Lucía Fernández.pdf', excel:false}]),
+      onDrop:(e) => { e.preventDefault(); handleFiles(e.dataTransfer && e.dataTransfer.files); },
+      onPick:(e) => { handleFiles(e.target.files); },
       hasMsg:!!s.msg, msg:s.msg, hasDrop:!!s.drop, drop,
       discardDrop:() => set({drop:null}),
       confirmDrop:() => {
         if (!s.drop) return;
         const fr = s.drop.rows.filter(r => !r.dupe);
         if (!fr.length) return;
-        const add = fr.map((r,i) => ({id:'a' + (s.nextId + i), full:r.full, name:r.name, pais:r.pais, src:r.src, fecha:new Date().toLocaleDateString('es-ES')}));
+        const add = fr.map((r,i) => ({id:'a' + (s.nextId + i), full:r.full, name:r.name, pais:r.pais, src:r.src, fecha:r.fecha || new Date().toLocaleDateString('es-ES'), tel:r.tel || '', email:r.email || '', asesor:r.asesor || '', estado:r.estado || '', last:r.last || ''}));
         set({
-          added:add.reverse().concat(s.added), nextId:s.nextId + fr.length, drop:null,
-          msg:fr.length + (fr.length === 1 ? ' lead añadido' : ' leads añadidos') + ' como «Pendiente de contactar». La base inicial no se ha modificado.'
+          added:add.concat(s.added), nextId:s.nextId + fr.length, drop:null,
+          msg:fr.length + (fr.length === 1 ? ' lead añadido' : ' leads añadidos') + ' en Admisiones. Los leads ya cargados no se han modificado.'
         });
       },
       addedCount:s.added.length,
