@@ -942,25 +942,31 @@ select.inp{cursor:pointer}
           <button onClick="{{closeHist}}" style="background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px">{{histCloseLbl}}</button>
         </div>
         <sc-if value="{{noHist2}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:14px;padding:18px;background:#F5F7FE;border-radius:12px">Aún no hay ciclos cerrados.</div></sc-if>
-        <sc-for list="{{histCycles}}" as="c" hint-placeholder-count="2">
+        <sc-for list="{{histYears}}" as="y" hint-placeholder-count="2">
           <div style="border:1px solid #D7DCF5;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#FAFBFF">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-              <div><div style="font-weight:800;font-size:17px">{{c.name}}</div><div class="mono" style="font-size:11px;color:var(--mut)">Cerrado el {{c.closedTxt}}</div></div>
-              <button onClick="{{c.toggle}}" style="background:#fff;border:1px solid var(--inpline);border-radius:8px;padding:7px 12px;font-weight:700;font-size:12px">{{c.toggleLbl}}</button>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+              <div style="font-weight:800;font-size:20px">{{y.year}}</div>
+              <div><span class="lbl">Total facturación</span> <span class="mono" style="font-weight:800;font-size:22px;margin-left:8px">{{y.total}}</span></div>
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              <sc-for list="{{c.kpis}}" as="k" hint-placeholder-count="5"><div style="flex:1 1 130px;background:#fff;border:1px solid #E3E7F8;border-radius:10px;padding:10px 12px"><div class="lbl" style="font-size:10px">{{k.l}}</div><div class="mono" style="font-weight:700;font-size:18px;margin-top:4px">{{k.v}}</div></div></sc-for>
-            </div>
-            <sc-if value="{{c.open}}" hint-placeholder-val="{{false}}">
-              <div class="scroll" style="background:#F5F7FE;border-radius:12px;padding:4px 6px"><table>
-                <thead><tr><th>Alumno</th><th>Tipo</th><th style="text-align:right">Esperado</th><th style="text-align:right">Recibido</th><th style="text-align:right">Devolución</th><th>Estado</th></tr></thead>
-                <tbody><sc-for list="{{c.rows}}" as="r" hint-placeholder-count="3"><tr><td>{{r.name}}</td><td>{{r.tipo}}</td><td class="mono" style="text-align:right">{{r.esperado}}</td><td class="mono" style="text-align:right">{{r.recibido}}</td><td class="mono" style="text-align:right">{{r.devuelta}}</td><td>{{r.status}}</td></tr></sc-for></tbody>
-              </table></div>
-              <sc-if value="{{c.hasTasks}}" hint-placeholder-val="{{false}}">
-                <div class="lbl">Tareas resueltas</div>
-                <sc-for list="{{c.tasks}}" as="t" hint-placeholder-count="2"><div style="font-size:13px;line-height:1.45;background:#fff;border:1px solid #E3E7F8;border-radius:10px;padding:9px 12px"><b>{{t.text}}</b> <span style="color:var(--mut)">· {{t.dept}} · resuelta el {{t.resolvedDate}}</span><div style="color:var(--mut)">{{t.resolution}}</div></div></sc-for>
-              </sc-if>
-            </sc-if>
+            <sc-for list="{{y.cycles}}" as="c" hint-placeholder-count="1">
+              <div style="background:#fff;border:1px solid #E3E7F8;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                  <div><div style="font-weight:800;font-size:16px">{{c.name}}</div><div class="mono" style="font-size:11px;color:var(--mut)">Cerrado el {{c.closedTxt}}</div></div>
+                  <button onClick="{{c.toggle}}" style="background:#fff;border:1px solid var(--inpline);border-radius:8px;padding:7px 12px;font-weight:700;font-size:12px">{{c.toggleLbl}}</button>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{c.kpis}}" as="k" hint-placeholder-count="5"><div style="flex:1 1 120px;background:#F5F7FE;border-radius:10px;padding:9px 12px"><div class="lbl" style="font-size:10px">{{k.l}}</div><div class="mono" style="font-weight:700;font-size:17px;margin-top:4px">{{k.v}}</div></div></sc-for>
+                </div>
+                <sc-if value="{{c.open}}" hint-placeholder-val="{{false}}">
+                  <div class="lbl">Distribución final de habitaciones</div>
+                  <sc-if value="{{c.noRooms}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Este ciclo no guardó la distribución de habitaciones.</div></sc-if>
+                  <div class="scroll" style="background:#F5F7FE;border-radius:12px;padding:4px 6px"><table>
+                    <thead><tr><th>Nº</th><th>Tipo</th><th>Ocupantes</th></tr></thead>
+                    <tbody><sc-for list="{{c.rooms}}" as="r" hint-placeholder-count="3"><tr><td class="mono">{{r.num}}</td><td>{{r.tipo}}</td><td>{{r.occ}}</td></tr></sc-for></tbody>
+                  </table></div>
+                </sc-if>
+              </div>
+            </sc-for>
           </div>
         </sc-for>
       </div>
@@ -1494,21 +1500,25 @@ class Component extends DCLogic {
 
     const HIST_KEY = 'adminhub_bootcamp_historico_v1';
     const cycSnapshot = (name) => ({
-      id:'c' + Date.now().toString(36), name, closedAt:Date.now(), closedTxt:todayTxt,
+      id:'c' + Date.now().toString(36), name, year:new Date().getFullYear(), closedAt:Date.now(), closedTxt:todayTxt,
       leads:nLeads, aceptados:counts['Aceptado'] || 0, docsInc, cerrados:model.filter(m => m.closed).length,
       esperado:T.esperado, recibido:T.recibido, devuelta:T.devuelta, devPend:T.devPend, pend:T.pend, neta,
       counts:Object.assign({}, counts),
       costs:s.costs.map(x => ({label:x.label, v:x.v})),
+      rooms:roomList.map(r => ({num:r.num || '-', tipo:r.tipo, occ:r.occ.map(o => o.name).join(' / ')})),
       rows:model.map(m => ({name:m.c.full, tipo:m.tipo || '-', total:m.total == null ? null : m.total, esperado:m.esperado, recibido:m.recibido, devuelta:m.cancel ? (m.c.refund || 0) : 0, status:m.status})),
       tasks:s.tasks.filter(x => x.resolved).map(x => ({text:x.text, dept:DEPT[x.dept], resolvedDate:x.resolvedDate || '', resolution:x.resolution || ''}))
     });
-    const histCycles = (s.hist || []).slice().sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0)).map(c => ({
-      name:c.name, closedTxt:c.closedTxt, open:s.histSel === c.id, toggleLbl:s.histSel === c.id ? 'Ocultar detalle' : 'Ver detalle',
+    const histCyc = (s.hist || []).slice().sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0)).map(c => ({
+      _y:c.year || new Date(c.closedAt || Date.now()).getFullYear(), _n:c.neta || 0,
+      name:c.name, closedTxt:c.closedTxt, open:s.histSel === c.id, toggleLbl:s.histSel === c.id ? 'Ocultar habitaciones' : 'Ver habitaciones',
       toggle:() => set({histSel:s.histSel === c.id ? '' : c.id}),
-      kpis:[{l:'Leads', v:c.leads}, {l:'Aceptados', v:c.aceptados}, {l:'Casos cerrados', v:c.cerrados}, {l:'Facturación recibida', v:fmt(c.neta)}, {l:'Devoluciones', v:fmt(c.devuelta)}],
-      rows:(c.rows || []).map(r => ({name:r.name, tipo:r.tipo, esperado:fmt(r.esperado), recibido:fmt(r.recibido), devuelta:r.devuelta ? fmt(r.devuelta) : '-', status:r.status})),
-      tasks:c.tasks || [], hasTasks:(c.tasks || []).length > 0
+      kpis:[{l:'Leads', v:c.leads}, {l:'Aceptados', v:c.aceptados}, {l:'Casos cerrados', v:c.cerrados}, {l:'Facturación', v:fmt(c.neta)}, {l:'Devoluciones', v:fmt(c.devuelta)}],
+      rooms:c.rooms || [], noRooms:!(c.rooms || []).length
     }));
+    const histYears = [];
+    histCyc.forEach(c => { let y = histYears.find(z => z.n === c._y); if (!y) { y = {n:c._y, year:String(c._y), tot:0, cycles:[]}; histYears.push(y); } y.tot += c._n; y.cycles.push(c); });
+    histYears.sort((a, b) => b.n - a.n).forEach(y => { y.total = fmt(y.tot); });
     const cycReset = {estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, hmM:null, resDraft:{}};
     const roleButtons = [['mkt','Marketing'],['adm','Admisiones'],['com','Administración comercial'],['reu','Reuniones de seguimiento']].map(r => ({
       label:r[1], active:role === r[0], go:() => set({role:r[0]}),
@@ -2014,7 +2024,7 @@ class Component extends DCLogic {
       roBanner:!!profile && !canEdit,
       roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (!s.hub ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
-      histOpen:s.histOpen, histCycles, noHist2:histCycles.length === 0,
+      histOpen:s.histOpen, histYears, noHist2:histYears.length === 0,
       openHist:() => { set({histOpen:true}); this.loadHist(); },
       closeHist:() => { if (s.ext || (location.hash || '') === '#historico') { location.href = '../index.html'; } else set({histOpen:false}); },
       histCloseLbl:(location.hash || '') === '#historico' ? 'Volver al AdminHub' : 'Cerrar',
