@@ -128,28 +128,30 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
 }
 
-.bc-overlay{position:fixed;inset:0;z-index:410;background:rgba(0,5,15,0.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem;}
+.bc-overlay{position:fixed;inset:0;z-index:410;background:rgba(20,30,60,0.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:1rem;}
 .bc-overlay.open{display:flex;}
-.bc-modal{background:#030E1E;border:1px solid rgba(0,212,240,0.3);border-radius:18px;width:min(620px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 0 60px rgba(0,180,255,0.12);color:#E0F7FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
-.bc-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid rgba(0,212,240,0.1);}
-.bc-head h3{margin:0;color:#00D4F0;font-size:12px;letter-spacing:1px;text-transform:uppercase;}
-.bc-x{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;}
-.bc-body{padding:26px 22px 24px;}
-.bc-row{display:flex;flex-wrap:wrap;gap:30px;justify-content:center;align-items:flex-start;}
+.bc-modal{background:#F5F7FE;border:1px solid #D7DCF5;border-radius:18px;width:min(560px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(40,50,120,.25);color:#1B2150;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+.bc-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #E3E7F8;background:#fff;border-radius:18px 18px 0 0;}
+.bc-head h3{margin:0;color:#1B2150;font-size:13px;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.bc-back{border:1px solid #D7DCF5;background:#fff;color:#1B2150;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer;font-family:inherit;}
+.bc-x{width:24px;height:24px;border-radius:50%;border:1px solid #D7DCF5;background:#fff;color:#5A6393;cursor:pointer;font-size:12px;}
+.bc-body{padding:28px 22px 22px;}
+.bc-row{display:flex;flex-wrap:wrap;gap:34px;justify-content:center;align-items:flex-start;}
 .bc-node{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;position:relative;transition:transform .25s cubic-bezier(.34,1.56,.64,1);width:120px;}
-.bc-node:hover{transform:scale(1.08);}
-.bc-bub{width:96px;height:96px;border-radius:50%;background:#030d18;border:1.5px solid var(--nc,#22D3EE);display:flex;align-items:center;justify-content:center;position:relative;color:var(--nc,#22D3EE);}
+.bc-node:hover{transform:scale(1.07);}
+.bc-bub{width:96px;height:96px;border-radius:50%;background:#fff;border:2px solid var(--nc,#0A7F92);display:flex;align-items:center;justify-content:center;position:relative;color:var(--nc,#0A7F92);box-shadow:0 4px 14px rgba(40,50,120,.10);}
 .bc-bub.dash{border-style:dashed;}
-.bc-lbl{font-size:12px;font-weight:600;color:var(--nc,#22D3EE);text-align:center;line-height:1.3;}
-.bc-pen{position:absolute;top:-4px;right:-4px;width:26px;height:26px;border-radius:50%;background:#06182b;border:1px solid var(--nc,#22D3EE);display:flex;align-items:center;justify-content:center;color:var(--nc,#22D3EE);cursor:pointer;}
-.bc-form{margin-top:22px;border-top:1px solid rgba(0,212,240,0.12);padding-top:18px;display:none;flex-direction:column;gap:10px;}
+.bc-lbl{font-size:13px;font-weight:700;color:#1B2150;text-align:center;line-height:1.3;}
+.bc-pen{position:absolute;top:-4px;right:-4px;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--nc,#0A7F92);display:flex;align-items:center;justify-content:center;color:var(--nc,#0A7F92);cursor:pointer;}
+.bc-form{margin-top:22px;border-top:1px solid #E3E7F8;padding-top:18px;display:none;flex-direction:column;gap:10px;}
 .bc-form.open{display:flex;}
-.bc-form label{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,0.45);}
-.bc-form input{background:rgba(0,20,40,0.6);border:1px solid rgba(0,212,240,0.25);border-radius:8px;color:#E0F7FF;padding:9px 11px;font-size:13px;font-family:inherit;}
+.bc-form label{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:#5A6393;}
+.bc-form input{background:#fff;border:1px solid #D7DCF5;border-radius:8px;color:#1B2150;padding:9px 11px;font-size:13px;font-family:inherit;}
 .bc-btns{display:flex;gap:8px;flex-wrap:wrap;}
-.bc-btn{border-radius:8px;border:1px solid rgba(0,212,240,0.4);background:rgba(0,212,240,0.1);color:#00D4F0;padding:9px 14px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
-.bc-btn.del{border-color:rgba(255,80,110,.5);color:#FF8CA0;background:rgba(255,80,110,.08);}
-.bc-hint{font-size:11px;color:rgba(255,255,255,0.4);text-align:center;margin-top:18px;}
+.bc-btn{border-radius:8px;border:1px solid #0A7F92;background:#0A7F92;color:#fff;padding:9px 14px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
+.bc-btn.sec{background:#fff;color:#1B2150;border-color:#D7DCF5;}
+.bc-btn.del{background:#fff;border-color:#D32F4B;color:#D32F4B;}
+.bc-hint{font-size:11px;color:#5A6393;text-align:center;margin-top:18px;}
 </style>
 </head>
 <body>
@@ -230,7 +232,7 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
 <!-- ===== MODAL COMÚN: GESTIONAR BURBUJAS ===== -->
 <div class="bc-overlay" id="bcOverlay" onclick="if(event.target===this)bcClose()">
   <div class="bc-modal">
-    <div class="bc-head"><h3>Bootcamps</h3><button class="bc-x" onclick="bcClose()" aria-label="Cerrar">✕</button></div>
+    <div class="bc-head"><h3><button class="bc-back" id="bcBack" style="display:none" onclick="bcStep='root';bcRender()">‹ Atrás</button><span id="bcTitle">Bootcamps</span></h3><button class="bc-x" onclick="bcClose()" aria-label="Cerrar">✕</button></div>
     <div class="bc-body">
       <div class="bc-row" id="bcRow"></div>
       <div class="bc-form" id="bcForm">
@@ -238,9 +240,9 @@ canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none;}
         <input type="text" id="bcName" maxlength="40" placeholder="Ej.: Bootcamp Boston">
         <label for="bcUrl">Enlace (opcional)</label>
         <input type="text" id="bcUrl" placeholder="https://… o archivo.html">
-        <div class="bc-btns"><button class="bc-btn" onclick="bcSave()" id="bcSaveBtn">Guardar</button><button class="bc-btn" onclick="bcFormClose()">Cancelar</button><button class="bc-btn del" id="bcDelBtn" style="display:none" onclick="bcDelete()">Eliminar</button></div>
+        <div class="bc-btns"><button class="bc-btn" onclick="bcSave()" id="bcSaveBtn">Guardar</button><button class="bc-btn sec" onclick="bcFormClose()">Cancelar</button><button class="bc-btn del" id="bcDelBtn" style="display:none" onclick="bcDelete()">Eliminar</button></div>
       </div>
-      <div class="bc-hint">Los ciclos cerrados se guardan en el histórico.</div>
+      
     </div>
   </div>
 </div>
@@ -349,8 +351,8 @@ function goBootcamp(){
 }
 // ── MODAL BOOTCAMPS ──
 const BC_KEY='adminhub_bootcamp_bubbles_v1';
-const BC_DEFAULT=[{id:'sv',name:'Silicon Valley',color:'#22D3EE',url:'bootcamp.html#bootcamp-com'}];
-let bcBubbles=JSON.parse(JSON.stringify(BC_DEFAULT)), bcEdit=null, bcLoaded=false;
+const BC_DEFAULT=[{id:'sv',name:'Silicon Valley',color:'#0A7F92',url:'bootcamp.html#bootcamp-com'}];
+let bcBubbles=JSON.parse(JSON.stringify(BC_DEFAULT)), bcEdit=null, bcLoaded=false, bcStep='root';
 async function bcLoad(){
   try{ const d=await kvGet(BC_KEY); if(Array.isArray(d)&&d.length){ if(!d.some(x=>x.id==='sv'))d.unshift(BC_DEFAULT[0]); bcBubbles=d; } }catch(e){}
   bcLoaded=true; bcRender();
@@ -360,14 +362,25 @@ function bcRender(){
   const pen='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const globe='<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>';
   const hist='<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><polyline points="12 7 12 12 15.5 14"/></svg>';
+  const tool='<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h3M8 17h6"/></svg>';
   const plus='<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
-  let h=bcBubbles.map(b=>`<div class="bc-node" style="--nc:${b.color||'#22D3EE'}" onclick="bcOpen('${b.id}')"><div class="bc-bub">${globe}<span class="bc-pen" onclick="event.stopPropagation();bcFormOpen('${b.id}')" title="Editar burbuja">${pen}</span></div><span class="bc-lbl">${bmEscapeHtml(b.name)}</span></div>`).join('');
-  h+=`<div class="bc-node" style="--nc:#A78BFA" onclick="location.href='bootcamp.html#historico'"><div class="bc-bub">${hist}</div><span class="bc-lbl">Histórico</span></div>`;
-  h+=`<div class="bc-node" style="--nc:#34D399" onclick="bcFormOpen(null)"><div class="bc-bub dash">${plus}<span class="bc-pen" title="Nueva burbuja">${pen}</span></div><span class="bc-lbl">Nueva burbuja</span></div>`;
+  const back=document.getElementById('bcBack'), title=document.getElementById('bcTitle');
+  let h='';
+  if(bcStep==='sv'){
+    back.style.display=''; title.textContent='Silicon Valley';
+    h=`<div class="bc-node" style="--nc:#0A7F92" onclick="location.href='bootcamp.html#bootcamp-com'"><div class="bc-bub">${tool}</div><span class="bc-lbl">Herramienta</span></div>`
+     +`<div class="bc-node" style="--nc:#7C5CE6" onclick="location.href='bootcamp.html#historico'"><div class="bc-bub">${hist}</div><span class="bc-lbl">Histórico</span></div>`;
+    document.getElementById('bcForm').classList.remove('open');
+  } else {
+    back.style.display='none'; title.textContent='Bootcamps';
+    h=bcBubbles.map(b=>`<div class="bc-node" style="--nc:${b.color||'#0A7F92'}" onclick="bcOpen('${b.id}')"><div class="bc-bub">${globe}<span class="bc-pen" onclick="event.stopPropagation();bcFormOpen('${b.id}')" title="Editar burbuja">${pen}</span></div><span class="bc-lbl">${bmEscapeHtml(b.name)}</span></div>`).join('');
+    h+=`<div class="bc-node" style="--nc:#34A06B" onclick="bcFormOpen(null)"><div class="bc-bub dash">${plus}<span class="bc-pen" title="Nueva burbuja">${pen}</span></div><span class="bc-lbl">Nueva burbuja</span></div>`;
+  }
   document.getElementById('bcRow').innerHTML=h;
 }
 function bcOpen(id){
   const b=bcBubbles.find(x=>x.id===id); if(!b) return;
+  if(b.id==='sv'){ bcStep='sv'; bcRender(); return; }
   if(b.url){ if(/^https?:/i.test(b.url)) window.open(b.url,'_blank'); else window.location.href=b.url; }
   else alert('Esta burbuja todavía no tiene enlace. Pulsa el lápiz para añadirlo.');
 }
@@ -383,7 +396,7 @@ async function bcSave(){
   if(!name){ document.getElementById('bcName').focus(); return; }
   try{ const d=await kvGet(BC_KEY); if(Array.isArray(d)&&d.length) bcBubbles=d; }catch(e){}
   if(bcEdit){ const b=bcBubbles.find(x=>x.id===bcEdit); if(b){ b.name=name; b.url=url; } }
-  else { const cols=['#F5A623','#A78BFA','#34D399','#FF2E9F','#4FC3CF','#FFD966']; bcBubbles.push({id:'b'+Date.now().toString(36),name,color:cols[bcBubbles.length%cols.length],url}); }
+  else { const cols=['#E08A00','#7C5CE6','#34A06B','#C23B8A','#2F6FE0']; bcBubbles.push({id:'b'+Date.now().toString(36),name,color:cols[bcBubbles.length%cols.length],url}); }
   bcFormClose(); bcRender(); await bcPersist();
 }
 function bcDelete(){
@@ -393,7 +406,7 @@ function bcDelete(){
   });
 }
 function bcClose(){ document.getElementById('bcOverlay').classList.remove('open'); bcFormClose(); }
-function openBootcampModal(){ bcRender(); document.getElementById('bcOverlay').classList.add('open'); bcLoad(); }
+function openBootcampModal(){ bcStep='root'; bcRender(); document.getElementById('bcOverlay').classList.add('open'); bcLoad(); }
 
 function goReferidos(){
   // Navegación interna desde el Hub: Referidos OBS entra en modo escritura (sujeto a sus contraseñas por burbuja)
