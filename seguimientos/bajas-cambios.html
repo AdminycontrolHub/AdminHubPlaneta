@@ -13,13 +13,23 @@
   window.__puenteActivo=function(){return puente;};
   function marcar(v){puente=v;try{sessionStorage.setItem('usarPuente',v?'1':'0');}catch(e){}}
   function ruta(u){for(var i=0;i<MAP.length;i++){if(u.indexOf(MAP[i][0])===0){var r=u.slice(MAP[i][0].length),k=r.indexOf('?');return {p:MAP[i][1]+(k<0?r:r.slice(0,k)),q:k<0?'':r.slice(k+1)};}}return null;}
+  function enviarLote(lote,intento){
+    orig(GAS,{method:'POST',body:JSON.stringify({lote:lote.map(function(x){return x.r;})})})
+      .then(function(res){if(!res.ok) throw new Error('Google respondio '+res.status);return res.text();})
+      .then(function(t){var d;try{d=JSON.parse(t);}catch(e){throw new Error('Respuesta no valida: '+t.slice(0,120));}
+        if(!d||!d.r) throw new Error('Sin datos: '+t.slice(0,120));
+        lote.forEach(function(x,i){var o=d.r[i];if(!o){x.no(new TypeError('puente'));return;}
+          var s=(o.s>=200&&o.s<=599)?o.s:502;
+          x.si(new Response(o.t,{status:s,headers:{'Content-Type':'application/json'}}));});})
+      .catch(function(e){
+        console.warn('[Puente Google] intento '+(intento+1)+' fallido:',e&&e.message);
+        if(intento<3) setTimeout(function(){enviarLote(lote,intento+1);},1000*(intento+1));
+        else lote.forEach(function(x){x.no(e);});
+      });
+  }
   function vaciar(){
     temporizador=null; var lote=cola.splice(0,100); if(!lote.length) return;
-    orig(GAS,{method:'POST',body:JSON.stringify({lote:lote.map(function(x){return x.r;})})})
-      .then(function(res){return res.json();})
-      .then(function(d){lote.forEach(function(x,i){var o=d.r&&d.r[i];if(!o){x.no(new TypeError('puente'));return;}
-        x.si(new Response(o.t,{status:o.s,headers:{'Content-Type':'application/json'}}));});})
-      .catch(function(e){lote.forEach(function(x){x.no(e);});});
+    enviarLote(lote,0);
     if(cola.length) temporizador=setTimeout(vaciar,0);
   }
   function porGoogle(r){return new Promise(function(si,no){cola.push({r:r,si:si,no:no});if(cola.length>=100){clearTimeout(temporizador);vaciar();}else if(!temporizador)temporizador=setTimeout(vaciar,25);});}
@@ -251,6 +261,10 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
     <button class="btn-general" onclick="abrirHistoricoGeneral()" style="border-radius:20px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
       Buscar Histórico
+    </button>
+    <button class="btn-general" onclick="exportarPendientesExcel()" style="border-radius:20px;" title="Descarga en Excel todos los casos pendientes con toda su información">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+      Pendientes Excel
     </button>
     <button class="btn-general" onclick="abrirNacsGeneral()" style="border-radius:20px;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a6e80" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -797,12 +811,15 @@ async function kvSet(key, value, intentos){
   return false;
 }
 async function kvList(){
-  try{
-    const res = await fetch(KV_LIST);
-    if(!res.ok) return [];
-    const d = await res.json();
-    return d.keys || [];
-  }catch(e){ return []; }
+  for(let i = 0; i < 3; i++){
+    try{
+      const res = await fetch(KV_LIST);
+      if(res.ok){ const d = await res.json(); return d.keys || []; }
+    }catch(e){}
+    await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+  }
+  console.warn('[Hub] No se pudo cargar la lista de casos');
+  return [];
 }
 
 // ============================================================
@@ -2300,6 +2317,60 @@ function renderHistoricoGeneral(){
 // lee nada del Worker.
 // ============================================================
 let historicoVisible = [];
+// Descarga en Excel de TODOS los casos pendientes con toda su informacion
+// (una fila por caso y tipo pendiente, mismo criterio que las tarjetas).
+function exportarPendientesExcel(){
+  if(typeof XLSX === 'undefined'){
+    alert('No se pudo cargar la librería de Excel. Revisa tu conexión e inténtalo de nuevo.');
+    return;
+  }
+  const aFecha = s => {
+    const p = (s || '').split('/');
+    if(p.length !== 3) return s || '';
+    const serial = (Date.UTC(+p[2], +p[1]-1, +p[0]) - Date.UTC(1899, 11, 30)) / 86400000;
+    return isNaN(serial) ? (s || '') : serial;
+  };
+  const filas = [];
+  casos.filter(perteneceANivel1).forEach(c => {
+    const cats = categoriasDeCaso(c);
+    const pendientesDe = cats.length ? cats.filter(cat => esPendienteParaCategoria(c, cat)) : (esPendiente(c) ? [null] : []);
+    pendientesDe.forEach(cat => {
+      filas.push([
+        nombreMarca(c.marca),
+        cat ? cat.nombre : (c.tipoGestion || ''),
+        idMostrado(c),
+        nombreMostrado(c),
+        idNacsMostrado(c) || '',
+        aFecha(c.fechaIngreso),
+        diasDesde(c.fechaIngreso),
+        c.responsableManual || c.responsable || '',
+        tieneIncidencia(c) ? 'Sí' : 'No',
+        c.estadoDevolucion || '',
+        c.reclamado || '',
+        c.observacion || '',
+        c.categoriasOriginales || '',
+        c.asunto || '',
+        c.avisoError || ''
+      ]);
+    });
+  });
+  if(!filas.length){ alert('No hay casos pendientes para descargar.'); return; }
+  filas.sort((x, y) => (y[6] || 0) - (x[6] || 0));
+  const cabecera = ['Marca','Tipo','ID Oportunidad','Nombre','ID NACS','Fecha entrada','Días pendiente','Responsable','Incidencia','Estado devolución','Reclamado','Observaciones','Etiquetas Outlook','Asunto del correo','Aviso'];
+  const hoja = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
+  for(let r = 1; r <= filas.length; r++){
+    const celda = hoja[XLSX.utils.encode_cell({ r, c: 5 })];
+    if(celda && celda.t === 'n') celda.z = 'dd/mm/yyyy';
+  }
+  hoja['!cols'] = [10,20,18,28,14,13,10,14,10,16,12,40,30,40,24].map(w => ({ wch: w }));
+  hoja['!autofilter'] = { ref: hoja['!ref'] };
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, 'Pendientes');
+  const hoy = new Date();
+  const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(libro, `Pendientes_Bajas_y_Cambios_${fecha}.xlsx`);
+}
+
 function exportarHistoricoExcel(){
   if(typeof XLSX === 'undefined'){
     alert('No se pudo cargar la librería de Excel. Revisa tu conexión e inténtalo de nuevo.');
@@ -2309,7 +2380,7 @@ function exportarHistoricoExcel(){
     alert('No hay resultados para exportar con la búsqueda y los filtros actuales.');
     return;
   }
-  const cabecera = ['Marca','ID Oportunidad','Nombre','ID NACS','Tipo de gestión','Motivo','Medio devolución','Fecha de cierre','Responsable','Cerrado por','Aviso'];
+  const cabecera = ['Marca','ID Oportunidad','Nombre','ID NACS','Tipo de gestión','Motivo','Medio devolución','Fecha de cierre','Responsable','Cerrado por','Aviso','Observaciones'];
   // Fecha como numero de Excel (sin desfases por zona horaria) para que se
   // pueda ordenar y filtrar como fecha real; si no se entiende, va como texto.
   const aFecha = s => {
@@ -2339,7 +2410,8 @@ function exportarHistoricoExcel(){
       aFecha(fechaCierreDe(c)),
       c.responsableManual || c.responsable || '',
       c.cerradoPor || '',
-      c.avisoError || ''
+      c.avisoError || '',
+      c.observacion || ''
     ];
   });
   const hoja = XLSX.utils.aoa_to_sheet([cabecera, ...filas]);
@@ -2347,7 +2419,7 @@ function exportarHistoricoExcel(){
     const celda = hoja[XLSX.utils.encode_cell({ r, c: 7 })]; // columna "Fecha de cierre"
     if(celda && celda.t === 'n') celda.z = 'dd/mm/yyyy';
   }
-  hoja['!cols'] = [10,18,28,14,22,28,18,14,14,14,30].map(w => ({ wch: w }));
+  hoja['!cols'] = [10,18,28,14,22,28,18,14,14,14,30,40].map(w => ({ wch: w }));
   hoja['!autofilter'] = { ref: hoja['!ref'] };
   const libro = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(libro, hoja, 'Histórico');
