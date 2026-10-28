@@ -931,7 +931,7 @@ select.inp{cursor:pointer}
     </div>
   </sc-if>
   <sc-if value="{{histOpen}}" hint-placeholder-val="{{false}}">
-    <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:57">
+    <div style="position:fixed;inset:0;background:{{histBg}};display:flex;align-items:center;justify-content:center;padding:20px;z-index:57">
       <div role="dialog" aria-label="Histórico de ciclos" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:900px;max-height:94vh;overflow:auto;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(40,50,120,.3)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div>
@@ -2024,6 +2024,7 @@ class Component extends DCLogic {
       roBanner:!!profile && !canEdit,
       roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (!s.hub ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
+      histBg:(location.hash || '') === '#historico' ? '#EEF1FC' : 'rgba(27,33,80,.55)',
       histOpen:s.histOpen, histYears, noHist2:histYears.length === 0,
       openHist:() => { set({histOpen:true}); this.loadHist(); },
       closeHist:() => { if (s.ext || (location.hash || '') === '#historico') { location.href = '../index.html'; } else set({histOpen:false}); },
