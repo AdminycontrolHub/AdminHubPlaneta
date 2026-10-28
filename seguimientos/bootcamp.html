@@ -1318,7 +1318,11 @@ class Component extends DCLogic {
   }
 
   renderVals(){
-    const s = this.state;
+    const __LEG = {'Pendiente de contactar':'No contactado', 'Contactado, falta decisión':'Interesado', 'No contesta':'Ilocalizado'};
+    const __nm = (v) => __LEG[v] || v;
+    const s = Object.assign({}, this.state);
+    { const e0 = this.state.estados || {}, e1 = {}; Object.keys(e0).forEach(k => { e1[k] = __nm(e0[k]); }); s.estados = e1;
+      s.added = (this.state.added || []).map(a => a && a.estado && __LEG[a.estado] ? Object.assign({}, a, {estado:__LEG[a.estado]}) : a); }
     const set = (o) => this.setState(o);
     const role = s.role;
     const profile = s.profile, unlocked = s.unlocked || !!s.hub;
