@@ -765,6 +765,7 @@ select.inp{cursor:pointer}
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <input class="inp" aria-label="Nueva tarea" value="{{taskIn}}" onChange="{{onTaskIn}}" placeholder="Describe la tarea…" style="flex:1 1 220px">
+          <label style="display:flex;align-items:center;gap:6px;flex:0 0 auto"><span class="lbl" style="font-size:10px">Fecha revisión</span><input type="date" class="inp" aria-label="Fecha de revisión" value="{{taskRev}}" onChange="{{onTaskRev}}" style="width:150px"></label>
           <select class="inp" aria-label="Departamento" onChange="{{onTaskDept}}" style="flex:0 0 200px">
             <sc-for list="{{deptOpts}}" as="d" hint-placeholder-count="3">
               <option value="{{d.v}}" selected="{{d.sel}}">{{d.label}}</option>
@@ -778,6 +779,8 @@ select.inp{cursor:pointer}
               <div style="flex:1 1 220px;min-width:0">
                 <div style="font-size:14px;font-weight:600">{{x.text}}</div>
                 <div class="mono" style="font-size:11px;color:var(--mut);margin-top:2px">Asignada el {{x.date}}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex:0 0 auto"><span class="lbl" style="font-size:10px">Revisión</span><input type="date" class="inp" aria-label="Fecha de revisión" value="{{x.rev}}" onChange="{{x.onRev}}" style="width:150px;padding:6px 8px">
               </div>
               <span class="chip" style="{{x.deptStyle}}">{{x.dept}}</span>
               <span class="chip" style="{{x.statusStyle}}">{{x.status}}</span>
@@ -964,7 +967,7 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -1284,7 +1287,7 @@ class Component extends DCLogic {
 
     // ---------- ADMISIONES
     const urgent = [];
-    s.tasks.filter(x => x.dept === role && !x.done).forEach(x => urgent.push({isMoro:false, isOk:true, tipo:'Tarea de reunión', detail:x.text, who:'Reunión de seguimiento', date:x.date, ok:() => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {done:true, doneDate:todayTxt}) : y)})}));
+    s.tasks.filter(x => x.dept === role && !x.done).forEach(x => urgent.push({isMoro:false, isOk:true, tipo:'Tarea de reunión', detail:x.text + (x.review ? ' · Revisión: ' + x.review.split('-').reverse().join('/') : ''), who:'Reunión de seguimiento', date:x.date, ok:() => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {done:true, doneDate:todayTxt}) : y)})}));
     if (role === 'adm') s.claims.filter(x => !x.resolved && !x.gestionado).forEach(x => urgent.push({isMoro:false, isOk:true, tipo:x.tipo, detail:'Falta: ' + x.missing.join(' · '), who:x.name + ' · ' + x.asesor, date:x.date, ok:() => set({claims:s.claims.map(y => y.id === x.id ? Object.assign({}, y, {gestionado:true}) : y)})}));
     if (role === 'com') Object.keys(s.moro).filter(k => s.moro[k].st === 'pending').forEach(k => {
       const mv = s.moro[k], sel = s.moroSel[k];
@@ -1609,7 +1612,7 @@ class Component extends DCLogic {
     // ---------- reuniones
     const topicList = s.topics.map(x => ({text:x.text, rm:() => set({topics:s.topics.filter(y => y.id !== x.id)})}));
     const taskList = s.tasks.map(x => ({
-      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date,
+      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, rev:x.review || '', onRev:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:e.target.value}) : y)}),
       status:x.done ? 'Gestionada el ' + x.doneDate : 'Pendiente', statusStyle:x.done ? 'background:#DDF5E6;color:#176B3A' : 'background:#FFF4D6;color:#8A5A00',
       rm:() => set({tasks:s.tasks.filter(y => y.id !== x.id)})
     }));
@@ -1661,9 +1664,9 @@ class Component extends DCLogic {
       comViewTabs, isComAlumnos:s.comView === 'alumnos', isComRooms:s.comView === 'habitaciones', rooms:roomList, roomStats,
       topicList, noTopics:topicList.length === 0, taskList, noTasks:taskList.length === 0, deptOpts,
       topicIn:s.topicIn, taskIn:s.taskIn,
-      onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskDept:(e) => set({taskDept:e.target.value}),
+      onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
       addTopic:() => { const x = s.topicIn.trim(); if (!x) return; set({topics:s.topics.concat([{id:'p' + s.nextT, text:x}]), topicIn:'', nextT:s.nextT + 1}); },
-      addTask:() => { const x = s.taskIn.trim(); if (!x) return; set({tasks:s.tasks.concat([{id:'k' + s.nextT, text:x, dept:s.taskDept, done:false, date:todayTxt, doneDate:''}]), taskIn:'', nextT:s.nextT + 1, toast:'Tarea enviada a «Gestiones urgentes» de ' + DEPT[s.taskDept] + '.', toastTo:s.taskDept}); },
+      addTask:() => { const x = s.taskIn.trim(); if (!x) return; set({tasks:s.tasks.concat([{id:'k' + s.nextT, text:x, dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:s.taskRev}]), taskIn:'', taskRev:'', nextT:s.nextT + 1, toast:'Tarea enviada a «Gestiones urgentes» de ' + DEPT[s.taskDept] + '.', toastTo:s.taskDept}); },
       mktRows,
       plazasBox:'display:flex;flex-direction:column;align-items:center;gap:8px;background:' + (extra > 0 ? '#FFF8E6' : '#fff') + ';border:' + (extra > 0 ? '2px solid #F5A300' : '1px solid var(--line)') + ';border-radius:16px;padding:12px 22px;min-width:220px;box-shadow:' + (extra > 0 ? '0 0 0 4px rgba(245,163,0,.22)' : '0 1px 2px rgba(60,70,160,.06)'),
       plazasLbl:extra > 0 ? 'Sobre el objetivo' : (faltan === 0 ? 'Objetivo cumplido' : 'Plazas que faltan'),
