@@ -1008,11 +1008,11 @@ const titleCase = (t) => (t === t.toLowerCase() || t === t.toUpperCase()) ? t.to
 const mapEstado = (raw, matric) => {
   const t = nz(raw);
   if (matric) return 'Aceptado';
-  if (!t) return 'Pendiente de contactar';
+  if (!t) return 'No contactado';
   if (/matricul|acept|inscrit/.test(t)) return 'Aceptado';
   if (/no interes|rechaz|baja|descart|no puede|sin interes/.test(t)) return 'Rechazado';
-  if (/iloc|no contest|no responde|sin respuesta|erroneo/.test(t)) return 'No contesta';
-  if (/pendiente de contact|sin contact|nuevo/.test(t)) return 'Pendiente de contactar';
+  if (/iloc|no contest|no responde|sin respuesta|erroneo/.test(t)) return 'Ilocalizado';
+  if (/pendiente de contact|sin contact|nuevo/.test(t)) return 'No contactado';
   return ST_CONT;
 };
 const loadXlsx = () => window.XLSX ? Promise.resolve() : new Promise((ok, ko) => {
@@ -1180,16 +1180,16 @@ const PASSWORD = 'AdminHub';
 const RED = '#D32F4B';
 const LINE = '#B9C0EB';
 const INK = '#1B2150';
-const ST_CONT = 'Contactado, falta decisión';
-const ESTADOS = ['Pendiente de contactar', ST_CONT, 'No contesta', 'Aceptado', 'Rechazado'];
+const ST_CONT = 'Interesado';
+const ESTADOS = ['No contactado', 'Ilocalizado', ST_CONT, 'Aceptado', 'Rechazado'];
 const EST_COL = {
-  'Pendiente de contactar':['#ECE6FC','#5B3FC4'],
-  'Contactado, falta decisión':['#DCEBFE','#1D58C0'],
-  'No contesta':['#E7EAF5','#4B5578'],
+  'No contactado':['#ECE6FC','#5B3FC4'],
+  'Interesado':['#DCEBFE','#1D58C0'],
+  'Ilocalizado':['#E7EAF5','#4B5578'],
   'Aceptado':['#DDF5E6','#176B3A'],
   'Rechazado':['#FDECEF','#B3203D']
 };
-const BASE = {'Pendiente de contactar':0,'Contactado, falta decisión':0,'No contesta':0,'Aceptado':0,'Rechazado':0};
+const BASE = {'No contactado':0,'Interesado':0,'Ilocalizado':0,'Aceptado':0,'Rechazado':0};
 const LEADS = [];
 const SIM_EXCEL = [];
 const D0 = {ccgg:1,pi:1,hm:1};
@@ -1326,7 +1326,7 @@ class Component extends DCLogic {
     const NOW = new Date(); const NOWT = NOW.getTime(); const todayTxt = NOW.toLocaleDateString('es-ES');
     const mktBg = this.props.mktBg || '#ECE6FC';
     const eff = (l) => s.estados[l.id] || l.estado;
-    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'Pendiente de contactar', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado})).concat(LEADS);
+    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado})).concat(LEADS);
     const noteOf = (id, def) => (s.notes[id] !== undefined ? s.notes[id] : def);
     const setNote = (id, v) => { const n = Object.assign({}, s.notes); n[id] = v; set({notes:n}); };
     const priceOf = (id, seedHab, seedDto, seedPar, seedIni, seedTipo) => {
@@ -1581,7 +1581,7 @@ class Component extends DCLogic {
       const nNew = s.drop.rows.filter(r => !r.dupe).length;
       const nDup = s.drop.rows.length - nNew;
       drop = {
-        rows:s.drop.rows.map(r => ({name:r.name, pais:r.pais, estado:r.estado || 'Pendiente de contactar', src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
+        rows:s.drop.rows.map(r => ({name:r.name, pais:r.pais, estado:r.estado || 'No contactado', src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
         summary:nNew + ' nuevos · ' + nDup + ' duplicados',
         note:s.drop.excel ? 'Se comparan por email y por nombre con los leads ya cargados: los duplicados se omiten. Comprueba que el estado se ha leído bien antes de añadir.' : 'Se crea un lead por archivo, con el nombre del archivo.',
         none:nNew === 0, btnLabel:nNew === 0 ? 'No hay casos nuevos' : 'Añadir ' + nNew + (nNew === 1 ? ' lead nuevo' : ' leads nuevos'),
