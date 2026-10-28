@@ -93,6 +93,7 @@ select.inp{cursor:pointer}
     </div>
   </sc-if>
 
+  <sc-if value="{{hasCopy}}" hint-placeholder-val="{{false}}"><div role="status" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:80;background:#1B2150;color:#fff;border-radius:12px;padding:12px 20px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(20,30,80,.35);max-width:90vw;display:flex;align-items:center;gap:10px"><span style="color:#5FE3A1;font-size:16px">✓</span><span>{{copyMsg}}</span></div></sc-if>
   <!-- AVISO -->
   <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
     <div role="status" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--grnbg);border:1px solid var(--grnline);border-radius:12px;padding:12px 16px">
@@ -1233,7 +1234,7 @@ class Component extends DCLogic {
     const __prof = __hash || (['mkt','adm','com'].indexOf(__sv) >= 0 && !(__ext && __sv === 'com') ? __sv : null);
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
-      estados:{}, added:[], nextId:1, toast:'', toastTo:'com', msg:'', drag:false, drop:null,
+      estados:{}, added:[], nextId:1, copyMsg:'', toast:'', toastTo:'com', msg:'', drag:false, drop:null,
       cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
@@ -1370,8 +1371,10 @@ class Component extends DCLogic {
         moroGo:() => { const o = Object.assign({}, s.moro); o[id] = {st:'pending', date:todayTxt, name, asesor:asesorN}; set({moro:o, toastTo:'com', toast:'Checkeo de morosidad solicitado a Administración comercial para ' + name + '.'}); }
       };
     };
-    const copy = (txt, what) => () => { try { navigator.clipboard.writeText(txt); } catch (err) {} set({toast:'Copiado ' + what + ': ' + txt, toastTo:role}); };
-    const copyExt = () => { let base = ''; try { base = location.href.split('#')[0].split('?')[0]; } catch (e) {} const url = base + '#bootcamp-ext'; let ok = false; try { navigator.clipboard.writeText(url); ok = true; } catch (e) {} if (!ok) { try { const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {} } set({toast:'Enlace externo copiado (válido para Marketing y Admisiones): ' + url, toastTo:role}); };
+    const flash = (msg) => { set({copyMsg:msg}); clearTimeout(this._cmT); this._cmT = setTimeout(() => this.setState({copyMsg:''}), 2600); };
+    const doCopy = (txt) => { let ok = false; try { navigator.clipboard.writeText(txt).catch(() => {}); ok = true; } catch (e) {} try { const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {} };
+    const copy = (txt, what) => () => { doCopy(txt); flash('Copiado ' + what + ': ' + txt); };
+    const copyExt = () => { let base = ''; try { base = location.href.split('#')[0].split('?')[0]; } catch (e) {} const url = base + '#bootcamp-ext'; doCopy(url); flash('Enlace externo copiado (válido para Marketing y Admisiones)'); };
     const setPrice = (id, pt) => { if ('hab' in pt || 'dto' in pt) pt = Object.assign({finOv:null}, pt); const o = Object.assign({}, s.prices); o[id] = Object.assign({}, o[id], pt); set({prices:o}); };
     const nameById = {};
     LEADS.forEach(l => { nameById[l.id] = l.name; });
@@ -2093,6 +2096,7 @@ class Component extends DCLogic {
       demoOpts:[[null, 'Real'], [12, '12'], [20, '20'], [21, '21'], [23, '23']].map(d => ({label:d[1], active:s.demo === d[0], go:() => set({demo:d[0]}), style:'border-radius:7px;padding:3px 8px;font-size:11px;font-weight:700;border:1px solid ' + (s.demo === d[0] ? ACC.mkt : LINE) + ';background:' + (s.demo === d[0] ? ACC.mkt : '#FFFFFF') + ';color:' + (s.demo === d[0] ? '#FFFFFF' : INK)})),
       pips, pipsAria:personasAc + ' de ' + GOAL + ' plazas cubiertas', hasExtra:extra > 0, extraTxt:'+' + extra + (extra === 1 ? ' persona extra' : ' personas extra'),
       roleButtons, funnel, isMkt:role === 'mkt', isAdm:role === 'adm', isCom:role === 'com',
+      copyMsg:s.copyMsg, hasCopy:!!s.copyMsg,
       hasToast:!!s.toast, toast:s.toast, toastBtn:s.toastTo !== role,
       toastLabel:'Ver en ' + ({mkt:'Marketing', adm:'Admisiones', com:'Administración comercial', reu:'Reuniones'}[s.toastTo] || 'la pestaña'),
       toastGo:() => set({role:s.toastTo, comFilter:'Todos', toast:''}),
