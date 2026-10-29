@@ -39,7 +39,7 @@ select.inp{cursor:pointer}
 </style>
 </helmet>
 
-<div style="max-width:1400px;margin:0 auto;padding:28px 32px 48px;display:flex;flex-direction:column;gap:22px">
+<div style="max-width:1760px;margin:0 auto;padding:28px 24px 48px;display:flex;flex-direction:column;gap:22px">
 
   <!-- CABECERA -->
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
@@ -346,8 +346,8 @@ select.inp{cursor:pointer}
       </div>
       <div style="background:#fff;border-radius:12px;padding:4px 6px">
         <table class="tight" style="table-layout:fixed">
-          <colgroup><col style="width:12%"><col style="width:10%"><col style="width:12%"><col style="width:12%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:7%"><col style="width:15%"></colgroup>
-          <thead><tr><th>Lead</th><th>Asesor</th><th>Estado</th><th>Tarifa</th><th>Descuento</th><th>Precio final</th><th>Forma de pago</th><th>Forma de facturación</th><th>MES primera cuota</th><th>Último seguimiento</th></tr></thead>
+          <colgroup><col style="width:11%"><col style="width:7%"><col style="width:9%"><col style="width:9%"><col style="width:6%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:8%"><col style="width:19%"><col style="width:8%"></colgroup>
+          <thead><tr><th style="width:11%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Lead</th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Asesor</th><th style="width:9%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Estado</th><th style="width:9%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Tarifa</th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Descuento</th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Precio final</th><th style="width:9%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Forma de pago</th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Mes primera cuota</th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Forma de facturación</th><th style="width:18%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Último seguimiento</th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Acciones</th></tr></thead>
           <tbody>
             <sc-for list="{{admRows}}" as="l" hint-placeholder-count="6">
               <tr style="{{l.rowStyle}}">
@@ -446,17 +446,6 @@ select.inp{cursor:pointer}
                 </td>
                 <td>
                   <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
-                    <select class="inp" aria-label="Forma de facturación" onChange="{{l.onBill}}" style="{{l.billStyle}}">
-                      <sc-for list="{{l.billOpts}}" as="o" hint-placeholder-count="3">
-                        <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
-                      </sc-for>
-                    </select>
-                    <sc-if value="{{l.billAlert}}" hint-placeholder-val="{{false}}"><div style="margin-top:4px;background:#FDECEF;color:#B0203C;border:1px solid #F2A3B4;border-radius:6px;padding:3px 6px;font-size:11px;font-weight:800">¡Pedir datos empresa!</div></sc-if>
-                  </sc-if>
-                  <sc-if value="{{l.noPrice}}" hint-placeholder-val="{{false}}"><span style="color:var(--mut)">—</span></sc-if>
-                </td>
-                <td>
-                  <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
                     <select class="inp" aria-label="Mes de la primera cuota" onChange="{{l.onIni}}" style="{{l.iniStyle}}">
                       <sc-for list="{{l.iniOpts}}" as="o" hint-placeholder-count="5">
                         <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
@@ -465,7 +454,26 @@ select.inp{cursor:pointer}
                   </sc-if>
                   <sc-if value="{{l.noPrice}}" hint-placeholder-val="{{false}}"><span style="color:var(--mut)">—</span></sc-if>
                 </td>
-                <td><input class="inp" aria-label="Último seguimiento" value="{{l.last}}" onChange="{{l.onLast}}"></td>
+                <td>
+                  <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
+                    <select class="inp" aria-label="Forma de facturación" onChange="{{l.onBill}}" style="{{l.billStyle}}">
+                      <sc-for list="{{l.billOpts}}" as="o" hint-placeholder-count="3">
+                        <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
+                      </sc-for>
+                    </select>
+                    <sc-if value="{{l.billAlert}}" hint-placeholder-val="{{false}}"><div style="margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="background:#FDECEF;color:#B0203C;border:1px solid #F2A3B4;border-radius:6px;padding:3px 6px;font-size:11px;font-weight:800">¡Pedir datos empresa!</span><button onClick="{{l.onMail}}" title="Abrir correo para pedir los datos de la empresa" aria-label="Pedir datos de empresa por correo" style="background:#fff;border:1px solid #F2A3B4;border-radius:6px;padding:2px 7px;font-size:14px;line-height:1.2">✉</button></div></sc-if>
+                  </sc-if>
+                  <sc-if value="{{l.noPrice}}" hint-placeholder-val="{{false}}"><span style="color:var(--mut)">—</span></sc-if>
+                </td>
+                <td style="padding-left:18px"><input class="inp" aria-label="Último seguimiento" value="{{l.last}}" onChange="{{l.onLast}}"></td>
+                <td>
+                  <sc-if value="{{l.isLead}}" hint-placeholder-val="{{true}}">
+                    <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+                      <button onClick="{{l.onSave}}" style="background:var(--adm);color:#fff;border:0;border-radius:8px;padding:7px 10px;font-weight:800;font-size:12px">Guardar</button>
+                      <button onClick="{{l.onDel}}" title="Eliminar esta línea (con contraseña)" style="background:#fff;color:#B0203C;border:1px solid #F2A3B4;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px">Eliminar</button>
+                    </div>
+                  </sc-if>
+                </td>
               </tr>
             </sc-for>
           </tbody>
@@ -985,6 +993,23 @@ select.inp{cursor:pointer}
       </div>
     </div>
   </sc-if>
+  <sc-if value="{{delOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:59">
+      <div role="dialog" aria-label="Eliminar línea" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:460px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(40,50,120,.3)">
+        <div>
+          <div class="lbl">Admisiones</div>
+          <h2 style="margin:4px 0 0;font-size:20px;font-weight:800">Eliminar línea</h2>
+          <div style="color:var(--mut);font-size:13px;margin-top:6px;line-height:1.5">Se borrará <b>{{delName}}</b> y todos sus datos (estado, tarifa, cobros, documentación) para todos los usuarios. No se puede deshacer.</div>
+        </div>
+        <input type="password" class="inp" aria-label="Contraseña para eliminar" placeholder="Contraseña" value="{{delPwdVal}}" onChange="{{onDelPwd}}">
+        <sc-if value="{{delErr}}" hint-placeholder-val="{{false}}"><span style="font-size:12px;color:#B0203C;font-weight:700">Contraseña incorrecta</span></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{delCancel}}" style="background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px">Cancelar</button>
+          <button onClick="{{delConfirm}}" style="background:#D32F4B;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;font-size:14px">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
   <sc-if value="{{needProfile}}" hint-placeholder-val="{{false}}">
     <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60">
       <div role="dialog" aria-label="Elige tu perfil" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:820px;max-height:94vh;overflow:auto;padding:30px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 60px rgba(40,50,120,.35)">
@@ -1249,7 +1274,7 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, copyMsg:'', toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', delId:null, delPwd:'', delErr:false, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -1677,6 +1702,15 @@ class Component extends DCLogic {
       return Object.assign(priceView(l.id, pr, true), moroView(l.id, l.name, av.asesor, cur === 'Aceptado'), {
         tel:l.tel || '—', email:l.email || '—', copyTel:copy(l.tel || '—', 'teléfono'), copyEmail:copy(l.email || '—', 'email'),
         name:l.name, pais:l.pais, asesor:av.asesor, asesOpts:av.asesOpts, onAses:av.onAses, canal:l.canal, isNew:!!l.isNew, isLead:true, isStudent:false,
+        onDel:() => set({delId:l.id, delPwd:'', delErr:false}),
+        onSave:async () => { try { await this.flush(); } catch (e) {} flash(this.state.syncOk === false ? 'No se ha podido guardar: sin conexión. Se reintentará solo.' : 'Guardado ✓'); },
+        onMail:() => {
+          const nm = (l.full || l.name || '').trim(), first = nm.split(/\s+/)[0] || '';
+          const subj = '🎓 Bootcamp Silicon Valley · Datos de facturación de empresa';
+          const body = '🎓 OBS · Bootcamp Silicon Valley\n\nHola' + (first ? ' ' + first : '') + ',\n\nTe escribimos desde OBS. Para poder enviarte tu factura del Bootcamp Silicon Valley a nombre de tu empresa, necesitamos, a la mayor brevedad posible, los siguientes datos:\n\n  ✦ Nombre de la empresa\n  ✦ CIF\n  ✦ Dirección\n  ✦ País\n\nEn cuanto los recibamos, tramitaremos tu factura sin demora.\n\nGracias de antemano.\n\nUn cordial saludo,\nEquipo de Administración · OBS';
+          if (!l.email) flash('Este candidato no tiene email: se abre el correo sin destinatario.');
+          location.href = 'mailto:' + encodeURIComponent(l.email || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
+        },
         manual:!!l.manual, notManual:!l.manual, nameVal:l.full || '', telVal:l.tel || '', emailVal:l.email || '',
         onName:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {full:e.target.value.trim(), name:e.target.value.trim()}) : x)}),
         onTel:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {tel:e.target.value.trim()}) : x)}),
@@ -2073,6 +2107,15 @@ class Component extends DCLogic {
       roBanner:!!profile && !canEdit,
       roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (!s.hub ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
+      delOpen:!!s.delId, delErr:s.delErr, delPwdVal:s.delPwd, delName:((s.added.find(x => x.id === s.delId) || {}).full) || 'este candidato',
+      onDelPwd:(e) => set({delPwd:e.target.value, delErr:false}),
+      delCancel:() => set({delId:null, delPwd:'', delErr:false}),
+      delConfirm:() => {
+        if (s.delPwd !== 'AdminHub') { set({delErr:true}); return; }
+        const id = s.delId, strip = (m) => { const o = Object.assign({}, m); delete o[id]; return o; };
+        set({added:s.added.filter(x => x.id !== id), estados:strip(s.estados), prices:strip(s.prices), asesores:strip(s.asesores), notes:strip(s.notes), cs:strip(s.cs), obs:strip(s.obs), fact:strip(s.fact), delId:null, delPwd:'', delErr:false});
+        flash('Línea eliminada');
+      },
       addManual:() => { set({added:[{id:'m' + Date.now().toString(36), full:'', name:'', pais:'', src:'Manual', fecha:new Date().toLocaleDateString('es-ES'), tel:'', email:'', manual:true, estado:'No contactado'}].concat(s.added), filter:'Todos'}); },
       histBg:(location.hash || '') === '#historico' ? '#EEF1FC' : 'rgba(27,33,80,.55)',
       histOpen:s.histOpen, histYears, noHist2:histYears.length === 0,
