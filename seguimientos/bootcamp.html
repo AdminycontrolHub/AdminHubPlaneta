@@ -47,7 +47,7 @@ select.inp{cursor:pointer}
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
       <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley</div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
-      <div style="color:var(--mut);font-size:14px">Edición 2–7 marzo 2026 · una sola base de datos, cuatro pestañas</div>
+      <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
     <div style="{{plazasBox}}">
       <div class="lbl">{{plazasLbl}}</div>
@@ -335,14 +335,14 @@ select.inp{cursor:pointer}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
       <span class="lbl">Precios base</span>
-      <span class="chip" style="background:#DCEBFE;color:#1D58C0">Tarifa 1 · Individual · 4.990 € (a confirmar)</span>
-      <span class="chip" style="background:#DCEBFE;color:#1D58C0">Tarifa 2 · Doble · 3.990 € (a confirmar)</span>
+      <span class="chip" style="background:#DCEBFE;color:#1D58C0">Tarifa 1 · Individual · 5.275 €</span>
+      <span class="chip" style="background:#DCEBFE;color:#1D58C0">Tarifa 2 · Doble · 4.275 €</span>
       <span style="font-size:12px;color:var(--mut)">Al aceptar, elige tarifa y descuento: el precio final se calcula solo y es el único dato que ve Administración comercial. Si es doble, indica siempre a la pareja; arrastra un alumno sobre otro para agruparlos por color.</span>
     </div>
     <div class="panel" style="background:#E9F0FE;border-color:#C5D6F7;padding:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
         <h2 style="margin:0;font-size:18px;font-weight:700">Seguimiento de leads</h2>
-        <span class="lbl">Estado y último seguimiento editables</span>
+        <span style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="lbl">Estado y último seguimiento editables</span><button onClick="{{addManual}}" style="background:var(--adm);color:#fff;border:0;border-radius:10px;padding:9px 14px;font-weight:800;font-size:13px">+ Añadir candidato</button></span>
       </div>
       <div style="background:#fff;border-radius:12px;padding:4px 6px">
         <table class="tight" style="table-layout:fixed">
@@ -352,11 +352,14 @@ select.inp{cursor:pointer}
             <sc-for list="{{admRows}}" as="l" hint-placeholder-count="6">
               <tr style="{{l.rowStyle}}">
                 <td style="word-break:break-word">
+                  <sc-if value="{{l.manual}}" hint-placeholder-val="{{false}}"><div style="display:flex;flex-direction:column;gap:4px"><input class="inp" aria-label="Nombre del candidato" placeholder="Nombre y apellidos" value="{{l.nameVal}}" onChange="{{l.onName}}" style="font-weight:700"><input class="inp" aria-label="Teléfono del candidato" placeholder="Teléfono" value="{{l.telVal}}" onChange="{{l.onTel}}"><input class="inp" aria-label="Email del candidato" placeholder="Email" value="{{l.emailVal}}" onChange="{{l.onEmail}}"></div></sc-if>
+                  <sc-if value="{{l.notManual}}" hint-placeholder-val="{{true}}">
                   <span class="hov" tabindex="0"><span style="{{l.nameStyle}};border-bottom:1px dotted var(--mut)">{{l.name}}</span> <span class="mono" style="color:var(--mut);font-size:12px">{{l.pais}}</span>
                     <span class="pop">
                       <span style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="lbl">Teléfono</span><br><span class="mono" style="user-select:all;font-size:13px;color:var(--ink)">{{l.tel}}</span></span><button onClick="{{l.copyTel}}" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--ink)">Copiar</button></span>
                       <span style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="lbl">Email</span><br><span class="mono" style="user-select:all;font-size:13px;color:var(--ink)">{{l.email}}</span></span><button onClick="{{l.copyEmail}}" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--ink)">Copiar</button></span>
                     </span></span>
+                  </sc-if>
                   <sc-if value="{{l.isNew}}" hint-placeholder-val="{{false}}"> <span class="chip" style="background:var(--mkt);color:#fff">Nuevo</span></sc-if>
                   <sc-if value="{{l.mora}}" hint-placeholder-val="{{false}}"><div><span class="chip" style="background:var(--redbg);color:var(--redtx);border:1px solid var(--red)">Cuotas vencidas · {{l.moraAmt}}</span></div></sc-if>
                   <sc-if value="{{l.hasClaim}}" hint-placeholder-val="{{false}}"><div><span class="chip" style="background:var(--amberbg);color:var(--ambertx);border:1px solid var(--amberline)">Reclamación abierta</span></div></sc-if>
@@ -430,6 +433,14 @@ select.inp{cursor:pointer}
                         <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
                       </sc-for>
                     </select>
+                    <sc-if value="{{l.showCuotas}}" hint-placeholder-val="{{false}}">
+                      <select class="inp" aria-label="Número de cuotas" disabled="{{l.cuotasDis}}" onChange="{{l.onNc}}" style="margin-top:4px">
+                        <sc-for list="{{l.ncOpts}}" as="o" hint-placeholder-count="3">
+                          <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
+                        </sc-for>
+                      </select>
+                      <div style="font-size:11px;color:var(--mut);margin-top:2px">{{l.cuotasNote}}</div>
+                    </sc-if>
                   </sc-if>
                   <sc-if value="{{l.noPrice}}" hint-placeholder-val="{{false}}"><span style="color:var(--mut)">—</span></sc-if>
                 </td>
@@ -440,6 +451,7 @@ select.inp{cursor:pointer}
                         <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
                       </sc-for>
                     </select>
+                    <sc-if value="{{l.billAlert}}" hint-placeholder-val="{{false}}"><div style="margin-top:4px;background:#FDECEF;color:#B0203C;border:1px solid #F2A3B4;border-radius:6px;padding:3px 6px;font-size:11px;font-weight:800">¡Pedir datos empresa!</div></sc-if>
                   </sc-if>
                   <sc-if value="{{l.noPrice}}" hint-placeholder-val="{{false}}"><span style="color:var(--mut)">—</span></sc-if>
                 </td>
@@ -1052,7 +1064,7 @@ async function parseLeadFile(f) {
 }
 
 
-const MNUM = {dic:12, ene:1, feb:2, mar:3};
+const MNUM = {nov:11, dic:12, ene:1, feb:2};
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const parseEuro = (t) => {
   const m = String(t == null ? '' : t).replace(/[€\s]|eur(os)?/gi, '').match(/-?\d[\d.,]*/);
@@ -1071,7 +1083,7 @@ const parseMes = (t) => {
   let m = x.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (m) return +m[2];
   m = x.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return +m[2];
   for (let i = 0; i < 12; i++) if (x.indexOf(MESES[i]) >= 0) return i + 1;
-  const ab = {ene:1, feb:2, mar:3, dic:12}; m = x.match(/\b(ene|feb|mar|dic)\b/); if (m) return ab[m[1]];
+  const ab = {nov:11, dic:12, ene:1, feb:2}; m = x.match(/\b(nov|dic|ene|feb)\b/); if (m) return ab[m[1]];
   return null;
 };
 const loadScript = (src) => new Promise((ok, ko) => { const sc = document.createElement('script'); sc.src = src; sc.onload = () => ok(); sc.onerror = () => ko(new Error(src)); document.head.appendChild(sc); });
@@ -1114,7 +1126,7 @@ async function parseHmFile(f) {
   if (m) vals.pago = m[1];
   m = text.match(/(?:forma\s*de\s*)?factur\w*[^\n]{0,60}?(empresa|alumno|estudiante|particular)/i) || text.match(/(?:a\s*nombre\s*de|facturar\s*a)[^\n]{0,30}?(empresa|alumno|estudiante)/i);
   if (m) vals.fact = m[1];
-  m = text.match(/(?:primer[a]?\s*cuota|1\s*[ªa]?\s*cuota|inicio\s*(?:del\s*)?(?:pago|financiaci\w+))[^\n\d]{0,40}(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:enero|febrero|marzo|diciembre)(?:\s*(?:de\s*)?\d{4})?)/i);
+  m = text.match(/(?:primer[a]?\s*cuota|1\s*[ªa]?\s*cuota|inicio\s*(?:del\s*)?(?:pago|financiaci\w+))[^\n\d]{0,40}(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:noviembre|diciembre|enero|febrero)(?:\s*(?:de\s*)?\d{4})?)/i);
   if (m) vals.fecha = m[1];
   return {vals, chars:text.replace(/\s/g, '').length};
 }
@@ -1195,25 +1207,27 @@ const LEADS = [];
 const SIM_EXCEL = [];
 const D0 = {ccgg:1,pi:1,hm:1};
 const COM = [];
-const BASEP = {Individual:4990, Doble:3990};
+const BASEP = {Individual:5275, Doble:4275};
 const PAL = [['#ECE6FC','#7C5CE6','#4A31A8'],['#DCEBFE','#2F6FE0','#1D58C0'],['#DDF5E6','#2E9E5B','#176B3A'],['#FCE4F1','#D6409F','#9B2275'],['#FFF1D6','#E0A100','#8A5A00']];
 const FIN = {jc:2495, mu:4491, no:4241.5, mb:4990, jp:3591, dl:3990, sl:4241.5, ac:3192, da:4241.5};
 const DTO = {jc:50, mu:10, no:15, mb:0, jp:10, dl:0, sl:15, ac:20, da:15};
 const DTO_OPTS = [5, 10];
-const ASESORES = ['Ivonne Rose', 'Daniel Audrines', 'Rocío Alonso', 'María Gabriela Pan', 'Sin asignar'];
-const MONTHS = ['dic', 'ene', 'feb', 'mar'];
-const MONTH_LBL = {dic:'DIC', ene:'ENE', feb:'FEB', mar:'MAR'};
+const ASESORES = ['AC', 'XP', 'MG', 'Sin asignar'];
+const MONTHS = ['nov', 'dic', 'ene', 'feb'];
+const MONTH_LBL = {nov:'NOV', dic:'DIC', ene:'ENE', feb:'FEB'};
+// máximo de cuotas si se aplaza, según el mes de la 1.ª cuota (la última cuota es en febrero)
+const MAXC = {nov:3, dic:2};
 const INI_SEED = {};
 const CONTACT = {};
 const FECHA = {};
 LEADS.forEach(l => { const k = CONTACT[l.id]; l.tel = k[0]; l.email = k[1]; l.fecha = FECHA[l.id]; });
 COM.forEach(c => { c.fin = FIN[c.id] === undefined ? null : FIN[c.id]; c.dto = DTO[c.id] === undefined ? null : DTO[c.id]; });
-const SLOTS = [['pi','PI'],['dic','CUOTA DIC'],['ene','CUOTA ENE'],['feb','CUOTA FEB'],['mar','CUOTA MAR']];
-const CUTS = ['DIC','ENE','FEB','MAR'];
-const CUT_IDX = {dic:0,ene:1,feb:2,mar:3};
+const SLOTS = [['pi','PI'],['nov','CUOTA NOV'],['dic','CUOTA DIC'],['ene','CUOTA ENE'],['feb','CUOTA FEB']];
+const CUTS = ['NOV','DIC','ENE','FEB'];
+const CUT_IDX = {nov:0,dic:1,ene:2,feb:3};
 // Fechas de vencimiento (supuesto: día 5 de cada mes; ajustar a las reales)
-const DUE = {pi:0, dic:new Date(2025,11,5).getTime(), ene:new Date(2026,0,5).getTime(), feb:new Date(2026,1,5).getTime(), mar:new Date(2026,2,5).getTime()};
-const DOCS = [['ccgg','CCGG','Condiciones generales'],['pi','PI','Justificante de PI'],['hm','HM','Hoja de matrícula']];
+const DUE = {pi:0, nov:new Date(2026,10,5).getTime(), dic:new Date(2026,11,5).getTime(), ene:new Date(2027,0,5).getTime(), feb:new Date(2027,1,5).getTime()};
+const DOCS = [['ccgg','CCGG','Condiciones generales'],['pi','PI','Justificante de PI'],['hm','HM','Hoja de matrícula'],['dfe','DATOS FACTURACIÓN EMPRESA','Datos de facturación de la empresa (solo si factura a nombre de empresa)']];
 const FIELDS = [['nombre','Nombre completo'],['email','Email'],['tel','Teléfono'],['hab','Habitación'],['acomp','Acompañante']];
 const fmt = (n) => {
   const parts = Number(n).toFixed(2).split('.');
@@ -1331,7 +1345,7 @@ class Component extends DCLogic {
     const NOW = new Date(); const NOWT = NOW.getTime(); const todayTxt = NOW.toLocaleDateString('es-ES');
     const mktBg = this.props.mktBg || '#ECE6FC';
     const eff = (l) => s.estados[l.id] || l.estado;
-    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado})).concat(LEADS);
+    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual})).concat(LEADS);
     const noteOf = (id, def) => (s.notes[id] !== undefined ? s.notes[id] : def);
     const setNote = (id, v) => { const n = Object.assign({}, s.notes); n[id] = v; set({notes:n}); };
     const priceOf = (id, seedHab, seedDto, seedPar, seedIni, seedTipo) => {
@@ -1340,13 +1354,13 @@ class Component extends DCLogic {
       const pareja = p.pareja !== undefined ? p.pareja : (seedPar || '');
       const dto = p.dto !== undefined ? p.dto : seedDto;
       const bp = BASEP[hab];
-      return {hab, dto, fin:p.finOv != null ? p.finOv : ((bp && dto != null) ? Math.round(bp * (1 - dto / 100) * 100) / 100 : null), pareja, grp:p.grp, tipo:(p.tipo !== undefined ? p.tipo : (seedTipo || null)), ini:(p.ini !== undefined ? p.ini : (seedIni || null)), iniSet:p.ini !== undefined, bill:p.bill || null, hmv:p.hmv || null, ok:hab === 'Individual' || (hab === 'Doble' && pareja.trim() !== '')};
+      return {hab, dto, fin:p.finOv != null ? p.finOv : ((bp && dto != null) ? Math.round(bp * (1 - dto / 100) * 100) / 100 : null), pareja, grp:p.grp, tipo:(p.tipo !== undefined ? p.tipo : (seedTipo || null)), ini:(p.ini !== undefined ? p.ini : (seedIni || null)), iniSet:p.ini !== undefined, bill:p.bill || null, ncuotas:p.ncuotas || null, hmv:p.hmv || null, ok:hab === 'Individual' || (hab === 'Doble' && pareja.trim() !== '')};
     };
     const hmN = (id) => { const h = (s.prices[id] || {}).hmv; return h && !h.validated ? h.keys.length : 0; };
     const hmState = (id) => { const h = (s.prices[id] || {}).hmv; if (!h || !h.keys.length) return ''; return h.validated ? ' · validado por Admisiones el ' + (h.vdate || '') : ' · pisados por la HM, pendiente de validar por Admisiones'; };
     const asesView = (id, seed) => {
       const cur = s.asesores[id] !== undefined ? s.asesores[id] : seed;
-      return {asesor:cur, asesOpts:ASESORES.map(a => ({v:a, label:a, sel:cur === a})), onAses:(e) => { const o = Object.assign({}, s.asesores); o[id] = e.target.value; set({asesores:o}); }};
+      return {asesor:cur, asesOpts:(ASESORES.indexOf(cur) < 0 && cur ? ASESORES.concat([cur]) : ASESORES).map(a => ({v:a, label:a, sel:cur === a})), onAses:(e) => { const o = Object.assign({}, s.asesores); o[id] = e.target.value; set({asesores:o}); }};
     };
     // contador de plazas: cuenta personas (una pareja doble solo suma 2 cuando los dos están aceptados)
     const accLeads = allLeads.filter(l => eff(l) === 'Aceptado');
@@ -1391,6 +1405,23 @@ class Component extends DCLogic {
       o[tid] = Object.assign({}, pb, {grp:g, hab:'Doble', pareja:pr.pareja || nameById[src.id] || ''});
       set({prices:o, pairDrag:null});
     };
+    const maxC = (ini) => MAXC[ini] || 0;
+    const setTipo = (id, ini, t) => {
+      if (t === 'Aplazado') {
+        if (ini && !maxC(ini)) { flash('No se puede aplazar con la 1.ª cuota en ' + MONTH_LBL[ini] + ': la última cuota es en febrero.'); return false; }
+        setPrice(id, {tipo:t});
+      } else setPrice(id, {tipo:t || null, ncuotas:null});
+      return true;
+    };
+    const setIni = (id, pr, v) => {
+      const ini = v || null, pt = {ini};
+      if (pr.tipo === 'Aplazado' && ini) {
+        const mx = maxC(ini);
+        if (!mx) { pt.tipo = null; pt.ncuotas = null; flash('Con la 1.ª cuota en ' + MONTH_LBL[ini] + ' no se puede aplazar: se ha quitado «Aplazado».'); }
+        else if (pr.ncuotas && pr.ncuotas > mx) { pt.ncuotas = null; flash('Con la 1.ª cuota en ' + MONTH_LBL[ini] + ' el máximo es ' + mx + ' cuotas: elige de nuevo.'); }
+      }
+      setPrice(id, pt);
+    };
     const priceView = (id, pr, show) => {
       const hab = pr.hab, fin = pr.fin;
       const pend = pr.hmv && !pr.hmv.validated ? pr.hmv.keys : [];
@@ -1409,11 +1440,17 @@ class Component extends DCLogic {
         onDto:(e) => { const v = e.target.value; setPrice(id, {dto:v === '' ? null : Number(v)}); },
         tarOpts:[{v:'', label:'Elige tarifa', sel:hab !== 'Individual' && hab !== 'Doble'}, {v:'Individual', label:'Tarifa 1 · Individual', sel:hab === 'Individual'}, {v:'Doble', label:'Tarifa 2 · Doble', sel:hab === 'Doble'}],
         iniOpts:[{v:'', label:'Elige mes', sel:!pr.ini}].concat(MONTHS.map(mm => ({v:mm, label:MONTH_LBL[mm], sel:pr.ini === mm}))),
-        onIni:(e) => setPrice(id, {ini:e.target.value || null}),
+        onIni:(e) => setIni(id, pr, e.target.value),
         pagoOpts:[{v:'', label:'Elige forma', sel:pr.tipo !== 'Contado' && pr.tipo !== 'Aplazado'}, {v:'Contado', label:'Contado', sel:pr.tipo === 'Contado'}, {v:'Aplazado', label:'Aplazado', sel:pr.tipo === 'Aplazado'}],
-        onPago:(e) => setPrice(id, {tipo:e.target.value || null}),
+        onPago:(e) => { if (!setTipo(id, pr.ini, e.target.value || null)) e.target.value = pr.tipo || ''; },
+        showCuotas:pr.tipo === 'Aplazado',
+        cuotasDis:!pr.ini || !maxC(pr.ini),
+        ncOpts:[{v:'', label:'Nº cuotas', sel:!pr.ncuotas}].concat(Array.from({length:Math.max(0, maxC(pr.ini) - 1)}, (_, i) => i + 2).map(n => ({v:String(n), label:n + ' cuotas', sel:pr.ncuotas === n}))),
+        onNc:(e) => { const v = Number(e.target.value) || null; if (v && (!pr.ini || v > maxC(pr.ini))) { flash('Con esa fecha de 1.ª cuota no se puede elegir ese número de cuotas.'); e.target.value = pr.ncuotas ? String(pr.ncuotas) : ''; return; } setPrice(id, {ncuotas:v}); },
+        cuotasNote:!pr.ini ? 'Elige antes el mes de la 1.ª cuota' : (!maxC(pr.ini) ? 'No aplazable: última cuota en febrero' : 'Máx. ' + maxC(pr.ini) + ' cuotas'),
         billOpts:[{v:'', label:'Elige', sel:!pr.bill}, {v:'Alumno', label:'Alumno', sel:pr.bill === 'Alumno'}, {v:'Empresa', label:'Empresa', sel:pr.bill === 'Empresa'}],
         onBill:(e) => setPrice(id, {bill:e.target.value || null}),
+        billAlert:pr.bill === 'Empresa',
         pagoStyle:pend.indexOf('pago') >= 0 ? redSel : '', billStyle:pend.indexOf('fact') >= 0 ? redSel : '', iniStyle:pend.indexOf('fecha') >= 0 ? redSel : '',
         hmTxt:pend.length ? 'La HM ha modificado: ' + pend.map(k => HLBL[k] + (pr.hmv.was && pr.hmv.was[k] ? ' (antes ' + pr.hmv.was[k] + ')' : '')).join(' · ') : '',
         onValidate:() => setPrice(id, {hmv:Object.assign({}, pr.hmv, {validated:true, vdate:new Date().toLocaleDateString('es-ES')})}),
@@ -1439,9 +1476,10 @@ class Component extends DCLogic {
 
     // ---------- alumnos (Admisiones -> Adm. comercial)
     const fresh = allLeads.filter(l => eff(l) === 'Aceptado').map(l => ({
-      id:l.id, name:l.name, full:l.full, pais:l.pais, asesor:l.asesor, canal:l.canal, last:l.last, hab:priceOf(l.id,'—',null,'').hab, fin:(priceOf(l.id,'—',null,'').ok ? priceOf(l.id,'—',null,'').fin : null), acomp:priceOf(l.id,'—',null,'').pareja || '—', ini:priceOf(l.id,'—',null,'').ini, iniOverride:priceOf(l.id,'—',null,'').iniSet, grp:priceOf(l.id,'—',null,'').grp, tel:'—', email:'—',
-      sub:'Aceptado en Admisiones · importes por definir', tipo:priceOf(l.id,'—',null,'').tipo, amt:{pi:500,dic:0,ene:0,feb:0,mar:0}, extraAmt:0, docs:{}, paid:{}, refund:500, isNew:true, hm:null
+      id:l.id, name:l.name, full:l.full, pais:l.pais, asesor:l.asesor, canal:l.canal, last:l.last, hab:priceOf(l.id,'—',null,'').hab, fin:(priceOf(l.id,'—',null,'').ok ? priceOf(l.id,'—',null,'').fin : null), acomp:priceOf(l.id,'—',null,'').pareja || '—', ini:priceOf(l.id,'—',null,'').ini, iniOverride:priceOf(l.id,'—',null,'').iniSet, ncuotas:priceOf(l.id,'—',null,'').ncuotas, bill:priceOf(l.id,'—',null,'').bill, grp:priceOf(l.id,'—',null,'').grp, tel:'—', email:'—',
+      sub:'Aceptado en Admisiones · importes por definir', tipo:priceOf(l.id,'—',null,'').tipo, amt:{pi:500,nov:0,dic:0,ene:0,feb:0}, extraAmt:0, docs:{}, paid:{}, refund:500, isNew:true, hm:null
     }));
+    const docsFor = (c) => DOCS.filter(d => d[0] !== 'dfe' || c.bill === 'Empresa');
     const seeds = fresh.concat(COM.map(c => { const pr = priceOf(c.id, c.hab, c.dto, c.acomp === '—' ? '' : c.acomp, INI_SEED[c.id], c.tipo); return Object.assign({isNew:false, refund:c.refund || 500}, c, {tipo:pr.tipo, hab:pr.hab, fin:pr.ok ? pr.fin : null, acomp:pr.pareja || '—', ini:pr.ini, iniOverride:pr.iniSet, grp:pr.grp}); }));
     const mk = (c) => ({tipo:c.tipo || null, docs:Object.assign({}, c.docs), paid:Object.assign({}, c.paid), devuelto:false, devDate:'', flag:false, data:{nombre:c.full, email:c.email, tel:c.tel, hab:c.hab, acomp:c.acomp}, mod:{}});
     const get = (c) => Object.assign({}, s.cs[c.id] || mk(c), {tipo:c.tipo});
@@ -1455,8 +1493,8 @@ class Component extends DCLogic {
       if ((c.iniOverride || c.isNew) && c.fin != null && c.ini && st.tipo && st.tipo !== 'Cancelación') {
         calc = true;
         const rest = Math.max(0, Math.round((c.fin - piA) * 100) / 100);
-        const from = MONTHS.indexOf(c.ini), n = 4 - from;
-        amtE = {pi:piA, dic:0, ene:0, feb:0, mar:0}; extraE = 0;
+        const from = MONTHS.indexOf(c.ini), mxn = 4 - from, n = Math.max(1, Math.min(mxn, c.ncuotas || MAXC[c.ini] || mxn));
+        amtE = {pi:piA, nov:0, dic:0, ene:0, feb:0}; extraE = 0;
         if (st.tipo === 'Contado') amtE[c.ini] = rest;
         else { const each = Math.floor(rest / n * 100) / 100; MONTHS.slice(from).forEach((mm, i) => { amtE[mm] = i === n - 1 ? Math.round((rest - each * (n - 1)) * 100) / 100 : each; }); }
       }
@@ -1466,7 +1504,7 @@ class Component extends DCLogic {
         return {key:sl[0], label:sl[1], amount, on:!!st.paid[sl[0]] && amount > 0, due};
       });
       const withAmt = slots.filter(x => x.amount > 0);
-      const docsAll = !!(st.docs.ccgg && st.docs.pi && st.docs.hm);
+      const docsAll = docsFor(c).every(d => !!st.docs[d[0]]);
       const payAll = withAmt.length > 0 && withAmt.every(x => x.on);
       const esperado = cancel ? 0 : withAmt.reduce((a, x) => a + x.amount, 0) + extraE;
       const vencido = cancel ? 0 : withAmt.filter(x => x.due).reduce((a, x) => a + x.amount, 0);
@@ -1639,6 +1677,10 @@ class Component extends DCLogic {
       return Object.assign(priceView(l.id, pr, true), moroView(l.id, l.name, av.asesor, cur === 'Aceptado'), {
         tel:l.tel || '—', email:l.email || '—', copyTel:copy(l.tel || '—', 'teléfono'), copyEmail:copy(l.email || '—', 'email'),
         name:l.name, pais:l.pais, asesor:av.asesor, asesOpts:av.asesOpts, onAses:av.onAses, canal:l.canal, isNew:!!l.isNew, isLead:true, isStudent:false,
+        manual:!!l.manual, notManual:!l.manual, nameVal:l.full || '', telVal:l.tel || '', emailVal:l.email || '',
+        onName:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {full:e.target.value.trim(), name:e.target.value.trim()}) : x)}),
+        onTel:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {tel:e.target.value.trim()}) : x)}),
+        onEmail:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {email:e.target.value.trim()}) : x)}),
         last:noteOf(l.id, l.last), onLast:(e) => setNote(l.id, e.target.value),
         mora:false, moraAmt:'', hasMod:hmN(l.id) > 0, modN:hmN(l.id), hasClaim:!!openClaimOf(l.id), nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
         rowStyle:cur === 'Aceptado' ? 'background:#F0FAF4' : (l.isNew ? 'background:#F5F1FE' : ''),
@@ -1768,7 +1810,7 @@ class Component extends DCLogic {
       if (!st.data.hab || st.data.hab === '—') h.hab = 'Individual';
       return h;
     };
-    const HM_FIELDS = [['precio', 'Precio final', '4.990,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fact', 'Forma de facturación', 'Alumno / Empresa'], ['fecha', 'Fecha de la primera cuota', 'dd/mm/aaaa']];
+    const HM_FIELDS = [['precio', 'Precio final', '5.275,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fact', 'Forma de facturación', 'Alumno / Empresa'], ['fecha', 'Fecha de la primera cuota', 'dd/mm/aaaa']];
     const cmpHm = (mc, vals) => {
       const pr = priceOf(mc.id, '—', null, '');
       return HM_FIELDS.map(f => {
@@ -1831,10 +1873,10 @@ class Component extends DCLogic {
       const op = openClaimOf(c.id, 'pago');
       const lp = lastResolvedOf(c.id, 'pago');
       const payMissing = m.slots.filter(x => x.amount > 0 && !x.on).map(x => x.label);
-      const missing = DOCS.filter(d => !st.docs[d[0]]).map(d => d[1]);
-      const noneDocs = DOCS.every(d => !st.docs[d[0]]);
+      const missing = docsFor(c).filter(d => !st.docs[d[0]]).map(d => d[1]);
+      const noneDocs = docsFor(c).every(d => !st.docs[d[0]]);
       const claimLabel = noneDocs ? 'Reclamo de documentación' : 'Documentación incompleta';
-      const docs = DOCS.map(d => {
+      const docs = docsFor(c).map(d => {
         const on = !!st.docs[d[0]];
         return {
           label:d[1], sub:d[2], title:d[2], on, tick:on ? '✓' : '',
@@ -1846,7 +1888,7 @@ class Component extends DCLogic {
       const tipos = ['Contado','Aplazado','Cancelación'].map(t => {
         const act = m.tipo === t; const col = t === 'Cancelación' ? RED : ACC.com;
         return {
-          label:t, active:act, go:() => setPrice(c.id, {tipo:t}),
+          label:t, active:act, go:() => setTipo(c.id, c.ini, t),
           style:'border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;border:1px solid ' + (act ? col : LINE) + ';background:' + (act ? col : '#FFFFFF') + ';color:' + (act ? '#FFFFFF' : INK)
         };
       });
@@ -2031,6 +2073,7 @@ class Component extends DCLogic {
       roBanner:!!profile && !canEdit,
       roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (!s.hub ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
+      addManual:() => { set({added:[{id:'m' + Date.now().toString(36), full:'', name:'', pais:'', src:'Manual', fecha:new Date().toLocaleDateString('es-ES'), tel:'', email:'', manual:true, estado:'No contactado'}].concat(s.added), filter:'Todos'}); },
       histBg:(location.hash || '') === '#historico' ? '#EEF1FC' : 'rgba(27,33,80,.55)',
       histOpen:s.histOpen, histYears, noHist2:histYears.length === 0,
       openHist:() => { set({histOpen:true}); this.loadHist(); },
