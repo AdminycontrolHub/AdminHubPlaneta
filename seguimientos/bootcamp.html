@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 4</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 6</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -817,8 +817,8 @@ select.inp{cursor:pointer}
                 <button onClick="{{x.cmToggle}}" title="Añadir comentario" aria-label="Añadir comentario" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #CFC3F2;background:#fff;color:#5B3FC4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
                 <button onClick="{{x.rm}}" title="Eliminar" aria-label="Eliminar tema" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #F2A3B4;background:#fff;color:#B0203C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
               </div>
-              <sc-if value="{{x.hasComment}}" hint-placeholder-val="{{false}}"><div style="flex:1 1 100%;font-size:13px;color:#454E80;background:#F5F7FE;border-radius:8px;padding:7px 10px">💬 {{x.comment}}</div></sc-if>
-              <sc-if value="{{x.cmOpen}}" hint-placeholder-val="{{false}}"><input class="inp" aria-label="Comentario del tema" placeholder="Escribe un comentario y pulsa Enter…" value="{{x.comment}}" onChange="{{x.onComment}}" onKeyDown="{{x.onCmKey}}" style="flex:1 1 100%"></sc-if>
+              <sc-if value="{{x.hasComment}}" hint-placeholder-val="{{false}}"><div onClick="{{x.cmToggle}}" title="Clic para editar el comentario" style="flex:1 1 100%;font-size:13px;color:#454E80;background:#F5F7FE;border-radius:8px;padding:7px 10px;cursor:text">💬 {{x.comment}} <span style="color:var(--mut);font-size:11px">· editar</span></div></sc-if>
+              <sc-if value="{{x.cmOpen}}" hint-placeholder-val="{{false}}"><input class="inp" aria-label="Comentario del tema" placeholder="Escribe o edita el comentario (Enter para cerrar)…" value="{{x.comment}}" onChange="{{x.onComment}}" onKeyDown="{{x.onCmKey}}" onBlur="{{x.onCmBlur}}" style="flex:1 1 100%"></sc-if>
             </div>
           </sc-for>
           <sc-if value="{{noTopics}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Todavía no hay temas.</div></sc-if>
@@ -1302,16 +1302,36 @@ class Component extends DCLogic {
     this._onVis = () => { if (!document.hidden) this.pull(); };
     document.addEventListener('visibilitychange', this._onVis);
     window.addEventListener('focus', this._onVis);
+    this._onHide = () => { if (document.hidden) this.quickSave(); };
+    this._onPageHide = () => this.quickSave();
+    this._onBeforeUnload = (e) => { if (this.isDirty() || this._flushing) { this.quickSave(); e.preventDefault(); e.returnValue = ''; } };
+    document.addEventListener('visibilitychange', this._onHide);
+    window.addEventListener('pagehide', this._onPageHide);
+    window.addEventListener('beforeunload', this._onBeforeUnload);
+  }
+  quickSave(){
+    if (!this._base || !this.isDirty()) return;
+    Object.keys(KV_KEYS).forEach(key => {
+      const fields = KV_KEYS[key];
+      const snap = {}; fields.forEach(f => { snap[f] = jclone(this.state[f]); });
+      if (!fields.some(f => !jsonSame(snap[f], this._base[key][f]))) return;
+      const remote = (this._rc && this._rc[key]) || {};
+      const merged = {}; fields.forEach(f => { merged[f] = mergeField(f, this._base[key][f], snap[f], remote[f]); });
+      try { fetch(KV_URL, {method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body:JSON.stringify({key, value:Object.assign({}, remote, merged, {_t:Date.now()})})}); } catch (e) {}
+    });
   }
   componentWillUnmount(){
     clearInterval(this._timer); clearTimeout(this._deb);
     document.removeEventListener('visibilitychange', this._onVis);
     window.removeEventListener('focus', this._onVis);
+    document.removeEventListener('visibilitychange', this._onHide);
+    window.removeEventListener('pagehide', this._onPageHide);
+    window.removeEventListener('beforeunload', this._onBeforeUnload);
   }
   componentDidUpdate(){
     if (!this._base || !this.isDirty()) return;
     clearTimeout(this._deb);
-    this._deb = setTimeout(() => this.flush(), 500);
+    this._deb = setTimeout(() => this.flush(), 250);
   }
   isDirty(){
     return Object.keys(KV_KEYS).some(k => KV_KEYS[k].some(f => !jsonSame(this.state[f], this._base[k][f])));
@@ -1328,6 +1348,7 @@ class Component extends DCLogic {
       for (const key of Object.keys(KV_KEYS)) {
         const remote = await kvGet(key);
         if (!remote) continue;
+        this._rc = this._rc || {}; this._rc[key] = remote;
         // lectura obsoleta (KV es eventualmente consistente): si es anterior a nuestra última escritura, se ignora
         if (this._wt && this._wt[key] && (remote._t || 0) < this._wt[key]) continue;
         KV_KEYS[key].forEach(f => {
@@ -1351,12 +1372,15 @@ class Component extends DCLogic {
         const fields = KV_KEYS[key];
         const snap = {}; fields.forEach(f => { snap[f] = jclone(this.state[f]); });
         if (!fields.some(f => !jsonSame(snap[f], this._base[key][f]))) continue;
-        const remote = (await kvGet(key)) || {};
+        let remote = (await kvGet(key)) || {};
+        // lectura obsoleta del KV (más antigua que nuestra última escritura): usar lo último que escribimos, o se pisarían cambios recientes
+        if (this._wt && this._wt[key] && (remote._t || 0) < this._wt[key] && this._rc && this._rc[key]) remote = this._rc[key];
         const merged = {};
         fields.forEach(f => { merged[f] = mergeField(f, this._base[key][f], snap[f], remote[f]); });
         const _ts = Date.now();
         await kvSet(key, Object.assign({}, remote, merged, {_t:_ts}));
         this._wt = this._wt || {}; this._wt[key] = _ts;
+        this._rc = this._rc || {}; this._rc[key] = Object.assign({}, remote, merged, {_t:_ts});
         const patch = {};
         fields.forEach(f => {
           const cur = this.state[f];
@@ -2072,6 +2096,7 @@ class Component extends DCLogic {
       next:() => { const rest = s.topics.filter(y => y.id !== x.id), me = Object.assign({}, x, {moves:(x.moves || 0) + 1}); set({topics:rest.concat([me]), toast:'Tema movido a la próxima reunión.', toastTo:role}); },
       cmToggle:() => { const o = Object.assign({}, s.cmOpen); o[x.id] = !o[x.id]; set({cmOpen:o}); },
       onComment:(e) => set({topics:s.topics.map(y => y.id === x.id ? Object.assign({}, y, {comment:e.target.value}) : y)}),
+      onCmBlur:() => { const o = Object.assign({}, s.cmOpen); o[x.id] = false; setTimeout(() => this.setState({cmOpen:o}), 120); },
       onCmKey:(e) => { if (e.key === 'Enter') { const o = Object.assign({}, s.cmOpen); o[x.id] = false; set({cmOpen:o}); } },
       rm:() => { let ok = true; try { ok = confirm('¿Eliminar este tema? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({topics:s.topics.filter(y => y.id !== x.id)}); }
     }));
