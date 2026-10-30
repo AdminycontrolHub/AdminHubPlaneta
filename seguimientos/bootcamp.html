@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 3</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 4</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -806,9 +806,19 @@ select.inp{cursor:pointer}
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <sc-for list="{{topicList}}" as="x" hint-placeholder-count="3">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:10px 12px">
-              <span style="font-size:14px">{{x.text}}</span>
-              <button onClick="{{x.rm}}" aria-label="Quitar tema" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--mut)">Quitar</button>
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 10px;background:#fff;border-radius:10px;padding:10px 12px">
+              <div style="flex:1 1 200px;min-width:0">
+                <div style="font-size:14px;font-weight:600">{{x.text}}</div>
+                <div class="mono" style="font-size:11px;color:var(--mut);margin-top:2px">Introducido el {{x.date}}<sc-if value="{{x.hasMoved}}" hint-placeholder-val="{{false}}"> · {{x.moved}}</sc-if></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex:0 0 auto">
+                <button onClick="{{x.ok}}" title="Ok completado" aria-label="Ok completado" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #2E9E5B;background:#2E9E5B;color:#fff"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+                <button onClick="{{x.next}}" title="Mover a la próxima reunión" aria-label="Mover a la próxima reunión" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #B2DCE5;background:#fff;color:#0A6573"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+                <button onClick="{{x.cmToggle}}" title="Añadir comentario" aria-label="Añadir comentario" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #CFC3F2;background:#fff;color:#5B3FC4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+                <button onClick="{{x.rm}}" title="Eliminar" aria-label="Eliminar tema" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #F2A3B4;background:#fff;color:#B0203C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+              </div>
+              <sc-if value="{{x.hasComment}}" hint-placeholder-val="{{false}}"><div style="flex:1 1 100%;font-size:13px;color:#454E80;background:#F5F7FE;border-radius:8px;padding:7px 10px">💬 {{x.comment}}</div></sc-if>
+              <sc-if value="{{x.cmOpen}}" hint-placeholder-val="{{false}}"><input class="inp" aria-label="Comentario del tema" placeholder="Escribe un comentario y pulsa Enter…" value="{{x.comment}}" onChange="{{x.onComment}}" onKeyDown="{{x.onCmKey}}" style="flex:1 1 100%"></sc-if>
             </div>
           </sc-for>
           <sc-if value="{{noTopics}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Todavía no hay temas.</div></sc-if>
@@ -841,14 +851,7 @@ select.inp{cursor:pointer}
               </div>
               <span class="chip" style="{{x.deptStyle}}">{{x.dept}}</span>
               <span class="chip" style="{{x.statusStyle}}">{{x.status}}</span>
-              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                <button onClick="{{x.ok}}" title="Marcar como resuelta" aria-label="Resuelto" style="background:#2E9E5B;color:#fff;border:0;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Resuelto</button>
-                <button onClick="{{x.next}}" title="Mueve la fecha de revisión una semana" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--ink)">Mover a la próxima semana</button>
-                <button onClick="{{x.cmToggle}}" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--ink)">{{x.cmLbl}}</button>
-                <button onClick="{{x.rm}}" title="Eliminar tarea" aria-label="Eliminar tarea" style="background:#fff;border:1px solid #F2A3B4;border-radius:7px;padding:5px 8px;color:#B0203C;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-              </div>
-              <sc-if value="{{x.hasComment}}" hint-placeholder-val="{{false}}"><div style="flex:1 1 100%;font-size:13px;color:#454E80;background:#F5F7FE;border-radius:8px;padding:7px 10px">💬 {{x.comment}}</div></sc-if>
-              <sc-if value="{{x.cmOpen}}" hint-placeholder-val="{{false}}"><input class="inp" aria-label="Comentario de la tarea" placeholder="Escribe un comentario y pulsa Enter…" value="{{x.comment}}" onChange="{{x.onComment}}" onKeyDown="{{x.onCmKey}}" style="flex:1 1 100%"></sc-if>
+              <button onClick="{{x.rm}}" aria-label="Quitar tarea" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--mut)">Quitar</button>
             </div>
           </sc-for>
           <sc-if value="{{noTasks}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Todavía no hay tareas.</div></sc-if>
@@ -893,9 +896,9 @@ select.inp{cursor:pointer}
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
               <div style="flex:1 1 220px;font-size:14px;font-weight:600">{{h.text}}</div>
               <span class="chip" style="{{h.deptStyle}}">{{h.dept}}</span>
-              <span class="chip" style="background:#DDF5E6;color:#176B3A">Resuelta el {{h.resDate}}</span>
+              <span class="chip" style="background:#DDF5E6;color:#176B3A">Completado el {{h.resDate}}</span>
             </div>
-            <div class="mono" style="font-size:11px;color:var(--mut)">Asignada el {{h.date}}{{h.revTxt}}</div>
+            <div class="mono" style="font-size:11px;color:var(--mut)">{{h.dateLbl}} {{h.date}}{{h.revTxt}}</div>
             <div style="font-size:13px;line-height:1.45;white-space:pre-wrap">{{h.comment}}</div>
           </div>
         </sc-for>
@@ -1177,7 +1180,7 @@ const jclone = (v) => v === undefined ? undefined : JSON.parse(JSON.stringify(v)
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
 async function kvGet(key) {
-  const r = await fetch(KV_URL + '?key=' + encodeURIComponent(key), {cache:'no-store'});
+  const r = await fetch(KV_URL + '?key=' + encodeURIComponent(key) + '&_=' + Date.now());
   if (r.status === 404) return null;
   if (!r.ok) throw new Error('GET ' + r.status);
   const t = await r.text();
@@ -1313,9 +1316,9 @@ class Component extends DCLogic {
   isDirty(){
     return Object.keys(KV_KEYS).some(k => KV_KEYS[k].some(f => !jsonSame(this.state[f], this._base[k][f])));
   }
-  markSync(ok){
+  markSync(ok, err){
     const at = new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
-    if (this.state.syncOk !== ok || (ok && this.state.syncAt !== at)) this.setState({syncOk:ok, syncAt:ok ? at : this.state.syncAt});
+    if (this.state.syncOk !== ok || (ok && this.state.syncAt !== at) || (!ok && this.state.syncErr !== String(err && err.message || ''))) this.setState({syncOk:ok, syncAt:ok ? at : this.state.syncAt, syncErr:ok ? '' : String(err && err.message || '')});
   }
   async pull(){
     if (this._pulling || this._flushing || !this._base) return;
@@ -1336,7 +1339,7 @@ class Component extends DCLogic {
       if (Object.keys(patch).length) this.setState(patch);
       this.markSync(true);
       if (dirty || this.isDirty()) this.flush();
-    } catch (e) { this.markSync(false); }
+    } catch (e) { this.markSync(false, e); }
     finally { this._pulling = false; }
   }
   async flush(){
@@ -1364,7 +1367,7 @@ class Component extends DCLogic {
         if (Object.keys(patch).length) this.setState(patch);
       }
       this.markSync(true);
-    } catch (e) { this.markSync(false); this._again = false; setTimeout(() => this.flush(), 5000); }
+    } catch (e) { this.markSync(false, e); this._again = false; setTimeout(() => this.flush(), 5000); }
     finally { this._flushing = false; if (this._again) setTimeout(() => this.flush(), 150); }
   }
 
@@ -2062,7 +2065,16 @@ class Component extends DCLogic {
     }));
 
     // ---------- reuniones
-    const topicList = s.topics.map(x => ({text:x.text, rm:() => set({topics:s.topics.filter(y => y.id !== x.id)})}));
+    const topicList = s.topics.filter(x => !x.resolved).map(x => ({
+      text:x.text, date:x.date || todayTxt, comment:x.comment || '', hasComment:!!x.comment && !s.cmOpen[x.id], cmOpen:!!s.cmOpen[x.id],
+      hasMoved:!!x.moves, moved:'movido ' + (x.moves || 0) + (x.moves === 1 ? ' vez' : ' veces') + ' a la próxima reunión',
+      ok:() => set({topics:s.topics.map(y => y.id === x.id ? Object.assign({}, y, {resolved:true, date:y.date || todayTxt, resolvedDate:todayTxt, resolvedAt:Date.now()}) : y), toast:'Tema completado y guardado en el histórico.', toastTo:role}),
+      next:() => { const rest = s.topics.filter(y => y.id !== x.id), me = Object.assign({}, x, {moves:(x.moves || 0) + 1}); set({topics:rest.concat([me]), toast:'Tema movido a la próxima reunión.', toastTo:role}); },
+      cmToggle:() => { const o = Object.assign({}, s.cmOpen); o[x.id] = !o[x.id]; set({cmOpen:o}); },
+      onComment:(e) => set({topics:s.topics.map(y => y.id === x.id ? Object.assign({}, y, {comment:e.target.value}) : y)}),
+      onCmKey:(e) => { if (e.key === 'Enter') { const o = Object.assign({}, s.cmOpen); o[x.id] = false; set({cmOpen:o}); } },
+      rm:() => { let ok = true; try { ok = confirm('¿Eliminar este tema? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({topics:s.topics.filter(y => y.id !== x.id)}); }
+    }));
     const pad2 = (n) => String(n).padStart(2, '0');
     const todayIso = NOW.getFullYear() + '-' + pad2(NOW.getMonth() + 1) + '-' + pad2(NOW.getDate());
     const isoTxt = (v) => v ? v.split('-').reverse().join('/') : '';
@@ -2078,19 +2090,16 @@ class Component extends DCLogic {
         set({resDraft:o, tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {resolved:true, resolution:c, resolvedDate:todayTxt, resolvedAt:Date.now(), done:true, doneDate:y.done ? y.doneDate : todayTxt}) : y), toast:'Tarea resuelta y guardada en el histórico.', toastTo:role});
       }
     }));
-    const histList = s.tasks.filter(x => x.resolved).sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0)).map(x => ({
-      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, revTxt:x.review ? ' · Revisión prevista ' + isoTxt(x.review) : '', resDate:x.resolvedDate, comment:x.resolution
+    const histTasks = s.tasks.filter(x => x.resolved).sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0)).map(x => ({
+      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, revTxt:x.review ? ' · Revisión prevista ' + isoTxt(x.review) : '', resDate:x.resolvedDate, comment:x.resolution, _at:x.resolvedAt || 0, dateLbl:'Asignada el'
     }));
+    const histList = histTasks.concat(s.topics.filter(x => x.resolved).map(x => ({
+      text:x.text, dept:'Tema', deptStyle:'background:#FCE4F1;color:#9B2275', date:x.date || '', dateLbl:'Introducido el', revTxt:x.moves ? ' · movido ' + x.moves + (x.moves === 1 ? ' vez' : ' veces') : '', resDate:x.resolvedDate, comment:x.comment || '', _at:x.resolvedAt || 0
+    }))).sort((a, b) => (b._at || 0) - (a._at || 0));
     const taskList = s.tasks.filter(x => !x.resolved).map(x => ({
       text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, rev:x.review || '', onRev:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:e.target.value}) : y)}),
       status:x.done ? 'Gestionada el ' + x.doneDate : 'Pendiente', statusStyle:x.done ? 'background:#DDF5E6;color:#176B3A' : 'background:#FFF4D6;color:#8A5A00',
-      rm:() => { let ok = true; try { ok = confirm('¿Eliminar esta tarea? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({tasks:s.tasks.filter(y => y.id !== x.id), toast:'Tarea eliminada.', toastTo:role}); },
-      comment:x.comment || '', hasComment:!!x.comment && !s.cmOpen[x.id], cmOpen:!!s.cmOpen[x.id], cmLbl:s.cmOpen[x.id] ? 'Cerrar comentario' : (x.comment ? 'Editar comentario' : 'Añadir comentario'),
-      cmToggle:() => { const o = Object.assign({}, s.cmOpen); o[x.id] = !o[x.id]; set({cmOpen:o}); },
-      onComment:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {comment:e.target.value}) : y)}),
-      onCmKey:(e) => { if (e.key === 'Enter') { const o = Object.assign({}, s.cmOpen); o[x.id] = false; set({cmOpen:o}); } },
-      next:() => { const b = (x.review && x.review > todayIso) ? x.review : todayIso; const d = new Date(b + 'T12:00:00'); d.setDate(d.getDate() + 7); const nv = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:nv}) : y), toast:'Tarea movida: nueva revisión el ' + isoTxt(nv) + '.', toastTo:role}); },
-      ok:() => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {resolved:true, resolution:x.comment || 'Resuelta', resolvedDate:todayTxt, resolvedAt:Date.now(), done:true, doneDate:y.done ? y.doneDate : todayTxt}) : y), toast:'Tarea resuelta y guardada en el histórico.', toastTo:role})
+      rm:() => set({tasks:s.tasks.filter(y => y.id !== x.id)})
     }));
     const deptOpts = ['mkt', 'adm', 'com'].map(d => ({v:d, label:DEPT[d], sel:s.taskDept === d}));
 
@@ -2173,7 +2182,7 @@ class Component extends DCLogic {
       fromHub:!!s.hub,
       canLinks:profile === 'com',
       copyLink:() => copyExt(),
-      syncTxt:s.syncOk === null ? 'Conectando…' : (s.syncOk ? 'Sincronizado · ' + s.syncAt : 'Sin conexión · reintentando'),
+      syncTxt:s.syncOk === null ? 'Conectando…' : (s.syncOk ? 'Sincronizado · ' + s.syncAt : 'Sin conexión · ' + (s.syncErr || 'reintentando')),
       syncStyle:'font-weight:700;' + (s.syncOk === null ? 'background:#EEF1FD;color:#5A6393' : (s.syncOk ? 'background:#E3F6EA;color:#176B3A' : 'background:#FDECEF;color:#B0203C')),
       needProfile:!profile && !s.histOpen, profileOpts, hasProfile:!!profile,
       profileLbl:profile ? DEPT[profile] : '', profileChip:profile ? DEPT_CHIP[profile] : '',
@@ -2199,9 +2208,9 @@ class Component extends DCLogic {
         e.preventDefault();
         const x = (e.target.value || '').trim(); if (!x) return;
         e.target.value = '';
-        set({topics:s.topics.concat([{id:'p' + s.nextT, text:x}]), topicIn:'', nextT:s.nextT + 1});
+        set({topics:s.topics.concat([{id:'p' + s.nextT, text:x, date:todayTxt}]), topicIn:'', nextT:s.nextT + 1});
       }, onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
-      addTopic:() => { const x = s.topicIn.trim(); if (!x) return; set({topics:s.topics.concat([{id:'p' + s.nextT, text:x}]), topicIn:'', nextT:s.nextT + 1}); },
+      addTopic:() => { const x = s.topicIn.trim(); if (!x) return; set({topics:s.topics.concat([{id:'p' + s.nextT, text:x, date:todayTxt}]), topicIn:'', nextT:s.nextT + 1}); },
       addTask:() => { const x = s.taskIn.trim(); if (!x) return; set({tasks:s.tasks.concat([{id:'k' + s.nextT, text:x, dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:s.taskRev}]), taskIn:'', taskRev:'', nextT:s.nextT + 1, toast:'Tarea enviada a «Gestiones urgentes» de ' + DEPT[s.taskDept] + '.', toastTo:s.taskDept}); },
       mktRows,
       plazasBox:'display:flex;flex-direction:column;align-items:center;gap:8px;background:' + (extra > 0 ? '#FFF8E6' : '#fff') + ';border:' + (extra > 0 ? '2px solid #F5A300' : '1px solid var(--line)') + ';border-radius:16px;padding:12px 22px;min-width:220px;box-shadow:' + (extra > 0 ? '0 0 0 4px rgba(245,163,0,.22)' : '0 1px 2px rgba(60,70,160,.06)'),
