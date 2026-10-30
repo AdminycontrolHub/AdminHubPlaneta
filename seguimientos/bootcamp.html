@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley</div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 3</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -801,7 +801,7 @@ select.inp{cursor:pointer}
           <div style="color:var(--mut);font-size:13px;margin-top:2px">Cualquier departamento puede añadir temas</div>
         </div>
         <div style="display:flex;gap:8px">
-          <input class="inp" aria-label="Nuevo tema" value="{{topicIn}}" onChange="{{onTopicIn}}" placeholder="Escribe un tema…" style="flex:1 1 auto">
+          <input class="inp" aria-label="Nuevo tema" value="{{topicIn}}" onChange="{{onTopicIn}}" onKeyDown="{{onTopicKey}}" placeholder="Escribe un tema… (Enter para añadir)" style="flex:1 1 auto">
           <button onClick="{{addTopic}}" style="background:var(--reu);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:800;font-size:13px;white-space:nowrap">Añadir tema</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -1325,6 +1325,8 @@ class Component extends DCLogic {
       for (const key of Object.keys(KV_KEYS)) {
         const remote = await kvGet(key);
         if (!remote) continue;
+        // lectura obsoleta (KV es eventualmente consistente): si es anterior a nuestra última escritura, se ignora
+        if (this._wt && this._wt[key] && (remote._t || 0) < this._wt[key]) continue;
         KV_KEYS[key].forEach(f => {
           if (remote[f] === undefined || jsonSame(remote[f], this._base[key][f])) return;
           if (jsonSame(this.state[f], this._base[key][f])) { patch[f] = remote[f]; this._base[key][f] = jclone(remote[f]); }
@@ -1349,7 +1351,9 @@ class Component extends DCLogic {
         const remote = (await kvGet(key)) || {};
         const merged = {};
         fields.forEach(f => { merged[f] = mergeField(f, this._base[key][f], snap[f], remote[f]); });
-        await kvSet(key, Object.assign({}, remote, merged, {_t:Date.now()}));
+        const _ts = Date.now();
+        await kvSet(key, Object.assign({}, remote, merged, {_t:_ts}));
+        this._wt = this._wt || {}; this._wt[key] = _ts;
         const patch = {};
         fields.forEach(f => {
           const cur = this.state[f];
@@ -2183,7 +2187,20 @@ class Component extends DCLogic {
       dueList, noDue:dueList.length === 0, histList, noHist:histList.length === 0, todayLabel:todayTxt,
       topicList, noTopics:topicList.length === 0, taskList, noTasks:taskList.length === 0, deptOpts,
       topicIn:s.topicIn, taskIn:s.taskIn,
-      onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskKey:(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); setTimeout(() => { const b = document.getElementById('addTaskBtn'); if (b) b.click(); }, 80); } }, onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
+      onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskKey:(e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const x = (e.target.value || '').trim(); if (!x) return;
+        e.target.value = '';
+        set({tasks:s.tasks.concat([{id:'k' + s.nextT, text:x, dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:s.taskRev}]), taskIn:'', taskRev:'', nextT:s.nextT + 1, toast:'Tarea enviada a «Gestiones urgentes» de ' + DEPT[s.taskDept] + '.', toastTo:s.taskDept});
+      },
+      onTopicKey:(e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const x = (e.target.value || '').trim(); if (!x) return;
+        e.target.value = '';
+        set({topics:s.topics.concat([{id:'p' + s.nextT, text:x}]), topicIn:'', nextT:s.nextT + 1});
+      }, onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
       addTopic:() => { const x = s.topicIn.trim(); if (!x) return; set({topics:s.topics.concat([{id:'p' + s.nextT, text:x}]), topicIn:'', nextT:s.nextT + 1}); },
       addTask:() => { const x = s.taskIn.trim(); if (!x) return; set({tasks:s.tasks.concat([{id:'k' + s.nextT, text:x, dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:s.taskRev}]), taskIn:'', taskRev:'', nextT:s.nextT + 1, toast:'Tarea enviada a «Gestiones urgentes» de ' + DEPT[s.taskDept] + '.', toastTo:s.taskDept}); },
       mktRows,
