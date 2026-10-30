@@ -20,9 +20,6 @@ const KV_KEY = 'adminhub_bajas_comisiones_v1';
 const LOCAL_KEY = 'comisiones-db-v3'; // clave antigua en localStorage (solo para migrar datos existentes una vez)
 // Destino del botón "Volver a Bajas Comisiones" (relativo: la pantalla de Comisiones, en la misma carpeta)
 const HUB_URL = 'index.html';
-// Destino del botón "Volver al Hub" (relativo: el hub principal, una carpeta por encima de comisiones/)
-const HUB_HOME_URL = '../index.html';
-
 // Fusiona lo que hay en el KV con lo que acabamos de cambiar en esta pantalla, para no pisar lo de otra persona
 function mergeDb(r, l) {
   r = r || {};
@@ -813,10 +810,7 @@ function App() {
       <style>{css}</style>
       <div style={styles.bgGrid} />
       <div style={styles.shell}>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
-          <a href={HUB_HOME_URL} style={styles.backBtn}>
-            ⌂ Volver al Hub
-          </a>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <a href={HUB_URL} style={styles.backBtn}>
             ‹ Volver a Bajas Comisiones
           </a>
