@@ -3,8 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bajas de comisiones - OBS</title>
-<style>html,body{margin:0;background:#D2E8DE}</style>
+<title>Bajas de comisiones</title>
+<style>html,body{margin:0;background:var(--bg)}</style>
+<script>
+// Marca de esta pantalla: ?marca=obs | inesdi | esdesign | ucma  (sin parámetro: OBS)
+const BRANDS = {
+  obs: { nombre: "OBS", theme: { bg: "#D2E8DE", panel: "#E9F5EF", border: "#B4D3C5", border2: "#A9CDBD", inputBg: "#F5FBF8", text: "#12302A", muted: "#4B7364", miniBorder: "#C3DCCF", resizer: "#9CC2B2", cyanBg: "#E3F3EE", purpleBg: "#EAF1F0", accent: "#0A6D62", "accent-rgb": "10,109,98" } },
+  inesdi: { nombre: "INESDI", theme: { bg: "#E3DDF2", panel: "#F0ECF9", border: "#CBBFE5", border2: "#BEAFDF", inputBg: "#F8F6FD", text: "#251944", muted: "#6A5C94", miniBorder: "#D5CBEA", resizer: "#B9A9DC", cyanBg: "#EAE4F7", purpleBg: "#ECE8F6", accent: "#6A3FC4", "accent-rgb": "106,63,196" } },
+  esdesign: { nombre: "ESDesign", theme: { bg: "#F4E6CE", panel: "#FBF4E7", border: "#E5D0A8", border2: "#DCC08E", inputBg: "#FEFAF3", text: "#3E2A0C", muted: "#8A6A36", miniBorder: "#EBDCBD", resizer: "#D6BC8A", cyanBg: "#F8EDD8", purpleBg: "#F6EEDF", accent: "#B96A00", "accent-rgb": "185,106,0" } },
+  ucma: { nombre: "UCMA", theme: { bg: "#D5E6F4", panel: "#EAF3FA", border: "#B2CEE6", border2: "#A2C3DE", inputBg: "#F4F9FD", text: "#12293F", muted: "#4B6C8A", miniBorder: "#C3D9EB", resizer: "#9DBDD9", cyanBg: "#E1EEF8", purpleBg: "#E6EEF6", accent: "#1E6DB3", "accent-rgb": "30,109,179" } },
+};
+const _marcaParam = new URLSearchParams(location.search).get("marca");
+const BRAND_SLUG = _marcaParam ? String(_marcaParam).trim().toLowerCase() : "obs";
+const BRAND_INVALID = !BRANDS[BRAND_SLUG];
+const BRAND = BRANDS[BRAND_INVALID ? "obs" : BRAND_SLUG];
+(function () {
+  const root = document.documentElement.style;
+  Object.keys(BRAND.theme).forEach((k) => root.setProperty("--" + k, BRAND.theme[k]));
+  document.title = "Bajas de comisiones - " + BRAND.nombre;
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
@@ -16,8 +34,8 @@
 // Almacenamiento compartido: el histórico vive en el KV del Worker (/kv), igual que el resto de Admin Hub.
 // Se mantiene la interfaz window.storage.get/set para no tocar el código de la app.
 const WORKER_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
-const KV_KEY = 'adminhub_bajas_comisiones_v1';
-const LOCAL_KEY = 'comisiones-db-v3'; // clave antigua en localStorage (solo para migrar datos existentes una vez)
+const KV_KEY = BRAND_SLUG === 'obs' || BRAND_INVALID ? 'adminhub_bajas_comisiones_v1' : 'adminhub_bajas_comisiones_' + BRAND_SLUG + '_v1';
+const LOCAL_KEY = BRAND_SLUG === 'obs' || BRAND_INVALID ? 'comisiones-db-v3' : 'comisiones-db-v3-' + BRAND_SLUG; // clave antigua en localStorage (solo para migrar datos existentes una vez)
 // Destino del botón "Volver a Bajas Comisiones" (relativo: la pantalla de Comisiones, en la misma carpeta)
 const HUB_URL = 'index.html';
 // Fusiona lo que hay en el KV con lo que acabamos de cambiar en esta pantalla, para no pisar lo de otra persona
@@ -621,7 +639,7 @@ function App() {
     ws["!cols"] = [30, 22, 26, 16, 12, 12, 14, 14, 30, 14, 12, 30, 16, 14].map((w) => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Desglose de bajas");
-    XLSX.writeFile(wb, `desglose_bajas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `desglose_bajas_${BRAND_SLUG === "obs" ? "" : BRAND_SLUG + "_"}${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
   function toggleAplica(bajaId, role, checked) {
@@ -639,6 +657,24 @@ function App() {
     await persist(emptyDb, true);
     setStatus({ type: "ok", text: "Histórico borrado." });
     setBajasStatus(null);
+  }
+
+  async function cerrarCalculo() {
+    // Cierre de cálculo: deja la herramienta a 0 para todo el equipo. Misma contraseña que el resto de Admin Hub
+    const pwd = prompt("Contraseña para cerrar el cálculo (la herramienta quedará a 0 para todo el equipo):");
+    if (pwd === null) return;
+    if (pwd !== RESET_PASSWORD) { alert("Contraseña incorrecta."); return; }
+    if (!confirm("¿Cerrar el cálculo? Se borrarán tramos, bajas y asignaciones, y la herramienta quedará a 0. No se puede deshacer.")) return;
+    await persist(emptyDb, true);
+    setSearch("");
+    setEquipoFilter("Todos");
+    setMesFilter("Todos");
+    setTipologiaFilter("");
+    setMotivoFilter("");
+    setFallbackMonth("");
+    setAssignInputs({});
+    setBajasStatus(null);
+    setStatus({ type: "ok", text: "Cálculo cerrado. La herramienta está a 0." });
   }
 
   // ---------- derived data ----------
@@ -810,7 +846,10 @@ function App() {
       <style>{css}</style>
       <div style={styles.bgGrid} />
       <div style={styles.shell}>
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
+          <button onClick={cerrarCalculo} style={{ ...styles.backBtn, cursor: "pointer", fontFamily: "'Inter', sans-serif", borderColor: "#B01E58", color: "#B01E58", background: "rgba(176,30,88,0.08)" }}>
+            🔒 Cerrar cálculo
+          </button>
           <a href={HUB_URL} style={styles.backBtn}>
             ‹ Volver a Bajas Comisiones
           </a>
@@ -820,7 +859,7 @@ function App() {
           <div style={styles.headerLeft}>
             <div style={styles.headerIcon}>%</div>
             <div>
-              <div style={styles.headerTitle}>Bajas de comisiones - OBS</div>
+              <div style={styles.headerTitle}>{"Bajas de comisiones - " + BRAND.nombre}</div>
               <div style={styles.headerSub}>Administración comercial</div>
             </div>
           </div>
@@ -830,7 +869,7 @@ function App() {
         <div style={styles.row}>
           <div style={{ ...styles.panel, flex: 2 }}>
             <div style={styles.panelHead}>
-              <span style={styles.dot("#0A6D62")} />
+              <span style={styles.dot("var(--accent)")} />
               <span style={styles.panelHeadText}>FILTROS</span>
             </div>
             <div style={styles.filtersGrid}>
@@ -892,7 +931,7 @@ function App() {
         <div style={styles.kpiRow}>
           <div style={{ ...styles.kpiCard, flex: "0 0 170px" }}>
             <div style={styles.kpiLabel}>ASESORES (bajas)</div>
-            <div style={{ ...styles.kpiValue, color: "#0A6D62" }}>{kpis.totalAdvisors}</div>
+            <div style={{ ...styles.kpiValue, color: "var(--accent)" }}>{kpis.totalAdvisors}</div>
           </div>
           <div style={{ ...styles.kpiCard, flex: "1 1 480px" }}>
             <div style={styles.kpiLabel}>A DESCONTAR TOTAL (filtro)</div>
@@ -976,11 +1015,11 @@ function App() {
         )}
 
         {(db.bajas || []).length > 0 && (
-          <div style={{ ...styles.panel, border: "1.5px solid #0A6D62", padding: "14px 20px" }}>
+          <div style={{ ...styles.panel, border: "1.5px solid var(--accent)", padding: "14px 20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10, flexWrap: "wrap" }}>
-              <span style={styles.dot("#0A6D62")} />
+              <span style={styles.dot("var(--accent)")} />
               <span style={styles.panelHeadText}>FILTROS DE BAJAS</span>
-              <span style={{ marginLeft: "auto", fontSize: 12, color: "#4B7364" }}>
+              <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}>
                 Mostrando {enrichedBajas.length} de {enrichedAll.length} bajas ·{" "}
                 <button onClick={clearBajaFilters} style={styles.linkBtn}>Limpiar filtros</button>
               </span>
@@ -1020,7 +1059,7 @@ function App() {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th colSpan={3} style={{ ...styles.thc, height: 34, textAlign: "center", color: "#12302A" }}>APLICA</th>
+                  <th colSpan={3} style={{ ...styles.thc, height: 34, textAlign: "center", color: "var(--text)" }}>APLICA</th>
                 </tr>
                 <tr>
                   <th style={{ ...styles.thc, height: 34, textAlign: "center", color: "#B01E58" }}>AC</th>
@@ -1072,8 +1111,8 @@ function App() {
 
           <div style={{ ...styles.panelCyan, width: 290, flex: "0 0 290px", padding: "14px 10px" }}>
             <div style={styles.cardHead}>
-              <span style={styles.dot("#0A6D62")} />
-              <span style={{ ...styles.panelHeadText, color: "#0A6D62" }}>TIPOLOGÍA Y MOTIVO</span>
+              <span style={styles.dot("var(--accent)")} />
+              <span style={{ ...styles.panelHeadText, color: "var(--accent)" }}>TIPOLOGÍA Y MOTIVO</span>
             </div>
             <div style={styles.cardHint}>Datos del Excel de bajas</div>
             <table style={{ ...styles.table, tableLayout: "fixed" }}>
@@ -1083,8 +1122,8 @@ function App() {
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ ...styles.thc, height: 68, color: "#0A6D62", whiteSpace: "normal", lineHeight: 1.25 }}>TIPOLOGIA MATRICULA</th>
-                  <th style={{ ...styles.thc, height: 68, color: "#0A6D62", whiteSpace: "normal", lineHeight: 1.25 }}>MOTIVO DE BAJA</th>
+                  <th style={{ ...styles.thc, height: 68, color: "var(--accent)", whiteSpace: "normal", lineHeight: 1.25 }}>TIPOLOGIA MATRICULA</th>
+                  <th style={{ ...styles.thc, height: 68, color: "var(--accent)", whiteSpace: "normal", lineHeight: 1.25 }}>MOTIVO DE BAJA</th>
                 </tr>
               </thead>
               <tbody>
@@ -1103,7 +1142,7 @@ function App() {
               {bajasFlat.length > 0 && (
                 <tfoot>
                   <tr>
-                    <td style={{ ...styles.tdc, borderBottom: "none", borderTop: "1.5px solid #0A6D62" }} colSpan={2}></td>
+                    <td style={{ ...styles.tdc, borderBottom: "none", borderTop: "1.5px solid var(--accent)" }} colSpan={2}></td>
                   </tr>
                 </tfoot>
               )}
@@ -1129,10 +1168,10 @@ function App() {
               <thead>
                 <tr>
                   {[
-                    ["ASESOR", "#4B7364"], ["ID OPORT.", "#4B7364"], ["ORIGEN", "#4B7364"], ["FACT. NETA", "#4B7364"],
+                    ["ASESOR", "var(--muted)"], ["ID OPORT.", "var(--muted)"], ["ORIGEN", "var(--muted)"], ["FACT. NETA", "var(--muted)"],
                     ["TR.", "#B01E58"], ["DESC. AC", "#B01E58"],
-                    ["JEFE EQUIPO", "#4B7364"], ["TR.", "#5A36B8"], ["DESC. JE", "#5A36B8"],
-                    ["DIRECTOR", "#4B7364"], ["TR.", "#0A6D62"], ["DESC. DV", "#0A6D62"],
+                    ["JEFE EQUIPO", "var(--muted)"], ["TR.", "#5A36B8"], ["DESC. JE", "#5A36B8"],
+                    ["DIRECTOR", "var(--muted)"], ["TR.", "#0A6D62"], ["DESC. DV", "#0A6D62"],
                   ].map(([label, color], i) => (
                     <th key={i} style={{ ...styles.thc, height: 68, color }}>
                       {label}
@@ -1152,7 +1191,7 @@ function App() {
                 {bajasFlat.map((b) => (
                   <tr key={b.id} style={{ background: b.bloqueada ? "rgba(154,106,0,0.07)" : "transparent" }}>
                     <td style={{ ...styles.tdc, opacity: b.aplicaAsesor ? 1 : 0.4, textDecoration: b.aplicaAsesor ? "none" : "line-through" }} title={b.asesorNombreFinal}>{b.asesorNombreFinal}</td>
-                    <td style={{ ...styles.tdc, fontFamily: "'IBM Plex Mono', monospace", color: "#4B7364" }}>{b.idOportunidad || "—"}</td>
+                    <td style={{ ...styles.tdc, fontFamily: "'IBM Plex Mono', monospace", color: "var(--muted)" }}>{b.idOportunidad || "—"}</td>
                     <td style={styles.tdc}>{fmtMes(b.mesOrigen)}</td>
                     <td style={styles.tdc}>{fmtNum(b.factNeta)}</td>
                     <td style={{ ...styles.tdc, opacity: b.aplicaAsesor ? 1 : 0.4 }}><TramoChip v={b.tramoAsesor} /></td>
@@ -1169,7 +1208,7 @@ function App() {
               {bajasFlat.length > 0 && (
                 <tfoot>
                   <tr>
-                    <td style={{ ...styles.tdc, ...styles.tfootCell, fontWeight: 700, color: "#4B7364" }} colSpan={5}>TOTAL (LÍNEAS MARCADAS)</td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell, fontWeight: 700, color: "var(--muted)" }} colSpan={5}>TOTAL (LÍNEAS MARCADAS)</td>
                     <td style={{ ...styles.tdc, ...styles.tfootCell, color: "#B01E58", fontWeight: 700 }}>{fmtNum(kpis.asesores)}</td>
                     <td style={{ ...styles.tdc, ...styles.tfootCell }} colSpan={2}></td>
                     <td style={{ ...styles.tdc, ...styles.tfootCell, color: "#5A36B8", fontWeight: 700 }}>{fmtNum(kpis.jefes)}</td>
@@ -1193,10 +1232,10 @@ function App() {
         {/* DETALLE DE TRAMOS */}
         <div style={styles.panel}>
           <button style={{ ...styles.warnHead, padding: 0 }} onClick={() => setShowTramos((v) => !v)}>
-            <span style={styles.dot("#0A6D62")} />
+            <span style={styles.dot("var(--accent)")} />
             <span style={styles.panelHeadText}>DETALLE DE TRAMOS POR ASESOR Y MES</span>
             <span style={styles.panelHeadCount}>{flatTramoRows.length} registros</span>
-            <span style={{ marginLeft: 8, color: "#0A6D62" }}>{showTramos ? "−" : "+"}</span>
+            <span style={{ marginLeft: 8, color: "var(--accent)" }}>{showTramos ? "−" : "+"}</span>
           </button>
           {showTramos && (
             <div style={{ ...styles.tableWrap, marginTop: 14 }}>
@@ -1222,8 +1261,8 @@ function App() {
                   {flatTramoRows.map((r) => (
                     <tr key={r.codigo + r.mes}>
                       <td style={styles.td}>{fmtMes(r.mes)}</td>
-                      <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#4B7364" }}>{r.codigo}</td>
-                      <td style={{ ...styles.td, color: "#12302A" }}>{r.nombre}</td>
+                      <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "var(--muted)" }}>{r.codigo}</td>
+                      <td style={{ ...styles.td, color: "var(--text)" }}>{r.nombre}</td>
                       <td style={styles.td}>{r.equipo || "—"}</td>
                       <td style={styles.td}>{fmtEUR(r.factNeta)}</td>
                       <td style={styles.td}>
@@ -1248,61 +1287,61 @@ function App() {
 }
 
 const styles = {
-  app: { position: "relative", minHeight: "700px", background: "#D2E8DE", color: "#12302A", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
-  bgGrid: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(10,109,98,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(10,109,98,0.04) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none" },
+  app: { position: "relative", minHeight: "700px", background: "var(--bg)", color: "var(--text)", fontFamily: "'Inter', sans-serif", padding: "28px 32px", overflow: "auto" },
+  bgGrid: { position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(var(--accent-rgb),0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.04) 1px, transparent 1px)", backgroundSize: "36px 36px", pointerEvents: "none" },
   shell: { position: "relative", maxWidth: 1240, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 },
-  headerPanel: { background: "#E9F5EF", border: "1px solid #A9CDBD", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  headerPanel: { background: "var(--panel)", border: "1px solid var(--border2)", borderRadius: 16, padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
   headerLeft: { display: "flex", alignItems: "center", gap: 14 },
   headerIcon: { width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #B01E58", color: "#B01E58", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 17, fontFamily: "'IBM Plex Mono', monospace" },
   headerTitle: { fontSize: 18, fontWeight: 700 },
-  headerSub: { fontSize: 11.5, color: "#4B7364", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
-  headerRight: { fontSize: 12, color: "#4B7364", fontFamily: "'IBM Plex Mono', monospace" },
+  headerSub: { fontSize: 11.5, color: "var(--muted)", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
+  headerRight: { fontSize: 12, color: "var(--muted)", fontFamily: "'IBM Plex Mono', monospace" },
   row: { display: "flex", gap: 16, flexWrap: "wrap" },
-  panel: { background: "#E9F5EF", border: "1px solid #B4D3C5", borderRadius: 16, padding: 20, minWidth: 260 },
-  panelPink: { background: "#E9F5EF", border: "1px solid rgba(176,30,88,0.35)", borderRadius: 16, padding: "20px 0" },
-  panelPurple: { background: "#EAF1F0", border: "1px solid rgba(90,54,184,0.35)", borderRadius: 16, padding: "16px 0" },
-  panelCyan: { background: "#E3F3EE", border: "1px solid rgba(10,109,98,0.4)", borderRadius: 16, padding: "16px 0" },
+  panel: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 16, padding: 20, minWidth: 260 },
+  panelPink: { background: "var(--panel)", border: "1px solid rgba(176,30,88,0.35)", borderRadius: 16, padding: "20px 0" },
+  panelPurple: { background: "var(--purpleBg)", border: "1px solid rgba(90,54,184,0.35)", borderRadius: 16, padding: "16px 0" },
+  panelCyan: { background: "var(--cyanBg)", border: "1px solid rgba(var(--accent-rgb),0.4)", borderRadius: 16, padding: "16px 0" },
   panelHead: { display: "flex", alignItems: "center", gap: 9, marginBottom: 14, padding: "0 20px" },
-  panelHeadText: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, color: "#0A6D62" },
-  panelHeadCount: { marginLeft: "auto", fontSize: 11, color: "#4B7364", fontFamily: "'IBM Plex Mono', monospace" },
+  panelHeadText: { fontSize: 12, fontWeight: 700, letterSpacing: 1.2, color: "var(--accent)" },
+  panelHeadCount: { marginLeft: "auto", fontSize: 11, color: "var(--muted)", fontFamily: "'IBM Plex Mono', monospace" },
   dot: (color) => ({ width: 7, height: 7, borderRadius: "50%", background: color, display: "inline-block" }),
   filtersGrid: { display: "flex", gap: 14, flexWrap: "wrap" },
-  fieldLabel: { fontSize: 10.5, color: "#4B7364", letterSpacing: 1, fontWeight: 600, marginBottom: 6 },
-  select: { width: "100%", background: "#F5FBF8", border: "1px solid #A9CDBD", borderRadius: 8, color: "#12302A", padding: "8px 10px", fontSize: 13, fontFamily: "'Inter', sans-serif", boxSizing: "border-box" },
+  fieldLabel: { fontSize: 10.5, color: "var(--muted)", letterSpacing: 1, fontWeight: 600, marginBottom: 6 },
+  select: { width: "100%", background: "var(--inputBg)", border: "1px solid var(--border2)", borderRadius: 8, color: "var(--text)", padding: "8px 10px", fontSize: 13, fontFamily: "'Inter', sans-serif", boxSizing: "border-box" },
   uploadBtns: { display: "flex", gap: 10, marginBottom: 6 },
-  btnPrimary: { flex: 1, background: "#0A6D62", color: "#FFFFFF", textAlign: "center", padding: "9px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  btnPrimary: { flex: 1, background: "var(--accent)", color: "#FFFFFF", textAlign: "center", padding: "9px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
   btnGhost: { flex: 1, background: "transparent", border: "1.5px solid #B01E58", color: "#B01E58", textAlign: "center", padding: "8px 10px", borderRadius: 8, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
   statusMsg: { fontSize: 11.5, lineHeight: 1.4, marginTop: 4 },
   kpiRow: { display: "flex", gap: 16, flexWrap: "wrap" },
-  kpiCard: { flex: "1 1 200px", background: "#E9F5EF", border: "1px solid #B4D3C5", borderRadius: 14, padding: "16px 18px" },
-  kpiLabel: { fontSize: 10.5, color: "#4B7364", letterSpacing: 1, fontWeight: 600, marginBottom: 8 },
+  kpiCard: { flex: "1 1 200px", background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 14, padding: "16px 18px" },
+  kpiLabel: { fontSize: 10.5, color: "var(--muted)", letterSpacing: 1, fontWeight: 600, marginBottom: 8 },
   kpiValue: { fontSize: 26, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace" },
   warnPanel: { background: "#F6EFD8", border: "1px solid rgba(154,106,0,0.4)", borderRadius: 14, overflow: "hidden" },
   warnHead: { width: "100%", display: "flex", alignItems: "center", gap: 9, background: "transparent", border: "none", padding: "14px 20px", cursor: "pointer", textAlign: "left" },
   tableWrap: { overflowX: "auto", padding: "0 20px 16px 20px" },
   table: { width: "100%", borderCollapse: "collapse" },
-  th: { textAlign: "left", fontSize: 10, color: "#4B7364", fontWeight: 700, letterSpacing: 0.5, padding: "8px 10px", borderBottom: "1px solid #B4D3C5", whiteSpace: "nowrap" },
-  td: { fontSize: 12.5, padding: "8px 10px", borderBottom: "1px solid rgba(10,109,98,0.12)", color: "#12302A", whiteSpace: "nowrap" },
+  th: { textAlign: "left", fontSize: 10, color: "var(--muted)", fontWeight: 700, letterSpacing: 0.5, padding: "8px 10px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" },
+  td: { fontSize: 12.5, padding: "8px 10px", borderBottom: "1px solid rgba(var(--accent-rgb),0.12)", color: "var(--text)", whiteSpace: "nowrap" },
   chip: { color: "#FFFFFF", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, fontFamily: "'IBM Plex Mono', monospace" },
-  summaryRow: { display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13, borderBottom: "1px solid rgba(10,109,98,0.15)" },
-  emptyHint: { color: "#4B7364", fontSize: 12, padding: "6px 0" },
-  smallHint: { fontSize: 12, color: "#4B7364", marginTop: 10, lineHeight: 1.5 },
+  summaryRow: { display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13, borderBottom: "1px solid rgba(var(--accent-rgb),0.15)" },
+  emptyHint: { color: "var(--muted)", fontSize: 12, padding: "6px 0" },
+  smallHint: { fontSize: 12, color: "var(--muted)", marginTop: 10, lineHeight: 1.5 },
   cardHead: { display: "flex", alignItems: "center", gap: 9, height: 34, padding: "0 4px" },
-  cardHint: { fontSize: 11, color: "#4B7364", height: 26, lineHeight: "26px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 4px" },
-  thc: { textAlign: "left", fontSize: 10, color: "#4B7364", fontWeight: 700, letterSpacing: 0.3, padding: "0 6px", borderBottom: "1px solid #B4D3C5", whiteSpace: "nowrap", overflow: "visible", position: "relative", height: 34 },
-  tdc: { fontSize: 12, padding: "0 6px", height: 34, borderBottom: "1px solid rgba(10,109,98,0.12)", color: "#12302A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  cardHint: { fontSize: 11, color: "var(--muted)", height: 26, lineHeight: "26px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 4px" },
+  thc: { textAlign: "left", fontSize: 10, color: "var(--muted)", fontWeight: 700, letterSpacing: 0.3, padding: "0 6px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap", overflow: "visible", position: "relative", height: 34 },
+  tdc: { fontSize: 12, padding: "0 6px", height: 34, borderBottom: "1px solid rgba(var(--accent-rgb),0.12)", color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
   tfootCell: { borderBottom: "none", borderTop: "1.5px solid #B01E58" },
-  resizer: { position: "absolute", right: -3, top: 0, bottom: 0, width: 7, cursor: "col-resize", zIndex: 2, borderRight: "2px solid #9CC2B2", boxSizing: "border-box" },
+  resizer: { position: "absolute", right: -3, top: 0, bottom: 0, width: 7, cursor: "col-resize", zIndex: 2, borderRight: "2px solid var(--resizer)", boxSizing: "border-box" },
   toggleBtn: { background: "transparent", border: "1px solid", borderRadius: 8, padding: "6px 12px", fontSize: 11.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" },
   exportBtn: { display: "flex", alignItems: "center", gap: 6, background: "rgba(46,125,50,0.08)", border: "1.5px solid #2E7D32", color: "#2E7D32", borderRadius: 8, padding: "5px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" },
-  assignInput: { width: "100%", background: "#FFFFFF", border: "1px solid #C9A64A", borderRadius: 6, color: "#12302A", padding: "6px 8px", fontSize: 12, boxSizing: "border-box" },
-  assignBtn: { background: "#0A6D62", color: "#FFFFFF", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" },
+  assignInput: { width: "100%", background: "#FFFFFF", border: "1px solid #C9A64A", borderRadius: 6, color: "var(--text)", padding: "6px 8px", fontSize: 12, boxSizing: "border-box" },
+  assignBtn: { background: "var(--accent)", color: "#FFFFFF", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" },
   miniRow: { display: "flex", gap: 10, flex: 1, flexWrap: "wrap" },
-  miniCard: { flex: "1 1 130px", background: "#F5FBF8", border: "1px solid #C3DCCF", borderRadius: 8, padding: "7px 10px" },
-  miniLabel: { fontSize: 10, color: "#4B7364", letterSpacing: 0.5, fontWeight: 600 },
+  miniCard: { flex: "1 1 130px", background: "var(--inputBg)", border: "1px solid var(--miniBorder)", borderRadius: 8, padding: "7px 10px" },
+  miniLabel: { fontSize: 10, color: "var(--muted)", letterSpacing: 0.5, fontWeight: 600 },
   miniValue: { fontSize: 15, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace" },
-  backBtn: { display: "inline-flex", alignItems: "center", gap: 8, border: "1.5px solid #0A6D62", background: "rgba(10,109,98,0.08)", color: "#0A6D62", borderRadius: 10, padding: "8px 18px", fontSize: 13, fontWeight: 600, textDecoration: "none" },
-  linkBtn: { background: "transparent", border: "none", color: "#0A6D62", textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0 },
+  backBtn: { display: "inline-flex", alignItems: "center", gap: 8, border: "1.5px solid var(--accent)", background: "rgba(var(--accent-rgb),0.08)", color: "var(--accent)", borderRadius: 10, padding: "8px 18px", fontSize: 13, fontWeight: 600, textDecoration: "none" },
+  linkBtn: { background: "transparent", border: "none", color: "var(--accent)", textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0 },
   resetBtn: { alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(192,57,43,0.45)", color: "#C0392B", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer" },
 };
 
@@ -1310,12 +1349,20 @@ const css = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
   * { box-sizing: border-box; }
   label:hover, button:hover { filter: brightness(1.06); }
-  input:focus, select:focus { outline: 2px solid #0A6D62; outline-offset: 1px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   ::-webkit-scrollbar { height: 8px; width: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(10,109,98,0.3); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.3); border-radius: 8px; }
 `;
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(
+  BRAND_INVALID ? (
+    <div style={{ fontFamily: "'Inter', sans-serif", padding: 32, color: "var(--text)" }}>
+      Marca no reconocida en el enlace. Usa ?marca=obs, ?marca=inesdi, ?marca=esdesign o ?marca=ucma.
+    </div>
+  ) : (
+    <App />
+  )
+);
 </script>
 </body>
 </html>
