@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Histórico de Comisiones</title>
+<title>Bajas de comisiones - OBS</title>
 <style>html,body{margin:0;background:#D2E8DE}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -18,13 +18,43 @@
 const WORKER_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 const KV_KEY = 'adminhub_bajas_comisiones_v1';
 const LOCAL_KEY = 'comisiones-db-v3'; // clave antigua en localStorage (solo para migrar datos existentes una vez)
+// Destino del botón "Volver a Bajas Comisiones" (relativo: la pantalla de Comisiones, en la misma carpeta)
+const HUB_URL = 'index.html';
+// Destino del botón "Volver al Hub" (relativo: el hub principal, una carpeta por encima de comisiones/)
+const HUB_HOME_URL = '../index.html';
+
+// Fusiona lo que hay en el KV con lo que acabamos de cambiar en esta pantalla, para no pisar lo de otra persona
+function mergeDb(r, l) {
+  r = r || {};
+  const out = { ...r, ...l };
+  out.advisors = { ...(r.advisors || {}) };
+  for (const [c, a] of Object.entries(l.advisors || {})) {
+    const ra = out.advisors[c];
+    out.advisors[c] = ra ? { ...ra, ...a, records: { ...ra.records, ...a.records } } : a;
+  }
+  const bm = new Map();
+  (r.bajas || []).forEach((b) => bm.set(b.id, b));
+  (l.bajas || []).forEach((b) => bm.set(b.id, b));
+  out.bajas = Array.from(bm.values());
+  out.aplicaOverrides = { ...(r.aplicaOverrides || {}) };
+  for (const [id, o] of Object.entries(l.aplicaOverrides || {})) out.aplicaOverrides[id] = { ...(out.aplicaOverrides[id] || {}), ...o };
+  out.aliases = { ...(r.aliases || {}), ...(l.aliases || {}) };
+  return out;
+}
+
+// Lee el valor actual del KV (como texto JSON) o null si está vacío
+async function kvRead() {
+  const res = await fetch(`${WORKER_URL}/kv?key=${encodeURIComponent(KV_KEY)}`);
+  if (!res.ok) throw new Error('kv get failed');
+  const d = await res.json();
+  if (!d || !d.value) return null;
+  return typeof d.value === 'string' ? d.value : JSON.stringify(d.value);
+}
 
 window.storage = {
   async get(key) {
-    const res = await fetch(`${WORKER_URL}/kv?key=${encodeURIComponent(KV_KEY)}`);
-    if (!res.ok) throw new Error('kv get failed');
-    const d = await res.json();
-    if (d.value) return { key, value: d.value };
+    const cur = await kvRead();
+    if (cur) return { key, value: cur };
 
     // KV vacío: si este navegador tenía datos guardados en local, se suben al KV (migración única)
     let local = null;
@@ -35,14 +65,20 @@ window.storage = {
     }
     return null;
   },
-  async set(key, value) {
+  async set(key, value, shared, force) {
+    let out = JSON.parse(value);
+    if (!force) {
+      // lectura fresca antes de escribir: si falla, no se escribe a ciegas
+      const cur = await kvRead();
+      if (cur) out = mergeDb(JSON.parse(cur), out);
+    }
     const res = await fetch(`${WORKER_URL}/kv`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: KV_KEY, value: JSON.parse(value) })
+      body: JSON.stringify({ key: KV_KEY, value: out })
     });
     if (!res.ok) throw new Error('kv set failed');
-    return { key, value };
+    return { key, value: JSON.stringify(out) };
   },
 };
 </script>
@@ -163,6 +199,11 @@ function fmtEUR(n) {
   return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
 
+function fmtNum(n) {
+  if (n === null || n === undefined) return "—";
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function fmtEURShort(n) {
   if (n === null || n === undefined) return "—";
   if (Math.abs(n) >= 1000) return (n / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 }) + " mil €";
@@ -200,7 +241,41 @@ function simpleHash(str) {
 
 const STORAGE_KEY = "comisiones-db-v3";
 const RESET_PASSWORD = "AdminHub";
-const emptyDb = { advisors: {}, bajas: [], aplicaOverrides: {}, lastUpdate: null };
+const emptyDb = { advisors: {}, bajas: [], aplicaOverrides: {}, aliases: {}, lastUpdate: null };
+
+function SummaryCard({ title, color, panelStyle, items }) {
+  const [open, setOpen] = useState(false);
+  const subtotal = items.reduce((s, x) => s + x.total, 0);
+  return (
+    <div style={{ ...panelStyle, flex: "1 1 260px" }}>
+      <div style={styles.panelHead}>
+        <span style={styles.dot(color)} />
+        <span style={{ ...styles.panelHeadText, color }}>{title}</span>
+        <span style={styles.panelHeadCount}>{items.length}</span>
+      </div>
+      <div style={{ padding: "0 20px 14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div>
+          <div style={styles.kpiLabel}>SUBTOTAL</div>
+          <div style={{ ...styles.kpiValue, fontSize: 22, color }}>{fmtEUR(subtotal)}</div>
+        </div>
+        <button style={{ ...styles.toggleBtn, color, borderColor: color }} onClick={() => setOpen((v) => !v)}>
+          {open ? "Ocultar detalle ▴" : "Ver detalle ▾"}
+        </button>
+      </div>
+      {open && (
+        <div style={{ padding: "0 20px 16px 20px" }}>
+          {items.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
+          {items.map((x) => (
+            <div key={x.nombre} style={styles.summaryRow}>
+              <span>{x.nombre}</span>
+              <span style={{ color, fontWeight: 700 }}>{fmtEUR(x.total)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function App() {
   const [db, setDb] = useState(emptyDb);
@@ -212,7 +287,20 @@ function App() {
   const [status, setStatus] = useState(null);
   const [bajasStatus, setBajasStatus] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [showUnmatched, setShowUnmatched] = useState(false);
+  const [showUnmatched, setShowUnmatched] = useState(true);
+  const [assignInputs, setAssignInputs] = useState({});
+  const [tipologiaFilter, setTipologiaFilter] = useState("");
+  const [motivoFilter, setMotivoFilter] = useState("");
+  const DEFAULT_COLW = [12, 7, 7, 9, 5, 9, 12, 5, 9, 11, 5, 9];
+  const [colW, setColW] = useState(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem("comisiones-colw") || "null");
+      if (Array.isArray(v) && v.length === 12) return v;
+    } catch (e) {}
+    return DEFAULT_COLW;
+  });
+  const colWRef = useRef(colW);
+  const tableRef = useRef(null);
   const [showTramos, setShowTramos] = useState(false);
   const fileRef = useRef(null);
   const bajasFileRef = useRef(null);
@@ -240,7 +328,7 @@ function App() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  async function persist(newDb) {
+  async function persist(newDb, force) {
     if (loadFailedRef.current) {
       setStatus({ type: "error", text: "No se guarda: el histórico compartido no se cargó. Recarga la página." });
       return;
@@ -248,7 +336,8 @@ function App() {
     const withStamp = { ...newDb, lastUpdate: new Date().toISOString() };
     setDb(withStamp);
     try {
-      await window.storage.set(STORAGE_KEY, JSON.stringify(withStamp), false);
+      const res = await window.storage.set(STORAGE_KEY, JSON.stringify(withStamp), false, force);
+      setDb({ ...emptyDb, ...JSON.parse(res.value) });
     } catch (e) {
       setStatus({ type: "error", text: "No se pudo guardar. Inténtalo de nuevo." });
     }
@@ -349,6 +438,7 @@ function App() {
         let dupCount = 0;
         const existingIds = new Set((db.bajas || []).map((b) => b.id));
         const newBajas = [...(db.bajas || [])];
+        const idxById = new Map(newBajas.map((x, i) => [x.id, i]));
         const fileMes = parseMesFromFileName(file.name);
 
         wb.SheetNames.forEach((sheetName) => {
@@ -367,6 +457,7 @@ function App() {
             mesComercialBaja: findCol(headerNorm, (h) => h.includes("mes") && h.includes("comercial")),
             idOportunidad: findCol(headerNorm, (h) => h.includes("id") && h.includes("oportunidad")),
             motivo: findCol(headerNorm, (h) => h.includes("motivo")),
+            tipologia: findCol(headerNorm, (h) => h.includes("tipologia") && h.includes("matricula")),
             alumno: findCol(headerNorm, (h) => h.includes("nombres") || (h.includes("nombre") && h.includes("apellido"))),
           };
           if (idx.asesor === -1 || idx.factNeta === -1) return;
@@ -384,23 +475,29 @@ function App() {
             const jefeNombre = idx.jefe !== -1 ? String(row[idx.jefe] ?? "").trim() : "";
             const directorNombre = idx.director !== -1 ? String(row[idx.director] ?? "").trim() : "";
             const motivo = idx.motivo !== -1 ? String(row[idx.motivo] ?? "").trim() : "";
+            const tipologia = idx.tipologia !== -1 ? String(row[idx.tipologia] ?? "").trim() : "";
             const alumno = idx.alumno !== -1 ? String(row[idx.alumno] ?? "").trim() : "";
             const idOportunidadRaw = idx.idOportunidad !== -1 ? String(row[idx.idOportunidad] ?? "").trim() : "";
 
             const id = idOportunidadRaw || simpleHash(`${asesorNombre}|${alumno}|${factNeta}|${mesComercialBaja}`);
             if (existingIds.has(id)) {
               dupCount++;
+              const k = idxById.get(id);
+              if (k !== undefined && (tipologia || motivo)) {
+                newBajas[k] = { ...newBajas[k], tipologia: tipologia || newBajas[k].tipologia || "", motivo: motivo || newBajas[k].motivo || "" };
+              }
               continue;
             }
             existingIds.add(id);
 
-            const asesorCodigo = matchPerson(db.advisors, asesorNombre, equipo);
+            const asesorCodigo = (db.aliases || {})[normalize(asesorNombre)] || matchPerson(db.advisors, asesorNombre, equipo);
             const jefeCodigo = jefeNombre ? matchPerson(db.advisors, jefeNombre, equipo) : null;
             const directorCodigo = directorNombre ? matchPerson(db.advisors, directorNombre, null) : null;
 
             if (!asesorCodigo) unmatchedCount++;
             else matchedCount++;
 
+            idxById.set(id, newBajas.length);
             newBajas.push({
               id,
               idOportunidad: idOportunidadRaw || null,
@@ -415,6 +512,7 @@ function App() {
               mesComisiones,
               factNeta,
               motivo,
+              tipologia,
               alumno,
             });
           }
@@ -442,6 +540,93 @@ function App() {
     reader.readAsArrayBuffer(file);
   }
 
+  function assignAsesor(baja) {
+    const text = (assignInputs[baja.id] || "").trim();
+    if (!text) {
+      setBajasStatus({ type: "error", text: "Escribe el nombre del asesor correcto antes de asignar." });
+      return;
+    }
+    const advisors = db.advisors || {};
+    const nt = normalize(text);
+    const exact = Object.values(advisors).find((a) => normalize(a.nombre) === nt);
+    const codigo = exact ? exact.codigo : matchPerson(advisors, text, baja.equipo);
+    if (!codigo || !advisors[codigo]) {
+      setBajasStatus({ type: "error", text: `No se encontró "${text}" en el histórico de tramos. Elige un nombre de la lista.` });
+      return;
+    }
+    const key = normalize(baja.asesorNombre);
+    const newBajas = (db.bajas || []).map((b) => (!b.asesorCodigo && normalize(b.asesorNombre) === key ? { ...b, asesorCodigo: codigo } : b));
+    const aliases = { ...(db.aliases || {}), [key]: codigo };
+    persist({ ...db, bajas: newBajas, aliases });
+    setAssignInputs({});
+    setBajasStatus({ type: "ok", text: `"${baja.asesorNombre}" asignado a ${advisors[codigo].nombre}. Descuentos recalculados.` });
+  }
+
+  function startResize(e, i) {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const tw = tableRef.current ? tableRef.current.getBoundingClientRect().width : 1000;
+    const start = [...colWRef.current];
+    const MIN = 3;
+    function move(ev) {
+      const dp = ((ev.clientX - startX) / tw) * 100;
+      let a = start[i] + dp;
+      let b = start[i + 1] - dp;
+      if (a < MIN) { b -= MIN - a; a = MIN; }
+      if (b < MIN) { a -= MIN - b; b = MIN; }
+      const n = [...start];
+      n[i] = a;
+      n[i + 1] = b;
+      colWRef.current = n;
+      setColW(n);
+    }
+    function up() {
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+      try { localStorage.setItem("comisiones-colw", JSON.stringify(colWRef.current)); } catch (err) {}
+    }
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  }
+
+  function resetColW() {
+    colWRef.current = DEFAULT_COLW;
+    setColW(DEFAULT_COLW);
+    try { localStorage.removeItem("comisiones-colw"); } catch (err) {}
+  }
+
+  function exportDesglose() {
+    // Exporta TODAS las bajas cargadas, sin tener en cuenta los filtros de pantalla.
+    const r2 = (n) => Math.round(n * 100) / 100;
+    const todas = [...enrichedAll].sort((x, y) => x.asesorNombreFinal.localeCompare(y.asesorNombreFinal) || y.mesComisiones.localeCompare(x.mesComisiones));
+    const header = [
+      "Asesor", "TIPOLOGIA MATRICULA", "MOTIVO DE BAJA", "ID oportunidad", "Mes origen", "Fact. neta",
+      "Tramo asesor (%)", "Desc. asesor",
+      "Jefe de equipo", "Tramo jefe (%)", "Desc. jefe",
+      "Director de ventas", "Tramo director (%)", "Desc. director",
+    ];
+    let tA = 0, tJ = 0, tD = 0;
+    const rows = todas.map((b) => {
+      const dA = b.descAsesor == null ? "" : b.aplicaAsesor ? r2(b.descAsesor) : 0;
+      const dJ = !b.jefeCodigo || b.descJefe == null ? "" : b.aplicaJefe ? r2(b.descJefe) : 0;
+      const dD = !b.directorCodigo || b.descDirector == null ? "" : b.aplicaDirector ? r2(b.descDirector) : 0;
+      tA += dA || 0; tJ += dJ || 0; tD += dD || 0;
+      return [
+        b.asesorNombreFinal, b.tipologia || "", b.motivo || "", b.idOportunidad || "", fmtMes(b.mesOrigen), b.factNeta,
+        b.tramoAsesor == null ? "" : b.tramoAsesor, dA,
+        b.jefeNombreFinal || "", b.tramoJefe == null ? "" : b.tramoJefe, dJ,
+        b.directorNombreFinal || "", b.tramoDirector == null ? "" : b.tramoDirector, dD,
+      ];
+    });
+    const total = ["TOTAL (líneas marcadas)", "", "", "", "", "", "", r2(tA), "", "", r2(tJ), "", "", r2(tD)];
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, total]);
+    ws["!cols"] = [30, 22, 26, 16, 12, 12, 14, 14, 30, 14, 12, 30, 16, 14].map((w) => ({ wch: w }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Desglose de bajas");
+    XLSX.writeFile(wb, `desglose_bajas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   function toggleAplica(bajaId, role, checked) {
     const current = db.aplicaOverrides[bajaId] || {};
     const newOverrides = { ...db.aplicaOverrides, [bajaId]: { ...current, [role]: checked } };
@@ -454,7 +639,7 @@ function App() {
     if (pwd === null) return;
     if (pwd !== RESET_PASSWORD) { alert("Contraseña incorrecta."); return; }
     if (!confirm("¿Borrar todo el histórico guardado (tramos y bajas)? No se puede deshacer.")) return;
-    await persist(emptyDb);
+    await persist(emptyDb, true);
     setStatus({ type: "ok", text: "Histórico borrado." });
     setBajasStatus(null);
   }
@@ -493,17 +678,17 @@ function App() {
     return fallback;
   }
 
-  const enrichedBajas = useMemo(() => {
-    const s = normalize(search);
+  const enrichedAll = useMemo(() => {
     return (db.bajas || [])
       .map((b) => {
         const tramoAsesor = tramoFor(b.asesorCodigo, b.mesOrigen);
         const tramoJefe = tramoFor(b.jefeCodigo, b.mesOrigen);
         const tramoDirector = tramoFor(b.directorCodigo, b.mesOrigen);
         const overrides = db.aplicaOverrides[b.id] || {};
-        const aplicaAsesor = overrides.asesor !== false;
-        const aplicaJefe = overrides.jefe !== false;
-        const aplicaDirector = overrides.director !== false;
+        const bloqueada = normalize(b.tipologia) === "ce";
+        const aplicaAsesor = !bloqueada && overrides.asesor !== false;
+        const aplicaJefe = !bloqueada && overrides.jefe !== false;
+        const aplicaDirector = !bloqueada && overrides.director !== false;
         return {
           ...b,
           asesorNombreFinal: nombreFor(b.asesorCodigo, b.asesorNombre),
@@ -512,19 +697,35 @@ function App() {
           tramoAsesor,
           tramoJefe,
           tramoDirector,
-          descAsesor: tramoAsesor != null ? -(b.factNeta * (tramoAsesor / 100)) : null,
-          descJefe: b.jefeCodigo && tramoJefe != null ? -(b.factNeta * (tramoJefe / 100)) : null,
-          descDirector: b.directorCodigo && tramoDirector != null ? -(b.factNeta * (tramoDirector / 100)) : null,
+          descAsesor: tramoAsesor != null ? (bloqueada ? 0 : -(b.factNeta * (tramoAsesor / 100))) : null,
+          descJefe: b.jefeCodigo && tramoJefe != null ? (bloqueada ? 0 : -(b.factNeta * (tramoJefe / 100))) : null,
+          descDirector: b.directorCodigo && tramoDirector != null ? (bloqueada ? 0 : -(b.factNeta * (tramoDirector / 100))) : null,
+          bloqueada,
           aplicaAsesor,
           aplicaJefe,
           aplicaDirector,
         };
       })
+      .sort((a, b) => (a.mesComisiones === b.mesComisiones ? a.asesorNombreFinal.localeCompare(b.asesorNombreFinal) : b.mesComisiones.localeCompare(a.mesComisiones)));
+  }, [db]);
+
+  const tipologias = useMemo(() => Array.from(new Set((db.bajas || []).map((b) => b.tipologia).filter(Boolean))).sort((a, b) => a.localeCompare(b)), [db]);
+  const motivos = useMemo(() => Array.from(new Set((db.bajas || []).map((b) => b.motivo).filter(Boolean))).sort((a, b) => a.localeCompare(b)), [db]);
+
+  const enrichedBajas = useMemo(() => {
+    const s = normalize(search);
+    return enrichedAll
       .filter((b) => equipoFilter === "Todos" || b.equipo === equipoFilter)
       .filter((b) => mesFilter === "Todos" || b.mesComisiones === mesFilter)
       .filter((b) => !s || normalize(b.asesorNombreFinal).includes(s) || (b.asesorCodigo || "").includes(s))
-      .sort((a, b) => (a.mesComisiones === b.mesComisiones ? a.asesorNombreFinal.localeCompare(b.asesorNombreFinal) : b.mesComisiones.localeCompare(a.mesComisiones)));
-  }, [db, search, equipoFilter, mesFilter]);
+      .filter((b) => !tipologiaFilter || b.tipologia === tipologiaFilter)
+      .filter((b) => !motivoFilter || b.motivo === motivoFilter);
+  }, [enrichedAll, search, equipoFilter, mesFilter, tipologiaFilter, motivoFilter]);
+
+  function clearBajaFilters() {
+    setTipologiaFilter("");
+    setMotivoFilter("");
+  }
 
   const bajasByAdvisor = useMemo(() => {
     const groups = {};
@@ -535,6 +736,8 @@ function App() {
     });
     return Object.entries(groups).sort((a, b) => a[1].nombre.localeCompare(b[1].nombre));
   }, [enrichedBajas]);
+
+  const bajasFlat = useMemo(() => bajasByAdvisor.flatMap(([k, g]) => g.rows), [bajasByAdvisor]);
 
   const asesorSummary = useMemo(() => {
     const map = {};
@@ -589,16 +792,14 @@ function App() {
 
   const kpis = useMemo(() => {
     const totalAdvisors = new Set((db.bajas || []).map((b) => b.asesorCodigo || `sin-identificar:${normalize(b.asesorNombre)}`)).size;
-    const factNetaTotal = flatTramoRows.reduce((sum, r) => sum + (r.factNeta || 0), 0);
-    const deduccionTotal = enrichedBajas.reduce((sum, b) => {
-      let t = 0;
-      if (b.aplicaAsesor && b.descAsesor != null) t += b.descAsesor;
-      if (b.aplicaJefe && b.descJefe != null) t += b.descJefe;
-      if (b.aplicaDirector && b.descDirector != null) t += b.descDirector;
-      return sum + t;
-    }, 0);
-    return { totalAdvisors, factNetaTotal, deduccionTotal };
-  }, [db, flatTramoRows, enrichedBajas]);
+    let asesores = 0, jefes = 0, directores = 0;
+    enrichedBajas.forEach((b) => {
+      if (b.aplicaAsesor && b.descAsesor != null) asesores += b.descAsesor;
+      if (b.aplicaJefe && b.descJefe != null) jefes += b.descJefe;
+      if (b.aplicaDirector && b.descDirector != null) directores += b.descDirector;
+    });
+    return { totalAdvisors, asesores, jefes, directores, deduccionTotal: asesores + jefes + directores };
+  }, [db, enrichedBajas]);
 
   const unmatched = enrichedBajas.filter((b) => !b.asesorCodigo);
   const lastUpdateStr = db.lastUpdate ? new Date(db.lastUpdate).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
@@ -612,11 +813,20 @@ function App() {
       <style>{css}</style>
       <div style={styles.bgGrid} />
       <div style={styles.shell}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
+          <a href={HUB_HOME_URL} style={styles.backBtn}>
+            ⌂ Volver al Hub
+          </a>
+          <a href={HUB_URL} style={styles.backBtn}>
+            ‹ Volver a Bajas Comisiones
+          </a>
+        </div>
+
         <div style={styles.headerPanel}>
           <div style={styles.headerLeft}>
             <div style={styles.headerIcon}>%</div>
             <div>
-              <div style={styles.headerTitle}>Histórico de Comisiones</div>
+              <div style={styles.headerTitle}>Bajas de comisiones - OBS</div>
               <div style={styles.headerSub}>Administración comercial</div>
             </div>
           </div>
@@ -686,23 +896,29 @@ function App() {
         </div>
 
         <div style={styles.kpiRow}>
-          <div style={styles.kpiCard}>
+          <div style={{ ...styles.kpiCard, flex: "0 0 170px" }}>
             <div style={styles.kpiLabel}>ASESORES (bajas)</div>
             <div style={{ ...styles.kpiValue, color: "#0A6D62" }}>{kpis.totalAdvisors}</div>
           </div>
-          <div style={styles.kpiCard}>
-            <div style={styles.kpiLabel}>MES DE COMISIÓN (bajas)</div>
-            <div style={{ ...styles.kpiValue, color: "#5A36B8", fontSize: mesesComisiones.length > 1 ? 16 : undefined }}>
-              {mesesComisiones.length === 0 ? "—" : mesesComisiones.map(fmtMes).join(" · ")}
-            </div>
-          </div>
-          <div style={styles.kpiCard}>
-            <div style={styles.kpiLabel}>FACT. NETA (filtro)</div>
-            <div style={{ ...styles.kpiValue, color: "#2E7D32" }}>{fmtEURShort(kpis.factNetaTotal)}</div>
-          </div>
-          <div style={styles.kpiCard}>
+          <div style={{ ...styles.kpiCard, flex: "1 1 480px" }}>
             <div style={styles.kpiLabel}>A DESCONTAR TOTAL (filtro)</div>
-            <div style={{ ...styles.kpiValue, color: "#B01E58" }}>{fmtEURShort(kpis.deduccionTotal)}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              <div style={{ ...styles.kpiValue, color: "#B01E58" }}>{fmtEUR(kpis.deduccionTotal)}</div>
+              <div style={styles.miniRow}>
+                <div style={styles.miniCard}>
+                  <div style={styles.miniLabel}>ASESORES</div>
+                  <div style={{ ...styles.miniValue, color: "#B01E58" }}>{fmtEUR(kpis.asesores)}</div>
+                </div>
+                <div style={styles.miniCard}>
+                  <div style={styles.miniLabel}>JEFES DE EQUIPO</div>
+                  <div style={{ ...styles.miniValue, color: "#5A36B8" }}>{fmtEUR(kpis.jefes)}</div>
+                </div>
+                <div style={styles.miniCard}>
+                  <div style={styles.miniLabel}>DIRECTORES DE VENTAS</div>
+                  <div style={{ ...styles.miniValue, color: "#0A6D62" }}>{fmtEUR(kpis.directores)}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -710,135 +926,261 @@ function App() {
           <div style={styles.warnPanel}>
             <button style={styles.warnHead} onClick={() => setShowUnmatched((v) => !v)}>
               <span style={styles.dot("#9A6A00")} />
-              <span style={styles.panelHeadText}>{unmatched.length} BAJAS SIN ASESOR IDENTIFICADO</span>
+              <span style={styles.panelHeadText}>{unmatched.length} {unmatched.length === 1 ? "BAJA SIN ASESOR IDENTIFICADO" : "BAJAS SIN ASESOR IDENTIFICADO"}</span>
               <span style={{ marginLeft: "auto", color: "#9A6A00" }}>{showUnmatched ? "−" : "+"}</span>
             </button>
             {showUnmatched && (
               <div style={styles.tableWrap}>
+                <datalist id="advisors-list">
+                  {Object.values(db.advisors || {}).map((a) => (
+                    <option key={a.codigo} value={a.nombre} />
+                  ))}
+                </datalist>
+                <p style={{ ...styles.smallHint, marginTop: 0, marginBottom: 8 }}>
+                  Escribe el nombre correcto, elígelo de la lista y pulsa Asignar. Se recalculan los descuentos y se recordará para próximas cargas.
+                </p>
                 <table style={styles.table}>
                   <thead>
                     <tr>
+                      <th style={styles.th}>NOMBRE EN EL ARCHIVO</th>
+                      <th style={styles.th}>ID OPORTUNIDAD</th>
                       <th style={styles.th}>MES ORIGEN</th>
-                      <th style={styles.th}>MES COMISIONES</th>
-                      <th style={styles.th}>ASESOR (TEXTO ORIGINAL)</th>
                       <th style={styles.th}>EQUIPO</th>
                       <th style={styles.th}>FACT. NETA</th>
+                      <th style={{ ...styles.th, width: "28%" }}>ASESOR CORRECTO</th>
+                      <th style={styles.th}></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {unmatched.slice(0, 40).map((u) => (
+                    {unmatched.slice(0, 100).map((u) => (
                       <tr key={u.id}>
-                        <td style={styles.td}>{fmtMes(u.mesOrigen)}</td>
-                        <td style={styles.td}>{fmtMes(u.mesComisiones)}</td>
                         <td style={styles.td}>{u.asesorNombre}</td>
+                        <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace" }}>{u.idOportunidad || "—"}</td>
+                        <td style={styles.td}>{fmtMes(u.mesOrigen)}</td>
                         <td style={styles.td}>{u.equipo || "—"}</td>
                         <td style={styles.td}>{fmtEUR(u.factNeta)}</td>
+                        <td style={styles.td}>
+                          <input
+                            list="advisors-list"
+                            value={assignInputs[u.id] || ""}
+                            onChange={(e) => setAssignInputs((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                            onKeyDown={(e) => { if (e.key === "Enter") assignAsesor(u); }}
+                            placeholder="Apellidos, Nombre"
+                            style={styles.assignInput}
+                          />
+                        </td>
+                        <td style={styles.td}>
+                          <button style={styles.assignBtn} onClick={() => assignAsesor(u)}>Asignar</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                <p style={styles.smallHint}>
-                  Sube el Excel de tramos del mes de origen de esas bajas para que el asesor exista en el histórico, y vuelve a
-                  subir el Excel de bajas para reintentar el emparejamiento (las ya cargadas no se duplican).
-                </p>
               </div>
             )}
           </div>
         )}
 
-        {/* DESGLOSE DE BAJAS */}
-        <div style={styles.panelPink}>
-          <div style={styles.panelHead}>
-            <span style={styles.dot("#B01E58")} />
-            <span style={{ ...styles.panelHeadText, color: "#B01E58" }}>DESGLOSE DE BAJAS</span>
-            <span style={styles.panelHeadCount}>{enrichedBajas.length} bajas</span>
+        {(db.bajas || []).length > 0 && (
+          <div style={{ ...styles.panel, border: "1.5px solid #0A6D62", padding: "14px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10, flexWrap: "wrap" }}>
+              <span style={styles.dot("#0A6D62")} />
+              <span style={styles.panelHeadText}>FILTROS DE BAJAS</span>
+              <span style={{ marginLeft: "auto", fontSize: 12, color: "#4B7364" }}>
+                Mostrando {enrichedBajas.length} de {enrichedAll.length} bajas ·{" "}
+                <button onClick={clearBajaFilters} style={styles.linkBtn}>Limpiar filtros</button>
+              </span>
+            </div>
+            <div style={styles.filtersGrid}>
+              <div style={{ flex: "1 1 240px" }}>
+                <div style={styles.fieldLabel}>TIPOLOGIA MATRICULA</div>
+                <select value={tipologiaFilter} onChange={(e) => setTipologiaFilter(e.target.value)} style={styles.select}>
+                  <option value="">Todas</option>
+                  {tipologias.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ flex: "1 1 240px" }}>
+                <div style={styles.fieldLabel}>MOTIVO DE BAJA</div>
+                <select value={motivoFilter} onChange={(e) => setMotivoFilter(e.target.value)} style={styles.select}>
+                  <option value="">Todos</option>
+                  {motivos.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ flex: "1 1 240px" }} />
+            </div>
           </div>
-          <div style={{ padding: "0 20px 10px 20px", fontSize: 11, color: "#4B7364" }}>
-            El tramo aplicado es el que tenía cada persona en el mes comercial de origen de la venta. Desmarca "APLICA" para
-            excluir una línea del total.
-          </div>
-          <div style={styles.tableWrap}>
-            <table style={{ ...styles.table, minWidth: 1200 }}>
+        )}
+
+        {/* APLICAR + TIPOLOGÍA Y MOTIVO + DESGLOSE DE BAJAS */}
+        <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+          <div style={{ ...styles.panelPink, width: 150, flex: "0 0 150px", padding: "14px 10px" }}>
+            <div style={styles.cardHead}>
+              <span style={styles.dot("#B01E58")} />
+              <span style={{ ...styles.panelHeadText, color: "#B01E58" }}>APLICAR</span>
+            </div>
+            <div style={styles.cardHint}>Marca por rol</div>
+            <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>ASESOR</th>
-                  <th style={styles.th}>ID OPORTUNIDAD</th>
-                  <th style={styles.th}>MES ORIGEN</th>
-                  <th style={styles.th}>FACT. NETA</th>
-                  <th style={{ ...styles.th, color: "#B01E58" }}>TRAMO ASESOR</th>
-                  <th style={{ ...styles.th, width: 26 }} title="Aplica al asesor">✓</th>
-                  <th style={{ ...styles.th, color: "#B01E58" }}>DESC. ASESOR</th>
-                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(176,30,88,0.15)" }}>JEFE EQUIPO</th>
-                  <th style={{ ...styles.th, color: "#5A36B8" }}>TRAMO JEFE</th>
-                  <th style={{ ...styles.th, width: 26 }} title="Aplica al jefe de equipo">✓</th>
-                  <th style={{ ...styles.th, color: "#5A36B8" }}>DESC. JEFE</th>
-                  <th style={{ ...styles.th, borderLeft: "1px solid rgba(176,30,88,0.15)" }}>DIRECTOR VENTAS</th>
-                  <th style={{ ...styles.th, color: "#0A6D62" }}>TRAMO DIR.</th>
-                  <th style={{ ...styles.th, width: 26 }} title="Aplica al director de ventas">✓</th>
-                  <th style={{ ...styles.th, color: "#0A6D62" }}>DESC. DIR.</th>
+                  <th colSpan={3} style={{ ...styles.thc, height: 34, textAlign: "center", color: "#12302A" }}>APLICA</th>
+                </tr>
+                <tr>
+                  <th style={{ ...styles.thc, height: 34, textAlign: "center", color: "#B01E58" }}>AC</th>
+                  <th style={{ ...styles.thc, height: 34, textAlign: "center", color: "#5A36B8" }}>JE</th>
+                  <th style={{ ...styles.thc, height: 34, textAlign: "center", color: "#0A6D62" }}>DV</th>
                 </tr>
               </thead>
               <tbody>
-                {enrichedBajas.length === 0 && (
+                {bajasFlat.length === 0 && (
                   <tr>
-                    <td style={styles.td} colSpan={15}>
-                      {ready ? "Sube el Excel de bajas para ver el desglose aquí." : "Cargando histórico…"}
+                    <td style={styles.tdc} colSpan={3}></td>
+                  </tr>
+                )}
+                {bajasFlat.map((b) => {
+                  const lockStyle = { width: 15, height: 15, opacity: 0.5, cursor: "not-allowed" };
+                  const lockTitle = "Baja CE: no se descuenta a nadie";
+                  return (
+                    <tr key={b.id} style={{ background: b.bloqueada ? "rgba(154,106,0,0.07)" : "transparent" }}>
+                      <td style={{ ...styles.tdc, textAlign: "center" }}>
+                        <input type="checkbox" checked={b.aplicaAsesor} disabled={b.bloqueada} onChange={(e) => toggleAplica(b.id, "asesor", e.target.checked)} style={b.bloqueada ? lockStyle : { width: 15, height: 15, accentColor: "#B01E58" }} title={b.bloqueada ? lockTitle : "Aplica al asesor"} />
+                      </td>
+                      <td style={{ ...styles.tdc, textAlign: "center" }}>
+                        {b.jefeCodigo ? (
+                          <input type="checkbox" checked={b.aplicaJefe} disabled={b.bloqueada} onChange={(e) => toggleAplica(b.id, "jefe", e.target.checked)} style={b.bloqueada ? lockStyle : { width: 15, height: 15, accentColor: "#5A36B8" }} title={b.bloqueada ? lockTitle : "Aplica al jefe de equipo"} />
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td style={{ ...styles.tdc, textAlign: "center" }}>
+                        {b.directorCodigo ? (
+                          <input type="checkbox" checked={b.aplicaDirector} disabled={b.bloqueada} onChange={(e) => toggleAplica(b.id, "director", e.target.checked)} style={b.bloqueada ? lockStyle : { width: 15, height: 15, accentColor: "#0A6D62" }} title={b.bloqueada ? lockTitle : "Aplica al director de ventas"} />
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              {bajasFlat.length > 0 && (
+                <tfoot>
+                  <tr>
+                    <td style={{ ...styles.tdc, borderBottom: "none", borderTop: "1.5px solid #B01E58" }} colSpan={3}></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+
+          <div style={{ ...styles.panelCyan, width: 290, flex: "0 0 290px", padding: "14px 10px" }}>
+            <div style={styles.cardHead}>
+              <span style={styles.dot("#0A6D62")} />
+              <span style={{ ...styles.panelHeadText, color: "#0A6D62" }}>TIPOLOGÍA Y MOTIVO</span>
+            </div>
+            <div style={styles.cardHint}>Datos del Excel de bajas</div>
+            <table style={{ ...styles.table, tableLayout: "fixed" }}>
+              <colgroup>
+                <col style={{ width: "46%" }} />
+                <col style={{ width: "54%" }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ ...styles.thc, height: 68, color: "#0A6D62", whiteSpace: "normal", lineHeight: 1.25 }}>TIPOLOGIA MATRICULA</th>
+                  <th style={{ ...styles.thc, height: 68, color: "#0A6D62", whiteSpace: "normal", lineHeight: 1.25 }}>MOTIVO DE BAJA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bajasFlat.length === 0 && (
+                  <tr>
+                    <td style={styles.tdc} colSpan={2}></td>
+                  </tr>
+                )}
+                {bajasFlat.map((b) => (
+                  <tr key={b.id} style={{ background: b.bloqueada ? "rgba(154,106,0,0.07)" : "transparent" }}>
+                    <td style={{ ...styles.tdc, ...(b.bloqueada ? { color: "#9A6A00", fontWeight: 700 } : {}) }} title={b.tipologia || ""}>{b.tipologia || "—"}</td>
+                    <td style={styles.tdc} title={b.motivo || ""}>{b.motivo || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {bajasFlat.length > 0 && (
+                <tfoot>
+                  <tr>
+                    <td style={{ ...styles.tdc, borderBottom: "none", borderTop: "1.5px solid #0A6D62" }} colSpan={2}></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+
+          <div style={{ ...styles.panelPink, flex: 1, minWidth: 0, padding: "14px 10px" }}>
+            <div style={styles.cardHead}>
+              <span style={styles.dot("#B01E58")} />
+              <span style={{ ...styles.panelHeadText, color: "#B01E58" }}>DESGLOSE DE BAJAS</span>
+              <span style={{ ...styles.panelHeadCount, marginLeft: 8 }}>{bajasFlat.length} bajas</span>
+              <button style={{ ...styles.exportBtn, marginLeft: "auto" }} onClick={exportDesglose} disabled={bajasFlat.length === 0}>
+                ⬇ Exportar a Excel
+              </button>
+            </div>
+            <div style={styles.cardHint}>Arrastra el borde de una cabecera para ajustar el ancho (doble clic para restablecer). Usa APLICAR para excluir líneas.</div>
+            <table ref={tableRef} style={{ ...styles.table, tableLayout: "fixed" }}>
+              <colgroup>
+                {colW.map((w, i) => (
+                  <col key={i} style={{ width: `${w}%` }} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr>
+                  {[
+                    ["ASESOR", "#4B7364"], ["ID OPORT.", "#4B7364"], ["ORIGEN", "#4B7364"], ["FACT. NETA", "#4B7364"],
+                    ["TR.", "#B01E58"], ["DESC. AC", "#B01E58"],
+                    ["JEFE EQUIPO", "#4B7364"], ["TR.", "#5A36B8"], ["DESC. JE", "#5A36B8"],
+                    ["DIRECTOR", "#4B7364"], ["TR.", "#0A6D62"], ["DESC. DV", "#0A6D62"],
+                  ].map(([label, color], i) => (
+                    <th key={i} style={{ ...styles.thc, height: 68, color }}>
+                      {label}
+                      {i < 11 && <span style={styles.resizer} onMouseDown={(e) => startResize(e, i)} onDoubleClick={resetColW} title="Arrastra para ajustar el ancho" />}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {bajasFlat.length === 0 && (
+                  <tr>
+                    <td style={styles.tdc} colSpan={12}>
+                      Sube el Excel de bajas para ver el desglose aquí.
                     </td>
                   </tr>
                 )}
-                {bajasByAdvisor.map(([key, group]) => (
-                  <React.Fragment key={key}>
-                    {group.rows.map((b) => (
-                      <tr key={b.id}>
-                        <td style={{ ...styles.td, opacity: b.aplicaAsesor ? 1 : 0.4, textDecoration: b.aplicaAsesor ? "none" : "line-through" }}>{b.asesorNombreFinal}</td>
-                        <td style={{ ...styles.td, fontFamily: "'IBM Plex Mono', monospace", color: "#4B7364" }}>{b.idOportunidad || "—"}</td>
-                        <td style={styles.td}>{fmtMes(b.mesOrigen)}</td>
-                        <td style={styles.td}>{fmtEUR(b.factNeta)}</td>
-                        <td style={{ ...styles.td, opacity: b.aplicaAsesor ? 1 : 0.4 }}>
-                          <TramoChip v={b.tramoAsesor} />
-                        </td>
-                        <td style={{ ...styles.td, textAlign: "center" }}>
-                          <input type="checkbox" checked={b.aplicaAsesor} onChange={(e) => toggleAplica(b.id, "asesor", e.target.checked)} style={{ width: 14, height: 14, accentColor: "#B01E58" }} title="Aplica al asesor" />
-                        </td>
-                        <td style={{ ...styles.td, color: "#B01E58", fontWeight: 600, opacity: b.aplicaAsesor ? 1 : 0.4 }}>{b.descAsesor != null ? fmtEUR(b.descAsesor) : "—"}</td>
-                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(176,30,88,0.08)", opacity: b.aplicaJefe ? 1 : 0.4, textDecoration: b.aplicaJefe ? "none" : "line-through" }}>{b.jefeNombreFinal || "—"}</td>
-                        <td style={{ ...styles.td, opacity: b.aplicaJefe ? 1 : 0.4 }}>{b.jefeCodigo ? <TramoChip v={b.tramoJefe} /> : "—"}</td>
-                        <td style={{ ...styles.td, textAlign: "center" }}>
-                          {b.jefeCodigo && (
-                            <input type="checkbox" checked={b.aplicaJefe} onChange={(e) => toggleAplica(b.id, "jefe", e.target.checked)} style={{ width: 14, height: 14, accentColor: "#5A36B8" }} title="Aplica al jefe de equipo" />
-                          )}
-                        </td>
-                        <td style={{ ...styles.td, color: "#5A36B8", fontWeight: 600, opacity: b.aplicaJefe ? 1 : 0.4 }}>{b.descJefe != null ? fmtEUR(b.descJefe) : "—"}</td>
-                        <td style={{ ...styles.td, borderLeft: "1px solid rgba(176,30,88,0.08)", opacity: b.aplicaDirector ? 1 : 0.4, textDecoration: b.aplicaDirector ? "none" : "line-through" }}>{b.directorNombreFinal || "—"}</td>
-                        <td style={{ ...styles.td, opacity: b.aplicaDirector ? 1 : 0.4 }}>{b.directorCodigo ? <TramoChip v={b.tramoDirector} /> : "—"}</td>
-                        <td style={{ ...styles.td, textAlign: "center" }}>
-                          {b.directorCodigo && (
-                            <input type="checkbox" checked={b.aplicaDirector} onChange={(e) => toggleAplica(b.id, "director", e.target.checked)} style={{ width: 14, height: 14, accentColor: "#0A6D62" }} title="Aplica al director de ventas" />
-                          )}
-                        </td>
-                        <td style={{ ...styles.td, color: "#0A6D62", fontWeight: 600, opacity: b.aplicaDirector ? 1 : 0.4 }}>{b.descDirector != null ? fmtEUR(b.descDirector) : "—"}</td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
+                {bajasFlat.map((b) => (
+                  <tr key={b.id} style={{ background: b.bloqueada ? "rgba(154,106,0,0.07)" : "transparent" }}>
+                    <td style={{ ...styles.tdc, opacity: b.aplicaAsesor ? 1 : 0.4, textDecoration: b.aplicaAsesor ? "none" : "line-through" }} title={b.asesorNombreFinal}>{b.asesorNombreFinal}</td>
+                    <td style={{ ...styles.tdc, fontFamily: "'IBM Plex Mono', monospace", color: "#4B7364" }}>{b.idOportunidad || "—"}</td>
+                    <td style={styles.tdc}>{fmtMes(b.mesOrigen)}</td>
+                    <td style={styles.tdc}>{fmtNum(b.factNeta)}</td>
+                    <td style={{ ...styles.tdc, opacity: b.aplicaAsesor ? 1 : 0.4 }}><TramoChip v={b.tramoAsesor} /></td>
+                    <td style={{ ...styles.tdc, color: "#B01E58", fontWeight: 600, opacity: b.aplicaAsesor ? 1 : 0.4 }}>{fmtNum(b.descAsesor)}</td>
+                    <td style={{ ...styles.tdc, opacity: b.aplicaJefe ? 1 : 0.4, textDecoration: b.aplicaJefe ? "none" : "line-through" }} title={b.jefeNombreFinal || ""}>{b.jefeNombreFinal || "—"}</td>
+                    <td style={{ ...styles.tdc, opacity: b.aplicaJefe ? 1 : 0.4 }}>{b.jefeCodigo ? <TramoChip v={b.tramoJefe} /> : "—"}</td>
+                    <td style={{ ...styles.tdc, color: "#5A36B8", fontWeight: 600, opacity: b.aplicaJefe ? 1 : 0.4 }}>{fmtNum(b.descJefe)}</td>
+                    <td style={{ ...styles.tdc, opacity: b.aplicaDirector ? 1 : 0.4, textDecoration: b.aplicaDirector ? "none" : "line-through" }} title={b.directorNombreFinal || ""}>{b.directorNombreFinal || "—"}</td>
+                    <td style={{ ...styles.tdc, opacity: b.aplicaDirector ? 1 : 0.4 }}>{b.directorCodigo ? <TramoChip v={b.tramoDirector} /> : "—"}</td>
+                    <td style={{ ...styles.tdc, color: "#0A6D62", fontWeight: 600, opacity: b.aplicaDirector ? 1 : 0.4 }}>{fmtNum(b.descDirector)}</td>
+                  </tr>
                 ))}
               </tbody>
-              {enrichedBajas.length > 0 && (
+              {bajasFlat.length > 0 && (
                 <tfoot>
                   <tr>
-                    <td style={{ ...styles.th, borderTop: "1px solid rgba(176,30,88,0.3)" }} colSpan={6}>
-                      TOTAL (LÍNEAS MARCADAS)
-                    </td>
-                    <td style={{ ...styles.th, color: "#B01E58", fontSize: 13, borderTop: "1px solid rgba(176,30,88,0.3)" }}>
-                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplicaAsesor && b.descAsesor != null ? b.descAsesor : 0), 0))}
-                    </td>
-                    <td style={{ borderTop: "1px solid rgba(176,30,88,0.3)" }} colSpan={3}></td>
-                    <td style={{ ...styles.th, color: "#5A36B8", fontSize: 13, borderTop: "1px solid rgba(176,30,88,0.3)" }}>
-                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplicaJefe && b.descJefe != null ? b.descJefe : 0), 0))}
-                    </td>
-                    <td style={{ borderTop: "1px solid rgba(176,30,88,0.3)" }} colSpan={3}></td>
-                    <td style={{ ...styles.th, color: "#0A6D62", fontSize: 13, borderTop: "1px solid rgba(176,30,88,0.3)" }}>
-                      {fmtEUR(enrichedBajas.reduce((s, b) => s + (b.aplicaDirector && b.descDirector != null ? b.descDirector : 0), 0))}
-                    </td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell, fontWeight: 700, color: "#4B7364" }} colSpan={5}>TOTAL (LÍNEAS MARCADAS)</td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell, color: "#B01E58", fontWeight: 700 }}>{fmtNum(kpis.asesores)}</td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell }} colSpan={2}></td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell, color: "#5A36B8", fontWeight: 700 }}>{fmtNum(kpis.jefes)}</td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell }} colSpan={2}></td>
+                    <td style={{ ...styles.tdc, ...styles.tfootCell, color: "#0A6D62", fontWeight: 700 }}>{fmtNum(kpis.directores)}</td>
                   </tr>
                 </tfoot>
               )}
@@ -846,58 +1188,11 @@ function App() {
           </div>
         </div>
 
-        {asesorSummary.length > 0 && (
+        {enrichedBajas.length > 0 && (
           <div style={styles.row}>
-            <div style={{ ...styles.panelPink, flex: 1 }}>
-              <div style={styles.panelHead}>
-                <span style={styles.dot("#B01E58")} />
-                <span style={{ ...styles.panelHeadText, color: "#B01E58" }}>RESUMEN POR ASESOR</span>
-              </div>
-              <div style={{ padding: "0 18px 16px 18px" }}>
-                {asesorSummary.map((a) => (
-                  <div key={a.nombre} style={styles.summaryRow}>
-                    <span>{a.nombre}</span>
-                    <span style={{ color: "#B01E58", fontWeight: 700 }}>{fmtEUR(a.total)}</span>
-                  </div>
-                ))}
-                {asesorSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {(jefeSummary.length > 0 || directorSummary.length > 0) && (
-          <div style={styles.row}>
-            <div style={{ ...styles.panelPurple, flex: 1 }}>
-              <div style={styles.panelHead}>
-                <span style={styles.dot("#5A36B8")} />
-                <span style={{ ...styles.panelHeadText, color: "#5A36B8" }}>RESUMEN POR JEFE DE EQUIPO</span>
-              </div>
-              <div style={{ padding: "0 18px 16px 18px" }}>
-                {jefeSummary.map((j) => (
-                  <div key={j.nombre} style={styles.summaryRow}>
-                    <span>{j.nombre}</span>
-                    <span style={{ color: "#5A36B8", fontWeight: 700 }}>{fmtEUR(j.total)}</span>
-                  </div>
-                ))}
-                {jefeSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
-              </div>
-            </div>
-            <div style={{ ...styles.panelCyan, flex: 1 }}>
-              <div style={styles.panelHead}>
-                <span style={styles.dot("#0A6D62")} />
-                <span style={{ ...styles.panelHeadText, color: "#0A6D62" }}>RESUMEN POR DIRECTOR DE VENTAS</span>
-              </div>
-              <div style={{ padding: "0 18px 16px 18px" }}>
-                {directorSummary.map((d) => (
-                  <div key={d.nombre} style={styles.summaryRow}>
-                    <span>{d.nombre}</span>
-                    <span style={{ color: "#0A6D62", fontWeight: 700 }}>{fmtEUR(d.total)}</span>
-                  </div>
-                ))}
-                {directorSummary.length === 0 && <div style={styles.emptyHint}>Sin datos.</div>}
-              </div>
-            </div>
+            <SummaryCard title="RESUMEN POR ASESOR" color="#B01E58" panelStyle={styles.panelPink} items={asesorSummary} />
+            <SummaryCard title="RESUMEN POR JEFE EQUIPO" color="#5A36B8" panelStyle={styles.panelPurple} items={jefeSummary} />
+            <SummaryCard title="RESUMEN POR DIR. VENTAS" color="#0A6D62" panelStyle={styles.panelCyan} items={directorSummary} />
           </div>
         )}
 
@@ -998,6 +1293,22 @@ const styles = {
   summaryRow: { display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 13, borderBottom: "1px solid rgba(10,109,98,0.15)" },
   emptyHint: { color: "#4B7364", fontSize: 12, padding: "6px 0" },
   smallHint: { fontSize: 12, color: "#4B7364", marginTop: 10, lineHeight: 1.5 },
+  cardHead: { display: "flex", alignItems: "center", gap: 9, height: 34, padding: "0 4px" },
+  cardHint: { fontSize: 11, color: "#4B7364", height: 26, lineHeight: "26px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 4px" },
+  thc: { textAlign: "left", fontSize: 10, color: "#4B7364", fontWeight: 700, letterSpacing: 0.3, padding: "0 6px", borderBottom: "1px solid #B4D3C5", whiteSpace: "nowrap", overflow: "visible", position: "relative", height: 34 },
+  tdc: { fontSize: 12, padding: "0 6px", height: 34, borderBottom: "1px solid rgba(10,109,98,0.12)", color: "#12302A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+  tfootCell: { borderBottom: "none", borderTop: "1.5px solid #B01E58" },
+  resizer: { position: "absolute", right: -3, top: 0, bottom: 0, width: 7, cursor: "col-resize", zIndex: 2, borderRight: "2px solid #9CC2B2", boxSizing: "border-box" },
+  toggleBtn: { background: "transparent", border: "1px solid", borderRadius: 8, padding: "6px 12px", fontSize: 11.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" },
+  exportBtn: { display: "flex", alignItems: "center", gap: 6, background: "rgba(46,125,50,0.08)", border: "1.5px solid #2E7D32", color: "#2E7D32", borderRadius: 8, padding: "5px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" },
+  assignInput: { width: "100%", background: "#FFFFFF", border: "1px solid #C9A64A", borderRadius: 6, color: "#12302A", padding: "6px 8px", fontSize: 12, boxSizing: "border-box" },
+  assignBtn: { background: "#0A6D62", color: "#FFFFFF", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11.5, fontWeight: 700, cursor: "pointer" },
+  miniRow: { display: "flex", gap: 10, flex: 1, flexWrap: "wrap" },
+  miniCard: { flex: "1 1 130px", background: "#F5FBF8", border: "1px solid #C3DCCF", borderRadius: 8, padding: "7px 10px" },
+  miniLabel: { fontSize: 10, color: "#4B7364", letterSpacing: 0.5, fontWeight: 600 },
+  miniValue: { fontSize: 15, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace" },
+  backBtn: { display: "inline-flex", alignItems: "center", gap: 8, border: "1.5px solid #0A6D62", background: "rgba(10,109,98,0.08)", color: "#0A6D62", borderRadius: 10, padding: "8px 18px", fontSize: 13, fontWeight: 600, textDecoration: "none" },
+  linkBtn: { background: "transparent", border: "none", color: "#0A6D62", textDecoration: "underline", cursor: "pointer", fontSize: 12, padding: 0 },
   resetBtn: { alignSelf: "flex-start", background: "transparent", border: "1px solid rgba(192,57,43,0.45)", color: "#C0392B", borderRadius: 8, padding: "8px 14px", fontSize: 12, cursor: "pointer" },
 };
 
