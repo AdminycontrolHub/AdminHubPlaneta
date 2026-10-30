@@ -821,14 +821,14 @@ select.inp{cursor:pointer}
           <div style="color:var(--mut);font-size:13px;margin-top:2px">Cada tarea llega a «Gestiones urgentes» del departamento asignado</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input class="inp" aria-label="Nueva tarea" value="{{taskIn}}" onChange="{{onTaskIn}}" placeholder="Describe la tarea…" style="flex:1 1 220px">
+          <input class="inp" aria-label="Nueva tarea" value="{{taskIn}}" onChange="{{onTaskIn}}" onKeyDown="{{onTaskKey}}" placeholder="Describe la tarea… (Enter para guardar)" style="flex:1 1 220px">
           <label style="display:flex;align-items:center;gap:6px;flex:0 0 auto"><span class="lbl" style="font-size:10px">Fecha revisión</span><input type="date" class="inp" aria-label="Fecha de revisión" value="{{taskRev}}" onChange="{{onTaskRev}}" style="width:150px"></label>
           <select class="inp" aria-label="Departamento" onChange="{{onTaskDept}}" style="flex:0 0 200px">
             <sc-for list="{{deptOpts}}" as="d" hint-placeholder-count="3">
               <option value="{{d.v}}" selected="{{d.sel}}">{{d.label}}</option>
             </sc-for>
           </select>
-          <button onClick="{{addTask}}" style="background:var(--reu);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:800;font-size:13px;white-space:nowrap">Asignar tarea</button>
+          <button id="addTaskBtn" onClick="{{addTask}}" style="background:var(--reu);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:800;font-size:13px;white-space:nowrap">Asignar tarea</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <sc-for list="{{taskList}}" as="x" hint-placeholder-count="3">
@@ -841,7 +841,14 @@ select.inp{cursor:pointer}
               </div>
               <span class="chip" style="{{x.deptStyle}}">{{x.dept}}</span>
               <span class="chip" style="{{x.statusStyle}}">{{x.status}}</span>
-              <button onClick="{{x.rm}}" aria-label="Quitar tarea" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--mut)">Quitar</button>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <button onClick="{{x.ok}}" title="Marcar como resuelta" aria-label="Resuelto" style="background:#2E9E5B;color:#fff;border:0;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Resuelto</button>
+                <button onClick="{{x.next}}" title="Mueve la fecha de revisión una semana" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--ink)">Mover a la próxima semana</button>
+                <button onClick="{{x.cmToggle}}" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--ink)">{{x.cmLbl}}</button>
+                <button onClick="{{x.rm}}" title="Eliminar tarea" aria-label="Eliminar tarea" style="background:#fff;border:1px solid #F2A3B4;border-radius:7px;padding:5px 8px;color:#B0203C;display:inline-flex;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+              </div>
+              <sc-if value="{{x.hasComment}}" hint-placeholder-val="{{false}}"><div style="flex:1 1 100%;font-size:13px;color:#454E80;background:#F5F7FE;border-radius:8px;padding:7px 10px">💬 {{x.comment}}</div></sc-if>
+              <sc-if value="{{x.cmOpen}}" hint-placeholder-val="{{false}}"><input class="inp" aria-label="Comentario de la tarea" placeholder="Escribe un comentario y pulsa Enter…" value="{{x.comment}}" onChange="{{x.onComment}}" onKeyDown="{{x.onCmKey}}" style="flex:1 1 100%"></sc-if>
             </div>
           </sc-for>
           <sc-if value="{{noTasks}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Todavía no hay tareas.</div></sc-if>
@@ -1274,7 +1281,7 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, copyMsg:'', toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', delId:null, delPwd:'', delErr:false, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', cmOpen:{}, delId:null, delPwd:'', delErr:false, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -2073,7 +2080,13 @@ class Component extends DCLogic {
     const taskList = s.tasks.filter(x => !x.resolved).map(x => ({
       text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, rev:x.review || '', onRev:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:e.target.value}) : y)}),
       status:x.done ? 'Gestionada el ' + x.doneDate : 'Pendiente', statusStyle:x.done ? 'background:#DDF5E6;color:#176B3A' : 'background:#FFF4D6;color:#8A5A00',
-      rm:() => set({tasks:s.tasks.filter(y => y.id !== x.id)})
+      rm:() => { let ok = true; try { ok = confirm('¿Eliminar esta tarea? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({tasks:s.tasks.filter(y => y.id !== x.id), toast:'Tarea eliminada.', toastTo:role}); },
+      comment:x.comment || '', hasComment:!!x.comment && !s.cmOpen[x.id], cmOpen:!!s.cmOpen[x.id], cmLbl:s.cmOpen[x.id] ? 'Cerrar comentario' : (x.comment ? 'Editar comentario' : 'Añadir comentario'),
+      cmToggle:() => { const o = Object.assign({}, s.cmOpen); o[x.id] = !o[x.id]; set({cmOpen:o}); },
+      onComment:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {comment:e.target.value}) : y)}),
+      onCmKey:(e) => { if (e.key === 'Enter') { const o = Object.assign({}, s.cmOpen); o[x.id] = false; set({cmOpen:o}); } },
+      next:() => { const b = (x.review && x.review > todayIso) ? x.review : todayIso; const d = new Date(b + 'T12:00:00'); d.setDate(d.getDate() + 7); const nv = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:nv}) : y), toast:'Tarea movida: nueva revisión el ' + isoTxt(nv) + '.', toastTo:role}); },
+      ok:() => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {resolved:true, resolution:x.comment || 'Resuelta', resolvedDate:todayTxt, resolvedAt:Date.now(), done:true, doneDate:y.done ? y.doneDate : todayTxt}) : y), toast:'Tarea resuelta y guardada en el histórico.', toastTo:role})
     }));
     const deptOpts = ['mkt', 'adm', 'com'].map(d => ({v:d, label:DEPT[d], sel:s.taskDept === d}));
 
@@ -2170,7 +2183,7 @@ class Component extends DCLogic {
       dueList, noDue:dueList.length === 0, histList, noHist:histList.length === 0, todayLabel:todayTxt,
       topicList, noTopics:topicList.length === 0, taskList, noTasks:taskList.length === 0, deptOpts,
       topicIn:s.topicIn, taskIn:s.taskIn,
-      onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
+      onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskKey:(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); setTimeout(() => { const b = document.getElementById('addTaskBtn'); if (b) b.click(); }, 80); } }, onTaskRev:(e) => set({taskRev:e.target.value}), taskRev:s.taskRev, onTaskDept:(e) => set({taskDept:e.target.value}),
       addTopic:() => { const x = s.topicIn.trim(); if (!x) return; set({topics:s.topics.concat([{id:'p' + s.nextT, text:x}]), topicIn:'', nextT:s.nextT + 1}); },
       addTask:() => { const x = s.taskIn.trim(); if (!x) return; set({tasks:s.tasks.concat([{id:'k' + s.nextT, text:x, dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:s.taskRev}]), taskIn:'', taskRev:'', nextT:s.nextT + 1, toast:'Tarea enviada a «Gestiones urgentes» de ' + DEPT[s.taskDept] + '.', toastTo:s.taskDept}); },
       mktRows,
