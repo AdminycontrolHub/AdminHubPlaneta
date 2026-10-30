@@ -765,7 +765,7 @@ function bajasGo(e, el) {
 </script>
 
 <!-- ===== MODAL BAJAS COMISIONES ===== -->
-<!-- Para activar una marca: rellena su data-url con la ruta de su herramienta (por ejemplo data-url="bajas-inesdi.html"). Mientras esté vacío, avisa de que aún no está disponible. -->
+<!-- Todas las marcas usan el mismo archivo (bajas-comisiones.html) y la marca va en el enlace (?marca=). Si un data-url queda vacío, avisa de que aún no está disponible. -->
 <div class="anexos-overlay" id="bajasOverlay" onclick="bajasOverlayClick(event)">
   <div class="anexos-modal">
 
@@ -796,7 +796,7 @@ function bajasGo(e, el) {
           <span class="anexos-bubble-label">OBS</span>
         </a>
 
-        <a class="anexos-bubble-wrap inesdi" href="#" data-marca="INESDI" data-url="" onclick="bajasGo(event,this)">
+        <a class="anexos-bubble-wrap inesdi" href="#" data-marca="INESDI" data-url="bajas-comisiones.html?marca=INESDI" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#a878f0" stroke-width="1.5"/>
@@ -807,7 +807,7 @@ function bajasGo(e, el) {
           <span class="anexos-bubble-label">INESDI</span>
         </a>
 
-        <a class="anexos-bubble-wrap esdesign" href="#" data-marca="ESDesign" data-url="" onclick="bajasGo(event,this)">
+        <a class="anexos-bubble-wrap esdesign" href="#" data-marca="ESDesign" data-url="bajas-comisiones.html?marca=ESDESIGN" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#f0a830" stroke-width="1.5"/>
@@ -818,7 +818,7 @@ function bajasGo(e, el) {
           <span class="anexos-bubble-label">ESDesign</span>
         </a>
 
-        <a class="anexos-bubble-wrap ucma" href="#" data-marca="UCMA" data-url="" onclick="bajasGo(event,this)">
+        <a class="anexos-bubble-wrap ucma" href="#" data-marca="UCMA" data-url="bajas-comisiones.html?marca=UCMA" onclick="bajasGo(event,this)">
           <div class="anexos-bubble">
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <rect x="7" y="4" width="22" height="28" rx="3" stroke="#3aabf0" stroke-width="1.5"/>
