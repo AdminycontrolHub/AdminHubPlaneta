@@ -62,6 +62,7 @@ th { font-size: 11px; color: var(--text-secondary); border-top: none; }
 .muted { color: var(--text-muted); }
 .sub { color: var(--text-secondary); }
 .drop { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vl td { border-top: 1px solid #000; }
 .hint { position: fixed; right: 14px; bottom: 12px; opacity: .3; cursor: pointer; font-size: 18px; background: none; border: none; }
 .hint:hover { opacity: .8; }
 @media (max-width: 860px) {
@@ -185,6 +186,8 @@ sel = defaultMonth();
 
 const work = (m, d) => dow(m, d) < 5 && !hol[m + '-' + d];
 const nd = e => { let c = 0; for (let d = e.a; d <= e.b; d++) if (work(e.m, d)) c++; return c; };
+const isVero = p => /^ver[oó]nica$/i.test(String(p.name).trim());
+const ordered = () => S.people.filter(p => !isVero(p)).concat(S.people.filter(isVero));
 const pn = id => { const p = S.people.find(x => x.id == id); return p ? p.name : ''; };
 const cover = (m, d) => S.ent.filter(e => e.m == m && d >= e.a && d <= e.b && S.people.some(p => p.id == e.p));
 const used = (id, t) => S.ent.filter(e => e.p == id && e.t == t).reduce((s, e) => s + nd(e), 0);
@@ -296,7 +299,8 @@ function renderMonth() {
   for (let d = 1; d <= n; d++) t += '<span class="h">' + d + '</span>';
   t += '<span></span>';
   for (let d = 1; d <= n; d++) t += '<span class="h muted">' + 'LMXJVSD'[dow(m, d)] + '</span>';
-  S.people.forEach(p => {
+  ordered().forEach((p, ix) => {
+    if (isVero(p) && ix > 0) t += '<span style="grid-column:1/-1;height:1px;background:#000;margin:1px 0"></span>';
     t += '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' + (p.id == me ? 'font-weight:600' : '') + '">' + esc(p.name) + '</span>';
     for (let d = 1; d <= n; d++) {
       const k = m + '-' + d; let c = 'c', col = null, tip = '';
@@ -381,7 +385,7 @@ function removeEntry(i) {
 // ═══ Ficha lateral ═══
 function renderSide() {
   const p = S.people.find(x => x.id == me);
-  const opts = '<option value="0"' + (!p ? ' selected' : '') + '>Elige tu nombre</option>' + S.people.map(x => '<option value="' + x.id + '"' + (x.id == me ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('');
+  const opts = '<option value="0"' + (!p ? ' selected' : '') + '>Elige tu nombre</option>' + ordered().map(x => '<option value="' + x.id + '"' + (x.id == me ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('');
   let h = '<div class="muted" style="font-size:11px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Soy<select onchange="VAC.setMe(+this.value)" style="height:26px;font-size:12px;flex:1">' + opts + '</select></div>';
   if (!p) { $('side').innerHTML = h + '<div class="sub" style="padding:6px 0">Elige tu nombre para ver tu saldo y pedir días.</div>'; return; }
   const uv = used(me, 'v'), ul = used(me, 'l');
@@ -407,9 +411,9 @@ function renderSide() {
 // ═══ Todo el equipo ═══
 function renderTeam() {
   let tv = 0, tl = 0;
-  const rows = S.people.map(p => {
+  const rows = ordered().map((p, ix) => {
     const uv = used(p.id, 'v'), ul = used(p.id, 'l'), bj = used(p.id, 'b'); tv += p.vac - uv; tl += p.lib - ul;
-    return '<tr><td style="font-weight:600">' + esc(p.name) + '</td><td style="width:22%"><div class="bar"><div style="width:' + Math.min(100, p.vac ? uv / p.vac * 100 : 0) + '%;background:' + C_VAC + '"></div></div></td><td>' + uv + ' de ' + p.vac + '</td><td>' + (p.vac - uv) + '</td><td>' + ul + ' de ' + p.lib + '</td><td>' + (p.lib - ul) + '</td><td>' + (bj ? '<span style="color:var(--text-danger)">' + bj + ' d</span>' : '–') + '</td></tr>';
+    return '<tr' + (isVero(p) && ix > 0 ? ' class="vl"' : '') + '><td style="font-weight:600">' + esc(p.name) + '</td><td style="width:22%"><div class="bar"><div style="width:' + Math.min(100, p.vac ? uv / p.vac * 100 : 0) + '%;background:' + C_VAC + '"></div></div></td><td>' + uv + ' de ' + p.vac + '</td><td>' + (p.vac - uv) + '</td><td>' + ul + ' de ' + p.lib + '</td><td>' + (p.lib - ul) + '</td><td>' + (bj ? '<span style="color:var(--text-danger)">' + bj + ' d</span>' : '–') + '</td></tr>';
   }).join('');
   $('vTeam').innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px"><div class="mc"><span class="sub" style="font-size:12px">Personas en el equipo</span><b>' + S.people.length + '</b></div><div class="mc"><span class="sub" style="font-size:12px">Vacaciones por pedir</span><b>' + tv + ' días</b></div><div class="mc"><span class="sub" style="font-size:12px">Libre disposición por pedir</span><b>' + tl + ' días</b></div></div>'
     + '<table><tr><th>Persona</th><th>Vacaciones pedidas</th><th></th><th>Pendientes</th><th>Libre disp. pedidos</th><th>Pendientes</th><th>Bajas</th></tr>' + rows + '</table>';
@@ -426,8 +430,8 @@ function renderAdmin() {
   const T = (k, l) => '<span class="pill' + (tab == k ? ' on' : '') + '" onclick="VAC.setTab(\'' + k + '\')">' + l + '</span>';
   let h = '<div style="display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap">' + T('eq', 'Equipo') + T('cal', 'Calendario del año') + T('dias', 'Días por persona') + T('anio', 'Año') + '<span class="sub" style="margin-left:auto;font-size:12px;display:inline-flex;align-items:center;gap:5px">' + ic('unlock', 14) + ' Desbloqueado</span><button onclick="VAC.lock()">Bloquear</button></div>';
   if (tab == 'eq') {
-    S.people.forEach(p => {
-      h += '<div class="row"><span class="muted">' + ic('user', 16) + '</span><input value="' + esc(p.name) + '" style="width:170px" onchange="VAC.rename(' + p.id + ',this.value)"><span class="sub">Equipo ADC</span><span style="margin-left:auto">'
+    ordered().forEach((p, ix) => {
+      h += '<div class="row"' + (isVero(p) && ix > 0 ? ' style="border-top:1px solid #000"' : '') + '><span class="muted">' + ic('user', 16) + '</span><input value="' + esc(p.name) + '" style="width:170px" onchange="VAC.rename(' + p.id + ',this.value)"><span class="sub">Equipo ADC</span><span style="margin-left:auto">'
         + (delId == p.id ? '<span class="err">¿Eliminar a ' + esc(p.name) + '?</span> <button onclick="VAC.delP(' + p.id + ')">Sí, eliminar</button> <button onclick="VAC.cancelDel()">Cancelar</button>' : '<button onclick="VAC.askDel(' + p.id + ')" style="color:var(--text-danger)">' + ic('trash', 14) + 'Eliminar</button>') + '</span></div>';
     });
     h += '<div class="row"><button onclick="VAC.addP()">' + ic('plus', 14) + 'Añadir miembro</button></div>';
@@ -448,7 +452,7 @@ function renderAdmin() {
   }
   if (tab == 'dias') {
     h += '<div class="sub" style="font-size:12px;margin-bottom:6px">Cambia estos días cada año según el calendario</div><table><tr><th>Persona</th><th>Vacaciones</th><th>Libre disposición</th></tr>';
-    S.people.forEach(p => { h += '<tr><td style="font-weight:600">' + esc(p.name) + '</td><td><input type="number" min="0" max="60" value="' + p.vac + '" style="width:70px" onchange="VAC.setN(' + p.id + ',\'vac\',this.value)"></td><td><input type="number" min="0" max="20" value="' + p.lib + '" style="width:70px" onchange="VAC.setN(' + p.id + ',\'lib\',this.value)"></td></tr>'; });
+    ordered().forEach((p, ix) => { h += '<tr' + (isVero(p) && ix > 0 ? ' class="vl"' : '') + '><td style="font-weight:600">' + esc(p.name) + '</td><td><input type="number" min="0" max="60" value="' + p.vac + '" style="width:70px" onchange="VAC.setN(' + p.id + ',\'vac\',this.value)"></td><td><input type="number" min="0" max="20" value="' + p.lib + '" style="width:70px" onchange="VAC.setN(' + p.id + ',\'lib\',this.value)"></td></tr>'; });
     h += '</table>';
   }
   if (tab == 'anio') {
