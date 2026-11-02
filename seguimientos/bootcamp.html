@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 8</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 10</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -800,6 +800,9 @@ select.inp{cursor:pointer}
           <h2 style="margin:0;font-size:18px;font-weight:700">Temas a tratar en la próxima reunión</h2>
           <div style="color:var(--mut);font-size:13px;margin-top:2px">Cualquier departamento puede añadir temas</div>
         </div>
+        <sc-if value="{{hasTopics}}" hint-placeholder-val="{{true}}">
+          <button onClick="{{topicsToToday}}" title="Convierte todos los temas pendientes en tareas con revisión hoy" style="align-self:flex-start;background:#fff;color:#2A3A8C;border:1px solid #BCD0F5;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer">Pasar todo a «Tareas a revisar hoy» →</button>
+        </sc-if>
         <div style="display:flex;gap:8px">
           <input class="inp" aria-label="Nuevo tema" value="{{topicIn}}" onChange="{{onTopicIn}}" onKeyDown="{{onTopicKey}}" placeholder="Escribe un tema… (Enter para añadir)" style="flex:1 1 auto">
           <button onClick="{{addTopic}}" style="background:var(--reu);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:800;font-size:13px;white-space:nowrap">Añadir tema</button>
@@ -900,6 +903,7 @@ select.inp{cursor:pointer}
               <div style="flex:1 1 220px;font-size:14px;font-weight:600">{{h.text}}</div>
               <span class="chip" style="{{h.deptStyle}}">{{h.dept}}</span>
               <span class="chip" style="background:#DDF5E6;color:#176B3A">Completado el {{h.resDate}}</span>
+              <button onClick="{{h.onHDel}}" title="Borrar del histórico (con contraseña)" aria-label="Borrar del histórico" style="background:#fff;border:1px solid #F2A3B4;color:#B0203C;border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
             </div>
             <div class="mono" style="font-size:11px;color:var(--mut)">{{h.dateLbl}} {{h.date}}{{h.revTxt}}</div>
             <div style="font-size:13px;line-height:1.45;white-space:pre-wrap">{{h.comment}}</div>
@@ -1003,6 +1007,23 @@ select.inp{cursor:pointer}
             </sc-for>
           </div>
         </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{hdelOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;inset:0;background:rgba(27,33,80,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60">
+      <div role="dialog" aria-label="Borrar del histórico" style="background:#fff;color:var(--ink);border-radius:20px;width:100%;max-width:460px;padding:26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(40,50,120,.3)">
+        <div>
+          <div class="lbl">Reuniones · Histórico</div>
+          <h2 style="margin:4px 0 0;font-size:20px;font-weight:800">Borrar del histórico</h2>
+          <div style="color:var(--mut);font-size:13px;margin-top:6px;line-height:1.5">Se borrará <b>{{hdelText}}</b> para todos los usuarios. No se puede deshacer.</div>
+        </div>
+        <input type="password" class="inp" aria-label="Contraseña para borrar" placeholder="Contraseña" value="{{hdelPwdVal}}" onChange="{{onHdelPwd}}">
+        <sc-if value="{{hdelErr}}" hint-placeholder-val="{{false}}"><span style="font-size:12px;color:#B0203C;font-weight:700">Contraseña incorrecta</span></sc-if>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+          <button onClick="{{hdelCancel}}" style="background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px">Cancelar</button>
+          <button onClick="{{hdelConfirm}}" style="background:#D32F4B;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;font-size:14px">Borrar</button>
+        </div>
       </div>
     </div>
   </sc-if>
@@ -1287,7 +1308,7 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, copyMsg:'', toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', cmOpen:{}, delId:null, delPwd:'', delErr:false, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', cmOpen:{}, delId:null, delPwd:'', delErr:false, hdel:null, hdelPwd:'', hdelErr:false, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -2132,11 +2153,11 @@ class Component extends DCLogic {
       }
     }));
     const histTasks = s.tasks.filter(x => x.resolved).sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0)).map(x => ({
-      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, revTxt:x.review ? ' · Revisión prevista ' + isoTxt(x.review) : '', resDate:x.resolvedDate, comment:x.resolution, _at:x.resolvedAt || 0, dateLbl:'Asignada el'
+      text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, revTxt:x.review ? ' · Revisión prevista ' + isoTxt(x.review) : '', resDate:x.resolvedDate, comment:x.resolution, _at:x.resolvedAt || 0, dateLbl:'Asignada el', kind:'task', hid:x.id
     }));
     const histList = histTasks.concat(s.topics.filter(x => x.resolved).map(x => ({
-      text:x.text, dept:'Tema', deptStyle:'background:#FCE4F1;color:#9B2275', date:x.date || '', dateLbl:'Introducido el', revTxt:x.moves ? ' · movido ' + x.moves + (x.moves === 1 ? ' vez' : ' veces') : '', resDate:x.resolvedDate, comment:x.comment || '', _at:x.resolvedAt || 0
-    }))).sort((a, b) => (b._at || 0) - (a._at || 0));
+      text:x.text, dept:'Tema', deptStyle:'background:#FCE4F1;color:#9B2275', date:x.date || '', dateLbl:'Introducido el', revTxt:x.moves ? ' · movido ' + x.moves + (x.moves === 1 ? ' vez' : ' veces') : '', resDate:x.resolvedDate, comment:x.comment || '', _at:x.resolvedAt || 0, kind:'topic', hid:x.id
+    }))).sort((a, b) => (b._at || 0) - (a._at || 0)).map(h => Object.assign(h, {onHDel:() => set({hdel:{kind:h.kind, id:h.hid, text:h.text}, hdelPwd:'', hdelErr:false})}));
     const taskList = s.tasks.filter(x => !x.resolved).map(x => ({
       text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, rev:x.review || '', onRev:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:e.target.value}) : y)}),
       status:x.done ? 'Gestionada el ' + x.doneDate : 'Pendiente', statusStyle:x.done ? 'background:#DDF5E6;color:#176B3A' : 'background:#FFF4D6;color:#8A5A00',
@@ -2174,6 +2195,16 @@ class Component extends DCLogic {
       roBanner:!!profile && !canEdit,
       roText:'Solo lectura: esta pestaña la edita ' + (role === 'reu' ? 'todo el mundo' : DEPT[role]) + '.' + (!s.hub ? ' Con la contraseña de administración puedes desbloquear la edición total.' : ''),
       canChange:!s.locked,
+      hdelOpen:!!s.hdel, hdelErr:s.hdelErr, hdelPwdVal:s.hdelPwd, hdelText:s.hdel ? s.hdel.text : '',
+      onHdelPwd:(e) => set({hdelPwd:e.target.value, hdelErr:false}),
+      hdelCancel:() => set({hdel:null, hdelPwd:'', hdelErr:false}),
+      hdelConfirm:() => {
+        if (s.hdelPwd !== 'AdminHub') { set({hdelErr:true}); return; }
+        const d = s.hdel;
+        set(d.kind === 'task' ? {tasks:s.tasks.filter(x => x.id !== d.id)} : {topics:s.topics.filter(x => x.id !== d.id)});
+        set({hdel:null, hdelPwd:'', hdelErr:false});
+        flash('Borrado del histórico');
+      },
       delOpen:!!s.delId, delErr:s.delErr, delPwdVal:s.delPwd, delName:((s.added.find(x => x.id === s.delId) || {}).full) || 'este candidato',
       onDelPwd:(e) => set({delPwd:e.target.value, delErr:false}),
       delCancel:() => set({delId:null, delPwd:'', delErr:false}),
@@ -2235,7 +2266,15 @@ class Component extends DCLogic {
       changeProfile:() => { lsSet('adminhub_bootcamp_profile', null); set({profile:null, unlocked:false, pwdIn:'', pwdErr:false}); },
       comViewTabs, isComAlumnos:s.comView === 'alumnos', isComRooms:s.comView === 'habitaciones', rooms:roomList, roomStats,
       dueList, noDue:dueList.length === 0, histList, noHist:histList.length === 0, todayLabel:todayTxt,
-      topicList, noTopics:topicList.length === 0, taskList, noTasks:taskList.length === 0, deptOpts,
+      topicList, noTopics:topicList.length === 0, hasTopics:topicList.length > 0,
+      topicsToToday:() => {
+        const pend = s.topics.filter(x => !x.resolved);
+        if (!pend.length) return;
+        const d = new Date(), p2 = (n) => String(n).padStart(2, '0'), iso = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+        let n = s.nextT;
+        const nt = pend.map(x => ({id:'k' + (n++), text:x.text + (x.comment ? ' — ' + x.comment : ''), dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:iso}));
+        set({tasks:s.tasks.concat(nt), topics:s.topics.filter(x => x.resolved), nextT:n, toast:pend.length + (pend.length === 1 ? ' tema pasado' : ' temas pasados') + ' a «Tareas a revisar hoy».', toastTo:s.taskDept});
+      }, taskList, noTasks:taskList.length === 0, deptOpts,
       topicIn:s.topicIn, taskIn:s.taskIn,
       onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskKey:(e) => {
         if (e.key !== 'Enter') return;
