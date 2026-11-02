@@ -128,7 +128,7 @@ const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.m
 const C_EMP = '#85B7EB', C_VAC = '#F7E463', C_LIB = '#D63DB8', C_ORA = '#EF9F27', C_BAJ = '#E24B4A';
 const MS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MON3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-const TN = { v:'Vacaciones', l:'Libre disposición', b:'Baja' };
+const TN = { v:'Vacaciones', l:'Libre disposición', b:'No operativa' };
 const TC = { v:C_VAC, l:C_LIB, b:C_BAJ };
 
 // ═══ Iconos ═══
@@ -179,7 +179,7 @@ function normalize(x) {
   const b = defaults();
   return { people: Array.isArray(x.people) ? x.people : b.people, hl: Array.isArray(x.hl) ? x.hl : b.hl, ent: Array.isArray(x.ent) ? x.ent : [] };
 }
-let me = 0, sel = 0, scope = 'team', view = 'main', unlocked = false, tab = 'eq', reqT = 'v', delId = null, note = '', online = true, pending = 0, detected = null, attach = null, detWarn = '';
+let me = 0, sel = 0, scope = 'team', view = 'main', unlocked = false, tab = 'eq', reqT = 'v', delId = null, note = '', online = true, pending = 0, detected = null, attach = null, detWarn = '', bTarget = 'all';
 try { me = parseInt(localStorage.getItem(ME_KEY), 10) || 0; } catch (e) {}
 function defaultMonth() { const n = new Date(); return n.getFullYear() === YEAR ? n.getMonth() : (n.getFullYear() > YEAR ? 11 : 0); }
 sel = defaultMonth();
@@ -188,6 +188,8 @@ const work = (m, d) => dow(m, d) < 5 && !hol[m + '-' + d];
 const nd = e => { let c = 0; for (let d = e.a; d <= e.b; d++) if (work(e.m, d)) c++; return c; };
 const isVero = p => /^ver[oó]nica$/i.test(String(p.name).trim());
 const ordered = () => S.people.filter(p => !isVero(p)).concat(S.people.filter(isVero));
+const meP = () => S.people.find(x => x.id == me);
+const meIsVero = () => { const q = meP(); return !!q && isVero(q); };
 const pn = id => { const p = S.people.find(x => x.id == id); return p ? p.name : ''; };
 const cover = (m, d) => S.ent.filter(e => e.m == m && d >= e.a && d <= e.b && S.people.some(p => p.id == e.p));
 const used = (id, t) => S.ent.filter(e => e.p == id && e.t == t).reduce((s, e) => s + nd(e), 0);
@@ -265,13 +267,17 @@ function opRemoveEntry(k) {
   S.ent = S.ent.filter(e => !(e.p == k.p && e.m == k.m && e.a == k.a && e.b == k.b && e.t == k.t));
 }
 
+function opForceDay(p, m, d, t) { opRemoveDay(p, m, d); S.ent.push({ p: p, m: m, a: d, b: d, t: t }); mergeEnt(); }
+function opClearDayType(p, m, d, t) { const e = S.ent.find(x => x.p == p && x.m == m && d >= x.a && d <= x.b); if (e && e.t == t) opRemoveDay(p, m, d); }
+function bTargets() { return bTarget === 'all' ? S.people.map(q => q.id) : [bTarget]; }
+
 // ═══ Pintado de días ═══
 function dayInfo(m, d, onlyMe) {
   const h = hol[m + '-' + d];
   if (h) return { c: C_EMP, tip: h.n };
   if (dow(m, d) > 4) return { w: 1 };
   const all = cover(m, d), list = onlyMe ? all.filter(e => e.p == me) : all;
-  const names = list.map(e => pn(e.p) + (e.t == 'l' ? ' (libre)' : e.t == 'b' ? ' (baja)' : '')).join(', ');
+  const names = list.map(e => pn(e.p) + (e.t == 'l' ? ' (libre)' : e.t == 'b' ? ' (no operativa)' : '')).join(', ');
   if (list.some(e => e.t == 'b')) return { c: C_BAJ, tip: names };
   const la = list.filter(e => e.t != 'b'), away = all.filter(e => e.t != 'b').length;
   if (la.length && away >= 2) return { c: C_ORA, tip: names };
@@ -293,7 +299,7 @@ function renderYear() {
   $('year').innerHTML = h;
 }
 function renderMonth() {
-  const m = sel, n = dim(m);
+  const m = sel, n = dim(m), canB = meIsVero() && reqT == 'b';
   $('mh').textContent = MS[m] + ' ' + YEAR;
   let t = '<div class="tl" style="grid-template-columns:62px repeat(' + n + ',minmax(0,1fr))"><span></span>';
   for (let d = 1; d <= n; d++) t += '<span class="h">' + d + '</span>';
@@ -311,8 +317,8 @@ function renderMonth() {
         const away = cover(m, d).filter(x => x.t != 'b').length;
         col = e.t == 'b' ? C_BAJ : (away >= 2 ? C_ORA : (e.t == 'l' ? C_LIB : C_VAC)); tip = TN[e.t];
       }
-      const mine = p.id == me && work(m, d);
-      t += '<span class="' + c + (mine ? ' cl' : '') + '" style="' + bg(col) + '" title="' + d + ' ' + MS[m].toLowerCase() + (tip ? ' · ' + esc(tip) : '') + (mine ? (e ? ' · pulsa para quitar' : ' · pulsa para pedir') : '') + '"' + (mine ? ' onclick="VAC.toggleDay(' + m + ',' + d + ')"' : '') + '></span>';
+      const mine = work(m, d) && (p.id == me || canB);
+      t += '<span class="' + c + (mine ? ' cl' : '') + '" style="' + bg(col) + '" title="' + d + ' ' + MS[m].toLowerCase() + (tip ? ' · ' + esc(tip) : '') + (mine ? (canB ? (e && e.t == 'b' ? ' · pulsa para quitar' : ' · pulsa para marcar no operativa') : (e ? ' · pulsa para quitar' : ' · pulsa para pedir')) : '') + '"' + (mine ? ' onclick="VAC.toggleCell(' + p.id + ',' + m + ',' + d + ')"' : '') + '></span>';
     }
   });
   t += '<span></span>';
@@ -323,16 +329,32 @@ function renderMonth() {
   $('detail').innerHTML = t + '</div>';
 }
 function renderLegend() {
-  const L = [[C_EMP, 'Días de la empresa'], [C_VAC, 'Vacaciones'], [C_LIB, 'Libre disposición'], [C_ORA, '2 o más personas de vacaciones el mismo día'], [C_BAJ, 'Baja']];
+  const L = [[C_EMP, 'Días de la empresa'], [C_VAC, 'Vacaciones'], [C_LIB, 'Libre disposición'], [C_ORA, '2 o más personas de vacaciones el mismo día'], [C_BAJ, 'No operativa']];
   $('lg').innerHTML = L.map(x => '<span><i style="background:' + x[0] + '"></i>' + x[1] + '</span>').join('');
 }
 
 // ═══ Acciones del usuario ═══
+function toggleCell(pid, m, d) {
+  if (meIsVero() && reqT == 'b') {
+    sel = m; note = '';
+    const ex = S.ent.find(e => e.p == pid && e.m == m && d >= e.a && d <= e.b);
+    if (ex && ex.t == 'b') mutate(function () { opClearDayType(pid, m, d, 'b'); });
+    else mutate(function () { opForceDay(pid, m, d, 'b'); });
+    return;
+  }
+  toggleDay(m, d);
+}
 function toggleDay(m, d) {
   sel = m;
   if (!me || !S.people.some(p => p.id == me)) { note = 'Elige primero quién eres'; renderAll(); return; }
+  if (reqT == 'b' && !meIsVero()) reqT = 'v';
+  if (reqT == 'b') {
+    const ids = bTargets(), todos = ids.every(id => S.ent.some(e => e.p == id && e.m == m && d >= e.a && d <= e.b && e.t == 'b'));
+    note = ''; mutate(function () { ids.forEach(id => { if (todos) opClearDayType(id, m, d, 'b'); else opForceDay(id, m, d, 'b'); }); }); return;
+  }
   const mine = S.ent.find(e => e.p == me && e.m == m && d >= e.a && d <= e.b);
   const mm = me;
+  if (mine && mine.t == 'b') { note = 'Ese día está marcado como no operativa'; renderAll(); return; }
   if (mine) { note = ''; mutate(function () { opRemoveDay(mm, m, d); }); return; }
   if (reqT != 'b') {
     const p = S.people.find(x => x.id == me);
@@ -370,6 +392,8 @@ function addReq() {
   const r = parseR(); if (r.err) return;
   const wd = r.days.filter(x => work(x[0], x[1]));
   if (!wd.length) { note = 'Ese rango no tiene días laborables'; renderSide(); return; }
+  if (reqT == 'b' && !meIsVero()) reqT = 'v';
+  if (reqT == 'b') { const ids = bTargets(); note = ''; sel = wd[0][0]; mutate(function () { ids.forEach(id => wd.forEach(x => opForceDay(id, x[0], x[1], 'b'))); }); return; }
   const p = S.people.find(x => x.id == me), t = reqT, mm = me;
   const nuevos = wd.filter(x => !S.ent.some(e => e.p == mm && e.m == x[0] && x[1] >= e.a && x[1] <= e.b));
   if (t != 'b' && nuevos.length > (t == 'v' ? p.vac - used(me, 'v') : p.lib - used(me, 'l'))) { note = 'Te pasas de tus días de ' + TN[t].toLowerCase(); renderSide(); return; }
@@ -378,12 +402,14 @@ function addReq() {
 }
 function removeEntry(i) {
   const e = S.ent[i]; if (!e || e.p != me) return;
+  if (e.t == 'b' && !meIsVero()) return;
   const k = { p: e.p, m: e.m, a: e.a, b: e.b, t: e.t };
   mutate(function () { opRemoveEntry(k); });
 }
 
 // ═══ Ficha lateral ═══
 function renderSide() {
+  if (reqT == 'b' && !meIsVero()) reqT = 'v';
   const p = S.people.find(x => x.id == me);
   const opts = '<option value="0"' + (!p ? ' selected' : '') + '>Elige tu nombre</option>' + ordered().map(x => '<option value="' + x.id + '"' + (x.id == me ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('');
   let h = '<div class="muted" style="font-size:11px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Soy<select onchange="VAC.setMe(+this.value)" style="height:26px;font-size:12px;flex:1">' + opts + '</select></div>';
@@ -394,8 +420,10 @@ function renderSide() {
     + '<div class="sub" style="display:flex;justify-content:space-between"><span>Vacaciones</span><span>' + uv + '/' + p.vac + ' · quedan ' + (p.vac - uv) + '</span></div><div class="bar" style="margin:3px 0 9px"><div style="width:' + Math.min(100, p.vac ? uv / p.vac * 100 : 0) + '%;background:' + C_VAC + '"></div></div>'
     + '<div class="sub" style="display:flex;justify-content:space-between"><span>Libre disp.</span><span>' + ul + '/' + p.lib + ' · quedan ' + (p.lib - ul) + '</span></div><div class="bar" style="margin:3px 0 12px"><div style="width:' + Math.min(100, p.lib ? ul / p.lib * 100 : 0) + '%;background:' + C_LIB + '"></div></div>'
     + '<div class="sub" style="border-top:0.5px solid var(--border);padding-top:9px;margin-bottom:6px">Qué vas a pedir</div>'
-    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">' + ['v', 'l', 'b'].map(k => '<span class="pill' + (reqT == k ? ' on' : '') + '" onclick="VAC.setReqT(\'' + k + '\')">' + (k == 'v' ? 'Vacaciones' : k == 'l' ? 'Libre disp.' : 'Baja') + '</span>').join('') + '</div>'
-    + '<div class="muted" style="font-size:11px;margin-bottom:7px">Pulsa los días en el calendario o elige un rango</div>'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">' + (meIsVero() ? ['v', 'l', 'b'] : ['v', 'l']).map(k => '<span class="pill' + (reqT == k ? ' on' : '') + '" onclick="VAC.setReqT(\'' + k + '\')">' + (k == 'v' ? 'Vacaciones' : k == 'l' ? 'Libre disp.' : 'No operativa') + '</span>').join('') + '</div>'
+    + (reqT == 'b'
+      ? '<div class="muted" style="font-size:11px;margin-bottom:5px">Calendario grande: se aplica a «Para». En la fila de una persona: solo a esa persona</div><div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">Para<select onchange="VAC.setBT(this.value)" style="height:26px;font-size:12px;flex:1"><option value="all"' + (bTarget === 'all' ? ' selected' : '') + '>Todo el equipo</option>' + ordered().map(x => '<option value="' + x.id + '"' + (bTarget === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select></div>'
+      : '<div class="muted" style="font-size:11px;margin-bottom:7px">Pulsa los días en el calendario o elige un rango</div>')
     + '<input type="date" id="d1" value="' + (window._d1 || YEAR + '-01-04') + '" min="' + YEAR + '-01-01" max="' + YEAR + '-12-31" onchange="window._d1=this.value;VAC.prev()" style="width:100%;margin-bottom:4px"><input type="date" id="d2" value="' + (window._d2 || YEAR + '-01-08') + '" min="' + YEAR + '-01-01" max="' + YEAR + '-12-31" onchange="window._d2=this.value;VAC.prev()" style="width:100%">'
     + '<div id="prev" style="margin:6px 0"></div><button onclick="VAC.addReq()" style="width:100%;justify-content:center">Pedir rango</button>'
     + (note ? '<div class="warn">' + esc(note) + '</div>' : '')
@@ -403,7 +431,7 @@ function renderSide() {
   if (!mine.length) h += '<div class="muted" style="padding:4px 0">Aún no has pedido días.</div>';
   mine.forEach(e => {
     const i = S.ent.indexOf(e);
-    h += '<div class="row" style="padding:4px 0;border-top:none"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:' + TC[e.t] + '" title="' + TN[e.t] + '"></span><span style="flex:1">' + e.a + (e.b > e.a ? '–' + e.b : '') + ' ' + MS[e.m].slice(0, 3).toLowerCase() + ' · ' + nd(e) + ' d</span><span class="muted" style="cursor:pointer" title="Quitar" onclick="VAC.removeEntry(' + i + ')">' + ic('trash', 14) + '</span></div>';
+    h += '<div class="row" style="padding:4px 0;border-top:none"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:' + TC[e.t] + '" title="' + TN[e.t] + '"></span><span style="flex:1">' + e.a + (e.b > e.a ? '–' + e.b : '') + ' ' + MS[e.m].slice(0, 3).toLowerCase() + ' · ' + nd(e) + ' d</span>' + (e.t == 'b' && !meIsVero() ? '' : '<span class="muted" style="cursor:pointer" title="Quitar" onclick="VAC.removeEntry(' + i + ')">' + ic('trash', 14) + '</span>') + '</div>';
   });
   $('side').innerHTML = h; prev();
 }
@@ -416,7 +444,7 @@ function renderTeam() {
     return '<tr' + (isVero(p) && ix > 0 ? ' class="vl"' : '') + '><td style="font-weight:600">' + esc(p.name) + '</td><td style="width:22%"><div class="bar"><div style="width:' + Math.min(100, p.vac ? uv / p.vac * 100 : 0) + '%;background:' + C_VAC + '"></div></div></td><td>' + uv + ' de ' + p.vac + '</td><td>' + (p.vac - uv) + '</td><td>' + ul + ' de ' + p.lib + '</td><td>' + (p.lib - ul) + '</td><td>' + (bj ? '<span style="color:var(--text-danger)">' + bj + ' d</span>' : '–') + '</td></tr>';
   }).join('');
   $('vTeam').innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px"><div class="mc"><span class="sub" style="font-size:12px">Personas en el equipo</span><b>' + S.people.length + '</b></div><div class="mc"><span class="sub" style="font-size:12px">Vacaciones por pedir</span><b>' + tv + ' días</b></div><div class="mc"><span class="sub" style="font-size:12px">Libre disposición por pedir</span><b>' + tl + ' días</b></div></div>'
-    + '<table><tr><th>Persona</th><th>Vacaciones pedidas</th><th></th><th>Pendientes</th><th>Libre disp. pedidos</th><th>Pendientes</th><th>Bajas</th></tr>' + rows + '</table>';
+    + '<table><tr><th>Persona</th><th>Vacaciones pedidas</th><th></th><th>Pendientes</th><th>Libre disp. pedidos</th><th>Pendientes</th><th>No operativa</th></tr>' + rows + '</table>';
 }
 
 // ═══ Gestión de info ═══
@@ -608,7 +636,7 @@ function applyDet() {
 }
 
 // ═══ Navegación ═══
-function setMe(id) { me = id; note = ''; try { localStorage.setItem(ME_KEY, String(id)); } catch (e) {} renderAll(); }
+function setMe(id) { me = id; { const pp = S.people.find(x => x.id == id); if (!(pp && isVero(pp)) && reqT == 'b') reqT = 'v'; } note = ''; try { localStorage.setItem(ME_KEY, String(id)); } catch (e) {} renderAll(); }
 function go(v) {
   view = v;
   ['Main', 'Team', 'Adm'].forEach(k => { $('v' + k).style.display = (k.toLowerCase() == v ? (k == 'Main' ? 'grid' : 'block') : 'none'); });
@@ -621,7 +649,7 @@ function renderAll() { renderYear(); renderMonth(); renderSide(); renderTeam(); 
 
 window.VAC = {
   selM: function (m) { sel = m; renderYear(); renderMonth(); },
-  toggleDay: toggleDay, addReq: addReq, prev: prev, removeEntry: removeEntry, setMe: setMe,
+  toggleDay: toggleDay, toggleCell: toggleCell, setBT: function (v) { bTarget = v === 'all' ? 'all' : parseInt(v, 10); renderSide(); }, addReq: addReq, prev: prev, removeEntry: removeEntry, setMe: setMe,
   setReqT: function (k) { reqT = k; note = ''; renderSide(); },
   unlock: unlock, setYear: setYear, lock: function () { unlocked = false; renderAdmin(); },
   setTab: function (k) { tab = k; renderAdmin(); },
