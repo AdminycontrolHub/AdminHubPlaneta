@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vacaciones 2027 · Admin Hub</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --verde: #0e8f5b;
+  --surface-1: #EAE3D7; --surface-2: #F5F0E8;
+  --text-primary: #1a3a5c; --text-secondary: #4a6a8a; --text-muted: #8a9db0;
+  --border: rgba(26,58,92,0.16); --border-strong: rgba(26,58,92,0.32);
+  --bg-accent: rgba(0,128,200,0.12); --text-accent: #005080; --border-accent: #2f7fc0;
+  --bg-warning: #FFF0C2; --text-warning: #8a5a00; --bg-danger: #FDE2E2; --text-danger: #b42318;
+  --radius: 8px;
+}
+body { background: #0a2540; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text-primary); }
+.page { max-width: 1080px; margin: 0 auto; padding: 18px 16px 40px; }
+.back { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; padding: 7px 14px 7px 11px; border-radius: 10px; border: 1px solid rgba(0,230,255,0.35); background: rgba(0,90,130,0.15); color: #00E6FF; font-size: 13px; text-decoration: none; transition: all .2s; }
+.back:hover { background: rgba(0,230,255,0.12); border-color: rgba(0,230,255,0.7); transform: translateX(-2px); }
+#app { --cell: color-mix(in srgb, var(--text-primary) 9%, transparent); border-radius: 16px; background: var(--surface-2); overflow: hidden; font-size: 13px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+#app button { font-family: inherit; font-size: 12px; padding: 6px 11px; display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--text-primary); border: 0.5px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
+#app button:hover { background: var(--surface-1); }
+#app input, #app select { font-family: inherit; font-size: 13px; height: 30px; padding: 0 8px; border: 0.5px solid var(--border-strong); border-radius: var(--radius); background: #fff; color: var(--text-primary); }
+#app input:focus, #app select:focus { outline: 2px solid var(--border-accent); outline-offset: 0; }
+.ic { flex: none; }
+.bar0 { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 0.5px solid var(--border); flex-wrap: wrap; background: #E8E1D5; }
+.ttl { display: flex; align-items: center; gap: 8px; color: var(--verde); font-weight: 600; font-size: 16px; }
+.pad { padding: 16px; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 16px; }
+.pill { font-size: 12px; padding: 3px 10px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); cursor: pointer; background: transparent; color: var(--text-primary); user-select: none; }
+.pill.on { background: var(--bg-accent); color: var(--text-accent); border-color: var(--border-accent); }
+.pill.static { cursor: default; }
+.yg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.mb { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 7px 8px; cursor: pointer; background: rgba(255,255,255,0.4); }
+.mb:hover { border-color: var(--border-strong); }
+.mb.sel { border: 1.5px solid var(--border-accent); padding: 6.5px 7.5px; }
+.mb h4 { font-size: 12px; font-weight: 600; margin: 0 0 5px; }
+.dg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dg i { aspect-ratio: 1; border-radius: 2px; background: var(--cell); box-sizing: border-box; display: block; }
+.dg i.wk, .tl .c.wk { background: transparent; border: 0.5px solid var(--border); }
+.cl { cursor: pointer; }
+.cl:hover { outline: 1.5px solid var(--text-accent); outline-offset: 0; }
+.lg { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--border); }
+.lg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -2px; }
+.tl { display: grid; gap: 2px; align-items: center; font-size: 11px; }
+.tl .c { height: 22px; border-radius: 2px; background: var(--cell); box-sizing: border-box; }
+.tl .h { text-align: center; color: var(--text-secondary); letter-spacing: -.4px; }
+.bar { height: 7px; border-radius: 4px; background: var(--cell); overflow: hidden; }
+.bar div { height: 100%; }
+.side { border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px; align-self: start; font-size: 12px; background: rgba(255,255,255,0.4); }
+.row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 0.5px solid var(--border); }
+.mc { background: var(--surface-1); border-radius: var(--radius); padding: 10px 12px; }
+.mc b { display: block; font-size: 20px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 7px 6px; border-top: 0.5px solid var(--border); text-align: left; font-weight: 400; }
+th { font-size: 11px; color: var(--text-secondary); border-top: none; }
+.err { color: var(--text-danger); font-size: 12px; }
+.warn { color: var(--text-warning); background: var(--bg-warning); padding: 5px 8px; border-radius: var(--radius); font-size: 12px; margin-top: 6px; }
+.ok { color: var(--verde); }
+.muted { color: var(--text-muted); }
+.sub { color: var(--text-secondary); }
+.drop { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hint { position: fixed; right: 14px; bottom: 12px; opacity: .3; cursor: pointer; font-size: 18px; background: none; border: none; }
+.hint:hover { opacity: .8; }
+@media (max-width: 860px) {
+  .main { grid-template-columns: 1fr; }
+  .yg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) { .yg { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="back" href="index.html" id="backHub"></a>
+
+  <div id="app">
+    <div class="bar0">
+      <div class="ttl"><span id="palm"></span><span>Vacaciones <span id="yr">2027</span></span></div>
+      <span class="pill static">Equipo ADC</span>
+      <span id="st" class="sub" style="font-size:11px">Cargando…</span>
+      <span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+        <button id="bBack" onclick="go('main')" style="display:none"></button>
+        <button id="bTeam" onclick="go('team')"></button>
+        <button id="bAdm" onclick="go('adm')"></button>
+      </span>
+    </div>
+
+    <div id="vMain" class="pad main">
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+          <span id="pT" class="pill on" onclick="setScope('team')">Todo el equipo</span>
+          <span id="pM" class="pill" onclick="setScope('me')">Solo yo</span>
+          <span style="margin-left:auto;font-size:11px" class="sub">Pulsa un día para pedirlo o quitarlo</span>
+        </div>
+        <div id="year" class="yg"></div>
+        <div style="border-top:0.5px solid var(--border);margin-top:14px;padding-top:12px">
+          <div id="mh" style="font-weight:600;font-size:14px;margin-bottom:8px"></div>
+          <div id="detail"></div>
+        </div>
+        <div class="lg" id="lg"></div>
+      </div>
+      <div class="side" id="side"></div>
+    </div>
+
+    <div id="vTeam" class="pad" style="display:none"></div>
+    <div id="vAdm" class="pad" style="display:none"></div>
+  </div>
+</div>
+<button class="hint" id="hintBtn" title="Pista" style="display:none">🌠✨</button>
+
+<script>
+(function(){
+// ═══ Configuración ═══
+const YEAR = 2027;                       // Para otro año: cambiar solo esta línea
+const WORKER_URL = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
+const KV_KEY = 'adminhub_vacaciones_' + YEAR + '_v1';
+const KV_FILE_KEY = 'adminhub_vacaciones_' + YEAR + '_adjunto_v1';
+const GESTION_PASSWORD = 'AdminHub';   // Contraseña de "Gestión de info" (cámbiala aquí)
+const ME_KEY = 'adminhub_vacaciones_yo';
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+
+const C_EMP = '#85B7EB', C_VAC = '#F7E463', C_LIB = '#D63DB8', C_ORA = '#EF9F27', C_BAJ = '#E24B4A';
+const MS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MON3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const TN = { v:'Vacaciones', l:'Libre disposición', b:'Baja' };
+const TC = { v:C_VAC, l:C_LIB, b:C_BAJ };
+
+// ═══ Iconos ═══
+const P = {
+  palm: '<path d="M12 22c.4-4 .8-8 1.4-11.5"/><path d="M13.4 10.5C12 7.5 8.5 6 5 7.5"/><path d="M13.4 10.5C10.5 9 7 10 5 13"/><path d="M13.4 10.5c1.1-3.5 4.1-5 7.6-4"/><path d="M13.4 10.5c2.6-1 5.6.5 7.1 3.5"/><path d="M13.4 10.5C13 7.5 13.5 5 15.5 3"/><path d="M8 22h8"/>',
+  back: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  unlock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'
+};
+function ic(n, s) { s = s || 16; return '<svg class="ic" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + P[n] + '</svg>'; }
+
+// ═══ Utilidades de fecha ═══
+const dow = (m, d) => (new Date(YEAR, m, d).getDay() + 6) % 7;
+const dim = m => new Date(YEAR, m + 1, 0).getDate();
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const $ = id => document.getElementById(id);
+
+// ═══ Estado ═══
+function defaults() {
+  const nm = ['Ana','Elsa','Toñi','Noelia','Silvia','Verónica','Cristina'];
+  return {
+    people: nm.map((n, i) => ({ id: i + 1, name: n, vac: 23, lib: 4 })),
+    hl: [[0,1,'Año Nuevo'],[0,6,'Reyes'],[2,26,'Viernes Santo'],[2,29,'Lunes de Pascua'],[4,1,'Fiesta del Trabajo'],[5,24,'San Juan'],[7,15,'La Asunción'],[8,11,'Diada de Catalunya'],[10,1,'Todos los Santos'],[11,6,'Día de la Constitución'],[11,8,'La Inmaculada'],[11,25,'Navidad'],[11,26,'San Esteban']].map(a => ({ m:a[0], d:a[1], n:a[2] })),
+    ent: []
+  };
+}
+let S = defaults();
+let hol = {};
+function rebuild() { hol = {}; S.hl.forEach(h => { hol[h.m + '-' + h.d] = h; }); }
+function normalize(x) {
+  const b = defaults();
+  return { people: Array.isArray(x.people) ? x.people : b.people, hl: Array.isArray(x.hl) ? x.hl : b.hl, ent: Array.isArray(x.ent) ? x.ent : [] };
+}
+let me = 0, sel = 0, scope = 'team', view = 'main', unlocked = false, tab = 'eq', reqT = 'v', delId = null, note = '', online = true, pending = 0, detected = null, attach = null, detWarn = '';
+try { me = parseInt(localStorage.getItem(ME_KEY), 10) || 0; } catch (e) {}
+(function () { const n = new Date(); sel = n.getFullYear() === YEAR ? n.getMonth() : (n.getFullYear() > YEAR ? 11 : 0); })();
+
+const work = (m, d) => dow(m, d) < 5 && !hol[m + '-' + d];
+const nd = e => { let c = 0; for (let d = e.a; d <= e.b; d++) if (work(e.m, d)) c++; return c; };
+const pn = id => { const p = S.people.find(x => x.id == id); return p ? p.name : ''; };
+const cover = (m, d) => S.ent.filter(e => e.m == m && d >= e.a && d <= e.b && S.people.some(p => p.id == e.p));
+const used = (id, t) => S.ent.filter(e => e.p == id && e.t == t).reduce((s, e) => s + nd(e), 0);
+const bg = c => c ? 'background:' + c + ';' : '';
+
+// ═══ KV ═══
+async function kvGet(key) {
+  const r = await fetch(WORKER_URL + '/kv?key=' + encodeURIComponent(key));
+  if (!r.ok) throw new Error('kv get ' + r.status);
+  const d = await r.json();
+  if (!d || d.value == null || d.value === '') return null;
+  return typeof d.value === 'string' ? JSON.parse(d.value) : d.value;
+}
+async function kvSet(key, value) {
+  const r = await fetch(WORKER_URL + '/kv', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: key, value: value }) });
+  if (!r.ok) throw new Error('kv set ' + r.status);
+}
+function setSt(t, cls) { const e = $('st'); e.textContent = t; e.className = cls || 'sub'; }
+async function loadAll() {
+  try {
+    const f = await kvGet(KV_KEY);
+    if (f) S = normalize(f);
+    rebuild(); online = true; setSt('Sincronizado', 'sub');
+  } catch (e) { online = false; rebuild(); setSt('Sin conexión con el servidor: los cambios no se guardarán', 'err'); }
+  try { attach = await kvGet(KV_FILE_KEY); } catch (e) {}
+}
+// Lectura antes de escritura: cada cambio se vuelve a aplicar sobre los datos frescos del servidor
+let queue = Promise.resolve();
+function mutate(fn) {
+  fn(); rebuild(); pending++; renderAll();
+  queue = queue.then(async function () {
+    try {
+      setSt('Guardando…', 'sub');
+      const f = await kvGet(KV_KEY);
+      if (f) { S = normalize(f); }
+      fn(); rebuild();
+      await kvSet(KV_KEY, S);
+      online = true; setSt('Guardado', 'ok');
+    } catch (e) { online = false; setSt('No se ha podido guardar. Recarga la página', 'err'); }
+    pending--; if (pending === 0) renderAll();
+  });
+}
+
+// ═══ Operaciones idempotentes sobre S ═══
+function mergeEnt() {
+  S.ent.sort((a, b) => a.p - b.p || a.t.localeCompare(b.t) || a.m - b.m || a.a - b.a);
+  const out = [];
+  S.ent.forEach(e => {
+    const l = out[out.length - 1];
+    if (l && l.p == e.p && l.t == e.t && l.m == e.m) {
+      let gap = true;
+      for (let d = l.b + 1; d < e.a; d++) if (work(e.m, d)) { gap = false; break; }
+      if (gap) { l.b = Math.max(l.b, e.b); return; }
+    }
+    out.push({ p: e.p, m: e.m, a: e.a, b: e.b, t: e.t });
+  });
+  S.ent = out;
+}
+function opAddDay(p, m, d, t) {
+  if (S.ent.some(e => e.p == p && e.m == m && d >= e.a && d <= e.b)) return;
+  S.ent.push({ p: p, m: m, a: d, b: d, t: t }); mergeEnt();
+}
+function opRemoveDay(p, m, d) {
+  const e = S.ent.find(x => x.p == p && x.m == m && d >= x.a && d <= x.b);
+  if (!e) return;
+  if (e.a == e.b) S.ent.splice(S.ent.indexOf(e), 1);
+  else if (d == e.a) e.a = d + 1;
+  else if (d == e.b) e.b = d - 1;
+  else { S.ent.push({ p: p, m: m, a: d + 1, b: e.b, t: e.t }); e.b = d - 1; }
+  mergeEnt();
+}
+function opRemoveEntry(k) {
+  S.ent = S.ent.filter(e => !(e.p == k.p && e.m == k.m && e.a == k.a && e.b == k.b && e.t == k.t));
+}
+
+// ═══ Pintado de días ═══
+function dayInfo(m, d, onlyMe) {
+  const h = hol[m + '-' + d];
+  if (h) return { c: C_EMP, tip: h.n };
+  if (dow(m, d) > 4) return { w: 1 };
+  const all = cover(m, d), list = onlyMe ? all.filter(e => e.p == me) : all;
+  const names = list.map(e => pn(e.p) + (e.t == 'l' ? ' (libre)' : e.t == 'b' ? ' (baja)' : '')).join(', ');
+  if (list.some(e => e.t == 'b')) return { c: C_BAJ, tip: names };
+  const la = list.filter(e => e.t != 'b'), away = all.filter(e => e.t != 'b').length;
+  if (la.length && away >= 2) return { c: C_ORA, tip: names };
+  if (la.length) return { c: la[0].t == 'l' ? C_LIB : C_VAC, tip: names };
+  return { tip: '' };
+}
+function renderYear() {
+  let h = '';
+  for (let m = 0; m < 12; m++) {
+    const f = dow(m, 1), n = dim(m);
+    h += '<div class="mb' + (m == sel ? ' sel' : '') + '" onclick="VAC.selM(' + m + ')"><h4>' + MS[m] + '</h4><div class="dg">';
+    for (let i = 0; i < f; i++) h += '<i style="background:transparent"></i>';
+    for (let d = 1; d <= n; d++) {
+      const x = dayInfo(m, d, scope == 'me'), click = work(m, d);
+      h += '<i class="' + (x.w ? 'wk' : '') + (click ? ' cl' : '') + '" style="' + bg(x.c) + '" title="' + d + ' ' + MS[m].toLowerCase() + (x.tip ? ' · ' + esc(x.tip) : '') + '"' + (click ? ' onclick="event.stopPropagation();VAC.toggleDay(' + m + ',' + d + ')"' : '') + '></i>';
+    }
+    h += '</div></div>';
+  }
+  $('year').innerHTML = h;
+}
+function renderMonth() {
+  const m = sel, n = dim(m);
+  $('mh').textContent = MS[m] + ' ' + YEAR;
+  let t = '<div class="tl" style="grid-template-columns:62px repeat(' + n + ',minmax(0,1fr))"><span></span>';
+  for (let d = 1; d <= n; d++) t += '<span class="h">' + d + '</span>';
+  t += '<span></span>';
+  for (let d = 1; d <= n; d++) t += '<span class="h muted">' + 'LMXJVSD'[dow(m, d)] + '</span>';
+  S.people.forEach(p => {
+    t += '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' + (p.id == me ? 'font-weight:600' : '') + '">' + esc(p.name) + '</span>';
+    for (let d = 1; d <= n; d++) {
+      const k = m + '-' + d; let c = 'c', col = null, tip = '';
+      const e = S.ent.find(x => x.p == p.id && x.m == m && d >= x.a && d <= x.b);
+      if (hol[k]) { col = C_EMP; tip = hol[k].n; }
+      else if (dow(m, d) > 4) c += ' wk';
+      else if (e) {
+        const away = cover(m, d).filter(x => x.t != 'b').length;
+        col = e.t == 'b' ? C_BAJ : (away >= 2 ? C_ORA : (e.t == 'l' ? C_LIB : C_VAC)); tip = TN[e.t];
+      }
+      const mine = p.id == me && work(m, d);
+      t += '<span class="' + c + (mine ? ' cl' : '') + '" style="' + bg(col) + '" title="' + d + ' ' + MS[m].toLowerCase() + (tip ? ' · ' + esc(tip) : '') + (mine ? (e ? ' · pulsa para quitar' : ' · pulsa para pedir') : '') + '"' + (mine ? ' onclick="VAC.toggleDay(' + m + ',' + d + ')"' : '') + '></span>';
+    }
+  });
+  t += '<span class="sub">Aquí</span>';
+  for (let d = 1; d <= n; d++) {
+    if (!work(m, d)) { t += '<span></span>'; continue; }
+    t += '<span class="h">' + (S.people.length - cover(m, d).length) + '</span>';
+  }
+  $('detail').innerHTML = t + '</div>';
+}
+function renderLegend() {
+  const L = [[C_EMP, 'Días de la empresa'], [C_VAC, 'Vacaciones'], [C_LIB, 'Libre disposición'], [C_ORA, '2 o más personas de vacaciones el mismo día'], [C_BAJ, 'Baja']];
+  $('lg').innerHTML = L.map(x => '<span><i style="background:' + x[0] + '"></i>' + x[1] + '</span>').join('');
+}
+
+// ═══ Acciones del usuario ═══
+function toggleDay(m, d) {
+  sel = m;
+  if (!me || !S.people.some(p => p.id == me)) { note = 'Elige primero quién eres'; renderAll(); return; }
+  const mine = S.ent.find(e => e.p == me && e.m == m && d >= e.a && d <= e.b);
+  const mm = me;
+  if (mine) { note = ''; mutate(function () { opRemoveDay(mm, m, d); }); return; }
+  if (reqT != 'b') {
+    const p = S.people.find(x => x.id == me);
+    const rest = reqT == 'v' ? p.vac - used(me, 'v') : p.lib - used(me, 'l');
+    if (rest <= 0) { note = 'No te quedan días de ' + TN[reqT].toLowerCase(); renderAll(); return; }
+  }
+  const t = reqT; note = '';
+  mutate(function () { opAddDay(mm, m, d, t); });
+}
+function parseR() {
+  const a = $('d1').value, b = $('d2').value;
+  if (!a || !b) return { err: 'Elige las dos fechas' };
+  const s = new Date(a + 'T00:00:00'), e = new Date(b + 'T00:00:00');
+  if (e < s) return { err: 'La fecha final es anterior a la inicial' };
+  if (s.getFullYear() != YEAR || e.getFullYear() != YEAR) return { err: 'Elige fechas de ' + YEAR };
+  const days = []; for (let x = new Date(s); x <= e; x.setDate(x.getDate() + 1)) days.push([x.getMonth(), x.getDate()]);
+  return { days: days };
+}
+function prev() {
+  const el = $('prev'); if (!el) return;
+  const r = parseR(); if (r.err) { el.innerHTML = '<div class="err">' + r.err + '</div>'; return; }
+  const wd = r.days.filter(x => work(x[0], x[1])), p = S.people.find(x => x.id == me);
+  if (!p) { el.innerHTML = ''; return; }
+  let h = '<div>' + wd.length + ' días laborables';
+  if (reqT != 'b') { const left = (reqT == 'v' ? p.vac - used(me, 'v') : p.lib - used(me, 'l')) - wd.length; h += ' · ' + (left < 0 ? '<span class="err">te pasas ' + (-left) + '</span>' : 'quedarían ' + left); }
+  h += '</div>';
+  if (reqT != 'b') {
+    const names = {}; wd.forEach(x => cover(x[0], x[1]).forEach(e => { if (e.p != me && e.t != 'b') names[pn(e.p)] = 1; }));
+    const k = Object.keys(names); if (k.length) h += '<div class="warn">Coincides con ' + k.join(', ') + '</div>';
+  }
+  el.innerHTML = h;
+}
+function addReq() {
+  if (!me || !S.people.some(p => p.id == me)) { note = 'Elige primero quién eres'; renderSide(); return; }
+  const r = parseR(); if (r.err) return;
+  const wd = r.days.filter(x => work(x[0], x[1]));
+  if (!wd.length) { note = 'Ese rango no tiene días laborables'; renderSide(); return; }
+  const p = S.people.find(x => x.id == me), t = reqT, mm = me;
+  const nuevos = wd.filter(x => !S.ent.some(e => e.p == mm && e.m == x[0] && x[1] >= e.a && x[1] <= e.b));
+  if (t != 'b' && nuevos.length > (t == 'v' ? p.vac - used(me, 'v') : p.lib - used(me, 'l'))) { note = 'Te pasas de tus días de ' + TN[t].toLowerCase(); renderSide(); return; }
+  note = ''; sel = wd[0][0];
+  mutate(function () { wd.forEach(x => opAddDay(mm, x[0], x[1], t)); });
+}
+function removeEntry(i) {
+  const e = S.ent[i]; if (!e || e.p != me) return;
+  const k = { p: e.p, m: e.m, a: e.a, b: e.b, t: e.t };
+  mutate(function () { opRemoveEntry(k); });
+}
+
+// ═══ Ficha lateral ═══
+function renderSide() {
+  const p = S.people.find(x => x.id == me);
+  const opts = '<option value="0"' + (!p ? ' selected' : '') + '>Elige tu nombre</option>' + S.people.map(x => '<option value="' + x.id + '"' + (x.id == me ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('');
+  let h = '<div class="muted" style="font-size:11px;margin-bottom:8px;display:flex;align-items:center;gap:6px">Soy<select onchange="VAC.setMe(+this.value)" style="height:26px;font-size:12px;flex:1">' + opts + '</select></div>';
+  if (!p) { $('side').innerHTML = h + '<div class="sub" style="padding:6px 0">Elige tu nombre para ver tu saldo y pedir días.</div>'; return; }
+  const uv = used(me, 'v'), ul = used(me, 'l');
+  const mine = S.ent.filter(e => e.p == me).sort((a, c) => a.m - c.m || a.a - c.a);
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:32px;height:32px;border-radius:50%;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px">' + esc(p.name.slice(0, 2).toUpperCase()) + '</div><div style="font-weight:600;font-size:14px">' + esc(p.name) + '</div></div>'
+    + '<div class="sub" style="display:flex;justify-content:space-between"><span>Vacaciones</span><span>' + uv + '/' + p.vac + ' · quedan ' + (p.vac - uv) + '</span></div><div class="bar" style="margin:3px 0 9px"><div style="width:' + Math.min(100, p.vac ? uv / p.vac * 100 : 0) + '%;background:' + C_VAC + '"></div></div>'
+    + '<div class="sub" style="display:flex;justify-content:space-between"><span>Libre disp.</span><span>' + ul + '/' + p.lib + ' · quedan ' + (p.lib - ul) + '</span></div><div class="bar" style="margin:3px 0 12px"><div style="width:' + Math.min(100, p.lib ? ul / p.lib * 100 : 0) + '%;background:' + C_LIB + '"></div></div>'
+    + '<div class="sub" style="border-top:0.5px solid var(--border);padding-top:9px;margin-bottom:6px">Qué vas a pedir</div>'
+    + '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">' + ['v', 'l', 'b'].map(k => '<span class="pill' + (reqT == k ? ' on' : '') + '" onclick="VAC.setReqT(\'' + k + '\')">' + (k == 'v' ? 'Vacaciones' : k == 'l' ? 'Libre disp.' : 'Baja') + '</span>').join('') + '</div>'
+    + '<div class="muted" style="font-size:11px;margin-bottom:7px">Pulsa los días en el calendario o elige un rango</div>'
+    + '<input type="date" id="d1" value="' + (window._d1 || YEAR + '-01-04') + '" min="' + YEAR + '-01-01" max="' + YEAR + '-12-31" onchange="window._d1=this.value;VAC.prev()" style="width:100%;margin-bottom:4px"><input type="date" id="d2" value="' + (window._d2 || YEAR + '-01-08') + '" min="' + YEAR + '-01-01" max="' + YEAR + '-12-31" onchange="window._d2=this.value;VAC.prev()" style="width:100%">'
+    + '<div id="prev" style="margin:6px 0"></div><button onclick="VAC.addReq()" style="width:100%;justify-content:center">Pedir rango</button>'
+    + (note ? '<div class="warn">' + esc(note) + '</div>' : '')
+    + '<div class="sub" style="border-top:0.5px solid var(--border);margin-top:12px;padding-top:9px">Mis solicitudes</div>';
+  if (!mine.length) h += '<div class="muted" style="padding:4px 0">Aún no has pedido días.</div>';
+  mine.forEach(e => {
+    const i = S.ent.indexOf(e);
+    h += '<div class="row" style="padding:4px 0;border-top:none"><span style="width:9px;height:9px;border-radius:50%;flex:none;background:' + TC[e.t] + '" title="' + TN[e.t] + '"></span><span style="flex:1">' + e.a + (e.b > e.a ? '–' + e.b : '') + ' ' + MS[e.m].slice(0, 3).toLowerCase() + ' · ' + nd(e) + ' d</span><span class="muted" style="cursor:pointer" title="Quitar" onclick="VAC.removeEntry(' + i + ')">' + ic('trash', 14) + '</span></div>';
+  });
+  $('side').innerHTML = h; prev();
+}
+
+// ═══ Todo el equipo ═══
+function renderTeam() {
+  let tv = 0, tl = 0;
+  const rows = S.people.map(p => {
+    const uv = used(p.id, 'v'), ul = used(p.id, 'l'), bj = used(p.id, 'b'); tv += p.vac - uv; tl += p.lib - ul;
+    return '<tr><td style="font-weight:600">' + esc(p.name) + '</td><td style="width:22%"><div class="bar"><div style="width:' + Math.min(100, p.vac ? uv / p.vac * 100 : 0) + '%;background:' + C_VAC + '"></div></div></td><td>' + uv + ' de ' + p.vac + '</td><td>' + (p.vac - uv) + '</td><td>' + ul + ' de ' + p.lib + '</td><td>' + (p.lib - ul) + '</td><td>' + (bj ? '<span style="color:var(--text-danger)">' + bj + ' d</span>' : '–') + '</td></tr>';
+  }).join('');
+  $('vTeam').innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px"><div class="mc"><span class="sub" style="font-size:12px">Personas en el equipo</span><b>' + S.people.length + '</b></div><div class="mc"><span class="sub" style="font-size:12px">Vacaciones por pedir</span><b>' + tv + ' días</b></div><div class="mc"><span class="sub" style="font-size:12px">Libre disposición por pedir</span><b>' + tl + ' días</b></div></div>'
+    + '<table><tr><th>Persona</th><th>Vacaciones pedidas</th><th></th><th>Pendientes</th><th>Libre disp. pedidos</th><th>Pendientes</th><th>Bajas</th></tr>' + rows + '</table>';
+}
+
+// ═══ Gestión de info ═══
+function renderAdmin() {
+  const v = $('vAdm');
+  $('hintBtn').style.display = (view == 'adm' && !unlocked) ? 'block' : 'none';
+  if (!unlocked) {
+    v.innerHTML = '<div style="max-width:300px;margin:30px auto;text-align:center"><div class="sub">' + ic('lock', 30) + '</div><div style="font-weight:600;font-size:14px;margin:6px 0 10px">Gestión de info</div><input type="password" id="pw" placeholder="Contraseña" style="width:100%" oninput="document.getElementById(\'pe\').textContent=\'\'" onkeydown="if(event.key==\'Enter\')VAC.unlock()"><div id="pe" class="err" style="min-height:18px;margin:4px 0"></div><button onclick="VAC.unlock()" style="width:100%;justify-content:center">Entrar</button></div>';
+    return;
+  }
+  const T = (k, l) => '<span class="pill' + (tab == k ? ' on' : '') + '" onclick="VAC.setTab(\'' + k + '\')">' + l + '</span>';
+  let h = '<div style="display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap">' + T('eq', 'Equipo') + T('cal', 'Calendario del año') + T('dias', 'Días por persona') + '<span class="sub" style="margin-left:auto;font-size:12px;display:inline-flex;align-items:center;gap:5px">' + ic('unlock', 14) + ' Desbloqueado</span><button onclick="VAC.lock()">Bloquear</button></div>';
+  if (tab == 'eq') {
+    S.people.forEach(p => {
+      h += '<div class="row"><span class="muted">' + ic('user', 16) + '</span><input value="' + esc(p.name) + '" style="width:170px" onchange="VAC.rename(' + p.id + ',this.value)"><span class="sub">Equipo ADC</span><span style="margin-left:auto">'
+        + (delId == p.id ? '<span class="err">¿Eliminar a ' + esc(p.name) + '?</span> <button onclick="VAC.delP(' + p.id + ')">Sí, eliminar</button> <button onclick="VAC.cancelDel()">Cancelar</button>' : '<button onclick="VAC.askDel(' + p.id + ')" style="color:var(--text-danger)">' + ic('trash', 14) + 'Eliminar</button>') + '</span></div>';
+    });
+    h += '<div class="row"><button onclick="VAC.addP()">' + ic('plus', 14) + 'Añadir miembro</button></div>';
+  }
+  if (tab == 'cal') {
+    h += '<div class="drop">' + ic('upload', 22) + '<div style="flex:1;min-width:200px"><div style="font-weight:600">Subir calendario ' + YEAR + '</div><div class="sub" style="font-size:12px">PDF del calendario laboral, .ics o Excel/CSV con columnas Fecha y Nombre. Revisa los días detectados antes de aplicarlos</div></div><input type="file" id="calFile" accept=".pdf,.ics,.xlsx,.xls,.csv" style="height:auto;padding:5px" onchange="VAC.onFile(this)"></div><div id="cmsg"></div>';
+    if (attach) h += '<div class="sub" style="font-size:12px;margin-bottom:10px;display:flex;align-items:center;gap:6px">' + ic('dl', 14) + 'Calendario adjunto: ' + esc(attach.name) + ' <button onclick="VAC.downloadAttach()" style="padding:2px 8px">Descargar</button></div>';
+    if (detected) {
+      h += '<div style="border:0.5px solid var(--border-accent);border-radius:var(--radius);padding:10px;margin-bottom:12px;background:var(--bg-accent)"><div style="font-weight:600;margin-bottom:6px">Días detectados (' + detected.length + ')</div>' + (detWarn ? '<div class="warn" style="margin:0 0 8px">' + esc(detWarn) + '</div>' : '') + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 16px">';
+      detected.forEach((x, i) => { h += '<label style="display:flex;gap:6px;align-items:center;font-size:12px;cursor:pointer"><input type="checkbox" style="height:auto" ' + (x.on ? 'checked' : '') + ' onchange="VAC.detOn(' + i + ',this.checked)"><span style="width:62px">' + x.d + ' ' + MS[x.m].slice(0, 3).toLowerCase() + '</span><span>' + esc(x.n) + '</span></label>'; });
+      h += '</div><div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap"><label style="font-size:12px;display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="repl" style="height:auto">Reemplazar los días actuales</label><button onclick="VAC.applyDet()">Aplicar seleccionados</button><button onclick="VAC.cancelDet()">Descartar</button></div></div>';
+    }
+    h += '<div class="sub" style="font-size:12px;margin:4px 0 6px;display:flex;align-items:center;gap:6px"><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:' + C_EMP + '"></i>Días de la empresa (' + S.hl.length + '). Pulsa un día del calendario para marcarlo o quitarlo</div><div id="admYear" class="yg" style="margin-bottom:12px"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">';
+    S.hl.slice().sort((a, b) => a.m - b.m || a.d - b.d).forEach(x => {
+      h += '<div class="row" style="padding:3px 0"><span style="width:64px">' + x.d + ' ' + MS[x.m].slice(0, 3).toLowerCase() + '</span><input value="' + esc(x.n) + '" style="flex:1;min-width:0;height:26px" onchange="VAC.nameH(' + x.m + ',' + x.d + ',this.value)"><span class="muted" style="cursor:pointer" title="Quitar" onclick="VAC.delH(' + x.m + ',' + x.d + ')">' + ic('x', 14) + '</span></div>';
+    });
+    h += '</div><div class="row" style="margin-top:8px"><input type="date" id="nd" min="' + YEAR + '-01-01" max="' + YEAR + '-12-31"><input id="nn" placeholder="Nombre del día" style="flex:1"><button onclick="VAC.addH()">' + ic('plus', 14) + 'Añadir</button></div><div id="he" class="err"></div>';
+  }
+  if (tab == 'dias') {
+    h += '<div class="sub" style="font-size:12px;margin-bottom:6px">Cambia estos días cada año según el calendario</div><table><tr><th>Persona</th><th>Vacaciones</th><th>Libre disposición</th></tr>';
+    S.people.forEach(p => { h += '<tr><td style="font-weight:600">' + esc(p.name) + '</td><td><input type="number" min="0" max="60" value="' + p.vac + '" style="width:70px" onchange="VAC.setN(' + p.id + ',\'vac\',this.value)"></td><td><input type="number" min="0" max="20" value="' + p.lib + '" style="width:70px" onchange="VAC.setN(' + p.id + ',\'lib\',this.value)"></td></tr>'; });
+    h += '</table>';
+  }
+  v.innerHTML = h;
+  if (tab == 'cal') renderAdmYear();
+}
+function renderAdmYear() {
+  const el = $('admYear'); if (!el) return;
+  let h = '';
+  for (let m = 0; m < 12; m++) {
+    const f = dow(m, 1), n = dim(m);
+    h += '<div class="mb" style="cursor:default"><h4>' + MS[m] + '</h4><div class="dg">';
+    for (let i = 0; i < f; i++) h += '<i style="background:transparent"></i>';
+    for (let d = 1; d <= n; d++) {
+      const hh = hol[m + '-' + d], wk = dow(m, d) > 4;
+      h += '<i class="cl' + (wk && !hh ? ' wk' : '') + '" style="' + bg(hh ? C_EMP : '') + '" title="' + d + ' ' + MS[m].toLowerCase() + (hh ? ' · ' + esc(hh.n) : '') + '" onclick="VAC.togH(' + m + ',' + d + ')"></i>';
+    }
+    h += '</div></div>';
+  }
+  el.innerHTML = h;
+}
+function unlock() {
+  const v = $('pw').value;
+  if (!v.trim()) { $('pe').textContent = 'Escribe la contraseña'; return; }
+  if (v !== GESTION_PASSWORD) { $('pe').textContent = 'Contraseña incorrecta'; return; }
+  unlocked = true; renderAdmin();
+}
+function rename(id, v) { v = v.trim(); if (!v) { renderAdmin(); return; } mutate(function () { const p = S.people.find(x => x.id == id); if (p) p.name = v; }); }
+function delP(id) { delId = null; mutate(function () { S.people = S.people.filter(x => x.id != id); S.ent = S.ent.filter(e => e.p != id); }); if (me == id) setMe(0); }
+function addP() { const id = Date.now(); mutate(function () { if (!S.people.some(p => p.id == id)) S.people.push({ id: id, name: 'Nuevo miembro', vac: 23, lib: 4 }); }); }
+function setN(id, k, v) { const n = Math.max(0, parseInt(v, 10) || 0); mutate(function () { const p = S.people.find(x => x.id == id); if (p) p[k] = n; }); }
+function addH() {
+  const d = $('nd').value, n = $('nn').value.trim();
+  if (!d || !n) { $('he').textContent = 'Indica fecha y nombre'; return; }
+  const x = new Date(d + 'T00:00:00'); if (x.getFullYear() != YEAR) { $('he').textContent = 'Elige una fecha de ' + YEAR; return; }
+  const m = x.getMonth(), dd = x.getDate();
+  mutate(function () { S.hl = S.hl.filter(h => !(h.m == m && h.d == dd)); S.hl.push({ m: m, d: dd, n: n }); });
+}
+function delH(m, d) { mutate(function () { S.hl = S.hl.filter(h => !(h.m == m && h.d == d)); }); }
+function nameH(m, d, v) { v = v.trim(); if (!v) { renderAdmin(); return; } mutate(function () { const h = S.hl.find(x => x.m == m && x.d == d); if (h) h.n = v; }); }
+function togH(m, d) {
+  const exists = !!hol[m + '-' + d];
+  mutate(function () {
+    S.hl = S.hl.filter(h => !(h.m == m && h.d == d));
+    if (!exists) S.hl.push({ m: m, d: d, n: 'Día de la empresa' });
+  });
+}
+
+// ═══ Subida de calendario ═══
+function loadScript(url) {
+  return new Promise(function (res, rej) {
+    const s = document.createElement('script'); s.src = url; s.onload = res; s.onerror = function () { rej(new Error('No se pudo cargar ' + url)); };
+    document.head.appendChild(s);
+  });
+}
+function parseTextoFestivos(txt) {
+  const re = /(\d{1,2})\s+de\s+([a-záéíóú]+)\s*\(([^)]+)\)/gi; let m; const out = [], seen = {};
+  while ((m = re.exec(txt))) {
+    const mo = MON3.indexOf(m[2].slice(0, 3).toLowerCase()), d = parseInt(m[1], 10);
+    if (mo < 0 || d < 1 || d > dim(mo) || seen[mo + '-' + d]) continue;
+    seen[mo + '-' + d] = 1;
+    const n = m[3].trim();
+    out.push({ m: mo, d: d, n: n, on: !/noche de reyes|jornada especial/i.test(n) });
+  }
+  const ym = /CALENDARIO\s+(\d{4})/i.exec(txt); out.year = ym ? parseInt(ym[1], 10) : 0;
+  return out;
+}
+async function leerPdf(file) {
+  await loadScript(PDFJS); window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise; let txt = '';
+  for (let p = 1; p <= pdf.numPages; p++) { const pg = await pdf.getPage(p); const c = await pg.getTextContent(); txt += c.items.map(i => i.str).join(' ') + ' '; }
+  return parseTextoFestivos(txt);
+}
+function leerIcs(txt) {
+  const out = [], seen = {}; const ev = txt.split('BEGIN:VEVENT').slice(1);
+  ev.forEach(b => {
+    const ds = /DTSTART[^:]*:(\d{4})(\d{2})(\d{2})/.exec(b), sm = /SUMMARY[^:]*:(.+)/.exec(b);
+    if (!ds || parseInt(ds[1], 10) != YEAR) return;
+    const m = parseInt(ds[2], 10) - 1, d = parseInt(ds[3], 10);
+    if (seen[m + '-' + d]) return; seen[m + '-' + d] = 1;
+    out.push({ m: m, d: d, n: sm ? sm[1].trim() : 'Día de la empresa', on: true });
+  });
+  return out;
+}
+async function leerExcel(file) {
+  await loadScript(XLSX_URL);
+  const wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+  const rows = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, cellDates: true });
+  const out = [], seen = {};
+  rows.forEach(r => {
+    let dt = null, nm = '';
+    (r || []).forEach(c => {
+      if (!dt && c instanceof Date) dt = c;
+      else if (!dt && typeof c === 'string') { const q = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(c.trim()); if (q) dt = new Date(+q[3], +q[2] - 1, +q[1]); }
+      else if (typeof c === 'string' && !nm) nm = c.trim();
+    });
+    if (!dt || dt.getFullYear() != YEAR) return;
+    const m = dt.getMonth(), d = dt.getDate(); if (seen[m + '-' + d]) return; seen[m + '-' + d] = 1;
+    out.push({ m: m, d: d, n: nm || 'Día de la empresa', on: true });
+  });
+  return out;
+}
+function b64(buf) { let s = ''; const u = new Uint8Array(buf), k = 0x8000; for (let i = 0; i < u.length; i += k) s += String.fromCharCode.apply(null, u.subarray(i, i + k)); return btoa(s); }
+async function onFile(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const msg = $('cmsg'); msg.innerHTML = '<div class="sub" style="margin-bottom:8px">Leyendo ' + esc(f.name) + '…</div>';
+  try {
+    const ext = f.name.split('.').pop().toLowerCase(); let res;
+    if (ext == 'pdf') res = await leerPdf(f);
+    else if (ext == 'ics') res = leerIcs(await f.text());
+    else res = await leerExcel(f);
+    res.sort((a, b) => a.m - b.m || a.d - b.d);
+    detected = res;
+    detWarn = (res.year && res.year != YEAR) ? 'Este calendario es de ' + res.year + ': Semana Santa y otras fechas cambian cada año, así que revisa los días antes de aplicarlos' : '';
+    if (f.size <= 3 * 1024 * 1024 && online) {
+      try { const obj = { name: f.name, type: f.type || 'application/octet-stream', data: b64(await f.arrayBuffer()), at: new Date().toISOString() }; await kvSet(KV_FILE_KEY, obj); attach = obj; } catch (e) { msg.innerHTML = '<div class="warn">Los días se han leído, pero no se ha podido guardar el archivo adjunto</div>'; }
+    }
+    if (!res.length) { detected = null; msg.innerHTML = '<div class="warn">No se han encontrado días de ' + YEAR + ' en ese archivo. Márcalos a mano en el calendario de abajo</div>'; renderAdmin(); return; }
+    renderAdmin();
+  } catch (e) { msg.innerHTML = '<div class="err" style="margin-bottom:8px">No se ha podido leer el archivo. Márcalos a mano en el calendario de abajo</div>'; }
+}
+function downloadAttach() {
+  if (!attach) return;
+  const bin = atob(attach.data), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([u], { type: attach.type })); a.download = attach.name; document.body.appendChild(a); a.click(); a.remove();
+}
+function applyDet() {
+  const sel2 = detected.filter(x => x.on), repl = $('repl').checked;
+  detected = null;
+  mutate(function () {
+    if (repl) S.hl = [];
+    sel2.forEach(x => { S.hl = S.hl.filter(h => !(h.m == x.m && h.d == x.d)); S.hl.push({ m: x.m, d: x.d, n: x.n }); });
+  });
+}
+
+// ═══ Navegación ═══
+function setMe(id) { me = id; note = ''; try { localStorage.setItem(ME_KEY, String(id)); } catch (e) {} renderAll(); }
+function go(v) {
+  view = v;
+  ['Main', 'Team', 'Adm'].forEach(k => { $('v' + k).style.display = (k.toLowerCase() == v ? (k == 'Main' ? 'grid' : 'block') : 'none'); });
+  $('bBack').style.display = v == 'main' ? 'none' : 'inline-flex';
+  $('bTeam').style.display = v == 'main' ? 'inline-flex' : 'none';
+  $('bAdm').style.display = v == 'main' ? 'inline-flex' : 'none';
+  if (v == 'adm') renderAdmin(); else $('hintBtn').style.display = 'none';
+}
+function renderAll() { renderYear(); renderMonth(); renderSide(); renderTeam(); if (view == 'adm') renderAdmin(); }
+
+window.VAC = {
+  selM: function (m) { sel = m; renderYear(); renderMonth(); },
+  toggleDay: toggleDay, addReq: addReq, prev: prev, removeEntry: removeEntry, setMe: setMe,
+  setReqT: function (k) { reqT = k; note = ''; renderSide(); },
+  unlock: unlock, lock: function () { unlocked = false; renderAdmin(); },
+  setTab: function (k) { tab = k; renderAdmin(); },
+  rename: rename, delP: delP, addP: addP, setN: setN, addH: addH, delH: delH, nameH: nameH, togH: togH,
+  askDel: function (id) { delId = id; renderAdmin(); }, cancelDel: function () { delId = null; renderAdmin(); },
+  onFile: onFile, downloadAttach: downloadAttach, applyDet: applyDet,
+  detOn: function (i, v) { detected[i].on = v; },
+  cancelDet: function () { detected = null; renderAdmin(); }
+};
+window.setScope = function (s) { scope = s; $('pT').className = 'pill' + (s == 'team' ? ' on' : ''); $('pM').className = 'pill' + (s == 'me' ? ' on' : ''); renderYear(); };
+window.go = go;
+
+// ═══ Arranque ═══
+$('backHub').innerHTML = ic('back', 16) + '<span>Admin Hub</span>';
+$('palm').innerHTML = ic('palm', 24);
+$('yr').textContent = YEAR;
+$('bBack').innerHTML = ic('back', 14) + 'Volver al calendario';
+$('bTeam').innerHTML = ic('users', 14) + 'Ver todo el equipo';
+$('bAdm').innerHTML = ic('lock', 14) + 'Gestión de info';
+$('hintBtn').addEventListener('click', function () { const pe = $('pe'); if (pe) pe.textContent = 'Contraseña: ' + GESTION_PASSWORD; });
+rebuild(); renderLegend(); renderAll();
+loadAll().then(function () { rebuild(); renderAll(); });
+})();
+</script>
+</body>
+</html>
