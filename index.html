@@ -26,12 +26,10 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .organizate-star-btn img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 5px rgba(255,46,159,0.35)); }
 
 .guide-btn { display: flex; align-items: center; gap: 0; cursor: pointer; background: none; border: none; padding: 0; }
-.guide-circle { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(238,232,223,0.5); background: transparent; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
-.guide-btn:hover .guide-circle { background: rgba(238,232,223,0.14); border-color: #EEE8DF; box-shadow: 0 0 12px rgba(238,232,223,0.15); }
-.guide-q { color: rgba(238,232,223,0.7); font-size: 15px; font-weight: 600; line-height: 1; transition: color .2s; }
-.guide-btn:hover .guide-q { color: #EEE8DF; }
+.guide-circle { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid rgba(29,204,132,0.5); background: transparent; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
+.guide-btn:hover .guide-circle { background: rgba(29,204,132,0.14); border-color: #1dcc84; box-shadow: 0 0 12px rgba(29,204,132,0.3); }
 .guide-label { max-width: 0; overflow: hidden; white-space: nowrap; font-size: 11px; color: #EEE8DF; opacity: 0; transition: max-width .3s ease, opacity .25s ease, margin .3s ease; margin-left: 0; font-family: inherit; }
-.guide-btn:hover .guide-label { max-width: 160px; opacity: 1; margin-left: 8px; }
+.guide-btn:hover .guide-label { max-width: 160px; opacity: 1; margin-left: 8px; color: #1dcc84; }
 
 /* ── AITOR badge ── */
 .ai-badge { display: flex; align-items: center; gap: 7px; background: rgba(0,90,130,0.15); border: 1px solid rgba(0,230,255,0.25); border-radius: 10px; padding: 5px 10px 5px 6px; cursor: pointer; position: absolute; top: 79%; right: 14px; z-index: 100; transition: all 0.3s ease; }
@@ -259,30 +257,6 @@ body { background: #0a2540; margin: 0; padding: 0; }
 .pwd-btn.ok { background:#00E6FF; color:#031420; }
 .pwd-btn.ok:hover { background:#4de8ff; }
 
-/* ── Tour guiado ── */
-.tour-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-.tour-overlay.active { pointer-events: all; opacity: 1; }
-.tour-spotlight { position: fixed; border-radius: 50%; z-index: 502; pointer-events: none; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
-.tour-spotlight.rect { border-radius: 12px; }
-.tour-tooltip { position: fixed; z-index: 503; background: #EEE8DF; border-radius: 13px; padding: 14px 16px; width: 220px; border: 1px solid #d0c9be; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: all 0.35s cubic-bezier(0.4,0,0.2,1); pointer-events: none; }
-.tour-tt-tag { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; display: inline-block; margin-bottom: 6px; font-weight: 600; }
-.tour-tt-title { font-size: 13px; font-weight: 600; color: #1a3a5c; margin-bottom: 5px; }
-.tour-tt-desc { font-size: 11px; color: #4a6a8a; line-height: 1.6; }
-.tour-tt-examples { margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
-.tour-tt-ex { background: rgba(0,80,120,0.08); border-radius: 5px; padding: 4px 8px; font-size: 10px; color: #005080; font-style: italic; }
-.tour-nav-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 503; background: #E2DBD1; border-top: 2px solid #c5bfb5; padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.tour-nav-btn { border-radius: 8px; padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; border: none; }
-.tour-nav-btn.prev { background: #d4cfc6; color: #1a3a5c; }
-.tour-nav-btn.prev:hover { background: #c8c2b8; }
-.tour-nav-btn.prev:disabled { opacity: 0.35; cursor: default; }
-.tour-nav-btn.next { background: #1a3a5c; color: #fff; }
-.tour-nav-btn.next:hover { background: #0f2440; }
-.tour-nav-btn.skip { background: transparent; color: #8aaac5; font-size: 11px; font-weight: 500; padding: 8px 10px; border: 1px solid #c5bfb5; }
-.tour-nav-btn.skip:hover { background: #ddd7cd; color: #1a3a5c; }
-.tour-nav-dots { display: flex; gap: 5px; align-items: center; flex: 1; justify-content: center; }
-.tour-nav-dot { width: 6px; height: 6px; border-radius: 50%; background: #8aaac5; transition: all .2s; }
-.tour-nav-dot.on { background: #1a3a5c; width: 18px; border-radius: 3px; }
-
 @media (max-width: 600px) {
   .aitor-wrapper { flex-direction: column; align-items: stretch; width: 100%; }
   .modal { width: 100vw; height: 100dvh; border-radius: 0; order: 1; }
@@ -329,9 +303,12 @@ body { background: #0a2540; margin: 0; padding: 0; }
           <line x1="8" y1="23" x2="16" y2="23"/>
         </svg>
       </button>
-      <button class="guide-btn" id="guideTourBtn">
-        <div class="guide-circle"><span class="guide-q">?</span></div>
-        <span class="guide-label">¿Por dónde empiezo?</span>
+      <!-- Acceso directo a Vacaciones 2027 (sustituye al antiguo tour "¿Por dónde empiezo?") -->
+      <button class="guide-btn" id="vacacionesBtn" title="Vacaciones 2027" aria-label="Vacaciones 2027" onclick="window.location.href='vacaciones.html'">
+        <div class="guide-circle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1dcc84" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c.4-4 .8-8 1.4-11.5"/><path d="M13.4 10.5C12 7.5 8.5 6 5 7.5"/><path d="M13.4 10.5C10.5 9 7 10 5 13"/><path d="M13.4 10.5c1.1-3.5 4.1-5 7.6-4"/><path d="M13.4 10.5c2.6-1 5.6.5 7.1 3.5"/><path d="M13.4 10.5C13 7.5 13.5 5 15.5 3"/><path d="M8 22h8"/></svg>
+        </div>
+        <span class="guide-label">Vacaciones 2027</span>
       </button>
     </div>
 
@@ -585,18 +562,6 @@ body { background: #0a2540; margin: 0; padding: 0; }
   </div>
 </div>
 
-<!-- Tour guiado -->
-<div class="tour-overlay" id="tourOverlay">
-  <div class="tour-spotlight" id="tourSpotlight"></div>
-  <div class="tour-tooltip" id="tourTooltip"></div>
-  <div class="tour-nav-bar">
-    <button class="tour-nav-btn prev" id="tourBtnPrev" disabled>← Anterior</button>
-    <div class="tour-nav-dots" id="tourDots"></div>
-    <button class="tour-nav-btn skip" id="tourBtnSkip">Saltar</button>
-    <button class="tour-nav-btn next" id="tourBtnNext">Siguiente →</button>
-  </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const WORKER_URL   = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
@@ -632,6 +597,7 @@ MÓDULOS DISPONIBLES:
 - Comisiones → comisiones/index.html
 - Anexos de comisiones (generación de anexos AC/JE/DV por marca) → comisiones/anexos.html
 - Bajas comisiones → comisiones/bajas-comisiones.html
+- Vacaciones 2027 (solicitud de vacaciones y días de libre disposición del equipo, calendario anual, bajas y gestión de equipo) → vacaciones.html
 - Control de Gestión → acceso restringido con contraseña, solo personal autorizado.
 
 Si el usuario pregunta por "referidos", "recompensas de referidos", "alumnos referidos" o similar, enlaza siempre a seguimientos/referidos.html#referidos-obs explicando que es el módulo de Referidos OBS dentro de Tareas/Seguimientos.
@@ -641,6 +607,7 @@ Si el usuario pregunta por "Mesa del Jueves", "en vivo" o "reunión de los jueve
 Si el usuario pregunta por "anexos", "anexo de comisiones", "AC", "JE" o "DV", enlaza siempre a comisiones/anexos.html explicando que está dentro de Comisiones.
 Si el usuario pregunta por "bajas de comisiones" o "bajas comisiones", enlaza siempre a comisiones/bajas-comisiones.html.
 Si el usuario pregunta por "bootcamp" o "Silicon Valley", enlaza siempre a seguimientos/bootcamp.html.
+Si el usuario pregunta por "vacaciones", "libre disposición", "pedir días" o "solicitud de vacaciones", enlaza siempre a vacaciones.html.
 Si el usuario pregunta por "Sabadell", "crédito", "financiación" o "cuotas del crédito", enlaza siempre a cobros/cuotas-sabadell.html explicando que está dentro de Cobros.
 Si el usuario pregunta por "Organízate" o "mis tareas", enlaza siempre a seguimientos/organizate.html#organizate-yo.
 Si el usuario pregunta por "hoja de matrícula", "PF", "autorrelleno" o "subir convocatoria", enlaza siempre a convo/index.html.
@@ -961,6 +928,9 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     { icon:'📎', label:'Anexos de comisiones (AC / JE / DV)',    color:'#ff64b4', bg:'rgba(255,100,180,0.1)', tagBg:'rgba(255,100,180,0.12)', tagColor:'#8a1a5a', tag:'Comisiones', url:'comisiones/anexos.html' },
     { icon:'📤', label:'Bajas comisiones',                       color:'#ff64b4', bg:'rgba(255,100,180,0.1)', tagBg:'rgba(255,100,180,0.12)', tagColor:'#8a1a5a', tag:'Comisiones', url:'comisiones/bajas-comisiones.html' },
 
+    // ── Vacaciones ──
+    { icon:'🌴', label:'Vacaciones 2027 — solicitar días',       color:'#1dcc84', bg:'rgba(29,204,132,0.1)', tagBg:'rgba(29,204,132,0.12)', tagColor:'#0a6644', tag:'Vacaciones', url:'vacaciones.html' },
+
     // ── Accesos rápidos ──
     { icon:'⚡', label:'Sudoku OBS',                             color:'#f0a830', bg:'rgba(240,168,48,0.1)', tagBg:'rgba(240,168,48,0.12)', tagColor:'#8a5a00', tag:'Accesos rápidos', openAccesos:true },
   ];
@@ -972,6 +942,7 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     { tag:'Tareas',          icon:'✅', title:'Tareas',          color:'#a878f0', bg:'rgba(168,120,240,0.12)',txt:'#5a2aaa' },
     { tag:"Convo '27",       icon:'🎓', title:"Convo '27",       color:'#3aabf0', bg:'rgba(58,171,240,0.12)', txt:'#0a5a8a' },
     { tag:'Comisiones',      icon:'💸', title:'Comisiones',      color:'#ff64b4', bg:'rgba(255,100,180,0.12)',txt:'#8a1a5a' },
+    { tag:'Vacaciones',      icon:'🌴', title:'Vacaciones',      color:'#1dcc84', bg:'rgba(29,204,132,0.12)', txt:'#0a6644' },
     { tag:'Accesos rápidos', icon:'⚡', title:'Accesos rápidos', color:'#f0a830', bg:'rgba(240,168,48,0.12)', txt:'#8a5a00' },
   ];
 
@@ -1010,104 +981,6 @@ Cuando respondas con navegación, da primero el enlace y luego una línea breve 
     chatArea.appendChild(div); chatArea.scrollTop = chatArea.scrollHeight; return div;
   }
 
-  // ── TOUR GUIADO ──
-  const TOUR_STEPS = [
-    { selector:'#aitorBadge', rect:true, color:'#00E6FF',
-      tag:{t:'Empieza aquí', bg:'rgba(0,180,255,0.15)', c:'#005080'},
-      title:'🤖 AITOR — tu guía del hub',
-      desc:'Tu asistente de IA siempre disponible. Puedes pedirle que te lleve a cualquier módulo usando lenguaje natural, sin necesidad de buscarlo tú mismo.',
-      extras:['«Llévame a Reportes»','«Ver datos de morosidad»','«Abrir cruce de datos»'] },
-    { selector:'.node[data-k="reportes"]', color:'#00E6FF',
-      tag:{t:'Módulo 1', bg:'rgba(0,230,255,0.12)', c:'#007a99'},
-      title:'📊 Reportes',
-      desc:'Métricas de matrículas por marca y convocatoria (OBS, INESDI, ESDesign, UCMA). Brutas, bajas, netas, becas, cierres pasados y acceso a SXDataHub.' },
-    { selector:'.node[data-k="cobros"]', color:'#1dcc84',
-      tag:{t:'Módulo 2', bg:'rgba(29,204,132,0.12)', c:'#0a6644'},
-      title:'💰 Cobros y Morosidad',
-      desc:'Datos de morosidad por convocatoria anterior y actual, carteras por marca, Power BI Activa e impagos previos a inicio.' },
-    { selector:'.node[data-k="tareas"]', color:'#a878f0',
-      tag:{t:'Módulo 3', bg:'rgba(168,120,240,0.12)', c:'#5a2aaa'},
-      title:'✅ Tareas',
-      desc:'Seguimiento de tareas pendientes del equipo ADMC, gestión de incidencias y seguimiento de alumnos.' },
-    { selector:'.node[data-k="convo"]', color:'#3aabf0',
-      tag:{t:'Módulo 4', bg:'rgba(58,171,240,0.12)', c:'#0a5a8a'},
-      title:"🎓 Convo '27",
-      desc:'Fechas clave por marca con alertas automáticas si hay fechas vencidas. Incluye la herramienta de cruce de datos entre Excels.' },
-    { selector:'.node[data-k="manuales"]', color:'#f0a830',
-      tag:{t:'Módulo 5', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
-      title:'📋 Manuales',
-      desc:'Manuales operativos y guías del equipo de cobros. Referencia rápida para procedimientos y protocolos.' },
-    { selector:'.node[data-k="comisiones"]', color:'#ff64b4',
-      tag:{t:'Módulo 6', bg:'rgba(255,100,180,0.12)', c:'#8a1a5a'},
-      title:'💸 Comisiones',
-      desc:'Calculadora de comisiones, histórico por marca (OBS, INESDI, ESDesign, UCMA) y anexos de comisiones.' },
-    { selector:'.node[data-k="ctrl"]', color:'#00ffb4',
-      tag:{t:'Módulo 7', bg:'rgba(0,255,180,0.1)', c:'#005a38'},
-      title:'🔒 Control de Gestión',
-      desc:'Puerta de entrada al departamento de Control de Gestión. Acceso restringido a personal autorizado mediante contraseña.' },
-    { selector:'#accesosCard', rect:true, color:'#f0a830',
-      tag:{t:'Panel lateral', bg:'rgba(240,168,48,0.12)', c:'#8a5a00'},
-      title:'⚡ Accesos Rápidos',
-      desc:'Panel lateral con enlaces directos a herramientas externas. Personalizable, reordenable por drag & drop y sincronizado para todo el equipo.',
-      extras:['Sudokus · Hermes · PayComet','Bloqueo Campus · Planner · Referidos'] },
-  ];
-
-  let tourCur = 0;
-  const tourOverlay = document.getElementById('tourOverlay');
-  const tourSpot    = document.getElementById('tourSpotlight');
-  const tourTip     = document.getElementById('tourTooltip');
-  const tourDotsEl  = document.getElementById('tourDots');
-  const tourBtnPrev = document.getElementById('tourBtnPrev');
-  const tourBtnNext = document.getElementById('tourBtnNext');
-  const tourBtnSkip = document.getElementById('tourBtnSkip');
-
-  TOUR_STEPS.forEach((_, i) => {
-    const d = document.createElement('div'); d.className = 'tour-nav-dot'; d.id = 'tdot' + i;
-    tourDotsEl.appendChild(d);
-  });
-
-  function tourShow(i) {
-    const s = TOUR_STEPS[i];
-    const el = document.querySelector(s.selector); if (!el) return;
-    const r = el.getBoundingClientRect();
-    TOUR_STEPS.forEach((_, j) => { document.getElementById('tdot' + j).className = 'tour-nav-dot' + (j === i ? ' on' : ''); });
-    const pad = s.rect ? 12 : 0;
-    if (s.rect) {
-      tourSpot.className = 'tour-spotlight rect';
-      tourSpot.style.left   = (r.left - pad) + 'px'; tourSpot.style.top    = (r.top - pad) + 'px';
-      tourSpot.style.width  = (r.width + pad * 2) + 'px'; tourSpot.style.height = (r.height + pad * 2) + 'px';
-      tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}99`;
-    } else {
-      const rad = 56; const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      tourSpot.className = 'tour-spotlight';
-      tourSpot.style.left   = (cx - rad) + 'px'; tourSpot.style.top    = (cy - rad) + 'px';
-      tourSpot.style.width  = (rad * 2) + 'px'; tourSpot.style.height  = (rad * 2) + 'px';
-      tourSpot.style.boxShadow = `0 0 0 9999px rgba(2,14,38,0.42), 0 0 0 2px ${s.color}88`;
-    }
-    const ttW = 400, ttH = 320;
-    const spotL = parseFloat(tourSpot.style.left), spotT = parseFloat(tourSpot.style.top);
-    const spotW = parseFloat(tourSpot.style.width), spotH = parseFloat(tourSpot.style.height);
-    const spotR = spotL + spotW; const margin = 16;
-    let ttLeft, ttTop;
-    if (spotL > ttW + margin * 2) ttLeft = spotL - ttW - margin;
-    else if (window.innerWidth - spotR > ttW + margin * 2) ttLeft = spotR + margin;
-    else ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, spotL + spotW / 2 - ttW / 2));
-    ttTop = Math.max(margin, Math.min(window.innerHeight * 0.55, spotT + spotH / 2 - ttH / 2));
-    ttLeft = Math.max(margin, Math.min(window.innerWidth - ttW - margin, ttLeft));
-    tourTip.style.left = ttLeft + 'px'; tourTip.style.top = ttTop + 'px'; tourTip.style.width = ttW + 'px';
-    let ex = s.extras ? `<div class="tour-tt-examples">${s.extras.map(e => `<div class="tour-tt-ex">${e}</div>`).join('')}</div>` : '';
-    tourTip.innerHTML = `<span class="tour-tt-tag" style="background:${s.tag.bg};color:${s.tag.c};">${s.tag.t}</span><div class="tour-tt-title">${s.title}</div><div class="tour-tt-desc">${s.desc}</div>${ex}`;
-    tourBtnPrev.disabled = (i === 0);
-    tourBtnNext.textContent = i === TOUR_STEPS.length - 1 ? '¡Listo! ✓' : 'Siguiente →';
-    tourCur = i;
-  }
-
-  function tourOpen()  { tourOverlay.classList.add('active'); tourShow(0); }
-  function tourClose() { tourOverlay.classList.remove('active'); }
-  document.getElementById('guideTourBtn').addEventListener('click', tourOpen);
-  tourBtnNext.addEventListener('click', () => { if (tourCur < TOUR_STEPS.length - 1) tourShow(tourCur + 1); else tourClose(); });
-  tourBtnPrev.addEventListener('click', () => { if (tourCur > 0) tourShow(tourCur - 1); });
-  tourBtnSkip.addEventListener('click', tourClose);
 });
 </script>
 </body>
