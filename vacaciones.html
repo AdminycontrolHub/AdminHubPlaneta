@@ -315,7 +315,7 @@ function renderMonth() {
       t += '<span class="' + c + (mine ? ' cl' : '') + '" style="' + bg(col) + '" title="' + d + ' ' + MS[m].toLowerCase() + (tip ? ' · ' + esc(tip) : '') + (mine ? (e ? ' · pulsa para quitar' : ' · pulsa para pedir') : '') + '"' + (mine ? ' onclick="VAC.toggleDay(' + m + ',' + d + ')"' : '') + '></span>';
     }
   });
-  t += '<span class="sub">Aquí</span>';
+  t += '<span></span>';
   for (let d = 1; d <= n; d++) {
     if (!work(m, d)) { t += '<span></span>'; continue; }
     t += '<span class="h">' + (S.people.length - cover(m, d).length) + '</span>';
