@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 10</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 12</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -801,7 +801,10 @@ select.inp{cursor:pointer}
           <div style="color:var(--mut);font-size:13px;margin-top:2px">Cualquier departamento puede añadir temas</div>
         </div>
         <sc-if value="{{hasTopics}}" hint-placeholder-val="{{true}}">
-          <button onClick="{{topicsToToday}}" title="Convierte todos los temas pendientes en tareas con revisión hoy" style="align-self:flex-start;background:#fff;color:#2A3A8C;border:1px solid #BCD0F5;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer">Pasar todo a «Tareas a revisar hoy» →</button>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+            <button onClick="{{selAll}}" aria-label="Seleccionar todos los temas" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:0;padding:2px;font-weight:700;font-size:13px;color:#2A3A8C;cursor:pointer"><span style="{{allStyle}}">{{allMark}}</span>Seleccionar todo</button>
+            <button onClick="{{topicsToToday}}" style="{{moveStyle}}">Pasar seleccionados a «Tareas a revisar hoy» ({{selCount}}) →</button>
+          </div>
         </sc-if>
         <div style="display:flex;gap:8px">
           <input class="inp" aria-label="Nuevo tema" value="{{topicIn}}" onChange="{{onTopicIn}}" onKeyDown="{{onTopicKey}}" placeholder="Escribe un tema… (Enter para añadir)" style="flex:1 1 auto">
@@ -810,6 +813,7 @@ select.inp{cursor:pointer}
         <div style="display:flex;flex-direction:column;gap:8px">
           <sc-for list="{{topicList}}" as="x" hint-placeholder-count="3">
             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 10px;background:#fff;border-radius:10px;padding:10px 12px">
+              <button onClick="{{x.onSel}}" aria-label="Seleccionar tema" title="Seleccionar para pasar a revisar hoy" style="{{x.selStyle}}">{{x.selMark}}</button>
               <div style="flex:1 1 200px;min-width:0">
                 <div style="font-size:14px;font-weight:600">{{x.text}}</div>
                 <div class="mono" style="font-size:11px;color:var(--mut);margin-top:2px">Introducido el {{x.date}}<sc-if value="{{x.hasMoved}}" hint-placeholder-val="{{false}}"> · {{x.moved}}</sc-if></div>
@@ -850,11 +854,12 @@ select.inp{cursor:pointer}
                 <div style="font-size:14px;font-weight:600">{{x.text}}</div>
                 <div class="mono" style="font-size:11px;color:var(--mut);margin-top:2px">Asignada el {{x.date}}</div>
               </div>
+              <button onClick="{{x.toTopic}}" title="Pasar a tareas de la próxima reunión" aria-label="Pasar a temas de la próxima reunión" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #B2DCE5;background:#fff;color:#0A6573"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
               <div style="display:flex;align-items:center;gap:6px;flex:0 0 auto"><span class="lbl" style="font-size:10px">Revisión</span><input type="date" class="inp" aria-label="Fecha de revisión" value="{{x.rev}}" onChange="{{x.onRev}}" style="width:150px;padding:6px 8px">
               </div>
               <span class="chip" style="{{x.deptStyle}}">{{x.dept}}</span>
-              <span class="chip" style="{{x.statusStyle}}">{{x.status}}</span>
-              <button onClick="{{x.rm}}" aria-label="Quitar tarea" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;padding:4px 9px;font-size:12px;font-weight:700;color:var(--mut)">Quitar</button>
+              <sc-if value="{{x.isDone}}" hint-placeholder-val="{{false}}"><span class="chip" style="{{x.statusStyle}}">{{x.status}}</span></sc-if>
+              <button onClick="{{x.rm}}" title="Eliminar tarea" aria-label="Eliminar tarea" style="width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1.5px solid #F2A3B4;background:#fff;color:#B0203C"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
             </div>
           </sc-for>
           <sc-if value="{{noTasks}}" hint-placeholder-val="{{false}}"><div style="color:var(--mut);font-size:13px">Todavía no hay tareas.</div></sc-if>
@@ -877,6 +882,7 @@ select.inp{cursor:pointer}
               <div style="flex:1 1 220px;font-size:14px;font-weight:600">{{x.text}}</div>
               <span class="chip" style="{{x.deptStyle}}">{{x.dept}}</span>
               <span class="chip" style="{{x.lateStyle}}">{{x.lateTxt}} · revisión {{x.rev}}</span>
+              <button onClick="{{x.rm}}" title="Eliminar tarea" aria-label="Eliminar tarea" style="background:#fff;border:1px solid #F2A3B4;color:#B0203C;border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
               <textarea class="inp" aria-label="Comentario de resolución" placeholder="Comentario de resolución…" value="{{x.draft}}" onChange="{{x.onDraft}}" rows="2" style="flex:1 1 320px;resize:vertical"></textarea>
@@ -1308,7 +1314,7 @@ class Component extends DCLogic {
     this.state = {
       role:__prof || 'mkt', filter:'Todos', comFilter:'Todos', corte:2,
       estados:{}, added:[], nextId:1, copyMsg:'', toast:'', toastTo:'com', msg:'', drag:false, drop:null,
-      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', cmOpen:{}, delId:null, delPwd:'', delErr:false, hdel:null, hdelPwd:'', hdelErr:false, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
+      cs:{}, notes:{}, goal:20, demo:null, prices:{}, obs:{}, fact:{}, profile:__prof, locked:!!__hash, ext:__ext, hub:(function(){ try { return (location.hash || '') === '#bootcamp-com'; } catch (e) { return false; } })(), syncOk:null, syncAt:'', unlocked:false, pwdIn:'', pwdErr:false, moro:{}, moroSel:{}, comView:'alumnos', roomNo:{}, topicIn:'', taskIn:'', taskDept:'adm', taskRev:'', cmOpen:{}, delId:null, delPwd:'', delErr:false, hdel:null, hdelPwd:'', hdelErr:false, sel:{}, hist:[], histOpen:(function(){ try { return (location.hash || '') === '#historico'; } catch (e) { return false; } })(), histSel:'', cycOpen:false, cycName:'Silicon Valley', cycPwd:'', cycErr:'', cycBusy:false, mktPwd:'', mktPwdErr:false, mktTools:false, hmM:null, resDraft:{}, nextT:1,
       topics:[], tasks:[], asesores:{}, pairDrag:null, hmDrag:'', exportOpen:false, claims:[], nextClaim:1,
       costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}],
       costName:'', costAmt:''
@@ -2127,7 +2133,9 @@ class Component extends DCLogic {
 
     // ---------- reuniones
     const topicList = s.topics.filter(x => !x.resolved).map(x => ({
-      text:x.text, date:x.date || todayTxt, comment:x.comment || '', hasComment:!!x.comment && !s.cmOpen[x.id], cmOpen:!!s.cmOpen[x.id],
+      text:x.text, date:x.date || todayTxt, comment:x.comment || '',
+      selMark:s.sel[x.id] ? '✓' : '', selStyle:'flex:0 0 auto;width:22px;height:22px;border-radius:50%;padding:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;line-height:1;' + (s.sel[x.id] ? 'background:#2A3A8C;color:#fff;border:2px solid #2A3A8C' : 'background:#fff;color:#fff;border:2px solid #9DB3E8'),
+      onSel:() => { const o = Object.assign({}, s.sel); if (o[x.id]) delete o[x.id]; else o[x.id] = true; set({sel:o}); }, hasComment:!!x.comment && !s.cmOpen[x.id], cmOpen:!!s.cmOpen[x.id],
       hasMoved:!!x.moves, moved:'movido ' + (x.moves || 0) + (x.moves === 1 ? ' vez' : ' veces') + ' a la próxima reunión',
       ok:() => set({topics:s.topics.map(y => y.id === x.id ? Object.assign({}, y, {resolved:true, date:y.date || todayTxt, resolvedDate:todayTxt, resolvedAt:Date.now()}) : y), toast:'Tema completado y guardado en el histórico.', toastTo:role}),
       next:() => { const rest = s.topics.filter(y => y.id !== x.id), me = Object.assign({}, x, {moves:(x.moves || 0) + 1}); set({topics:rest.concat([me]), toast:'Tema movido a la próxima reunión.', toastTo:role}); },
@@ -2142,6 +2150,7 @@ class Component extends DCLogic {
     const isoTxt = (v) => v ? v.split('-').reverse().join('/') : '';
     const dueList = s.tasks.filter(x => !x.resolved && x.review && x.review <= todayIso).map(x => ({
       text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], rev:isoTxt(x.review),
+      rm:() => { let ok = true; try { ok = confirm('¿Eliminar esta tarea? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({tasks:s.tasks.filter(y => y.id !== x.id)}); },
       lateTxt:x.review < todayIso ? 'Vencida' : 'Hoy', lateStyle:x.review < todayIso ? 'background:#FDECEF;color:#B0203C;font-weight:700' : 'background:#FFF4D6;color:#8A5A00;font-weight:700',
       draft:s.resDraft[x.id] || '',
       onDraft:(e) => { const o = Object.assign({}, s.resDraft); o[x.id] = e.target.value; set({resDraft:o}); },
@@ -2161,7 +2170,9 @@ class Component extends DCLogic {
     const taskList = s.tasks.filter(x => !x.resolved).map(x => ({
       text:x.text, dept:DEPT[x.dept], deptStyle:DEPT_CHIP[x.dept], date:x.date, rev:x.review || '', onRev:(e) => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {review:e.target.value}) : y)}),
       status:x.done ? 'Gestionada el ' + x.doneDate : 'Pendiente', statusStyle:x.done ? 'background:#DDF5E6;color:#176B3A' : 'background:#FFF4D6;color:#8A5A00',
-      rm:() => set({tasks:s.tasks.filter(y => y.id !== x.id)})
+      isDone:!!x.done,
+      toTopic:() => set({tasks:s.tasks.filter(y => y.id !== x.id), topics:s.topics.concat([{id:'p' + s.nextT, text:x.text, date:todayTxt}]), nextT:s.nextT + 1, toast:'Tarea pasada a «Temas a tratar en la próxima reunión».', toastTo:role}),
+      rm:() => { let ok = true; try { ok = confirm('¿Eliminar esta tarea? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({tasks:s.tasks.filter(y => y.id !== x.id)}); }
     }));
     const deptOpts = ['mkt', 'adm', 'com'].map(d => ({v:d, label:DEPT[d], sel:s.taskDept === d}));
 
@@ -2267,13 +2278,19 @@ class Component extends DCLogic {
       comViewTabs, isComAlumnos:s.comView === 'alumnos', isComRooms:s.comView === 'habitaciones', rooms:roomList, roomStats,
       dueList, noDue:dueList.length === 0, histList, noHist:histList.length === 0, todayLabel:todayTxt,
       topicList, noTopics:topicList.length === 0, hasTopics:topicList.length > 0,
+      selCount:topicList.filter(t => t.selMark).length,
+      allMark:(topicList.length && topicList.every(t => t.selMark)) ? '✓' : '',
+      allStyle:'width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;line-height:1;' + ((topicList.length && topicList.every(t => t.selMark)) ? 'background:#2A3A8C;color:#fff;border:2px solid #2A3A8C' : 'background:#fff;color:#fff;border:2px solid #9DB3E8'),
+      moveStyle:'border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px;border:1px solid #BCD0F5;' + (topicList.some(t => t.selMark) ? 'background:#2A3A8C;color:#fff;cursor:pointer' : 'background:#fff;color:#9AA3C7;cursor:default'),
+      selAll:() => { const pend = s.topics.filter(x => !x.resolved); const all = pend.length && pend.every(x => s.sel[x.id]); const o = {}; if (!all) pend.forEach(x => { o[x.id] = true; }); set({sel:o}); },
       topicsToToday:() => {
-        const pend = s.topics.filter(x => !x.resolved);
-        if (!pend.length) return;
+        const pend = s.topics.filter(x => !x.resolved && s.sel[x.id]);
+        if (!pend.length) { set({toast:'Marca con la bolita los temas que quieres pasar.', toastTo:role}); return; }
         const d = new Date(), p2 = (n) => String(n).padStart(2, '0'), iso = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
         let n = s.nextT;
+        const ids = {}; pend.forEach(x => { ids[x.id] = true; });
         const nt = pend.map(x => ({id:'k' + (n++), text:x.text + (x.comment ? ' — ' + x.comment : ''), dept:s.taskDept, done:false, date:todayTxt, doneDate:'', review:iso}));
-        set({tasks:s.tasks.concat(nt), topics:s.topics.filter(x => x.resolved), nextT:n, toast:pend.length + (pend.length === 1 ? ' tema pasado' : ' temas pasados') + ' a «Tareas a revisar hoy».', toastTo:s.taskDept});
+        set({tasks:s.tasks.concat(nt), topics:s.topics.filter(x => !ids[x.id]), sel:{}, nextT:n, toast:pend.length + (pend.length === 1 ? ' tema pasado' : ' temas pasados') + ' a «Tareas a revisar hoy».', toastTo:s.taskDept});
       }, taskList, noTasks:taskList.length === 0, deptOpts,
       topicIn:s.topicIn, taskIn:s.taskIn,
       onTopicIn:(e) => set({topicIn:e.target.value}), onTaskIn:(e) => set({taskIn:e.target.value}), onTaskKey:(e) => {
