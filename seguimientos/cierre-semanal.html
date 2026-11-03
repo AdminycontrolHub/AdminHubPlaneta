@@ -229,7 +229,6 @@ textarea.free:focus{border-color:var(--g4);box-shadow:0 0 0 3px rgba(240,199,90,
 
 <button class="secret" title="" onclick="uiAlert('Contraseña: AdminHub')">🌠✨</button>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 /* ============ CONFIG ============ */
 var WORKER = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
@@ -771,8 +770,42 @@ function adoptPasamos(p, sn){
   }
   p.snapSeen = sn.pUpd;
 }
+/* copia la tabla como tabla real (HTML) para pegarla en Teams */
 function fotoCierre(){
-  if (dbDoc){ fotoImagen(); return; }
+  var p = getPage(curId); if (!p) return;
+  var cols = ['Marca','Objetivo','Matris','Bajas+CE','Pasamos','Netas','Esteban','Arrastramos para próxima semana'];
+  var th = 'padding:8px 12px;background:#0a3532;color:#fbe39b;border:1px solid #11504a;font-family:Segoe UI,Arial,sans-serif;font-size:12px;text-align:center;';
+  var td = 'padding:8px 12px;border:1px solid #9bb8b3;font-family:Segoe UI,Arial,sans-serif;font-size:13px;text-align:center;';
+  var h = '<table style="border-collapse:collapse"><thead><tr>', t = cols.join('\t') + '\n', i;
+  for (i = 0; i < cols.length; i++) h += '<th style="' + th + '">' + esc(cols[i]) + '</th>';
+  h += '</tr></thead><tbody>';
+  for (i = 0; i < p.rows.length; i++){
+    var r = p.rows[i], vac = String(r.pasamos).trim() === '';
+    var cells = [r.marca, r.obj, r.matris, r.bajas, r.pasamos, netasText(r), r.nota, arrText(r)];
+    h += '<tr>';
+    for (var k = 0; k < cells.length; k++){
+      var st = td + (k === 0 ? 'font-weight:bold;text-align:left;' : '') + (k === 4 && vac ? 'background:#f0c75a;' : '');
+      h += '<td style="' + st + '">' + (esc(cells[k]) || '&nbsp;') + '</td>';
+    }
+    h += '</tr>';
+    t += cells.join('\t') + '\n';
+  }
+  h += '</tbody></table>';
+  var ok = function(){ flash('📋 tabla copiada · pégala en Teams', 'ok'); };
+  var fallback = function(){
+    var d = document.createElement('div'); d.innerHTML = h; d.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(d);
+    var rg = document.createRange(); rg.selectNodeContents(d);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rg);
+    var good = false; try { good = document.execCommand('copy'); } catch(e){}
+    sel.removeAllRanges(); document.body.removeChild(d);
+    if (good) ok(); else uiAlert('No he podido copiar la tabla. Prueba de nuevo.');
+  };
+  try {
+    navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([h], { type:'text/html' }), 'text/plain': new Blob([t], { type:'text/plain' }) })]).then(ok, fallback);
+  } catch(e){ fallback(); }
+}
+function fotoCierreEnlace(){
   var p = getPage(curId); if (!p) return;
   if (!p.snap) p.snap = newToken();
   flash('preparando enlace…', 'warn');
