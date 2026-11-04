@@ -368,7 +368,7 @@ function doSave(){
     state.pages = merged;
     return kvSet({ pages: merged });
   }).then(function(){
-    dirty = {}; deleted = {}; kvOk = true; localSet();
+    dirty = {}; deleted = {}; kvOk = true; localSet(); syncSoon();
     setStatus('● guardado en la nube', 'ok');
     renderYears(); renderSide();
   }).catch(function(){
@@ -385,7 +385,7 @@ function load(){
     else if (loc && loc.pages.length){ state = loc; for (var i = 0; i < state.pages.length; i++) dirty[state.pages[i].id] = true; scheduleSave(); }
     else { state = { pages: seed() }; for (var j = 0; j < state.pages.length; j++) dirty[state.pages[j].id] = true; scheduleSave(); }
     setStatus('● conectado', 'ok'); boot();
-    setTimeout(pullSnap, 1500); setInterval(pullSnap, 20000);
+    setTimeout(syncLive, 1200); setInterval(syncLive, 20000);
   }).catch(function(){
     state = (loc && loc.pages.length) ? loc : { pages: seed() };
     kvOk = false; setStatus('⚠ sin conexión · modo local', 'err'); boot();
@@ -826,16 +826,31 @@ function fotoCierreEnlace(){
     };
   }).catch(function(){ uiAlert('No he podido crear el enlace. Revisa la conexión.'); });
 }
-/* trae lo que Esteban haya rellenado */
-function pullSnap(){
-  if (dbDoc || EQ) return;
-  var p = getPage(curId); if (!p || !p.snap) return;
-  wGetRaw(SNAP_PREFIX + p.snap).then(function(sn){
-    if (!sn || !sn.rows || !sn.pUpd || sn.pUpd <= (p.snapSeen || 0)) return;
-    adoptPasamos(p, sn); scheduleSave(p.id); renderRows(); refreshNetas();
-    flash('✔ Esteban ha rellenado Pasamos', 'ok');
-  }).catch(function(){});
+/* vista fija de Esteban (?e=live): siempre la semana actual. Se envía tu hoja y se trae su Pasamos */
+var LIVE = 'live', syncBusy = false, syncFail = false;
+function livePage(){
+  var cv = defaultConv();
+  return pageOfDate(weekISO(), cv) || pagesOf(cv)[0] || null;
 }
+function syncLive(){
+  if (dbDoc || EQ || syncBusy || !state || !state.pages.length) return;
+  var p = livePage(); if (!p) return;
+  syncBusy = true;
+  wGetRaw(SNAP_PREFIX + LIVE).catch(function(){ return null; }).then(function(sn){
+    var same = sn && sn.rows && sn.pageId === p.id;
+    if (same && sn.pUpd && sn.pUpd > (p.snapSeen || 0)){
+      adoptPasamos(p, sn); p.snap = LIVE; scheduleSave(p.id);
+      if (curId === p.id){ renderRows(); refreshNetas(); }
+      flash('✔ Esteban ha rellenado Pasamos', 'ok');
+    }
+    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, rows:snapRows(p) });
+  }).then(function(){ syncFail = false; syncBusy = false; }).catch(function(){
+    syncBusy = false;
+    if (!syncFail){ syncFail = true; flash('⚠ no he podido sincronizar con Esteban', 'err'); }
+  });
+}
+var syncT = null;
+function syncSoon(){ clearTimeout(syncT); syncT = setTimeout(syncLive, 1500); }
 
 /* vista de Esteban: solo la tabla, Pasamos editable */
 function evView(){
@@ -866,6 +881,7 @@ function evView(){
     var ac = tr.querySelector('.arrc'); ac.textContent = arrText(sn.rows[i]); ac.className = 'arrc ' + cls(arrVal(sn.rows[i]));
     st('guardando…', 'warn'); clearTimeout(tmr);
     tmr = setTimeout(function(){
+      tmr = null;
       wGetRaw(SNAP_PREFIX + EQ).then(function(cur){
         cur = cur || sn;
         for (var k in pend){ if (cur.rows[k]) cur.rows[k].pasamos = pend[k]; }
@@ -874,8 +890,12 @@ function evView(){
       }).then(function(){ st('● guardado', 'ok'); }).catch(function(){ st('⚠ no se ha podido guardar', 'err'); });
     }, 700);
   };
+  setInterval(function(){
+    if (!sn || tmr || document.activeElement && document.activeElement.tagName === 'INPUT') return;
+    wGetRaw(SNAP_PREFIX + EQ).then(function(v){ if (v && v.rows && !tmr){ sn = v; draw(); } }).catch(function(){});
+  }, 30000);
   wGetRaw(SNAP_PREFIX + EQ).then(function(v){
-    if (!v || !v.rows){ document.getElementById('evt').textContent = 'Enlace no válido'; return; }
+    if (!v || !v.rows){ document.getElementById('evt').textContent = 'Todavía no hay cierre publicado. Vuelve a intentarlo en unos minutos.'; return; }
     sn = v;
     document.getElementById('evt').textContent = (v.title || 'Cierre Semanal') + ' · ' + fmtShort(v.date) + ' · ' + v.conv;
     draw(); st('● conectado', 'ok');
