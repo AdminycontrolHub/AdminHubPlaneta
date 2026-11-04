@@ -764,7 +764,7 @@ function fotoImagen(){
 
 /* ============ ENLACE PARA ESTEBAN ============ */
 var EQ = (function(){ var m = /[?&]e=([A-Za-z0-9]+)/.exec(location.search); return m ? m[1] : null; })();
-var SNAP_PREFIX = 'cierre_esteban_';
+var SNAP_PREFIX = 'adminhub_cierre_esteban_';
 function newToken(){ var a = 'abcdefghijkmnpqrstuvwxyz23456789', t = '', i; try { var u = new Uint8Array(20); crypto.getRandomValues(u); for (i = 0; i < 20; i++) t += a[u[i] % a.length]; } catch(e){ for (i = 0; i < 20; i++) t += a[Math.floor(Math.random() * a.length)]; } return t; }
 function snapRows(p){ return p.rows.map(function(r){ return { marca:r.marca, obj:r.obj, matris:r.matris, bajas:r.bajas, pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r) }; }); }
 function adoptPasamos(p, sn){
