@@ -209,7 +209,7 @@ textarea.free:focus{border-color:var(--g4);box-shadow:0 0 0 3px rgba(240,199,90,
 </style>
 </head>
 <body>
-<input type="file" id="xl" accept=".xlsx,.xls,.csv" style="display:none" onchange="onXlsx(this)">
+<input type="file" id="xl" accept=".xlsx,.xls,.csv" multiple style="display:none" onchange="onXlsx(this)">
 
 <div class="modalwin">
 <div class="top">
@@ -592,7 +592,7 @@ function renderSide(){
     }
     var wk = dd.toLocaleDateString('es-ES', { weekday:'short' }).replace('.', ''), pc = pendCount(p);
     h += '<div class="pchip' + (p.id === curId ? ' on' : '') + '" title="' + esc(fmtDate(p.date) + (pc ? ' · ' + pc + ' pendientes' : '')) + '" onclick="openPage(\'' + p.id + '\')">' +
-         (pc ? '<i class="dot"></i>' : '') + '<b>' + dd.getDate() + '</b><span>' + esc(wk) + '</span></div>';
+         (pc ? '<i class="dot"></i>' : '') + '<b>' + (semOf(p) ? esc(semOf(p)) : dd.getDate()) + '</b><span>' + (semOf(p) ? dd.getDate() + ' ' + esc(wk) : esc(wk)) + '</span></div>';
   }
   if (lastM) h += '</div>';
   if (!shown) h = '<div class="empty">' + (q ? 'Sin resultados' : 'Aún no hay resúmenes en ' + curConv + '.<br>Crea el primero con ＋') + '</div>';
@@ -619,7 +619,9 @@ function renderMain(){
        '<button class="nav" onclick="stepPage(1)"' + (idx === all.length - 1 ? ' disabled' : '') + '>Siguiente ▶</button>' +
        '<span class="navhint">' + (idx + 1) + ' de ' + all.length + ' resúmenes</span></div>';
 
-  h += '<div class="head"><div class="cal"><div class="cm">' + esc(mon) + '</div><div class="cd">' + d.getDate() + '</div><div class="cw">' + esc(wd) + '</div></div>';
+  var sm = semOf(p), mtop = mon;
+  if (sm && p.semMes && !/^mes/i.test(p.semMes)) mtop = p.semMes.slice(0, 3).toUpperCase();
+  h += '<div class="head"><div class="cal"><div class="cm">' + esc(mtop) + '</div><div class="cd">' + (sm ? esc(sm) : d.getDate()) + '</div><div class="cw">' + (sm ? esc(d.getDate() + ' ' + d.toLocaleDateString('es-ES', { month:'short' }).replace('.', '')) : esc(wd)) + '</div></div>';
   h += '<div class="ht"><input class="title-in" value="' + esc(p.title) + '" oninput="setField(\'title\',this.value)">' +
        '<div class="meta"><span>Fecha:</span><input type="date" value="' + esc(p.date) + '" onchange="setDate(this.value)"></div></div>';
   h += '<div class="acts"><button class="btn" onclick="fotoCierre()">📸 Foto cierre</button>' +
@@ -917,7 +919,7 @@ function syncLive(manual){
       p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
       banner('Esteban ha enviado el cierre a Adm. Comercial a las ' + fmtHora(sn.sentAt));
     }
-    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), rows:snapRows(p) });
+    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, sem:p.sem || '', title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), rows:snapRows(p) });
   }).then(function(){
     if (!manual) return;
     return wGetRaw(SNAP_PREFIX + LIVE).then(function(chk){
@@ -998,7 +1000,7 @@ function evView(){
   wGetRaw(SNAP_PREFIX + EQ).then(function(v){
     if (!v || !v.rows){ document.getElementById('evt').textContent = 'Todavía no hay cierre publicado. Vuelve a intentarlo en unos minutos.'; return; }
     sn = v;
-    document.getElementById('evt').textContent = (v.title || 'Cierre Semanal') + ' · ' + fmtShort(v.date) + ' · ' + v.conv;
+    document.getElementById('evt').textContent = (v.title || 'Cierre Semanal') + ' · ' + (v.sem ? v.sem + ' · ' : '') + fmtShort(v.date) + ' · ' + v.conv;
     draw(); st('● conectado', 'ok');
   }).catch(function(){ document.getElementById('evt').textContent = 'No se ha podido cargar'; st('⚠ sin conexión', 'err'); });
 }
@@ -1020,65 +1022,109 @@ function normBrand(v){
   return t;
 }
 function onXlsx(inp){
-  var f = inp.files && inp.files[0]; if (!f) return;
+  var files = inp.files ? Array.prototype.slice.call(inp.files) : []; if (!files.length) return;
   if (typeof XLSX === 'undefined'){ uiAlert('No se ha podido cargar la librería de Excel. Revisa la conexión.'); inp.value = ''; return; }
-  var rd = new FileReader();
-  rd.onload = function(e){
-    try { applyObjetivos(parseObjetivos(new Uint8Array(e.target.result))); }
-    catch(err){ uiAlert('No he podido leer el Excel: ' + err.message); }
-    inp.value = '';
-  };
-  rd.readAsArrayBuffer(f);
+  var res = [], errs = [], left = files.length;
+  files.forEach(function(f){
+    var rd = new FileReader();
+    rd.onload = function(e){
+      try { res.push(parseCurva(new Uint8Array(e.target.result), f.name)); }
+      catch(err){ errs.push(f.name + ': ' + err.message); }
+      if (--left === 0){ inp.value = ''; applyCurvas(res, errs); }
+    };
+    rd.onerror = function(){ errs.push(f.name + ': no se pudo leer'); if (--left === 0){ inp.value = ''; applyCurvas(res, errs); } };
+    rd.readAsArrayBuffer(f);
+  });
 }
-function parseObjetivos(buf){
+/* serie Excel -> ISO (yyyy-mm-dd) */
+function xlIso(v){
+  if (v instanceof Date) return isoOf(v);
+  if (typeof v === 'number' && v > 30000 && v < 80000){ return new Date(Math.round((v - 25569) * 86400000)).toISOString().slice(0, 10); }
+  return null;
+}
+/* detecta la marca del archivo por el título de la hoja o por el nombre del fichero */
+function brandOfFile(rows, fname){
+  function tryTxt(t){
+    t = String(t || '').toUpperCase();
+    if (/UCMA/.test(t)) return 'UCMA';
+    if (/INESDI|INE[^A-Z]|INE$/.test(t)) return 'INE';
+    if (/ESDESIGN|ESD/.test(t)) return 'ESD';
+    if (/OBS/.test(t)) return 'OBS';
+    return null;
+  }
+  for (var i = 0; i < Math.min(rows.length, 8); i++){
+    for (var j = 0; j < rows[i].length; j++){
+      if (typeof rows[i][j] === 'string' && /curva|ventas/i.test(rows[i][j])){ var k = tryTxt(rows[i][j]); if (k) return k; }
+    }
+  }
+  return tryTxt(fname);
+}
+/* lee una curva: por cada martes, objetivo semanal (columna Sem del FORECAST) y semana comercial S1..S5 */
+function parseCurva(buf, fname){
   var wb = XLSX.read(buf, { type:'array' });
   var ws = wb.Sheets[wb.SheetNames[0]];
   var rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:'' });
-  var map = {}, KNOWN = { OBS:1, INE:1, ESD:1 };
-  var hr = -1, cm = -1, co = -1, i, j;
+  var hr = -1, cF = -1, cM = -1, cS = -1, i, j;
   for (i = 0; i < rows.length && hr < 0; i++){
-    var a = -1, b = -1;
+    var f = -1, m = -1, sm = -1;
     for (j = 0; j < rows[i].length; j++){
-      var t = String(rows[i][j]).toLowerCase();
-      if (a < 0 && t.indexOf('marca') >= 0) a = j;
-      if (b < 0 && t.indexOf('obj') >= 0) b = j;
+      var t = String(rows[i][j]).trim().toLowerCase();
+      if (t === 'fecha' && f < 0) f = j;
+      if (t === 'mes' && m < 0) m = j;
+      if (t === 'sem' && sm < 0) sm = j;
     }
-    if (a >= 0 && b >= 0){ hr = i; cm = a; co = b; }
+    if (f >= 0 && sm >= 0){ hr = i; cF = f; cM = m; cS = sm; }
   }
-  if (hr >= 0){
-    for (i = hr + 1; i < rows.length; i++){
-      var k = normBrand(rows[i][cm]), v = num(rows[i][co]);
-      if (KNOWN[k] && v != null && !(k in map)) map[k] = v;
-    }
-  } else {
-    for (i = 0; i < rows.length; i++){
-      for (j = 0; j < rows[i].length; j++){
-        var kb = normBrand(rows[i][j]);
-        if (KNOWN[kb] && !(kb in map)){
-          for (var c = j + 1; c < rows[i].length; c++){ var nv = num(rows[i][c]); if (nv != null){ map[kb] = nv; break; } }
-        }
-      }
-    }
+  if (hr < 0) throw new Error('no encuentro las columnas "Fecha" y "Sem"');
+  var brand = brandOfFile(rows, fname);
+  if (!brand) throw new Error('no sé de qué marca es (no aparece OBS, ESDesign o Inesdi en el título ni en el nombre)');
+  var by = {}, n = 0, mes = '', cnt = 0;
+  for (i = hr + 1; i < rows.length; i++){
+    var r = rows[i];
+    if (cM >= 0 && typeof r[cM] === 'string' && r[cM].trim()){ mes = r[cM].trim(); cnt = 0; }
+    var iso = xlIso(r[cF]);
+    if (!iso) continue;
+    cnt++;
+    by[iso] = { obj: num(r[cS]), sem: 'S' + cnt, mes: mes };
+    n++;
   }
-  return map;
+  if (!n) throw new Error('no hay fechas en la columna "Fecha"');
+  return { brand: brand, name: fname, by: by, n: n };
 }
-function applyObjetivos(map){
-  var p = pagesOf(curConv)[0]; if (!p) return;
-  var done = [], used = {}, i;
-  for (i = 0; i < p.rows.length; i++){
-    var k = normBrand(p.rows[i].marca);
-    if (k in map){ p.rows[i].obj = String(map[k]); done.push(p.rows[i].marca + ' → ' + map[k]); used[k] = 1; }
+function applyCurvas(res, errs){
+  errs = errs || [];
+  var p = getPage(curId) || pagesOf(curConv)[0];
+  if (!p){ uiAlert('No hay ningún cierre abierto.'); return; }
+  var msg = [], i, j, semSet = null, semBad = false, firstBy = null;
+  for (i = 0; i < res.length; i++){
+    var c = res[i], e = c.by[p.date];
+    if (c.brand === 'UCMA'){ msg.push('✖ ' + c.name + ': es de UCMA; el objetivo de UCMA-OBS se escribe a mano.'); continue; }
+    if (!firstBy) firstBy = c.by;
+    if (!e){ msg.push('✖ ' + c.name + ' (' + c.brand + '): el ' + fmtShort(p.date) + ' no aparece en ese archivo.'); continue; }
+    if (e.obj == null){ msg.push('✖ ' + c.name + ' (' + c.brand + '): la semana ' + e.sem + ' no tiene objetivo en la columna Sem.'); continue; }
+    var done = false;
+    for (j = 0; j < p.rows.length; j++){
+      if (normBrand(p.rows[j].marca) === c.brand){ p.rows[j].obj = String(e.obj); done = true; msg.push('✔ ' + p.rows[j].marca + ' → ' + e.obj + '  (' + e.sem + ')'); }
+    }
+    if (!done) msg.push('✖ ' + c.name + ': ese resumen no tiene fila de ' + c.brand + '.');
+    if (semSet && semSet !== e.sem) semBad = true;
+    if (!semSet) semSet = e.sem;
   }
-  var skipped = [];
-  for (var key in map){ if (!used[key]) skipped.push(key); }
-  if (!done.length){
-    uiAlert('No he encontrado objetivos que encajen. El Excel necesita una columna "Marca" y otra "Objetivo" (o las marcas OBS / ESDesign / Inesdi con su cifra al lado).');
-    return;
+  /* semana comercial en todos los cierres cuyo martes aparezca en algún archivo */
+  var tagged = 0;
+  if (firstBy){
+    for (i = 0; i < state.pages.length; i++){
+      var q = state.pages[i], ee = firstBy[q.date];
+      if (ee && (q.sem !== ee.sem || q.semMes !== ee.mes)){ q.sem = ee.sem; q.semMes = ee.mes; dirty[q.id] = true; tagged++; }
+    }
   }
-  scheduleSave(p.id);
-  if (p.id !== curId) goTo(p.id); else renderRows();
-  uiAlert('Objetivos importados en el resumen del ' + fmtShort(p.date) + ':\n' + done.join('\n') + (skipped.length ? '\n\nSin fila en ese resumen: ' + skipped.join(', ') : ''));
+  for (i = 0; i < errs.length; i++) msg.push('✖ ' + errs[i]);
+  if (semBad) msg.push('⚠ Los archivos no coinciden en la semana comercial de este martes. Revisa que sean del mismo año.');
+  if (tagged || res.length) scheduleSave(p.id);
+  renderAll();
+  uiAlert((msg.length ? msg.join('\n') : 'No he podido importar nada.'));
 }
+function semOf(p){ return p && p.sem ? p.sem : ''; }
 
 load();
 </script>
