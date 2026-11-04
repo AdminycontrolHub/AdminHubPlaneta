@@ -161,6 +161,9 @@ td.netasc.neg{background:rgba(224,136,58,.16);color:#f0a35e}
 .ban{position:absolute;top:78px;left:50%;transform:translateX(-50%);z-index:60;background:linear-gradient(135deg,var(--g5),var(--g3));color:#2a1d00;padding:11px 22px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.45),0 0 24px rgba(240,199,90,.5);max-width:calc(100% - 32px)}
 .rowbtns{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pubbtn{margin-top:10px;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;letter-spacing:.4px;background:linear-gradient(135deg,var(--g5),var(--g3));color:#2a1d00;box-shadow:0 0 14px rgba(240,199,90,.28);transition:.2s}
+.pubbtn.done,.pubbtn:disabled{background:rgba(88,181,168,.16);color:#9fd8cf;box-shadow:none;cursor:default;border:1px solid rgba(88,181,168,.45)}
+.unlock{margin:10px 0 0 10px;border:none;background:none;color:var(--t5);font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit;opacity:.7}
+.unlock:hover{opacity:1}
 .pubbtn:hover{box-shadow:0 0 24px rgba(240,199,90,.55)}
 .addrow:hover{border-color:var(--g4);color:var(--g4);background:rgba(240,199,90,.06)}
 
@@ -630,7 +633,7 @@ function renderMain(){
 
   h += '<div class="h2 hl1">Puntos más importantes</div>';
   h += '<div class="tw"><table class="tbl"><thead><tr><th class="h-x"></th><th class="h-m">Marca</th><th class="h-o">Objetivo</th><th class="h-t">Matris</th><th class="h-b">Bajas+CE</th><th class="h-p">Pasamos</th><th class="h-n">Netas</th><th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr></thead><tbody id="tb"></tbody></table></div>';
-  h += '<div class="rowbtns"><button class="addrow" onclick="addRow()">＋ Añadir marca</button><button class="pubbtn" onclick="syncLive(true)" title="Envía esta tabla a la pestaña de Teams de Esteban">📤 Publicar para Esteban</button></div>';
+  h += '<div class="rowbtns"><button class="addrow" onclick="addRow()">＋ Añadir marca</button><span id="pubwrap">' + pubBtnHtml(p) + '</span></div>';
 
   h += '<div class="two"><div>';
   h += '<div class="h2 hl2">Notas</div>';
@@ -901,12 +904,30 @@ function livePage(){
   return (livePid && getPage(livePid)) || pageOfDate(weekISO(), cv) || pagesOf(cv)[0] || null;
 }
 /* manual = botón Publicar: publica el cierre abierto y avisa del resultado */
+var pubPending = false;
+function pubBtnHtml(p){
+  if (p && p.pubAt) return '<button class="pubbtn done" disabled title="Ya publicado. El aviso a Esteban sale una sola vez">✔ Publicado para Esteban · ' + fmtHora(p.pubAt) + '</button><button class="unlock" onclick="unlockPub()" title="Solo si necesitas volver a avisar a Esteban">desbloquear</button>';
+  return '<button class="pubbtn" onclick="syncLive(true)" title="Envía esta tabla a Esteban. Solo se puede pulsar una vez">📤 Publicar para Esteban</button>';
+}
+function refreshPubBtn(){ var w = document.getElementById('pubwrap'); if (w) w.innerHTML = pubBtnHtml(getPage(curId)); }
+function unlockPub(){
+  uiPrompt('Contraseña AdminHub para volver a habilitar el botón:', true, function(pw){
+    if (pw == null) return;
+    if (String(pw).trim().toLowerCase() !== IMPORT_PWD){ uiAlert('Contraseña incorrecta'); return; }
+    var p = getPage(curId); if (!p) return;
+    p.pubAt = 0; scheduleSave(p.id); refreshPubBtn();
+  });
+}
 function syncLive(manual){
   if (EQ || !state || !state.pages.length) return;
   if (dbDoc){ if (manual) uiAlert('Publicar funciona en la versión de GitHub. Aquí la herramienta no se conecta con tu Worker.'); return; }
   if (syncBusy && !manual) return;
   var p = manual ? getPage(curId) : livePage(); if (!p) return;
-  if (manual){ livePid = p.id; flash('publicando…', 'warn'); }
+  if (manual){
+    if (pubPending || p.pubAt) return;
+    pubPending = true; var bt = document.querySelector('#pubwrap .pubbtn'); if (bt) bt.disabled = true;
+    livePid = p.id; flash('publicando…', 'warn');
+  }
   syncBusy = true;
   wGetRaw(SNAP_PREFIX + LIVE).catch(function(){ return null; }).then(function(sn){
     var same = sn && sn.rows && sn.pageId === p.id;
@@ -923,11 +944,12 @@ function syncLive(manual){
   }).then(function(){
     if (!manual) return;
     return wGetRaw(SNAP_PREFIX + LIVE).then(function(chk){
-      if (chk && chk.rows) flash('✔ Publicado para Esteban', 'ok');
+      if (chk && chk.rows){ p.pubAt = Date.now(); scheduleSave(p.id); flash('✔ Publicado para Esteban', 'ok'); }
       else uiAlert('Se ha enviado, pero al volver a leerlo no aparece. Puede ser que el Worker tarde unos segundos en actualizar. Espera un minuto y abre la vista de Esteban; si sigue vacía, avísame.');
     });
-  }).then(function(){ syncFail = false; syncBusy = false; }).catch(function(e){
+  }).then(function(){ syncFail = false; syncBusy = false; if (manual){ pubPending = false; refreshPubBtn(); } }).catch(function(e){
     syncBusy = false;
+    if (manual){ pubPending = false; refreshPubBtn(); }
     if (manual) uiAlert('No he podido publicar: ' + (e && e.message ? e.message : e) + '\n\nSi pone 403 o 404, el Worker no acepta esta clave. Avísame con ese número.');
     else if (!syncFail){ syncFail = true; flash('⚠ no he podido sincronizar con Esteban', 'err'); }
   });
