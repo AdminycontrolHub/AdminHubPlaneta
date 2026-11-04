@@ -791,7 +791,10 @@ function newToken(){ var a = 'abcdefghijkmnpqrstuvwxyz23456789', t = '', i; try 
 function snapRows(p){ return p.rows.map(function(r){ return { marca:r.marca, obj:r.obj, matris:r.matris, bajas:r.bajas, pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r) }; }); }
 function adoptPasamos(p, sn){
   for (var i = 0; i < p.rows.length && i < sn.rows.length; i++){
-    if (String(sn.rows[i].marca) === String(p.rows[i].marca)) p.rows[i].pasamos = sn.rows[i].pasamos == null ? '' : sn.rows[i].pasamos;
+    if (String(sn.rows[i].marca) === String(p.rows[i].marca)) {
+      p.rows[i].pasamos = sn.rows[i].pasamos == null ? '' : sn.rows[i].pasamos;
+      if (sn.rows[i].nota != null) p.rows[i].nota = sn.rows[i].nota;
+    }
   }
   p.snapSeen = sn.pUpd;
 }
@@ -881,7 +884,7 @@ function syncLive(manual){
     if (same && sn.pUpd && sn.pUpd > (p.snapSeen || 0)){
       adoptPasamos(p, sn); p.snap = LIVE; scheduleSave(p.id);
       if (curId === p.id){ renderRows(); refreshNetas(); }
-      banner('Esteban ha modificado Pasamos a las ' + fmtHora(sn.pUpd) + '. Revisa tu tabla');
+      banner('Esteban ha modificado el cierre (Pasamos o comentarios) a las ' + fmtHora(sn.pUpd) + '. Revisa tu tabla');
     }
     if (same && sn.sentAt && sn.sentAt > (p.sentSeen || 0)){
       p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
@@ -910,7 +913,7 @@ function evView(){
   document.body.innerHTML = '<div class="ev"><div class="evh"><div><small>Cierre Semanal</small><h1 id="evt">Cargando…</h1></div><span id="evs" class="status mono"></span></div>' +
     '<div class="tw"><table class="tbl"><thead><tr><th class="h-x"></th><th class="h-m">Marca</th><th class="h-o">Objetivo</th><th class="h-t">Matris</th><th class="h-b">Bajas+CE</th><th class="h-p">Pasamos</th><th class="h-n">Netas</th><th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr></thead><tbody id="evtb"></tbody></table></div>' +
     '<div class="evbar"><button class="pubbtn" id="evsend" onclick="evSend()">📨 Enviar a Adm. Comercial</button><span id="evsent" class="evn"></span></div>' +
-    '<p class="evn">Rellena la columna Pasamos (resaltada). Se guarda automáticamente.</p></div>';
+    '<p class="evn">Rellena la columna Pasamos (resaltada), escribe tu comentario si quieres y pulsa Enviar a Adm. Comercial. Se guarda automáticamente.</p></div>';
   var sn = null, st = function(t, c){ var e = document.getElementById('evs'); e.textContent = t; e.className = 'status mono ' + (c || ''); };
   function draw(){
     var h = '', i;
@@ -918,9 +921,9 @@ function evView(){
       var r = sn.rows[i];
       h += '<tr><td class="star"></td><td class="brand b-' + normBrand(r.marca) + '"><input readonly value="' + esc(r.marca) + '"></td>' +
         '<td class="num c-o"><input readonly value="' + esc(r.obj) + '"></td><td class="num c-t"><input readonly value="' + esc(r.matris) + '"></td><td class="num c-b"><input readonly value="' + esc(r.bajas) + '"></td>' +
-        '<td class="num c-p' + (String(r.pasamos).trim() === '' ? ' falta' : '') + '"><input inputmode="numeric" value="' + esc(r.pasamos) + '" oninput="evSet(' + i + ',this.value)"></td>' +
+        '<td class="num c-p' + (String(r.pasamos).trim() === '' ? ' falta' : '') + '"><input inputmode="numeric" value="' + esc(r.pasamos) + '" oninput="evSet(' + i + ',\'pasamos\',this.value)"></td>' +
         '<td class="netasc ' + cls(netasVal(r)) + '">' + esc(netasText(r)) + '</td>' +
-        '<td class="c-e"><input readonly value="' + esc(r.nota) + '"></td><td class="arrc ' + cls(arrVal(r)) + '">' + esc(arrText(r)) + '</td></tr>';
+        '<td class="c-e"><input placeholder="Escribe tu comentario…" value="' + esc(r.nota) + '" oninput="evSet(' + i + ',\'nota\',this.value)"></td><td class="arrc ' + cls(arrVal(r)) + '">' + esc(arrText(r)) + '</td></tr>';
     }
     document.getElementById('evtb').innerHTML = h;
     var b = document.getElementById('evsend'), m = document.getElementById('evsent');
@@ -932,7 +935,7 @@ function evView(){
     var b = document.getElementById('evsend'); b.disabled = true; st('enviando…', 'warn');
     wGetRaw(SNAP_PREFIX + EQ).then(function(cur){
       cur = cur || sn; cur.sentAt = Date.now();
-      for (var k in pend){ if (cur.rows[k]) cur.rows[k].pasamos = pend[k]; }
+      for (var k in pend){ if (cur.rows[k]) for (var f in pend[k]) cur.rows[k][f] = pend[k][f]; }
       pend = {}; if (tmr){ clearTimeout(tmr); tmr = null; }
       cur.pUpd = Date.now(); sn = cur;
       return wSetRaw(SNAP_PREFIX + EQ, cur);
@@ -942,18 +945,20 @@ function evView(){
     }).catch(function(){ b.disabled = false; st('⚠ no se ha podido enviar', 'err'); });
   };
   var tmr = null, pend = {};
-  window.evSet = function(i, v){
-    sn.rows[i].pasamos = v; pend[i] = v;
+  window.evSet = function(i, f, v){
+    sn.rows[i][f] = v; pend[i] = pend[i] || {}; pend[i][f] = v;
     var tr = document.getElementById('evtb').getElementsByTagName('tr')[i];
-    tr.querySelector('.c-p').classList.toggle('falta', String(v).trim() === '');
-    var c = tr.querySelector('.netasc'); c.textContent = netasText(sn.rows[i]); c.className = 'netasc ' + cls(netasVal(sn.rows[i]));
-    var ac = tr.querySelector('.arrc'); ac.textContent = arrText(sn.rows[i]); ac.className = 'arrc ' + cls(arrVal(sn.rows[i]));
+    if (f === 'pasamos'){
+      tr.querySelector('.c-p').classList.toggle('falta', String(v).trim() === '');
+      var c = tr.querySelector('.netasc'); c.textContent = netasText(sn.rows[i]); c.className = 'netasc ' + cls(netasVal(sn.rows[i]));
+      var ac = tr.querySelector('.arrc'); ac.textContent = arrText(sn.rows[i]); ac.className = 'arrc ' + cls(arrVal(sn.rows[i]));
+    }
     st('guardando…', 'warn'); clearTimeout(tmr);
     tmr = setTimeout(function(){
       tmr = null;
       wGetRaw(SNAP_PREFIX + EQ).then(function(cur){
         cur = cur || sn;
-        for (var k in pend){ if (cur.rows[k]) cur.rows[k].pasamos = pend[k]; }
+        for (var k in pend){ if (cur.rows[k]) for (var f in pend[k]) cur.rows[k][f] = pend[k][f]; }
         cur.pUpd = Date.now(); pend = {};
         return wSetRaw(SNAP_PREFIX + EQ, cur);
       }).then(function(){ st('● guardado', 'ok'); }).catch(function(){ st('⚠ no se ha podido guardar', 'err'); });
