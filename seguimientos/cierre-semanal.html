@@ -940,7 +940,10 @@ function syncLive(manual){
       p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
       banner('Esteban ha enviado el cierre a Adm. Comercial a las ' + fmtHora(sn.sentAt));
     }
-    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, sem:p.sem || '', title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), rows:snapRows(p) });
+    var out = { pageId:p.id, conv:p.conv, date:p.date, sem:p.sem || '', title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), rows:snapRows(p) };
+    /* no escribas en la nube si no ha cambiado nada (el plan gratuito de Cloudflare limita las escrituras diarias) */
+    if (!manual && sn && JSON.stringify(sn) === JSON.stringify(out)) return null;
+    return wSetRaw(SNAP_PREFIX + LIVE, out);
   }).then(function(){
     if (!manual) return;
     return wGetRaw(SNAP_PREFIX + LIVE).then(function(chk){
