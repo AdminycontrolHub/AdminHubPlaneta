@@ -139,7 +139,9 @@ th.h-a{width:100px;padding:10px 4px;white-space:normal;line-height:1.35;font-siz
 .tbl td input:focus{background:rgba(240,199,90,.06);box-shadow:inset 0 0 0 1px var(--g4),0 0 14px rgba(240,199,90,.25)}
 .tbl td.num input{font-family:'JetBrains Mono',monospace;text-align:center;font-weight:600;color:#d3f1ec}
 td.brand{--bc:#5b8f89;box-shadow:inset 3px 0 0 var(--bc)}
-td.brand.b-OBS{--bc:#f0c75a} td.brand.b-ESD{--bc:#58b5a8} td.brand.b-INE{--bc:#a67c12}
+tr.subtot td{background:linear-gradient(90deg,#d4a52a,#f0c75a 55%,#d4a52a) !important;color:#241a05;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;text-align:center;padding:2px 6px;line-height:1.15;height:20px;border-top:none;box-shadow:none}
+tr.subtot td.stl{white-space:nowrap;letter-spacing:1.4px;font-size:9px;text-transform:uppercase;text-align:left;padding-left:12px}
+td.brand.b-OBS{--bc:#f0c75a} td.brand.b-ESD{--bc:#58b5a8} td.brand.b-INE{--bc:#a67c12} td.brand.b-UCMAOBS{--bc:#8fd3c8}
 td.brand input{font-weight:700;letter-spacing:1px;color:var(--g5);padding-left:16px;font-family:'JetBrains Mono',monospace}
 td.star{width:36px;text-align:center}
 .starb{background:none;border:none;cursor:pointer;font-size:17px;color:rgba(127,168,162,.45);transition:.15s}
@@ -239,8 +241,8 @@ textarea.free:focus{border-color:var(--g4);box-shadow:0 0 0 3px rgba(240,199,90,
 var WORKER = 'https://lucky-shadow-44ed.veronica-zueras.workers.dev';
 var KV_KEY = 'adminhub_prereuniones_esteban_v1';
 var BASE_CONVS = ['2704'];
-var DEFAULT_BRANDS = ['OBS', 'ESDesign', 'Inesdi'];
-var BRAND_RANK = { OBS:0, ESD:1, INE:2 };
+var DEFAULT_BRANDS = ['OBS', 'UCMA-OBS', 'ESDesign', 'Inesdi'];
+var BRAND_RANK = { OBS:0, UCMAOBS:1, ESD:2, INE:3 };
 var BRAND_NAMES = { ESD:'ESDesign', INE:'Inesdi' };
 var DEFAULT_TITLE = 'Cierre Semanal';
 var IMPORT_PWD = 'adminhub';
@@ -442,9 +444,12 @@ function tidyBrands(p){
     var k = normBrand(p.rows[j].marca), t = String(p.rows[j].marca).trim().toUpperCase();
     if (BRAND_NAMES[k] && t === k) p.rows[j].marca = BRAND_NAMES[k];
   }
+  var hasU = false;
+  for (j = 0; j < p.rows.length; j++){ if (normBrand(p.rows[j].marca) === 'UCMAOBS') hasU = true; }
+  if (!hasU) p.rows.push({ marca:'UCMA-OBS', obj:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   p.rows = p.rows.map(function(r, i){ return { r:r, i:i }; }).sort(function(a, b){
     var ra = BRAND_RANK[normBrand(a.r.marca)], rb = BRAND_RANK[normBrand(b.r.marca)];
-    ra = (ra == null ? 3 : ra); rb = (rb == null ? 3 : rb);
+    ra = (ra == null ? 9 : ra); rb = (rb == null ? 9 : rb);
     return (ra - rb) || (a.i - b.i);
   }).map(function(x){ return x.r; });
   return JSON.stringify(p.rows.map(function(r){ return r.marca; })) !== before;
@@ -661,7 +666,7 @@ function renderRows(){
   var h = '';
   for (var i = 0; i < p.rows.length; i++){
     var r = p.rows[i];
-    h += '<tr>' +
+    h += '<tr class="dr">' +
       '<td class="star"><button class="starb' + (r.star ? ' on' : '') + '" title="Destacar" onclick="toggleStar(' + i + ')">★</button></td>' +
       '<td class="brand b-' + normBrand(r.marca) + '"><input value="' + esc(r.marca) + '" oninput="setRow(' + i + ',\'marca\',this.value);brandTint(this)"></td>' +
       '<td class="num c-o"><input value="' + esc(r.obj) + '" oninput="setRow(' + i + ',\'obj\',this.value)"></td>' +
@@ -672,15 +677,37 @@ function renderRows(){
       '<td class="c-e"><input value="' + esc(r.nota) + '" placeholder="Decisión / comentario…" oninput="setRow(' + i + ',\'nota\',this.value)"></td>' +
       '<td class="arrc ' + cls(arrVal(r)) + '">' + esc(arrText(r)) + '</td>' +
       '</tr>';
+    if (normBrand(r.marca) === 'UCMAOBS') h += subRowHtml(p);
   }
   document.getElementById('tb').innerHTML = h;
+}
+/* subtotal OBS + UCMA-OBS (línea fina amarilla bajo UCMA-OBS) */
+function subVals(p){
+  var o = null, m = null, b = null, pa = null, n = null;
+  function add(a, v){ return v == null ? a : (a == null ? v : a + v); }
+  for (var i = 0; i < p.rows.length; i++){
+    var r = p.rows[i], k = normBrand(r.marca);
+    if (k !== 'OBS' && k !== 'UCMAOBS') continue;
+    o = add(o, num(r.obj)); m = add(m, num(r.matris)); b = add(b, num(r.bajas)); pa = add(pa, num(r.pasamos)); n = add(n, netasVal(r));
+  }
+  return [o, m, b, pa, n].map(function(v){ return v == null ? '' : String(Math.round(v * 100) / 100); });
+}
+function subRowHtml(p){
+  var v = subVals(p);
+  return '<tr class="subtot"><td></td><td class="stl">Total</td><td>' + v[0] + '</td><td>' + v[1] + '</td><td>' + v[2] + '</td><td>' + v[3] + '</td><td>' + v[4] + '</td><td></td><td></td></tr>';
+}
+function refreshSub(){
+  var p = getPage(curId); if (!p) return;
+  var tr = document.querySelector('#tb tr.subtot'); if (!tr) return;
+  var v = subVals(p), tds = tr.getElementsByTagName('td');
+  for (var i = 0; i < 5; i++) tds[i + 2].textContent = v[i];
 }
 function brandTint(inp){ inp.parentNode.className = 'brand b-' + normBrand(inp.value); }
 function refreshNetas(){
   /* recalcula la columna Netas sin perder el foco al teclear */
   var p = getPage(curId); if (!p) return;
   var tb = document.getElementById('tb'); if (!tb) return;
-  var trs = tb.getElementsByTagName('tr');
+  var trs = tb.querySelectorAll('tr.dr');
   for (var i = 0; i < p.rows.length && i < trs.length; i++){
     var c = trs[i].querySelector('.netasc');
     if (c){ c.textContent = netasText(p.rows[i]); c.className = 'netasc ' + cls(netasVal(p.rows[i])); }
@@ -705,7 +732,7 @@ function renderTasks(){
 /* ============ ACCIONES ============ */
 function setField(k, v){ var p = getPage(curId); if (!p) return; p[k] = v; scheduleSave(p.id); if (k === 'title') renderSideSoft(); }
 function renderSideSoft(){ clearTimeout(renderSideSoft.t); renderSideSoft.t = setTimeout(renderSide, 300); }
-function setRow(i, k, v){ var p = getPage(curId); if (!p) return; p.rows[i][k] = v; scheduleSave(p.id); if (k === 'matris' || k === 'pasamos') refreshNetas(); if (k === 'pasamos'){ var cs = document.querySelectorAll('td.c-p'); if (cs[i]) cs[i].classList.toggle('falta', String(v).trim() === ''); } }
+function setRow(i, k, v){ var p = getPage(curId); if (!p) return; p.rows[i][k] = v; scheduleSave(p.id); if (k === 'matris' || k === 'pasamos') refreshNetas(); if (k === 'obj' || k === 'matris' || k === 'bajas' || k === 'pasamos' || k === 'marca') refreshSub(); if (k === 'pasamos'){ var cs = document.querySelectorAll('td.c-p'); if (cs[i]) cs[i].classList.toggle('falta', String(v).trim() === ''); } }
 function toggleStar(i){ var p = getPage(curId); p.rows[i].star = !p.rows[i].star; scheduleSave(p.id); renderRows(); }
 function addRow(){ var p = getPage(curId); p.rows.push({ marca:'', obj:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false }); scheduleSave(p.id); renderRows(); }
 function delRow(i){ var p = getPage(curId); p.rows.splice(i, 1); scheduleSave(p.id); renderRows(); }
@@ -890,7 +917,7 @@ function syncLive(manual){
       p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
       banner('Esteban ha enviado el cierre a Adm. Comercial a las ' + fmtHora(sn.sentAt));
     }
-    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, rows:snapRows(p) });
+    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), rows:snapRows(p) });
   }).then(function(){
     if (!manual) return;
     return wGetRaw(SNAP_PREFIX + LIVE).then(function(chk){
