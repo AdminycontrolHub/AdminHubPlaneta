@@ -259,6 +259,7 @@ var deleted = {};
 var extraConvs = [];
 var saveTimer = null;
 var kvOk = true;
+var SAVE_DELAY = 4000; /* agrupa los cambios: una sola escritura cada 4 s como máximo */
 
 function uid(){ return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -362,11 +363,15 @@ function scheduleSave(id){
   localSet();
   setStatus('guardando…', 'warn');
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(doSave, 900);
+  saveTimer = setTimeout(doSave, SAVE_DELAY);
 }
 
 /* lectura previa + fusión: nunca pisa cambios de otras personas */
+function flushSave(){ if (saveTimer){ clearTimeout(saveTimer); saveTimer = null; doSave(); } }
+document.addEventListener('visibilitychange', function(){ if (document.hidden) flushSave(); });
+window.addEventListener('pagehide', flushSave);
 function doSave(){
+  saveTimer = null;
   kvGet().then(function(remote){
     var map = {};
     var base = remote ? remote.pages : [];
@@ -376,6 +381,8 @@ function doSave(){
     var merged = [];
     for (var k in map) merged.push(map[k]);
     state.pages = merged;
+    /* si lo que hay en la nube ya es igual, no escribas (ahorra escrituras de KV) */
+    if (remote && JSON.stringify(remote.pages) === JSON.stringify(merged)) return null;
     return kvSet({ pages: merged });
   }).then(function(){
     dirty = {}; deleted = {}; kvOk = true; localSet(); syncSoon();
@@ -415,7 +422,7 @@ function load(){
     else if (loc && loc.pages.length){ state = loc; for (var i = 0; i < state.pages.length; i++) dirty[state.pages[i].id] = true; scheduleSave(); }
     else { state = { pages: seed() }; for (var j = 0; j < state.pages.length; j++) dirty[state.pages[j].id] = true; scheduleSave(); }
     setStatus('● conectado', 'ok'); boot();
-    setTimeout(function(){ syncLive(); }, 1200); setInterval(function(){ syncLive(); }, 20000);
+    setTimeout(function(){ syncLive(); }, 1200); setInterval(function(){ syncLive(); }, 45000);
   }).catch(function(){
     state = (loc && loc.pages.length) ? loc : { pages: seed() };
     kvOk = false; setStatus('⚠ sin conexión · modo local', 'err'); boot();
@@ -923,6 +930,7 @@ function syncLive(manual){
   if (dbDoc){ if (manual) uiAlert('Publicar funciona en la versión de GitHub. Aquí la herramienta no se conecta con tu Worker.'); return; }
   if (syncBusy && !manual) return;
   var p = manual ? getPage(curId) : livePage(); if (!p) return;
+  if (!manual && (!p.pubAt || document.hidden)) return; /* sin publicar o pestaña oculta: no leas ni escribas */
   if (manual){
     if (pubPending || p.pubAt) return;
     pubPending = true; var bt = document.querySelector('#pubwrap .pubbtn'); if (bt) bt.disabled = true;
@@ -1016,12 +1024,12 @@ function evView(){
         cur.pUpd = Date.now(); pend = {};
         return wSetRaw(SNAP_PREFIX + EQ, cur);
       }).then(function(){ st('● guardado', 'ok'); }).catch(function(){ st('⚠ no se ha podido guardar', 'err'); });
-    }, 700);
+    }, 1800);
   };
   setInterval(function(){
-    if (!sn || tmr || document.activeElement && document.activeElement.tagName === 'INPUT') return;
+    if (!sn || tmr || document.hidden || document.activeElement && document.activeElement.tagName === 'INPUT') return;
     wGetRaw(SNAP_PREFIX + EQ).then(function(v){ if (v && v.rows && !tmr){ sn = v; draw(); } }).catch(function(){});
-  }, 30000);
+  }, 45000);
   wGetRaw(SNAP_PREFIX + EQ).then(function(v){
     if (!v || !v.rows){ document.getElementById('evt').textContent = 'Todavía no hay cierre publicado. Vuelve a intentarlo en unos minutos.'; return; }
     sn = v;
