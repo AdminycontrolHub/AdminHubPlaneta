@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico Cierre Semanal</title>
+<style>body{background:#05211f;color:#bfe9e2;font-family:system-ui,sans-serif;padding:24px;max-width:1000px;margin:0 auto}h1{color:#fbe39b;font-size:22px;margin-bottom:12px}pre{white-space:pre-wrap;word-break:break-all;font-size:13px;line-height:1.6;background:#031514;border:1px solid #11504a;border-radius:6px;padding:14px}</style></head>
+<body><h1>Diagnóstico del Worker · Cierre Semanal</h1><pre id="dg">Probando…</pre>
+<script>
+var WORKER='https://lucky-shadow-44ed.veronica-zueras.workers.dev', KV_KEY='adminhub_prereuniones_esteban_v1';
+var out='', say=function(t){ out+=t+'\n'; document.getElementById('dg').textContent=out; };
+function get(key){
+  return fetch(WORKER+'/kv?key='+encodeURIComponent(key),{cache:'no-store'}).then(function(r){return r.text().then(function(t){say('GET '+key+' -> '+r.status+' | '+t.length+' caracteres | '+t.slice(0,220));});}).catch(function(e){say('GET '+key+' -> ERROR '+e);});
+}
+function post(key,val){
+  return fetch(WORKER+'/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,value:val})}).then(function(r){return r.text().then(function(t){say('POST '+key+' -> '+r.status+' | '+t.slice(0,200));});}).catch(function(e){say('POST '+key+' -> ERROR '+e);});
+}
+var tv=JSON.stringify({rows:[],prueba:true,hora:new Date().toISOString()});
+get(KV_KEY).then(function(){return get('adminhub_cierre_esteban_live');})
+.then(function(){return post('adminhub_cierre_prueba',tv);})
+.then(function(){return get('adminhub_cierre_prueba');})
+.then(function(){return post('adminhub_cierre_esteban_prueba',tv);})
+.then(function(){return get('adminhub_cierre_esteban_prueba');})
+.then(function(){say('\nFin. Haz una captura de esta pantalla y mándasela a Claude.');});
+</script></body></html>
