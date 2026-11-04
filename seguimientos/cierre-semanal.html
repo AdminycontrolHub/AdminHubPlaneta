@@ -380,7 +380,27 @@ function doSave(){
   });
 }
 
+/* diagnóstico del Worker: abrir cierre-semanal.html?diag */
+function diagView(){
+  document.body.style.overflow = 'auto';
+  document.body.innerHTML = '<div class="ev"><div class="evh"><div><small>Cierre Semanal</small><h1>Diagnóstico</h1></div></div><pre id="dg" style="white-space:pre-wrap;word-break:break-all;font-size:12px;line-height:1.5;color:#bfe9e2;background:rgba(3,21,20,.6);border:1px solid var(--line);border-radius:6px;padding:14px">Probando…</pre></div>';
+  var out = '', say = function(t){ out += t + '\n'; document.getElementById('dg').textContent = out; };
+  function get(key){
+    return fetch(WORKER + '/kv?key=' + encodeURIComponent(key), { cache:'no-store' }).then(function(r){ return r.text().then(function(t){ say('GET ' + key + ' -> ' + r.status + ' | ' + t.length + ' caracteres | ' + t.slice(0, 220)); }); }).catch(function(e){ say('GET ' + key + ' -> ERROR ' + e); });
+  }
+  function post(key, val){
+    return fetch(WORKER + '/kv', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ key:key, value:val }) }).then(function(r){ return r.text().then(function(t){ say('POST ' + key + ' -> ' + r.status + ' | ' + t.slice(0, 200)); }); }).catch(function(e){ say('POST ' + key + ' -> ERROR ' + e); });
+  }
+  var tv = JSON.stringify({ rows:[], prueba:true, hora:new Date().toISOString() });
+  get(KV_KEY).then(function(){ return get('adminhub_cierre_esteban_live'); })
+  .then(function(){ return post('adminhub_cierre_prueba', tv); })
+  .then(function(){ return get('adminhub_cierre_prueba'); })
+  .then(function(){ return post('adminhub_cierre_esteban_prueba', tv); })
+  .then(function(){ return get('adminhub_cierre_esteban_prueba'); })
+  .then(function(){ say('\nFin. Haz una captura de esta pantalla y mándasela a Claude.'); });
+}
 function load(){
+  if (/[?&]diag/.test(location.search)){ diagView(); return; }
   if (EQ){ evView(); return; }
   var loc = localGet();
   initDb().then(kvGet).then(function(remote){
