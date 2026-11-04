@@ -312,7 +312,7 @@ function parseKV(raw){
   if (raw == null) return null;
   var v = raw;
   if (typeof v === 'object' && v !== null && 'value' in v) v = v.value;
-  if (typeof v === 'string'){ try { v = JSON.parse(v); } catch(e){ return null; } }
+  for (var n = 0; n < 4 && typeof v === 'string'; n++){ try { v = JSON.parse(v); } catch(e){ return null; } }
   if (v && typeof v === 'object' && v.pages) return v;
   return null;
 }
@@ -326,7 +326,7 @@ function initDb(){
 function wGetRaw(key){
   return fetch(WORKER + '/kv?key=' + encodeURIComponent(key), { cache:'no-store' })
     .then(function(r){ if (!r.ok) throw new Error('KV ' + r.status); return r.text(); })
-    .then(function(t){ var j = null; try { j = JSON.parse(t); } catch(e){} var v = (j != null ? j : t); if (v && typeof v === 'object' && 'value' in v) v = v.value; if (typeof v === 'string'){ try { v = JSON.parse(v); } catch(e){ return null; } } return (v && typeof v === 'object') ? v : null; });
+    .then(function(t){ var j = null; try { j = JSON.parse(t); } catch(e){} var v = (j != null ? j : t); if (v && typeof v === 'object' && 'value' in v) v = v.value; for (var n = 0; n < 4 && typeof v === 'string'; n++){ try { v = JSON.parse(v); } catch(e){ return null; } } return (v && typeof v === 'object') ? v : null; });
 }
 function wSetRaw(key, obj){
   return fetch(WORKER + '/kv', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ key: key, value: JSON.stringify(obj) }) })
