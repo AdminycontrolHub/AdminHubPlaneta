@@ -155,6 +155,8 @@ td.arrc.pos{color:var(--g4)}
 td.arrc.neg{color:#f0a35e}
 td.netasc.neg{background:rgba(224,136,58,.16);color:#f0a35e}
 .addrow{margin-top:10px;background:transparent;border:1px dashed rgba(88,181,168,.5);color:var(--t5);border-radius:4px;padding:7px 14px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit}
+.evbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ban{position:absolute;top:78px;left:50%;transform:translateX(-50%);z-index:60;background:linear-gradient(135deg,var(--g5),var(--g3));color:#2a1d00;padding:11px 22px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.45),0 0 24px rgba(240,199,90,.5);max-width:calc(100% - 32px)}
 .rowbtns{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .pubbtn{margin-top:10px;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;letter-spacing:.4px;background:linear-gradient(135deg,var(--g5),var(--g3));color:#2a1d00;box-shadow:0 0 14px rgba(240,199,90,.28);transition:.2s}
 .pubbtn:hover{box-shadow:0 0 24px rgba(240,199,90,.55)}
@@ -850,6 +852,17 @@ function fotoCierreEnlace(){
   }).catch(function(){ uiAlert('No he podido crear el enlace. Revisa la conexión.'); });
 }
 /* vista fija de Esteban (?e=live): siempre la semana actual. Se envía tu hoja y se trae su Pasamos */
+var NOTIFY_URL = '';  /* opcional: dirección del flujo de Teams que te avisa cuando Esteban envía */
+function fmtHora(ms){ return new Date(ms).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' }); }
+var ORIG_TITLE = document.title;
+function banner(msg){
+  var old = document.getElementById('ban'); if (old) old.parentNode.removeChild(old);
+  var d = document.createElement('div'); d.id = 'ban'; d.className = 'ban';
+  d.textContent = '🔔 ' + msg + '  ·  clic para cerrar';
+  d.onclick = function(){ if (d.parentNode) d.parentNode.removeChild(d); document.title = ORIG_TITLE; };
+  (document.querySelector('.modalwin') || document.body).appendChild(d);
+  document.title = '🔔 ' + ORIG_TITLE;
+}
 var LIVE = 'live', syncBusy = false, syncFail = false, livePid = null;
 function livePage(){
   var cv = defaultConv();
@@ -868,9 +881,13 @@ function syncLive(manual){
     if (same && sn.pUpd && sn.pUpd > (p.snapSeen || 0)){
       adoptPasamos(p, sn); p.snap = LIVE; scheduleSave(p.id);
       if (curId === p.id){ renderRows(); refreshNetas(); }
-      flash('✔ Esteban ha rellenado Pasamos', 'ok');
+      banner('Esteban ha modificado Pasamos a las ' + fmtHora(sn.pUpd) + '. Revisa tu tabla');
     }
-    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, rows:snapRows(p) });
+    if (same && sn.sentAt && sn.sentAt > (p.sentSeen || 0)){
+      p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
+      banner('Esteban ha enviado el cierre a Adm. Comercial a las ' + fmtHora(sn.sentAt));
+    }
+    return wSetRaw(SNAP_PREFIX + LIVE, { pageId:p.id, conv:p.conv, date:p.date, title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, rows:snapRows(p) });
   }).then(function(){
     if (!manual) return;
     return wGetRaw(SNAP_PREFIX + LIVE).then(function(chk){
@@ -892,6 +909,7 @@ function evView(){
   document.body.style.overflow = 'auto';
   document.body.innerHTML = '<div class="ev"><div class="evh"><div><small>Cierre Semanal</small><h1 id="evt">Cargando…</h1></div><span id="evs" class="status mono"></span></div>' +
     '<div class="tw"><table class="tbl"><thead><tr><th class="h-x"></th><th class="h-m">Marca</th><th class="h-o">Objetivo</th><th class="h-t">Matris</th><th class="h-b">Bajas+CE</th><th class="h-p">Pasamos</th><th class="h-n">Netas</th><th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr></thead><tbody id="evtb"></tbody></table></div>' +
+    '<div class="evbar"><button class="pubbtn" id="evsend" onclick="evSend()">📨 Enviar a Adm. Comercial</button><span id="evsent" class="evn"></span></div>' +
     '<p class="evn">Rellena la columna Pasamos (resaltada). Se guarda automáticamente.</p></div>';
   var sn = null, st = function(t, c){ var e = document.getElementById('evs'); e.textContent = t; e.className = 'status mono ' + (c || ''); };
   function draw(){
@@ -905,7 +923,24 @@ function evView(){
         '<td class="c-e"><input readonly value="' + esc(r.nota) + '"></td><td class="arrc ' + cls(arrVal(r)) + '">' + esc(arrText(r)) + '</td></tr>';
     }
     document.getElementById('evtb').innerHTML = h;
+    var b = document.getElementById('evsend'), m = document.getElementById('evsent');
+    if (sn.sentAt){ b.textContent = '✔ Enviado a Adm. Comercial · volver a enviar'; b.disabled = false; b.style.opacity = ''; b.style.cursor = ''; m.textContent = 'Último envío a las ' + fmtHora(sn.sentAt) + '. Si cambias algo, pulsa de nuevo.'; }
+    else { b.textContent = '📨 Enviar a Adm. Comercial'; b.disabled = false; b.style.opacity = ''; b.style.cursor = ''; m.textContent = ''; }
   }
+  window.evSend = function(){
+    if (!sn) return;
+    var b = document.getElementById('evsend'); b.disabled = true; st('enviando…', 'warn');
+    wGetRaw(SNAP_PREFIX + EQ).then(function(cur){
+      cur = cur || sn; cur.sentAt = Date.now();
+      for (var k in pend){ if (cur.rows[k]) cur.rows[k].pasamos = pend[k]; }
+      pend = {}; if (tmr){ clearTimeout(tmr); tmr = null; }
+      cur.pUpd = Date.now(); sn = cur;
+      return wSetRaw(SNAP_PREFIX + EQ, cur);
+    }).then(function(){
+      st('● enviado', 'ok'); draw();
+      if (NOTIFY_URL){ try { fetch(NOTIFY_URL, { method:'POST', mode:'no-cors', headers:{ 'Content-Type':'text/plain' }, body:'Esteban ha enviado el cierre semanal a las ' + fmtHora(Date.now()) }).catch(function(){}); } catch(e){} }
+    }).catch(function(){ b.disabled = false; st('⚠ no se ha podido enviar', 'err'); });
+  };
   var tmr = null, pend = {};
   window.evSet = function(i, v){
     sn.rows[i].pasamos = v; pend[i] = v;
