@@ -774,7 +774,7 @@ function buildPage(iso, conv){
   }
   var rows = [];
   if (prevSame){
-    for (i = 0; i < prevSame.rows.length; i++) rows.push({ marca: prevSame.rows[i].marca, obj: prevSame.rows[i].obj, matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
+    for (i = 0; i < prevSame.rows.length; i++) rows.push({ marca: prevSame.rows[i].marca, obj: '', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   } else {
     for (i = 0; i < DEFAULT_BRANDS.length; i++) rows.push({ marca: DEFAULT_BRANDS[i], obj:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   }
