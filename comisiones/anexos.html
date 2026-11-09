@@ -531,7 +531,8 @@ function reubicarSaltosDePagina(xml){
 // En vez de tocar el margen (eso descuadra la cabecera/pie, que ya está bien posicionada), partimos
 // de verdad esa <section> en varias, clonando su cabecera y pie en cada una, para que CADA hoja física
 // sea siempre el principio/final de una página real del documento y conserve su margen correcto.
-async function repaginarDesbordes(box){
+async function repaginarDesbordes(box,keepPorHijo){
+  keepPorHijo=keepPorHijo||[];
   var ALTO_PAGINA_PX=ptToPx(841.9); // alto de una hoja A4 completa (el mismo valor que usa docx-preview para el min-height de cada <section>)
   await nextFrame();
   var secciones=Array.from(box.querySelectorAll('section'));
@@ -549,20 +550,36 @@ async function repaginarDesbordes(box){
     // 1ª pasada: medir TODO antes de mover nada (mover un hijo reflota a los siguientes y falsearía su posición)
     var inicioArticulo=article.getBoundingClientRect().top;
     var finesRelativos=hijos.map(function(hijo){ return hijo.getBoundingClientRect().bottom-inicioArticulo; });
-    // 2ª pasada: decidir en qué hijo corta cada hoja y mover los nodos reales (nunca clonarlos: evita duplicar firmas/ids)
-    var nuevasSecciones=[], articuloActual=article, inicioHojaActual=0;
+    // 2ª pasada: decidir en qué hijo corta cada hoja (un título con «mantener con el siguiente» no se queda solo al final de hoja)
+    var usarKeep=keepPorHijo.length===hijos.length; // si no cuadra el recuento con el DOM, no se toca nada
+    var esKeep=function(nodo,idx){return usarKeep&&!!keepPorHijo[idx];};
+    var cortes=[], inicioIdx=0, inicioPos=0;
     for(var h=0;h<hijos.length;h++){
-      if((finesRelativos[h]-inicioHojaActual)>disponiblePorHoja && articuloActual.children.length>0){
+      if((finesRelativos[h]-inicioPos)>disponiblePorHoja && h>inicioIdx){
+        var corte=h;
+        while(corte>inicioIdx+1){
+          var q=corte-1;
+          if(esKeep(hijos[q],q)) corte--;
+          else if(hijos[q].tagName==='P'&&!hijos[q].textContent.trim()&&q-1>inicioIdx&&esKeep(hijos[q-1],q-1)) corte-=2; // título + línea en blanco: van juntos
+          else break;
+        }
+        cortes.push(corte);inicioIdx=corte;inicioPos=finesRelativos[corte-1];
+        h=corte-1;
+      }
+    }
+    // mover los nodos reales (nunca clonarlos: evita duplicar firmas/ids)
+    var nuevasSecciones=[], articuloActual=article, k=0;
+    for(var h2=0;h2<hijos.length;h2++){
+      if(k<cortes.length&&h2===cortes[k]){
         var nuevaSeccion=sec.cloneNode(false);
         if(header) nuevaSeccion.appendChild(header.cloneNode(true));
         var nuevoArticulo=article.cloneNode(false);
         nuevaSeccion.appendChild(nuevoArticulo);
         if(footer) nuevaSeccion.appendChild(footer.cloneNode(true));
         nuevasSecciones.push(nuevaSeccion);
-        articuloActual=nuevoArticulo;
-        inicioHojaActual=(h>0?finesRelativos[h-1]:0);
+        articuloActual=nuevoArticulo;k++;
       }
-      articuloActual.appendChild(hijos[h]);
+      articuloActual.appendChild(hijos[h2]);
     }
     nuevasSecciones.forEach(function(ns){ sec.parentNode.insertBefore(ns,sec.nextSibling); sec=ns; });
     await nextFrame();
@@ -1957,6 +1974,104 @@ async function settleTextboxes(container,sizes){
   await nextFrame();
 }
 var COPIAS_POR_COLABORADOR=2; // un ejemplar para cada destinatario (p.ej. el propio colaborador y la empresa)
+/* Numeración fiel a Word al imprimir: docx-preview calcula mal las listas multinivel (empieza en 0.7, 1.7.1, salta números…).
+   Para imprimir calculamos nosotros los números como Word (contadores por lista, inicio de cada nivel, reinicios) y los
+   escribimos como texto en cada párrafo; las viñetas se dejan como están. El .docx que se descarga NO se toca. */
+function _fmtNum(n,fmt){
+  function rom(x){var r='',t=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];t.forEach(function(q){while(x>=q[0]){r+=q[1];x-=q[0];}});return r;}
+  function letras(x){var r='';while(x>0){x--;r=String.fromCharCode(97+x%26)+r;x=Math.floor(x/26);}return r;}
+  if(fmt==='lowerLetter')return letras(n);
+  if(fmt==='upperLetter')return letras(n).toUpperCase();
+  if(fmt==='lowerRoman')return rom(n).toLowerCase();
+  if(fmt==='upperRoman')return rom(n);
+  if(fmt==='decimalZero')return (n<10?'0':'')+n;
+  return String(n);
+}
+async function congelarNumeracion(buf){
+  try{
+    var z=await JSZip.loadAsync(buf);
+    var nf=z.file('word/numbering.xml'), df=z.file('word/document.xml');
+    if(!nf||!df)return buf;
+    var nx=await nf.async('string'), dx=await df.async('string');
+    var abs={}, nums={};
+    (nx.match(/<w:abstractNum\b[\s\S]*?<\/w:abstractNum>/g)||[]).forEach(function(a){
+      var id=(a.match(/w:abstractNumId="(\d+)"/)||[])[1], lv={};
+      (a.match(/<w:lvl\b[\s\S]*?<\/w:lvl>/g)||[]).forEach(function(l){
+        var il=+(l.match(/w:ilvl="(\d+)"/)||[])[1];
+        lv[il]={start:+((l.match(/<w:start w:val="(-?\d+)"/)||[])[1]||1),fmt:(l.match(/<w:numFmt w:val="(\w+)"/)||[])[1]||'decimal',
+          text:(l.match(/<w:lvlText w:val="([^"]*)"/)||[])[1]||'',suff:(l.match(/<w:suff w:val="(\w+)"/)||[])[1]||'tab',
+          ind:(l.match(/<w:pPr>[\s\S]*?(<w:ind\b[^>]*\/>)[\s\S]*?<\/w:pPr>/)||[])[1]||'',rpr:((l.match(/<w:rPr>([\s\S]*?)<\/w:rPr>/)||[])[1])||''};
+      });
+      abs[id]=lv;
+    });
+    (nx.match(/<w:num\b[\s\S]*?<\/w:num>/g)||[]).forEach(function(n){
+      var id=(n.match(/w:numId="(\d+)"/)||[])[1], a=(n.match(/<w:abstractNumId w:val="(\d+)"/)||[])[1], ov={};
+      (n.match(/<w:lvlOverride\b[\s\S]*?<\/w:lvlOverride>/g)||[]).forEach(function(o){
+        var il=(o.match(/w:ilvl="(\d+)"/)||[])[1], st=(o.match(/<w:startOverride w:val="(\d+)"/)||[])[1];
+        if(il!==undefined&&st!==undefined)ov[il]=+st;
+      });
+      nums[id]={abs:a,ov:ov,visto:false};
+    });
+    var cnt={}, out='', pos=0, re=/<w:numPr>([\s\S]*?)<\/w:numPr>/g, m, cambios=0;
+    while((m=re.exec(dx))){
+      var il=+((m[1].match(/<w:ilvl w:val="(\d+)"/)||[])[1]||0), nid=(m[1].match(/<w:numId w:val="(\d+)"/)||[])[1];
+      var nm=nums[nid]; if(!nm||!abs[nm.abs])continue;
+      var lv=abs[nm.abs], L=lv[il]; if(!L||L.fmt==='bullet'||L.fmt==='none')continue;
+      var c=cnt[nm.abs]=cnt[nm.abs]||{};
+      if(!nm.visto){nm.visto=true;Object.keys(nm.ov).forEach(function(k){c[k]=nm.ov[k]-1;});}
+      for(var k0=0;k0<il;k0++){if(c[k0]===undefined&&lv[k0])c[k0]=lv[k0].start;} // al usar un nivel hondo, los superiores quedan en su valor inicial (como Word)
+      c[il]=(c[il]===undefined)?L.start:c[il]+1;
+      Object.keys(c).forEach(function(k){if(+k>il)delete c[k];});
+      var label=L.text.replace(/%(\d)/g,function(_,d){var k=+d-1,q=lv[k]||{start:1,fmt:'decimal'};return _fmtNum(c[k]===undefined?q.start:c[k],q.fmt);});
+      var pPrEnd=dx.indexOf('</w:pPr>',m.index); if(pPrEnd<0)continue;
+      var pPrIni=dx.lastIndexOf('<w:pPr>',m.index);
+      var pPr=dx.slice(pPrIni,pPrEnd).replace(m[0],'');
+      if(!/<w:ind\b/.test(pPr)&&L.ind)pPr+=L.ind;
+      var marca=(dx.slice(pPrIni,pPrEnd).match(/<w:rPr>([\s\S]*?)<\/w:rPr>/)||[])[1]||'';
+      var rpr='<w:rPr>'+marca+L.rpr+'</w:rPr>';
+      var run='<w:r>'+rpr+'<w:t xml:space="preserve">'+label.replace(/&/g,'&amp;').replace(/</g,'&lt;')+(L.suff==='space'?' ':'')+'</w:t></w:r>'+(L.suff==='tab'?'<w:r><w:tab/></w:r>':'');
+      out+=dx.slice(pos,pPrIni)+pPr+'</w:pPr>'+run;
+      pos=pPrEnd+8; re.lastIndex=pos; cambios++;
+    }
+    if(!cambios)return buf;
+    z.file('word/document.xml',out+dx.slice(pos));
+    return await z.generateAsync({type:'arraybuffer',compression:'DEFLATE'});
+  }catch(e){return buf;}
+}
+async function keepNextPorHijo(buf){ // un booleano por cada párrafo/tabla de primer nivel del documento: «mantener con el siguiente» (propio o del estilo)
+  try{
+    var z=await JSZip.loadAsync(buf), f=z.file('word/document.xml'), sf=z.file('word/styles.xml'); if(!f)return [];
+    var x=await f.async('string'), sx=sf?await sf.async('string'):'', estilos={};
+    (sx.match(/<w:style\b[\s\S]*?<\/w:style>/g)||[]).forEach(function(st){
+      var id=(st.match(/w:styleId="([^"]+)"/)||[])[1];
+      if(id&&/<w:keepNext\s*\/>/.test(st))estilos[id]=1;
+    });
+    var b0=x.indexOf('<w:body>'); if(b0<0)return [];
+    var re=/<(\/?)w:(p|tbl)(\s[^>]*?)?(\/?)>/g, m, depth=0, out=[], ini=-1, tipo='';
+    re.lastIndex=b0;
+    while((m=re.exec(x))){
+      var cierra=m[1]==='/', auto=m[4]==='/';
+      if(!cierra){
+        if(depth===0){ini=m.index;tipo=m[2];}
+        if(auto){ if(depth===0)out.push(false); }
+        else depth++;
+      }else{
+        depth--;
+        if(depth===0){
+          var bloque=x.slice(ini,re.lastIndex), keep=false;
+          if(tipo==='p'){
+            var pp=(bloque.match(/<w:pPr>([\s\S]*?)<\/w:pPr>/)||[])[1]||'';
+            var ps=(pp.match(/<w:pStyle w:val="([^"]+)"/)||[])[1];
+            var kn=pp.match(/<w:keepNext\b([^>]*)\/>/);
+            keep=kn?!/w:val="(0|false)"/.test(kn[1]):!!(ps&&estilos[ps]);
+          }
+          out.push(keep);
+        }
+      }
+    }
+    return out;
+  }catch(e){return [];}
+}
 async function printRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
   if(!window.docx||!docx.renderAsync){toast('No se ha cargado el visor para imprimir. Usa Descargar e imprime desde Word.');return;}
@@ -1964,6 +2079,7 @@ async function printRows(list){
   if(!res.ok.length){toast('No se ha podido generar ningún anexo: '+res.errs.join(' · '),9000);return;}
   var root=$('printRoot');root.innerHTML='';
   for(var i=0;i<res.ok.length;i++){
+    res.ok[i].buf=await congelarNumeracion(res.ok[i].buf);
     var sizes=await extractShapeSizes(res.ok[i].buf);
     var firstBox=null, selectorContadorPrevio=':root';
     for(var c=0;c<COPIAS_POR_COLABORADOR;c++){
@@ -1972,7 +2088,7 @@ async function printRows(list){
         box=el('div');root.appendChild(box);
         await docx.renderAsync(res.ok[i].buf,box,null,{className:'dx'+i+'_'+c,inWrapper:false,breakPages:true,renderHeaders:true,renderFooters:true,ignoreLastRenderedPageBreak:false});
         await settleTextboxes(box,sizes);
-        await repaginarDesbordes(box);
+        await repaginarDesbordes(box,await keepNextPorHijo(res.ok[i].buf));
         firstBox=box;
       }else{
         // mismo contenido para cada copia (solo cambia a quién se le entrega el papel impreso):
