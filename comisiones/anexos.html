@@ -328,6 +328,23 @@ function fixSede(r){
   if(ok.indexOf(r.sede)>=0)return;
   r.sede=(r.cargo==='JE'&&varianteDeJE(r,m))||'';
 }
+function tokensEquipo(t){return (String(t||'').toUpperCase().match(/[A-Z]\d+/g)||[]);}
+function aplicarEquipo(r,equipo){ // «Equipo» de la BBDD -> bloque (grupo) del AC y variante de plantilla del JE/DV
+  var tk=tokensEquipo(equipo);if(!tk.length||!r.cargo)return;
+  var m=marcaById(r.marca);if(!m)return;
+  if(r.cargo==='AC'&&!r.grupo){
+    var mejor=null,n=0;
+    (grupos[r.marca]||[]).forEach(function(g){
+      var gt=tokensEquipo(g.id);
+      if(gt.length&&gt.every(function(x){return tk.indexOf(x)>=0;})&&gt.length>n){mejor=g;n=gt.length;}
+    });
+    if(mejor)r.grupo=mejor.id;
+  }
+  if((r.cargo==='JE'||r.cargo==='DV')&&!r.sede){
+    var sl=slotsOf(m).filter(function(x){return x.role===r.cargo&&x.grupos&&x.grupos.some(function(g){return tk.indexOf(g)>=0;});})[0];
+    if(sl)r.sede=sl.sede;
+  }
+}
 function refrescarVariantes(){ // tras cambiar el JE de un grupo: recalcula la plantilla de los JE que aún no tienen variante
   rows.forEach(function(r){if(r.cargo==='JE'&&!r.sede){var a=r.sede;fixSede(r);if(r.sede!==a)touch(r);}});
 }
@@ -732,13 +749,14 @@ function fmtFecha(v){
 function parseBBDD(grid){
   var hi=-1, cols=null;
   for(var i=0;i<Math.min(grid.length,15)&&hi<0;i++){
-    var c={nom:-1,ant:-1,trat:-1,puesto:-1,cod:-1,mail:-1};
+    var c={nom:-1,ant:-1,trat:-1,puesto:-1,cod:-1,mail:-1,eq:-1};
     (grid[i]||[]).forEach(function(h,j){
       var t=normTxt(h); if(!t) return;
       if(t.indexOf('nombreyapellidos')>=0||t==='nombre'){ if(c.nom<0) c.nom=j; }
       else if(t.indexOf('antiguedad')>=0){ if(c.ant<0) c.ant=j; }
       else if(t==='sra'||t==='sr'||t.indexOf('srsra')===0||t.indexOf('tratamiento')>=0){ if(c.trat<0) c.trat=j; }
-      else if(t.indexOf('puesto')>=0){ if(c.puesto<0) c.puesto=j; }
+      else if(t==='cargo'||t.indexOf('puesto')>=0){ if(c.puesto<0) c.puesto=j; }
+      else if(t==='equipo'||t.indexOf('equipo')===0){ if(c.eq<0) c.eq=j; }
       else if(t.indexOf('codigo')>=0){ if(c.cod<0) c.cod=j; }
       else if(t.indexOf('correo')>=0||t.indexOf('email')>=0||t.indexOf('mail')>=0){ if(c.mail<0) c.mail=j; }
     });
@@ -757,6 +775,7 @@ function parseBBDD(grid){
       trat:cols.trat>=0?String(row[cols.trat]==null?'':row[cols.trat]).trim():'',
       puesto:puesto,
       cargo:normCargo(puesto),
+      equipo:cols.eq>=0?String(row[cols.eq]==null?'':row[cols.eq]).replace(/\s+/g,' ').trim():'',
       codigo:cols.cod>=0?String(row[cols.cod]==null?'':row[cols.cod]).trim():'',
       email:cols.mail>=0?String(row[cols.mail]==null?'':row[cols.mail]).trim():''
     });
@@ -1257,6 +1276,7 @@ function matchRowCore(r){
     if(!r.codManual) r.codigo=f.e.codigo||r.codigo||'';
     if(!r.emailManual) r.email=f.e.email||r.email||'';
     if(!r.cargo&&f.e.cargo){r.cargo=f.e.cargo;fixSede(r);}
+    aplicarEquipo(r,f.e.equipo);
   }else if(r.src==='bbdd'){
     r.antig=r.invDate||'';r.trat='';r.src=r.invDate?'invite':'';r.aprox=false;r.bbddName='';if(!r.codManual)r.codigo='';if(!r.emailManual)r.email='';
   }
@@ -1524,7 +1544,7 @@ async function importBBDD(file){
     }
     if(!res||!res.header){toast('No reconozco las columnas. Necesito «Nombre y Apellidos Empleado» y «Antigüedad reconocida» (y «Sr / Sra»).',8000);return;}
     if(!res.people.length){toast('La BBDD no tiene filas con nombre.');return;}
-    var mini=res.people.map(function(p){return {nombre:p.nombre,antig:p.antig,trat:p.trat,cargo:p.cargo,codigo:p.codigo||'',email:p.email||''};}); // solo lo necesario (sin datos de baja IT)
+    var mini=res.people.map(function(p){return {nombre:p.nombre,antig:p.antig,trat:p.trat,cargo:p.cargo,equipo:p.equipo||'',codigo:p.codigo||'',email:p.email||''};}); // solo lo necesario (sin datos de baja IT)
     var stamp=new Date().toISOString();
     bbdd={list:mini,map:buildBBDDIndex(mini),name:file.name,updated:stamp};
     var guardada=true;
@@ -1542,13 +1562,14 @@ async function importBBDD(file){
       if(r){
         r.nombre=p.nombre; if(p.antig)r.antig=p.antig; if(p.trat)r.trat=p.trat;
         if(p.cargo&&!r.cargo){r.cargo=p.cargo;fixSede(r);}
+        aplicarEquipo(r,p.equipo);
         if(p.email&&!r.emailManual)r.email=p.email;
         r.src='bbdd';r.aprox=false;r.bbddName=p.nombre;
         touch(r);actualizadas++;
       }else{
         var nr=newRow(cur.m.id,p.nombre,p.cargo||'');
         nr.antig=p.antig;nr.trat=p.trat;nr.codigo=p.codigo;nr.email=p.email||'';nr.src='bbdd';
-        fixSede(nr);
+        fixSede(nr);aplicarEquipo(nr,p.equipo);
         rows.push(nr);touch(nr);byCodigo[p.codigo]=nr;creadas++;
       }
     });
@@ -1562,6 +1583,9 @@ async function importBBDD(file){
     if(porNombre)msg+=', '+porNombre+' completada(s) por nombre';
     msg+='.';
     if(res.cols.trat<0)msg+=' No encuentro la columna Sr / Sra.';
+    if(res.cols.puesto<0)msg+=' No encuentro la columna Cargo.';
+    if(res.cols.eq<0)msg+=' No encuentro la columna Equipo.';
+    else{var sinG=rows.filter(function(r){return r.marca===cur.m.id&&r.cargo==='AC'&&!r.grupo;}).length;if(sinG)msg+=' '+sinG+' AC sin bloque: crea en Grupos los equipos que faltan (A1, B1…) y vuelve a subir la BBDD.';}
     if(!guardada)msg+=' ⚠ No se ha podido guardar para el resto de usuarios.';
     toast(msg,9000);
   }catch(e){toast('No se pudo leer la BBDD: '+e.message);}
