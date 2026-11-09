@@ -276,8 +276,14 @@ var SLOTS_UCMA=[
  {key:'DV_BCN',role:'DV',sede:'BCN',label:'DV (BCN)'},
  {key:'JE_AND',role:'JE',sede:'AND',label:'JE (AND)'},
  {key:'JE_BCN',role:'JE',sede:'BCN',label:'JE (BCN)'}];
+var SLOTS_OBS=[ // OBS: un AC único; JE y DV tienen una plantilla por bloque de equipos (grupos). 'sede' hace aquí de variante y 'grupos' dice qué equipos cubre
+ {key:'AC',role:'AC',sede:'',label:'AC'},
+ {key:'JE_A2B2A4',role:'JE',sede:'A2-B2-A4',grupos:['A2','B2','A4'],label:'JE (A2·B2·A4)'},
+ {key:'DV_A2B2A4',role:'DV',sede:'A2-B2-A4',grupos:['A2','B2','A4'],label:'DV (A2·B2·A4)'},
+ {key:'JE_A1B1',role:'JE',sede:'A1-B1',grupos:['A1','B1'],label:'JE (A1·B1)'},
+ {key:'DV_A1B1',role:'DV',sede:'A1-B1',grupos:['A1','B1'],label:'DV (A1·B1)'}];
 var MARCAS=[
- {id:'OBS',t:'rgba(29,204,132,0.14)',cd:'#0B7A4B',n:'OBS',c:'#1dcc84',g:'rgba(29,204,132,0.28)',sp:'https://gplaneta.sharepoint.com/:f:/s/AdministracinComercialyCobros-AdministracinComercial2.0/IgCUhFl4FHt-Tbh45aFUUiWgAZs0zCNrmdTgzG_-6AXDcGg?e=YfpMR8'},
+ {id:'OBS',slots:SLOTS_OBS,t:'rgba(29,204,132,0.14)',cd:'#0B7A4B',n:'OBS',c:'#1dcc84',g:'rgba(29,204,132,0.28)',sp:'https://gplaneta.sharepoint.com/:f:/s/AdministracinComercialyCobros-AdministracinComercial2.0/IgCUhFl4FHt-Tbh45aFUUiWgAZs0zCNrmdTgzG_-6AXDcGg?e=YfpMR8'},
  {id:'INESDI',t:'rgba(168,120,240,0.14)',cd:'#6d3fc4',n:'INESDI',c:'#a878f0',g:'rgba(168,120,240,0.28)',sp:'https://gplaneta.sharepoint.com/:f:/s/AdministracinComercialyCobros-AdministracinComercial2.0/IgD_ErhtZtH_TJtxgFAoBamsAb9LY3aiosGE48DnguM3470?e=flpIAs'},
  {id:'ESDESIGN',t:'rgba(240,168,48,0.16)',cd:'#8f5200',n:'ESDesign',c:'#f0a830',g:'rgba(240,168,48,0.28)',sp:'https://gplaneta.sharepoint.com/:f:/s/AdministracinComercialyCobros-AdministracinComercial2.0/IgAD5y5QBs6fQp5OpnFiYMzaAR3VZ6eayhp4IkfxhoecHKI?e=wJEJdM'},
  {id:'UCMA',t:'rgba(58,171,240,0.14)',cd:'#17709f',n:'UCMA',c:'#3aabf0',g:'rgba(58,171,240,0.28)',sp:'https://gplaneta.sharepoint.com/:f:/s/AdministracinComercialyCobros-AdministracinComercial2.0/IgBWrtI6IeYeS6PpydzyVvrpAczFMAf4yrZzgl7yJTLoULA?e=PwRIQL'},
@@ -292,15 +298,31 @@ function hasSedes(m){return !!m&&slotsOf(m).some(function(x){return x.sede;});}
 function sedesFor(m,cargo){return slotsOf(m).filter(function(x){return x.role===cargo&&x.sede;}).map(function(x){return x.sede;});}
 function slotFor(r){
   var m=marcaById(r.marca);if(!m)return null;
-  var ss=slotsOf(m),sedes=hasSedes(m);
-  for(var i=0;i<ss.length;i++){if(sedes?(ss[i].role===r.cargo&&ss[i].sede===r.sede):ss[i].key===r.cargo)return ss[i];}
+  var ss=slotsOf(m);
+  for(var i=0;i<ss.length;i++){if(ss[i].role===r.cargo&&(ss[i].sede||'')===(r.sede||''))return ss[i];}
   return null;
+}
+function normNombre(t){return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function varianteDeJE(r,m){ // JE -> variante de plantilla según el grupo del que es responsable (grupos[marca][].je)
+  var n=normNombre(r.nombre);if(!n)return '';
+  var g=(grupos[m.id]||[]).filter(function(x){var j=normNombre(x.je);return j&&(j===n||n.indexOf(j)>=0||j.indexOf(n)>=0);});
+  for(var k=0;k<g.length;k++){
+    var sl=slotsOf(m).filter(function(x){return x.role===r.cargo&&x.grupos&&x.grupos.indexOf(g[k].id)>=0;})[0];
+    if(sl)return sl.sede;
+  }
+  return '';
 }
 function fixSede(r){
   var m=marcaById(r.marca);
-  if(!m||!hasSedes(m)){r.sede='';return;}
+  if(!m){r.sede='';return;}
   var ok=sedesFor(m,r.cargo);
-  if(ok.length===1)r.sede=ok[0];else if(ok.indexOf(r.sede)<0)r.sede='';
+  if(!ok.length){r.sede='';return;}
+  if(ok.length===1){r.sede=ok[0];return;}
+  if(ok.indexOf(r.sede)>=0)return;
+  r.sede=(r.cargo==='JE'&&varianteDeJE(r,m))||'';
+}
+function refrescarVariantes(){ // tras cambiar el JE de un grupo: recalcula la plantilla de los JE que aún no tienen variante
+  rows.forEach(function(r){if(r.cargo==='JE'&&!r.sede){var a=r.sede;fixSede(r);if(r.sede!==a)touch(r);}});
 }
 var idx={}, cur=null, unlocked=false, rows=[], sel={}, tplCache={}, bbdd={list:[],map:{},name:'',updated:''};
 var ROWS_KEY='adminhub_anexos_rows_v1', BBDD_KEY='adminhub_anexos_bbdd_v1', NOMBRES_KEY='adminhub_anexos_nombres_v1', GRUPOS_KEY='adminhub_anexos_grupos_v1', SYNC_MS=15000; // filas, BBDD, nombres de marcas MIXTA/PLUS y grupos de AC compartidos para todos los usuarios (KV)
@@ -1077,7 +1099,7 @@ async function syncAll(){
     var nn=await kvReadStrict(NOMBRES_KEY);
     if(nn.ok){if(nn.value&&JSON.stringify(nn.value)!==JSON.stringify(marcaNombres)){marcaNombres=nn.value;renderBubbles();changed=true;}}else allOk=false;
     var gg=await kvReadStrict(GRUPOS_KEY);
-    if(gg.ok){if(gg.value&&JSON.stringify(gg.value)!==JSON.stringify(grupos)){grupos=gg.value;if(grupOpen)renderGrupos();}}else allOk=false;
+    if(gg.ok){if(gg.value&&JSON.stringify(gg.value)!==JSON.stringify(grupos)){grupos=gg.value;refrescarVariantes();if(grupOpen)renderGrupos();}}else allOk=false;
     if(changed){if(isEditing())pendingRender=true;else renderRows();}
     setSync(allOk&&!rows.some(function(r){return r._dirty;})?'ok':(allOk?'pend':'err'));
   }catch(e){setSync('err');}
@@ -1099,7 +1121,7 @@ async function loadAll(){
   var rr=await kvReadStrict(ROWS_KEY);if(rr.ok){rows=((rr.value&&rr.value.rows)||[]).map(fromStore);sortRows();}
   var bb=await kvReadStrict(BBDD_KEY);if(bb.ok&&bb.value)setBBDD(bb.value);
   var nn=await kvReadStrict(NOMBRES_KEY);if(nn.ok&&nn.value)marcaNombres=nn.value;
-  var gg=await kvReadStrict(GRUPOS_KEY);if(gg.ok&&gg.value)grupos=gg.value;
+  var gg=await kvReadStrict(GRUPOS_KEY);if(gg.ok&&gg.value)grupos=gg.value;refrescarVariantes();
   setSync(ix.ok&&rr.ok&&bb.ok&&nn.ok&&gg.ok?'ok':'err');
 }
 
@@ -1125,7 +1147,8 @@ function tplState(r){
   if(!r.marca) return {ok:false,txt:'Elige la marca'};
   if(!r.cargo) return {ok:false,txt:'Elige el cargo'};
   var mm=marcaById(r.marca);
-  if(hasSedes(mm)&&!r.sede) return {ok:false,txt:'Elige la sede (AND/BCN)'};
+  var vs=sedesFor(mm,r.cargo);
+  if(vs.length&&!r.sede) return {ok:false,txt:'Elige la variante en Cargo ('+slotsOf(mm).filter(function(x){return x.role===r.cargo;}).map(function(x){return x.label;}).join(' / ')+')'};
   var sl=slotFor(r);
   if(!sl) return {ok:false,txt:'No hay plantilla '+r.cargo+' para '+marcaLabel(mm)};
   if(!(idx[r.marca]&&idx[r.marca][sl.key])) return {ok:false,txt:'Falta plantilla '+sl.label+' de '+marcaLabel(mm)};
@@ -1243,7 +1266,7 @@ function tratOptions(cur2){
 function cargoOptions(marca,r){
   var slots=marca?slotsOf(marca):SLOTS_STD;
   var curKey='';
-  slots.forEach(function(sl){if(sl.role===r.cargo&&sl.sede===r.sede)curKey=sl.key;});
+  slots.forEach(function(sl){if(sl.role===r.cargo&&(sl.sede||'')===(r.sede||''))curKey=sl.key;});
   return optionList(slots.map(function(sl){return [sl.key,sl.label];}),curKey,'Cargo…');
 }
 function optionList(values,cur2,blank){
@@ -1712,7 +1735,7 @@ function pedirJE(g,jeRows){
   var actuales=jeRows.map(function(r){return r.nombre;}).join(', ');
   var nuevo=(window.prompt('JE responsable del grupo '+g.label+(actuales?(' (JE disponibles: '+actuales+')'):'')+':',g.je||'')||'').trim();
   if(nuevo===g.je)return;
-  g.je=nuevo;saveGrupos();renderRows();
+  g.je=nuevo;refrescarVariantes();saveGrupos();renderRows();
 }
 function exportRows(list){
   if(!list.length){toast('Selecciona al menos una fila');return;}
