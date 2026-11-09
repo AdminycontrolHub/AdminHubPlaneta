@@ -94,6 +94,9 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .filtros{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .marca-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--cbg);border:1.5px dashed var(--c);border-radius:10px;padding:10px 14px;margin-bottom:14px}
 .marca-bar input[type=text]{width:260px}
+.recuento{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.recuento span{background:var(--cbg);border:1.5px solid var(--c);border-radius:999px;padding:5px 14px;font-size:13px;color:#0B2A40}
+.recuento span b{font-weight:800;margin-left:4px}
 .search-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:16px}
 .search-bar input[type=text]{flex:1;max-width:360px;font-size:14px}
 .drop{display:block;border:2px dashed var(--c);border-radius:14px;padding:22px;margin-bottom:16px;text-align:center;font-size:14.5px;color:#4c6578;cursor:pointer;background:rgba(255,255,255,0.45)}
@@ -959,7 +962,7 @@ async function openModal(m){
   var searchIn=el('input',{type:'text',id:'buscador',placeholder:'Buscar por nombre o código…'});
   searchIn.oninput=function(){cur.busqueda=normTxt(searchIn.value);renderRows();};
   var searchBar=el('div',{class:'search-bar'},[document.createTextNode('🔍'),searchIn]);
-  ab.appendChild(el('div',{class:'sec'},[el('div',{class:'sec-title',text:'Personas'}),tools,marcaBar,searchBar,drop,bulk,
+  ab.appendChild(el('div',{class:'sec'},[el('div',{class:'sec-title',text:'Personas'}),el('div',{class:'recuento',id:'recuento'}),tools,marcaBar,searchBar,drop,bulk,
     el('div',{class:'twrap'},[tbl,el('div',{class:'empty',id:'empty',text:'Todavía no hay filas. Arrastra una convocatoria o añade una fila (la BBDD completa la antigüedad y el Sr./Sra.).'})]),
     el('div',{class:'sec',id:'histSec',style:'display:none;margin-top:22px'})]));
   body.appendChild(ab);
@@ -1371,9 +1374,19 @@ function sectionHeaderTr(opts){
   }
   return {tr:tr,colapsado:colapsado};
 }
+function pintarRecuento(vr){
+  var box=$('recuento');if(!box)return;box.innerHTML='';
+  var n={AC:0,JE:0,DV:0};
+  vr.forEach(function(r){if(n[r.cargo]!==undefined)n[r.cargo]++;});
+  ['AC','JE','DV'].forEach(function(c){box.appendChild(el('span',null,[document.createTextNode(c),el('b',{text:String(n[c])})]));});
+  var sc=vr.length-n.AC-n.JE-n.DV;
+  box.appendChild(el('span',null,[document.createTextNode('Total'),el('b',{text:String(vr.length)})]));
+  if(sc)box.appendChild(el('span',{style:'border-style:dashed'},[document.createTextNode('Sin cargo'),el('b',{text:String(sc)})]));
+}
 function renderRows(){
   var tb=$('tbody');if(!tb)return;tb.innerHTML='';
   var vr=rows.filter(vis);
+  pintarRecuento(vr);
   $('empty').style.display=vr.length?'none':'block';
   $('tbl').style.display=vr.length?'table':'none';
   if(!vr.length){updateBulk();return;}
