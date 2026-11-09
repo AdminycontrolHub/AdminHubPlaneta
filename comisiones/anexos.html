@@ -1303,7 +1303,9 @@ function matchRowCore(r){
 function newRow(marca,nombre,cargo){return {id:newId(),t0:Date.now(),_dirty:false,_v:0,marca:marca,nombre:nombre,cargo:cargo,sede:'',invDate:'',antig:'',fin:'',finTipo:'',trat:'',src:'',aprox:false,bbddName:'',codigo:'',codManual:false,email:'',emailManual:false,genHash:'',genAt:0,firmado:false,oculto:false,grupo:'',enviado:false};}
 function renderBbddInfo(){
   var i=$('bbddInfo');if(!i)return;
-  i.textContent=bbdd.list.length?('BBDD: '+bbdd.list.length+' personas · '+bbdd.name):'Sin BBDD cargada';
+  var c={AC:0,JE:0,DV:0,x:0},vals={};
+  bbdd.list.forEach(function(p){if(c[p.cargo]!==undefined)c[p.cargo]++;else{c.x++;vals[p.puesto||'(vacío)']=1;}});
+  i.textContent=bbdd.list.length?('BBDD: '+bbdd.list.length+' personas · '+bbdd.name+' · AC '+c.AC+' · JE '+c.JE+' · DV '+c.DV+(c.x?(' · sin cargo '+c.x+' (p. ej. '+Object.keys(vals).slice(0,3).join(' / ')+')'):'')+' · v9-nov-c'):'Sin BBDD cargada · v9-nov-c';
 }
 function tratOptions(cur2){
   var v=[['Sr.','Sr.'],['Sra.','Sra.']];
@@ -1563,7 +1565,7 @@ async function importBBDD(file){
     }
     if(!res||!res.header){toast('No reconozco las columnas. Necesito «Nombre y Apellidos Empleado» y «Antigüedad reconocida» (y «Sr / Sra»).',8000);return;}
     if(!res.people.length){toast('La BBDD no tiene filas con nombre.');return;}
-    var mini=res.people.map(function(p){return {nombre:p.nombre,antig:p.antig,trat:p.trat,cargo:p.cargo,equipo:p.equipo||'',codigo:p.codigo||'',email:p.email||''};}); // solo lo necesario (sin datos de baja IT)
+    var mini=res.people.map(function(p){return {puesto:p.puesto,nombre:p.nombre,antig:p.antig,trat:p.trat,cargo:p.cargo,equipo:p.equipo||'',codigo:p.codigo||'',email:p.email||''};}); // solo lo necesario (sin datos de baja IT)
     var stamp=new Date().toISOString();
     bbdd={list:mini,map:buildBBDDIndex(mini),name:file.name,updated:stamp};
     var guardada=true;
