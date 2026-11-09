@@ -329,21 +329,39 @@ function fixSede(r){
   r.sede=(r.cargo==='JE'&&varianteDeJE(r,m))||'';
 }
 function tokensEquipo(t){return (String(t||'').toUpperCase().match(/[A-Z]\d+/g)||[]);}
-function aplicarEquipo(r,equipo){ // «Equipo» de la BBDD -> bloque (grupo) del AC y variante de plantilla del JE/DV
-  var tk=tokensEquipo(equipo);if(!tk.length||!r.cargo)return;
+function claveEquipo(t){ // «BA (A1, B1)» -> «A1-B1»; si no hay códigos tipo A1, el texto tal cual
+  var tk=tokensEquipo(t);
+  if(tk.length){var u=[];tk.forEach(function(x){if(u.indexOf(x)<0)u.push(x);});return u.join('-');}
+  return String(t||'').replace(/\s+/g,' ').trim();
+}
+function aplicarEquipo(r,equipo,forzar){ // «Equipo» de la BBDD -> bloque (grupo) del AC y variante de plantilla del JE/DV
+  var clave=claveEquipo(equipo);if(!clave||!r.cargo)return;
+  var tk=tokensEquipo(equipo);
   var m=marcaById(r.marca);if(!m)return;
-  if(r.cargo==='AC'&&!r.grupo){
-    var mejor=null,n=0;
-    (grupos[r.marca]||[]).forEach(function(g){
-      var gt=tokensEquipo(g.id);
-      if(gt.length&&gt.every(function(x){return tk.indexOf(x)>=0;})&&gt.length>n){mejor=g;n=gt.length;}
-    });
-    if(mejor)r.grupo=mejor.id;
+  if(r.cargo==='AC'&&(forzar||!r.grupo)){
+    var g=(grupos[r.marca]||[]).filter(function(x){return x.id===clave;})[0];
+    if(g)r.grupo=g.id;
   }
   if((r.cargo==='JE'||r.cargo==='DV')&&!r.sede){
     var sl=slotsOf(m).filter(function(x){return x.role===r.cargo&&x.grupos&&x.grupos.some(function(g){return tk.indexOf(g)>=0;});})[0];
     if(sl)r.sede=sl.sede;
   }
+}
+async function crearGruposDeBBDD(mid,list){ // crea un grupo por cada Equipo distinto de los AC y pone el JE
+  var g=grupos[mid]=grupos[mid]||[],nuevos=0,cambios=false;
+  list.forEach(function(p){
+    if(p.cargo!=='AC')return;
+    var k=claveEquipo(p.equipo);if(!k)return;
+    if(!g.some(function(x){return x.id===k;})){g.push({id:k,label:k,je:''});nuevos++;cambios=true;}
+  });
+  list.forEach(function(p){
+    if(p.cargo!=='JE')return;
+    var k=claveEquipo(p.equipo);if(!k)return;
+    var gr=g.filter(function(x){return x.id===k;})[0];
+    if(gr&&!gr.je){gr.je=p.nombre;cambios=true;}
+  });
+  if(cambios){await saveGrupos();if(typeof grupOpen!=='undefined'&&grupOpen)renderGrupos();}
+  return nuevos;
 }
 function refrescarVariantes(){ // tras cambiar el JE de un grupo: recalcula la plantilla de los JE que aún no tienen variante
   rows.forEach(function(r){if(r.cargo==='JE'&&!r.sede){var a=r.sede;fixSede(r);if(r.sede!==a)touch(r);}});
@@ -729,9 +747,10 @@ function normMarca(s){
 }
 function normCargo(s){
   var t=normTxt(s); if(!t) return '';
-  if(t==='ac'||t.indexOf('asesor')>=0) return 'AC';
-  if(t==='je'||t.indexOf('jefe')>=0) return 'JE';
-  if(t==='dv'||t.indexOf('director')>=0) return 'DV';
+  var w=' '+String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()+' ';
+  if(t==='dv'||t.indexOf('director')>=0||w.indexOf(' dv ')>=0) return 'DV';
+  if(t==='je'||t.indexOf('jefe')>=0||w.indexOf(' je ')>=0||t.indexOf('responsable')>=0||t.indexOf('coordinador')>=0) return 'JE';
+  if(t==='ac'||t.indexOf('asesor')>=0||w.indexOf(' ac ')>=0||t.indexOf('comercial')>=0) return 'AC';
   return '';
 }
 function nameKey(s){return String(s==null?'':s).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]+/g,' ').trim().split(' ').filter(Boolean).sort().join(' ');}
@@ -1454,7 +1473,7 @@ function renderRows(){
   var sinAgrupar=acRows.filter(function(r){return !r.grupo||!gdef.some(function(g){return g.id===r.grupo;});});
   addSection({id:'sinAC',label:'AC sin agrupar',count:sinAgrupar.length,color:GRUPO_NEUTRO,dropId:''},sinAgrupar,true,'');
 
-  if(sinCargo.length)addSection({id:'sinCargo',label:'Sin cargo',count:sinCargo.length,color:GRUPO_NEUTRO},sinCargo,false);
+  if(sinCargo.length)addSection({id:'sinCargo',label:'Sin cargo',count:sinCargo.length,color:GRUPO_NEUTRO},sinCargo,true);
 
   var addRowBtn=el('button',{class:'abtn sm alt',style:'margin:4px 0 4px 8px',text:'+ Nuevo grupo de AC',onclick:function(){
     var id=(window.prompt('Nombre del grupo nuevo (por ejemplo, D1):')||'').trim();
@@ -1553,6 +1572,7 @@ async function importBBDD(file){
     // cruce por código de colaborador: si el código ya existe en una fila de esta marca, la actualiza;
     // si no existe, crea una fila nueva. Nunca borra filas. Las personas sin código se completan por
     // nombre, como hasta ahora, solo en filas ya existentes.
+    var gNuevos=await crearGruposDeBBDD(cur.m.id,mini);
     var byCodigo={};
     rows.forEach(function(r){if(r.marca===cur.m.id&&r.codigo)byCodigo[r.codigo]=r;});
     var creadas=0,actualizadas=0;
@@ -1561,15 +1581,15 @@ async function importBBDD(file){
       var r=byCodigo[p.codigo];
       if(r){
         r.nombre=p.nombre; if(p.antig)r.antig=p.antig; if(p.trat)r.trat=p.trat;
-        if(p.cargo&&!r.cargo){r.cargo=p.cargo;fixSede(r);}
-        aplicarEquipo(r,p.equipo);
+        if(p.cargo&&r.cargo!==p.cargo){r.cargo=p.cargo;r.sede='';fixSede(r);}
+        aplicarEquipo(r,p.equipo,true);
         if(p.email&&!r.emailManual)r.email=p.email;
         r.src='bbdd';r.aprox=false;r.bbddName=p.nombre;
         touch(r);actualizadas++;
       }else{
         var nr=newRow(cur.m.id,p.nombre,p.cargo||'');
         nr.antig=p.antig;nr.trat=p.trat;nr.codigo=p.codigo;nr.email=p.email||'';nr.src='bbdd';
-        fixSede(nr);aplicarEquipo(nr,p.equipo);
+        fixSede(nr);aplicarEquipo(nr,p.equipo,true);
         rows.push(nr);touch(nr);byCodigo[p.codigo]=nr;creadas++;
       }
     });
@@ -1583,7 +1603,9 @@ async function importBBDD(file){
     if(porNombre)msg+=', '+porNombre+' completada(s) por nombre';
     msg+='.';
     if(res.cols.trat<0)msg+=' No encuentro la columna Sr / Sra.';
+    if(gNuevos)msg+=' '+gNuevos+' grupo(s) creado(s) desde Equipo.';
     if(res.cols.puesto<0)msg+=' No encuentro la columna Cargo.';
+    else{var sc=res.people.filter(function(x){return !x.cargo;});if(sc.length){var ej={};sc.forEach(function(x){ej[x.puesto||'(vacío)']=1;});msg+=' Cargo no reconocido en '+sc.length+' personas (valores: '+Object.keys(ej).slice(0,5).join(' · ')+').';}}
     if(res.cols.eq<0)msg+=' No encuentro la columna Equipo.';
     else{var sinG=rows.filter(function(r){return r.marca===cur.m.id&&r.cargo==='AC'&&!r.grupo;}).length;if(sinG)msg+=' '+sinG+' AC sin bloque: crea en Grupos los equipos que faltan (A1, B1…) y vuelve a subir la BBDD.';}
     if(!guardada)msg+=' ⚠ No se ha podido guardar para el resto de usuarios.';
@@ -1777,7 +1799,8 @@ async function dropOnGrupo(e,grupoId){
   e.preventDefault();
   var rowId=e.dataTransfer?e.dataTransfer.getData('text/plain'):'';
   var r=rows.find(function(x){return x.id===rowId;});
-  if(!r||r.cargo!=='AC'||r.grupo===grupoId) return;
+  if(!r||(r.cargo&&r.cargo!=='AC')||(r.cargo==='AC'&&r.grupo===grupoId)) return;
+  if(!r.cargo){r.cargo='AC';r.sede='';fixSede(r);} // una fila sin cargo arrastrada a un grupo de AC pasa a AC
   r.grupo=grupoId;touch(r);
   renderRows();
 }
