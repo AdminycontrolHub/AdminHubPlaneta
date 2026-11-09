@@ -481,9 +481,15 @@ function periodoRules(antigISO){
   }}];
 }
 function generoRules(trat){
-  // el puesto en la plantilla se escribe como "ASESOR(A)"/"JEFE(A)": (A) se quita en masculino y se funde en femenino
-  if(/^sra\.?$/i.test(trat||'')) return [{re:'\\(A\\)', val:'A'}];
-  if(/^sr\.?$/i.test(trat||'')) return [{re:'\\s?\\(A\\)', val:''}];
+  // el puesto en la plantilla se escribe como "Jefe(a)", "ASESOR(A)"…: en masculino se quita el (a); en femenino se funde con la
+  // palabra respetando mayúsculas/minúsculas: Jefe(a) -> Jefa, ASESOR(A) -> ASESORA, Asesor(a) -> Asesora
+  if(/^sra\.?$/i.test(trat||'')) return [
+    {re:'(e)?\\(a\\)', fn:function(m){var may=(m[1]?m[1]:m[0].charAt(1))===(m[1]?m[1]:m[0].charAt(1)).toUpperCase();return may?'A':'a';}}
+  ];
+  if(/^sr\.?$/i.test(trat||'')) return [
+    {re:'\\s?\\(a\\)', val:''},
+    {re:'\\bDirectora\\b', fn:function(m){return m[0]===m[0].toUpperCase()?'DIRECTOR':'Director';}} // la plantilla DV trae «Directora» fijo
+  ];
   return [];
 }
 function anexoFill(xml, vals, forceBlack){
@@ -1933,9 +1939,20 @@ async function settleTextboxes(container,sizes){
   // solo si falta para algún cuadro, se recurre al cálculo dinámico como red de seguridad.
   if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
   await nextFrame();
-  container.querySelectorAll('svg').forEach(function(svg,i){
+  var todosSvg=container.querySelectorAll('svg');
+  // Cada cuadro lleva en su propio style el tamaño y el desplazamiento que Word guardó (width/height/margin-left/margin-top en pt):
+  // lo usamos a él, no la posición en la lista. Antes se emparejaba por orden con los <v:shape> del documento, y si el pie de
+  // página tenía también cuadros (p. ej. el «3/3» de la plantilla DV) todo se desplazaba un puesto y las firmas desaparecían.
+  function propioDe(svg){
+    var st=svg.getAttribute('style')||'';
+    var mw=st.match(/(?:^|;)\s*width:\s*([\d.]+)pt/i), mh=st.match(/(?:^|;)\s*height:\s*([\d.]+)pt/i);
+    if(!mw||!mh) return null;
+    var ml=st.match(/margin-left:\s*(-?[\d.]+)(pt)?/i), mt=st.match(/margin-top:\s*(-?[\d.]+)(pt)?/i);
+    return {w:parseFloat(mw[1]),h:parseFloat(mh[1]),left:ml?parseFloat(ml[1]):0,top:mt?parseFloat(mt[1]):0};
+  }
+  todosSvg.forEach(function(svg,i){
     try{
-      var sz=sizes&&sizes[i];
+      var sz=propioDe(svg)||((sizes&&sizes.length===todosSvg.length)?sizes[i]:null);
       if(sz){
         svg.setAttribute('width',Math.ceil(ptToPx(sz.w)));
         svg.setAttribute('height',Math.ceil(ptToPx(sz.h)));
@@ -1972,6 +1989,30 @@ async function settleTextboxes(container,sizes){
     }catch(e){}
   });
   await nextFrame();
+  // Cuadros del cuerpo del documento (las casillas de firma): en Word llevan borde negro y el texto que viene después
+  // queda DEBAJO de ellos (ajuste «cuadrado»); docx-preview ni dibuja el borde ni reserva el hueco, y la fecha acababa
+  // encima de las firmas. Dibujamos el borde y empujamos hacia abajo lo que quede por debajo.
+  var anclas=[];
+  container.querySelectorAll('article svg').forEach(function(svg){
+    if(!propioDe(svg)) return;
+    svg.style.boxSizing='border-box';svg.style.border='0.75pt solid #000';
+    var par=svg.closest('p'); if(par&&anclas.indexOf(par)<0) anclas.push(par);
+  });
+  // los cuadros de párrafos seguidos forman un solo bloque (p. ej. firma del proponente y del aceptante): el hueco se reserva
+  // una vez, tras el último párrafo del bloque, para que los cuadros sigan alineados entre sí
+  var bloques=[];
+  anclas.forEach(function(par){
+    var ult=bloques[bloques.length-1];
+    if(ult&&ult[ult.length-1].nextElementSibling===par) ult.push(par); else bloques.push([par]);
+  });
+  bloques.forEach(function(bl){
+    var fondo=0;
+    bl.forEach(function(par){par.querySelectorAll('svg').forEach(function(sv){fondo=Math.max(fondo,sv.getBoundingClientRect().bottom);});});
+    var ultimo=bl[bl.length-1], sig=ultimo.nextElementSibling; if(!sig) return;
+    var solape=fondo-sig.getBoundingClientRect().top;
+    if(solape>0.5) ultimo.style.marginBottom=(parseFloat(ultimo.style.marginBottom)||0)+Math.ceil(solape)+'px';
+  });
+  if(anclas.length) await nextFrame();
 }
 var COPIAS_POR_COLABORADOR=2; // un ejemplar para cada destinatario (p.ej. el propio colaborador y la empresa)
 /* Numeración fiel a Word al imprimir: docx-preview calcula mal las listas multinivel (empieza en 0.7, 1.7.1, salta números…).
