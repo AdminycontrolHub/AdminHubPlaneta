@@ -187,19 +187,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 .cm-form-field { margin-bottom:12px; }
 .cm-form-input { width:100%; background:#F5F0E8; border:0.5px solid rgba(58,49,40,0.15); border-radius:8px; padding:8px 10px; font-size:12.5px; color:#3a3128; font-family:inherit; }
 
-/* ===== MODAL CFP (Cambio de forma de pago) ===== */
-.cfp-overlay{position:fixed;inset:0;z-index:450;background:rgba(0,5,15,0.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:2vh 2vw;}
-.cfp-overlay.open{display:flex;}
-.cfp-modal{position:relative;width:min(1280px,96vw);height:94vh;background:#030E1E;border:1px solid rgba(0,212,240,0.3);border-radius:18px;box-shadow:0 0 60px rgba(0,180,255,0.12);display:flex;flex-direction:column;overflow:hidden;}
-.cfp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 12px 20px;border-bottom:1px solid rgba(0,212,240,0.15);}
-.cfp-title{font-size:14px;font-weight:600;color:#E0F7FF;letter-spacing:0.02em;}
-.cfp-title small{display:block;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(0,212,240,0.5);font-weight:500;}
-.cfp-close{width:34px;height:34px;border-radius:9px;border:1px solid rgba(0,212,240,0.3);background:rgba(0,212,240,0.08);color:#00D4F0;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.cfp-close:hover{background:rgba(0,212,240,0.18);border-color:rgba(0,212,240,0.6);}
-.cfp-frame{flex:1;width:100%;border:0;background:#E9EEF3;}
-.cfp-ch .sb-modal{border-color:rgba(0,255,178,0.45);box-shadow:0 0 60px rgba(0,255,178,0.10);}
-.cfp-ch .sb-opt{border-color:rgba(0,255,178,0.35);color:#00FFB2;}
-.cfp-ch .sb-opt:hover{border-color:#00FFB2;box-shadow:0 0 22px rgba(0,255,178,0.25);}
 </style>
 </head>
 <body>
@@ -376,30 +363,6 @@ canvas#bgc { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   </div>
 </div>
 
-<!-- ===== SELECTOR DE MARCA PARA CFP (como el de Sabadell) ===== -->
-<div class="bm-overlay cfp-ch" id="cfpChooser" onclick="if(event.target===this)closeCFPChooser()">
-  <div class="sb-modal">
-    <p class="sb-title">Cambio de forma de pago (CFP)</p>
-    <p class="sb-sub">¿Para qué marca es la HM?</p>
-    <div class="sb-opts">
-      <button type="button" class="sb-opt" onclick="openCFP('OBS')">OBS<small>Business School</small></button>
-      <button type="button" class="sb-opt" onclick="openCFP('ESD')">ESD<small>ESDesign</small></button>
-    </div>
-    <button type="button" class="sb-cancel" onclick="closeCFPChooser()">Cancelar</button>
-  </div>
-</div>
-
-<!-- ===== MODAL CFP: el módulo «Cambio de forma de pago» se abre aquí dentro ===== -->
-<div class="cfp-overlay" id="cfpOverlay" onclick="if(event.target===this) closeCFP()">
-  <div class="cfp-modal" role="dialog" aria-modal="true" aria-labelledby="cfpTitle">
-    <div class="cfp-head">
-      <div class="cfp-title" id="cfpTitle"><small>Cobros</small>Cambio de forma de pago (CFP) · <span id="cfpMarca">OBS</span></div>
-      <button class="cfp-close" type="button" onclick="closeCFP()" aria-label="Cerrar" title="Cerrar">✕</button>
-    </div>
-    <iframe class="cfp-frame" id="cfpFrame" title="Cambio de forma de pago" allow="clipboard-write"></iframe>
-  </div>
-</div>
-
 <!-- ===== MODAL COMÚN: GESTIONAR BURBUJAS ===== -->
 <div class="bm-overlay" id="bmOverlay" onclick="bmOverlayClick(event)">
   <div class="bm-modal">
@@ -542,28 +505,7 @@ function goSabadellMarca(marca){
   const page = PAGES_SABADELL[marca];
   if(page) window.location.href = page;
 }
-/* CFP: se abre en un modal sin salir del hub. La página se carga al abrir y se vacía al cerrar (así siempre empieza limpia). */
-const PAGE_CFP = 'cambio-forma-pago.html';
-function openCFPChooser(){ document.getElementById('cfpChooser').classList.add('open'); }
-function closeCFPChooser(){ document.getElementById('cfpChooser').classList.remove('open'); }
-function openCFP(marca){
-  marca = (marca==='ESD') ? 'ESD' : 'OBS';
-  closeCFPChooser();
-  document.getElementById('cfpMarca').textContent = marca;
-  const fr = document.getElementById('cfpFrame');
-  fr.src = PAGE_CFP + '?marca=' + marca;
-  document.getElementById('cfpOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeCFP(){
-  const ov = document.getElementById('cfpOverlay');
-  if(!ov.classList.contains('open')) return;
-  ov.classList.remove('open');
-  document.getElementById('cfpFrame').src = 'about:blank';
-  document.body.style.overflow = '';
-}
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeSabadellChooser(); closeCFPChooser(); closeCFP(); } });
-window.addEventListener('message', e=>{ if(e.origin===location.origin && e.data && e.data.cfp==='cerrar') closeCFP(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSabadellChooser(); });
 
 function setActive(el){
   document.querySelectorAll('.node').forEach(n=>n.classList.remove('active'));
@@ -793,7 +735,6 @@ const BM_ICONS = {
   star:      `<path d="M19 5l4.09 8.28L32 14.6l-6.5 6.34L27.18 30 19 25.77 10.82 30l1.68-9.06L6 14.6l8.91-1.32L19 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`,
   flag:      `<path d="M9 4v30" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 6h18l-4 6 4 6H9" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`,
   bolt:      `<path d="M20 4L8 21h9l-2 13 15-19h-9l2-11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`,
-  swap:      `<path d="M8 13h20l-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 25H10l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`,
   calc:      `<rect x="7" y="4" width="24" height="30" rx="3" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="8" width="16" height="6" rx="1.2" stroke="currentColor" stroke-width="1.3"/><path d="M12 19h2M18 19h2M24 19h2M12 24h2M18 24h2M24 24h2M12 29h2M18 29h2M24 29h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`
 };
 const BM_COLORS = ['#22D3EE','#34D399','#F5A623','#A78BFA','#FF2E9F','#00FFB2','#FFD966','#FF6B6B'];
@@ -815,7 +756,7 @@ function bmGlow(hex){
   const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},0.28)`;
 }
-function bmBuiltinLabel(v){ return {cobros:'Cobros al día', sabadell:'Sabadell Calculadora', cfp:'Cambio de forma de pago (CFP)'}[v] || v; }
+function bmBuiltinLabel(v){ return {cobros:'Cobros al día', sabadell:'Sabadell Calculadora'}[v] || v; }
 
 /* Migración única: añade la burbuja "Sabadell Calculadora" a la lista guardada en KV.
    Se marca con una clave aparte para que, si se elimina después, no reaparezca. */
@@ -823,14 +764,13 @@ const BM_SABADELL_BUBBLE = { id:'sabadell', name:'Sabadell Calculadora', color:'
 const BM_MIGR_SABADELL_KEY = 'adminhub_carteras_migr_sabadell_v1';
 async function bmEnsureSabadell(){
   try{
-    if(!bmLoadOk) return;   /* si las burbujas no se cargaron del servidor, no se guarda nada encima */
     if(bmBubbles.some(b=>b.id==='sabadell')) return;
     let yaMigrada = false;
     try{
       const r = await fetch(`${WORKER_URL}/kv?key=${BM_MIGR_SABADELL_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
       const d = await r.json();
       yaMigrada = !!(d && d.value);
-    }catch(e){ yaMigrada = true; /* sin conexión: mejor no tocar las burbujas */ }
+    }catch(e){ yaMigrada = false; }
     if(yaMigrada) return;
     bmBubbles.push(JSON.parse(JSON.stringify(BM_SABADELL_BUBBLE)));
     await bmSaveBubbles();
@@ -838,78 +778,36 @@ async function bmEnsureSabadell(){
   }catch(e){ console.error('Migración Sabadell:', e); }
 }
 
-/* Migración única: añade la burbuja "CFP" (cambio de forma de pago). Si se elimina después, no reaparece. */
-const BM_CFP_BUBBLE = { id:'cfp', name:'CFP', color:'#00FFB2', icon:'swap', action:{type:'builtin', value:'cfp'} };
-const BM_MIGR_CFP_KEY = 'adminhub_carteras_migr_cfp_v1';
-async function bmEnsureCFP(){
-  try{
-    if(!bmLoadOk) return;
-    /* Si ya hay una burbuja CFP (aunque sea creada a mano), no se añade otra */
-    if(bmBubbles.some(b=>b.id==='cfp' || /(^|\b)cfp(\b|$)|cambio\s+de\s+forma\s+de\s+pago/i.test(String(b.name||'')))) return;
-    let yaMigrada = false;
-    try{
-      const r = await fetch(`${WORKER_URL}/kv?key=${BM_MIGR_CFP_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
-      const d = await r.json();
-      yaMigrada = !!(d && d.value);
-    }catch(e){ yaMigrada = true; /* sin conexión: mejor no tocar las burbujas */ }
-    if(yaMigrada) return;
-    bmBubbles.push(JSON.parse(JSON.stringify(BM_CFP_BUBBLE)));
-    await bmSaveBubbles();
-    await fetch(`${WORKER_URL}/kv`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ key: BM_MIGR_CFP_KEY, value: '1' }) });
-  }catch(e){ console.error('Migración CFP:', e); }
-}
-
-/* Burbujas: el servidor (KV) puede tardar hasta ~60 s en devolver el último cambio.
-   - Cada guardado deja también una copia en este navegador con su hora.
-   - Si al cargar el servidor devuelve otra cosa y la copia local tiene menos de 5 minutos, manda la copia local.
-   - Si la carga falla, se muestran las burbujas (copia local o por defecto) pero NO se guarda nada encima. */
-let bmLoadOk = false;
-const BM_LOCAL_KEY = 'adminhub_carteras_bubbles_local';
-function bmLocalGet(){ try{ return JSON.parse(localStorage.getItem(BM_LOCAL_KEY)||'null'); }catch(e){ return null; } }
-function bmLocalSet(list){ try{ localStorage.setItem(BM_LOCAL_KEY, JSON.stringify({ ts: Date.now(), data: list })); }catch(e){} }
-
 async function bmLoadBubbles(){
-  bmLoadOk = false;
-  const local = bmLocalGet();
   try{
     const res = await fetch(`${WORKER_URL}/kv?key=${BM_KV_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
-    if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    const parsed = data && data.value ? (typeof data.value==='string' ? JSON.parse(data.value) : data.value) : null;
-    bmLoadOk = true;
-    if(Array.isArray(parsed) && parsed.length){
-      bmBubbles = parsed;
-      const reciente = local && Array.isArray(local.data) && (Date.now()-local.ts) < 5*60*1000;
-      if(reciente && JSON.stringify(local.data)!==JSON.stringify(parsed)){
-        bmBubbles = local.data;          /* el servidor aún no refleja tu último cambio */
+    if(data.value){
+      const parsed = typeof data.value==='string' ? JSON.parse(data.value) : data.value;
+      if(Array.isArray(parsed) && parsed.length){
+        bmBubbles = parsed;
+      } else {
+        bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
         await bmSaveBubbles();
       }
     } else {
-      bmBubbles = (local && Array.isArray(local.data) && local.data.length) ? local.data : JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
+      bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
       await bmSaveBubbles();
     }
   }catch(e){
     console.error('Error cargando burbujas de Carteras:', e);
-    bmBubbles = (local && Array.isArray(local.data) && local.data.length) ? local.data : JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
+    bmBubbles = JSON.parse(JSON.stringify(BM_DEFAULT_BUBBLES));
   }
   await bmEnsureSabadell();
-  await bmEnsureCFP();
   bmRenderNodesRow();
 }
 async function bmSaveBubbles(){
-  if(!bmLoadOk){
-    alert('No se pudo conectar con el servidor al cargar las burbujas, así que no se guardan cambios para no borrar los tuyos. Recarga la página e inténtalo de nuevo.');
-    return false;
-  }
-  bmLocalSet(bmBubbles);
   try{
-    const r = await fetch(`${WORKER_URL}/kv`, {
+    await fetch(`${WORKER_URL}/kv`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ key: BM_KV_KEY, value: bmBubbles })
     });
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return true;
-  }catch(e){ console.error('Error guardando burbujas de Carteras:', e); alert('No se pudo guardar el cambio de las burbujas. Inténtalo de nuevo.'); return false; }
+  }catch(e){ console.error('Error guardando burbujas de Carteras:', e); }
 }
 
 function bmRenderNodesRow(){
@@ -939,20 +837,9 @@ function bmBubbleClick(id, nodeEl){
   if(b.id==='sabadell' || /sabadell/i.test(b.name||'') || (b.action && b.action.type==='url' && /cuotas-sabadell/i.test(b.action.value||''))){
     goSabadell(); return;
   }
-  /* La burbuja CFP (o una creada a mano con enlace a cambio-forma-pago.html) abre el modal */
-  /* Se reconoce como CFP por su identificador, su acción, su enlace o su nombre («CFP» / «Cambio de forma de pago»),
-     así funciona también con una burbuja creada a mano en el editor */
-  const esCFP = b.id==='cfp'
-    || (b.action && b.action.type==='builtin' && b.action.value==='cfp')
-    || (b.action && /cambio-forma-pago/i.test(String(b.action.value||'')))
-    || /(^|\b)cfp(\b|$)|cambio\s+de\s+forma\s+de\s+pago/i.test(String(b.name||''));
-  if(esCFP){
-    openCFPChooser(); return;
-  }
   if(b.action && b.action.type==='builtin'){
     if(b.action.value==='cobros') goCobros();
     else if(b.action.value==='sabadell') goSabadell();
-    else if(b.action.value==='cfp') openCFPChooser();
   } else if(b.action && b.action.type==='url' && b.action.value){
     window.open(b.action.value, '_blank');
   } else {
