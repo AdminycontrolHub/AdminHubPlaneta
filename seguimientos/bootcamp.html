@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 26</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 27</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1235,7 +1235,9 @@ const jsonSame = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const jclone = (v) => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
-async function kvGet(key) {
+const KV_CHUNK = 30000, KV_MAXONE = 40000;
+const kvChunked = (key) => key.indexOf('historico') < 0 && key.indexOf('bubbles') < 0;
+async function kvGetRaw(key) {
   let r;
   try { r = await fetch(KV_URL + '?key=' + encodeURIComponent(key) + '&_=' + Date.now()); }
   catch (e) { throw new Error('leer ' + key.replace('adminhub_bootcamp_', '') + ': el servidor no responde (red, bloqueo o límite del servidor)'); }
@@ -1248,14 +1250,32 @@ async function kvGet(key) {
   if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return null; } }
   return (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
 }
-async function kvSet(key, value) {
+async function kvGet(key) {
+  const v = await kvGetRaw(key);
+  if (!v || !v._chunks) return v;
+  // valor grande guardado en trozos: se leen todos y se comprueba que sean de la misma versión
+  for (let a = 0; a < 4; a++) {
+    const parts = await Promise.all(Array.from({length:v._chunks}, (_, i) => kvGetRaw(key + '__c' + i)));
+    if (parts.every((p, i) => p && p._v === v._v && p.i === i)) { try { return JSON.parse(parts.map(p => p.c).join('')); } catch (e) { break; } }
+    await new Promise(r => setTimeout(r, 800));
+  }
+  throw new Error('leer ' + key.replace('adminhub_bootcamp_', '') + ': datos a medias en el servidor, reintentando');
+}
+async function kvPost(key, value) {
   const body = JSON.stringify({key, value});
   let r;
   try { r = await fetch(KV_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body}); }
   catch (e) { throw new Error('guardar ' + key.replace('adminhub_bootcamp_', '') + ' (' + Math.round(body.length / 1024) + ' KB): el servidor no responde (red, bloqueo o límite del servidor)'); }
   if (!r.ok) throw new Error('guardar ' + key.replace('adminhub_bootcamp_', '') + ': el servidor responde ' + r.status);
 }
-// fusión de tres vías: base = última versión sincronizada, local = lo que tiene este navegador, remote = lo que hay en KV
+async function kvSet(key, value) {
+  const s = JSON.stringify(value);
+  if (!kvChunked(key) || s.length <= KV_MAXONE) { await kvPost(key, value); return; }
+  // valor grande: se parte en trozos pequeños (algunos servidores rechazan peticiones de más de ~64 KB)
+  const v = Date.now() + '-' + Math.random().toString(36).slice(2, 6), n = Math.ceil(s.length / KV_CHUNK);
+  for (let i = 0; i < n; i++) await kvPost(key + '__c' + i, {_v:v, i, c:s.slice(i * KV_CHUNK, (i + 1) * KV_CHUNK)});
+  await kvPost(key, {_chunks:n, _v:v, _t:value._t});
+}
 function mergeField(f, base, local, remote) {
   if (jsonSame(local, base)) return remote === undefined ? local : remote;
   if (Array.isArray(local)) {
@@ -1410,7 +1430,9 @@ class Component extends DCLogic {
       if (!fields.some(f => !jsonSame(snap[f], this._base[key][f]))) return;
       const remote = (this._rc && this._rc[key]) || {};
       const merged = {}; fields.forEach(f => { merged[f] = mergeField(f, this._base[key][f], snap[f], remote[f]); });
-      try { fetch(KV_URL, {method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body:JSON.stringify({key, value:Object.assign({}, remote, merged, {_t:Date.now()})})}); } catch (e) {}
+      const body = JSON.stringify({key, value:Object.assign({}, remote, merged, {_t:Date.now()})});
+      if (body.length > 30000) return; // demasiado grande para enviar al salir: queda en la copia local y se guarda al volver
+      try { fetch(KV_URL, {method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body}); } catch (e) {}
     });
   }
   componentWillUnmount(){
