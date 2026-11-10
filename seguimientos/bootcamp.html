@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 15</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 17</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -223,12 +223,13 @@ select.inp{cursor:pointer}
             </div>
             <div class="scroll" style="background:#fff;border-radius:12px;padding:4px 6px">
               <table>
-                <thead><tr><th>Lead</th><th>País</th><th>Estado</th><th>Archivo</th><th>Resultado</th></tr></thead>
+                <thead><tr><th>Lead</th><th>País</th><th>Idioma</th><th>Estado</th><th>Archivo</th><th>Resultado</th></tr></thead>
                 <tbody>
                   <sc-for list="{{drop.rows}}" as="p" hint-placeholder-count="4">
                     <tr>
                       <td style="font-weight:600">{{p.name}}</td>
                       <td class="mono" style="font-size:13px">{{p.pais}}</td>
+                      <td><sc-if value="{{p.flagES}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Español" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Español</title><rect width="22" height="15" fill="#AA151B"/><rect y="3.75" width="22" height="7.5" fill="#F1BF00"/></svg></sc-if><sc-if value="{{p.flagEN}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Inglés" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Inglés</title><rect width="22" height="15" fill="#fff"/><rect y="0.000" width="22" height="1.1538" fill="#B22234"/><rect y="2.308" width="22" height="1.1538" fill="#B22234"/><rect y="4.615" width="22" height="1.1538" fill="#B22234"/><rect y="6.923" width="22" height="1.1538" fill="#B22234"/><rect y="9.231" width="22" height="1.1538" fill="#B22234"/><rect y="11.538" width="22" height="1.1538" fill="#B22234"/><rect y="13.846" width="22" height="1.1538" fill="#B22234"/><rect width="9.2" height="8.08" fill="#3C3B6E"/></svg></sc-if><sc-if value="{{p.idiOther}}" hint-placeholder-val="{{false}}"><span class="mono" style="font-size:12px;color:var(--mut)">{{p.idiTxt}}</span></sc-if></td>
                       <td style="font-size:13px">{{p.estado}}</td>
                       <td style="color:var(--mut);font-size:13px">{{p.src}}</td>
                       <td><span class="chip" style="{{p.chip}}">{{p.result}}</span></td>
@@ -278,12 +279,13 @@ select.inp{cursor:pointer}
       <div style="background:#fff;border-radius:12px;padding:4px 6px">
         <table class="tight" style="table-layout:fixed">
           <colgroup><col style="width:34%"><col style="width:12%"><col style="width:20%"><col style="width:34%"></colgroup>
-          <thead><tr><th>Lead</th><th>País</th><th>Fecha de lead</th><th>Estado</th></tr></thead>
+          <thead><tr><th>Lead</th><th>País</th><th>Idioma</th><th>Fecha de lead</th><th>Estado</th></tr></thead>
           <tbody>
             <sc-for list="{{mktRows}}" as="r" hint-placeholder-count="6">
               <tr>
                 <td style="font-weight:700">{{r.name}} <sc-if value="{{r.isNew}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:var(--mkt);color:#fff">Nuevo</span></sc-if></td>
                 <td class="mono" style="font-size:13px">{{r.pais}}</td>
+                <td><sc-if value="{{r.flagES}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Español" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Español</title><rect width="22" height="15" fill="#AA151B"/><rect y="3.75" width="22" height="7.5" fill="#F1BF00"/></svg></sc-if><sc-if value="{{r.flagEN}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Inglés" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Inglés</title><rect width="22" height="15" fill="#fff"/><rect y="0.000" width="22" height="1.1538" fill="#B22234"/><rect y="2.308" width="22" height="1.1538" fill="#B22234"/><rect y="4.615" width="22" height="1.1538" fill="#B22234"/><rect y="6.923" width="22" height="1.1538" fill="#B22234"/><rect y="9.231" width="22" height="1.1538" fill="#B22234"/><rect y="11.538" width="22" height="1.1538" fill="#B22234"/><rect y="13.846" width="22" height="1.1538" fill="#B22234"/><rect width="9.2" height="8.08" fill="#3C3B6E"/></svg></sc-if><sc-if value="{{r.idiOther}}" hint-placeholder-val="{{false}}"><span class="mono" style="font-size:12px;color:var(--mut)">{{r.idiTxt}}</span></sc-if></td>
                 <td class="mono" style="font-size:13px">{{r.fecha}}</td>
                 <td><span class="chip" style="{{r.chip}}">{{r.estado}}</span></td>
               </tr>
@@ -354,7 +356,7 @@ select.inp{cursor:pointer}
                 <td style="word-break:break-word">
                   <sc-if value="{{l.manual}}" hint-placeholder-val="{{false}}"><div style="display:flex;flex-direction:column;gap:4px"><input class="inp" aria-label="Nombre del candidato" placeholder="Nombre y apellidos" value="{{l.nameVal}}" onChange="{{l.onName}}" style="font-weight:700"><input class="inp" aria-label="Teléfono del candidato" placeholder="Teléfono" value="{{l.telVal}}" onChange="{{l.onTel}}"><input class="inp" aria-label="Email del candidato" placeholder="Email" value="{{l.emailVal}}" onChange="{{l.onEmail}}"></div></sc-if>
                   <sc-if value="{{l.notManual}}" hint-placeholder-val="{{true}}">
-                  <span class="hov" tabindex="0"><span style="{{l.nameStyle}};border-bottom:1px dotted var(--mut)">{{l.name}}</span> <span class="mono" style="color:var(--mut);font-size:12px">{{l.pais}}</span>
+                  <span class="hov" tabindex="0"><span style="{{l.nameStyle}};border-bottom:1px dotted var(--mut)">{{l.name}}</span> <span class="mono" style="color:var(--mut);font-size:12px">{{l.pais}}</span> <sc-if value="{{l.flagES}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Español" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Español</title><rect width="22" height="15" fill="#AA151B"/><rect y="3.75" width="22" height="7.5" fill="#F1BF00"/></svg></sc-if><sc-if value="{{l.flagEN}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Inglés" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Inglés</title><rect width="22" height="15" fill="#fff"/><rect y="0.000" width="22" height="1.1538" fill="#B22234"/><rect y="2.308" width="22" height="1.1538" fill="#B22234"/><rect y="4.615" width="22" height="1.1538" fill="#B22234"/><rect y="6.923" width="22" height="1.1538" fill="#B22234"/><rect y="9.231" width="22" height="1.1538" fill="#B22234"/><rect y="11.538" width="22" height="1.1538" fill="#B22234"/><rect y="13.846" width="22" height="1.1538" fill="#B22234"/><rect width="9.2" height="8.08" fill="#3C3B6E"/></svg></sc-if><sc-if value="{{l.idiOther}}" hint-placeholder-val="{{false}}"><span class="mono" style="font-size:12px;color:var(--mut)">{{l.idiTxt}}</span></sc-if>
                     <span class="pop">
                       <span style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="lbl">Teléfono</span><br><span class="mono" style="user-select:all;font-size:13px;color:var(--ink)">{{l.tel}}</span></span><button onClick="{{l.copyTel}}" title="Copiar teléfono" aria-label="Copiar teléfono" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
                       <span style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="lbl">Email</span><br><span class="mono" style="user-select:all;font-size:13px;color:var(--ink)">{{l.email}}</span></span><button onClick="{{l.copyEmail}}" title="Copiar correo" aria-label="Copiar correo" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
@@ -544,7 +546,7 @@ select.inp{cursor:pointer}
           <div style="{{k.wrapStyle}}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:nowrap">
             <div style="min-width:0">
-              <div style="display:flex;align-items:center;gap:8px"><span style="{{k.nameStyle}}">{{k.name}}</span><sc-if value="{{k.isNew}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:var(--com);color:#fff">Nuevo</span></sc-if></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="{{k.nameStyle}}">{{k.name}}</span><sc-if value="{{k.flagES}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Español" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Español</title><rect width="22" height="15" fill="#AA151B"/><rect y="3.75" width="22" height="7.5" fill="#F1BF00"/></svg></sc-if><sc-if value="{{k.flagEN}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Inglés" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Inglés</title><rect width="22" height="15" fill="#fff"/><rect y="0.000" width="22" height="1.1538" fill="#B22234"/><rect y="2.308" width="22" height="1.1538" fill="#B22234"/><rect y="4.615" width="22" height="1.1538" fill="#B22234"/><rect y="6.923" width="22" height="1.1538" fill="#B22234"/><rect y="9.231" width="22" height="1.1538" fill="#B22234"/><rect y="11.538" width="22" height="1.1538" fill="#B22234"/><rect y="13.846" width="22" height="1.1538" fill="#B22234"/><rect width="9.2" height="8.08" fill="#3C3B6E"/></svg></sc-if><sc-if value="{{k.idiOther}}" hint-placeholder-val="{{false}}"><span class="mono" style="font-size:12px;color:var(--mut)">{{k.idiTxt}}</span></sc-if><sc-if value="{{k.isNew}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:var(--com);color:#fff">Nuevo</span></sc-if></div>
               <div style="margin-top:8px;display:inline-flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:#E1F3F7;border:1px solid #BFE0E8;border-radius:10px;padding:6px 12px">
                 <span class="lbl">{{k.precioLbl}}</span>
                 <span class="mono" style="font-size:20px;font-weight:700;color:var(--ink)">{{k.total}}</span>
@@ -1103,6 +1105,8 @@ const loadXlsx = () => window.XLSX ? Promise.resolve() : new Promise((ok, ko) =>
   sc.onload = () => ok(); sc.onerror = () => ko(new Error('xlsx'));
   document.head.appendChild(sc);
 });
+const normIdi = (v) => { const t = nz(v).replace(/[^a-z]/g, ''); if (!t) return ''; if (['es', 'esp', 'espanol', 'spanish', 'castellano'].indexOf(t) >= 0) return 'ES'; if (['eng', 'en', 'ingles', 'english', 'us', 'usa'].indexOf(t) >= 0) return 'ENG'; return String(v).trim().toUpperCase(); };
+const idiV = (c) => ({flagES:c === 'ES', flagEN:c === 'ENG', idiOther:!!c && c !== 'ES' && c !== 'ENG', idiTxt:c || ''});
 async function parseLeadFile(f) {
   await loadXlsx();
   const wb = /\.csv$/i.test(f.name) ? XLSX.read(await f.text(), {type:'string'}) : XLSX.read(await f.arrayBuffer(), {type:'array'});
@@ -1115,7 +1119,7 @@ async function parseLeadFile(f) {
   let iName = col(['nombre y apellidos', 'nombre completo', 'nombre']); if (iName < 0) iName = H.findIndex(h => /nombre/.test(h));
   const iMail = col(['email', 'e-mail', 'correo', 'correo electronico']), iPais = col(['pais']), iTel = col(['telefono', 'tel', 'movil']), iPref = col(['prefijo']);
   const iFecha = col(['fecha lead', 'fecha']), iAses = col(['asesor']), iEst = col(['estado']), iMat = col(['matriculado']);
-  const iSeg = col(['seguimiento']), iCom = col(['comentarios']);
+  const iSeg = col(['seguimiento']), iCom = col(['comentarios']), iIdi = col(['idioma', 'language', 'lang']);
   const get = (r, i) => i >= 0 ? r[i] : '';
   const list = [];
   rows.slice(hi + 1).forEach(r => {
@@ -1126,7 +1130,8 @@ async function parseLeadFile(f) {
       full:titleCase(full), pais:String(get(r, iPais)).trim().toUpperCase() || '—', email:String(get(r, iMail)).trim().toLowerCase(),
       tel:tel ? (pref ? '+' + pref + ' ' : '') + tel : '', fecha:fmtDate(get(r, iFecha)),
       asesor:String(get(r, iAses)).trim(), estado:mapEstado(get(r, iEst), iMat >= 0 && nz(get(r, iMat)) === 'si'),
-      last:String(get(r, iSeg)).trim() || String(get(r, iCom)).trim()
+      last:String(get(r, iSeg)).trim() || String(get(r, iCom)).trim(),
+      idioma:normIdi(get(r, iIdi))
     });
   });
   return {list, err:list.length ? '' : '«' + f.name + '»: no hay filas con nombre.'};
@@ -1343,13 +1348,13 @@ class Component extends DCLogic {
     window.addEventListener('pagehide', this._onPageHide);
     window.addEventListener('beforeunload', this._onBeforeUnload);
   }
-  _lcGet(key){ try { const v = lsGet('adminhub_bootcamp_lc_' + key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  _lcGet(key){ try { const v = lsGet('adminhub_bootcamp_lc2_' + key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
   persistLocal(){
     Object.keys(KV_KEYS).forEach(key => {
-      const fields = KV_KEYS[key];
-      if (!fields.some(f => !jsonSame(this.state[f], this._base[key][f]))) return;
-      const data = {}; fields.forEach(f => { data[f] = jclone(this.state[f]); });
-      try { lsSet('adminhub_bootcamp_lc_' + key, JSON.stringify({_t:Date.now(), data})); } catch (e) {}
+      const data = {}; let any = false;
+      KV_KEYS[key].forEach(f => { if (!jsonSame(this.state[f], this._base[key][f])) { data[f] = jclone(this.state[f]); any = true; } });
+      if (!any) return;
+      try { lsSet('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:Date.now(), data})); } catch (e) {}
     });
   }
   quickSave(){
@@ -1425,6 +1430,9 @@ class Component extends DCLogic {
         const merged = {};
         fields.forEach(f => { merged[f] = mergeField(f, this._base[key][f], snap[f], remote[f]); });
         const _ts = Date.now();
+        if (fields.some(f => Array.isArray(remote[f]) && remote[f].length > 0 && Array.isArray(merged[f]) && merged[f].length === 0)) {
+          try { await kvSet('adminhub_bootcamp_backup_v1', {_t:_ts, key:key, data:remote}); } catch (e) {}
+        }
         await kvSet(key, Object.assign({}, remote, merged, {_t:_ts}));
         this._wt = this._wt || {}; this._wt[key] = _ts;
         this._rc = this._rc || {}; this._rc[key] = Object.assign({}, remote, merged, {_t:_ts});
@@ -1455,7 +1463,7 @@ class Component extends DCLogic {
     const NOW = new Date(); const NOWT = NOW.getTime(); const todayTxt = NOW.toLocaleDateString('es-ES');
     const mktBg = this.props.mktBg || '#ECE6FC';
     const eff = (l) => s.estados[l.id] || l.estado;
-    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual})).concat(LEADS);
+    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual, idioma:a.idioma || ''})).concat(LEADS);
     const noteOf = (id, def) => (s.notes[id] !== undefined ? s.notes[id] : def);
     const setNote = (id, v) => { const n = Object.assign({}, s.notes); n[id] = v; set({notes:n}); };
     const priceOf = (id, seedHab, seedDto, seedPar, seedIni, seedTipo) => {
@@ -1586,7 +1594,7 @@ class Component extends DCLogic {
 
     // ---------- alumnos (Admisiones -> Adm. comercial)
     const fresh = allLeads.filter(l => eff(l) === 'Aceptado').map(l => ({
-      id:l.id, name:l.name, full:l.full, pais:l.pais, asesor:l.asesor, canal:l.canal, last:l.last, hab:priceOf(l.id,'—',null,'').hab, fin:(priceOf(l.id,'—',null,'').ok ? priceOf(l.id,'—',null,'').fin : null), acomp:priceOf(l.id,'—',null,'').pareja || '—', ini:priceOf(l.id,'—',null,'').ini, iniOverride:priceOf(l.id,'—',null,'').iniSet, ncuotas:priceOf(l.id,'—',null,'').ncuotas, bill:priceOf(l.id,'—',null,'').bill, grp:priceOf(l.id,'—',null,'').grp, tel:'—', email:'—',
+      id:l.id, idioma:l.idioma || '', name:l.name, full:l.full, pais:l.pais, asesor:l.asesor, canal:l.canal, last:l.last, hab:priceOf(l.id,'—',null,'').hab, fin:(priceOf(l.id,'—',null,'').ok ? priceOf(l.id,'—',null,'').fin : null), acomp:priceOf(l.id,'—',null,'').pareja || '—', ini:priceOf(l.id,'—',null,'').ini, iniOverride:priceOf(l.id,'—',null,'').iniSet, ncuotas:priceOf(l.id,'—',null,'').ncuotas, bill:priceOf(l.id,'—',null,'').bill, grp:priceOf(l.id,'—',null,'').grp, tel:'—', email:'—',
       sub:'Aceptado en Admisiones · importes por definir', tipo:priceOf(l.id,'—',null,'').tipo, amt:{pi:500,nov:0,dic:0,ene:0,feb:0}, extraAmt:0, docs:{}, paid:{}, refund:500, isNew:true, hm:null
     }));
     const docsFor = (c) => DOCS.filter(d => d[0] !== 'dfe' || c.bill === 'Empresa');
@@ -1736,7 +1744,7 @@ class Component extends DCLogic {
       const nNew = s.drop.rows.filter(r => !r.dupe).length;
       const nDup = s.drop.rows.length - nNew;
       drop = {
-        rows:s.drop.rows.map(r => ({name:r.name, pais:r.pais, estado:r.estado || 'No contactado', src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
+        rows:s.drop.rows.map(r => ({...idiV(r.idioma), name:r.name, pais:r.pais, estado:r.estado || 'No contactado', src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
         summary:nNew + ' nuevos · ' + nDup + ' duplicados',
         note:s.drop.excel ? 'Se comparan por email y por nombre con los leads ya cargados: los duplicados se omiten. Comprueba que el estado se ha leído bien antes de añadir.' : 'Se crea un lead por archivo, con el nombre del archivo.',
         none:nNew === 0, btnLabel:nNew === 0 ? 'No hay casos nuevos' : 'Añadir ' + nNew + (nNew === 1 ? ' lead nuevo' : ' leads nuevos'),
@@ -1820,7 +1828,7 @@ class Component extends DCLogic {
         onTel:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {tel:e.target.value.trim()}) : x)}),
         onEmail:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {email:e.target.value.trim()}) : x)}),
         last:noteOf(l.id, l.last), onLast:(e) => setNote(l.id, e.target.value),
-        mora:false, moraAmt:'', hasMod:hmN(l.id) > 0, modN:hmN(l.id), hasClaim:!!openClaimOf(l.id), nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
+        mora:false, moraAmt:'', hasMod:hmN(l.id) > 0, modN:hmN(l.id), hasClaim:!!openClaimOf(l.id), ...idiV(l.idioma), nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
         rowStyle:cur === 'Aceptado' ? 'background:#F0FAF4' : (l.isNew ? 'background:#F5F1FE' : ''),
         estOpts:ESTADOS.map(e => ({v:e, label:e, sel:cur === e})),
         estStyle:'font-weight:700;color:' + EST_COL[cur][1] + ';background:' + EST_COL[cur][0] + ';border-color:' + EST_COL[cur][1],
@@ -1846,7 +1854,7 @@ class Component extends DCLogic {
         name:c.name, pais:c.pais, asesor:av.asesor, asesOpts:av.asesOpts, onAses:av.onAses, canal:c.canal, isNew:false, isLead:false, isStudent:true, opts:[],
         last:noteOf(c.id, c.last), onLast:(e) => setNote(c.id, e.target.value),
         mora:m.mora, moraAmt:m.pend > 0 ? fmt(m.pend) : 'marcado', hasMod:m.modN > 0, modN:m.modN, hasClaim:!!openClaimOf(c.id),
-        nameStyle:'font-weight:700;' + (m.mora ? 'color:#B3203D' : ''),
+        ...idiV(m.idioma), nameStyle:'font-weight:700;' + (m.mora ? 'color:#B3203D' : ''),
         stuLabel:m.cancel ? 'Baja' : 'Aceptado', stuChip:m.cancel ? 'background:#FDECEF;color:#B3203D' : 'background:#DDF5E6;color:#176B3A',
         rowStyle:m.mora ? 'background:#FDECEF;box-shadow:inset 3px 0 0 ' + RED : ''
       });
@@ -1884,7 +1892,7 @@ class Component extends DCLogic {
     const exportRows = model.map(m => ({
       name:m.c.name, tipo:m.tipo || '—', esperado:fmt(m.esperado), vencido:fmt(m.vencido), recibido:fmt(m.recibido),
       pend:fmt(m.pend), dev:m.cancel ? fmt(m.c.refund) + (m.st.devuelto ? ' (devuelta)' : ' (pendiente)') : '—',
-      nameStyle:'font-weight:700;' + (m.mora ? 'color:#B3203D' : ''),
+      ...idiV(m.idioma), nameStyle:'font-weight:700;' + (m.mora ? 'color:#B3203D' : ''),
       pendStyle:'text-align:right;' + (m.pend > 0 ? 'color:#B3203D;font-weight:800' : '')
     }));
     const stamp = new Date().toLocaleString('es-ES');
@@ -2207,7 +2215,7 @@ class Component extends DCLogic {
     const deptOpts = ['mkt', 'adm', 'com'].map(d => ({v:d, label:DEPT[d], sel:s.taskDept === d}));
 
     // ---------- marketing: columnas del Excel
-    const mktRows = allLeads.map(l => { const e = eff(l); return {name:l.name, pais:l.pais, fecha:l.fecha || '—', isNew:!!l.isNew, estado:e, chip:'background:' + EST_COL[e][0] + ';color:' + EST_COL[e][1]}; });
+    const mktRows = allLeads.map(l => { const e = eff(l); return {...idiV(l.idioma), name:l.name, pais:l.pais, fecha:l.fecha || '—', isNew:!!l.isNew, estado:e, chip:'background:' + EST_COL[e][0] + ';color:' + EST_COL[e][1]}; });
 
     // ---------- perfil
     const profileOpts = [
@@ -2291,7 +2299,7 @@ class Component extends DCLogic {
         set({estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, hmM:null, resDraft:{}, mktPwd:'', mktPwdErr:false, msg:'Herramienta a cero. Ya puedes cargar de nuevo.', toast:'Todos los datos se han borrado.', toastTo:role});
       },
       hmOpen:hmModal.hmOpen, hmRows:hmModal.hmRows, hmName:hmModal.hmName, hmFile:hmModal.hmFile, hmRead:hmModal.hmRead, hmCancel:hmModal.hmCancel, hmSave:hmModal.hmSave,
-      resetAll:() => { let ok = true; try { ok = confirm('¿Borrar TODOS los datos de la herramienta (leads, estados, tarifas, cobros, reuniones…) para todos los usuarios? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, msg:'Herramienta a cero.', toast:'Todos los datos se han borrado.', toastTo:role}); },
+      resetAll:() => { let pw = null; try { pw = prompt('Contraseña para borrar TODOS los datos de la herramienta:'); } catch (e) {} if (pw !== 'AdminHub') { if (pw !== null) flash('Contraseña incorrecta: no se ha borrado nada.'); return; } let ok = true; try { ok = confirm('¿Borrar TODOS los datos de la herramienta (leads, estados, tarifas, cobros, reuniones…) para todos los usuarios? No se puede deshacer.'); } catch (e) {} if (!ok) return; set({estados:{}, added:[], prices:{}, asesores:{}, notes:{}, cs:{}, obs:{}, fact:{}, roomNo:{}, claims:[], moro:{}, moroSel:{}, tasks:[], topics:[], costs:[{id:'meta',label:'Meta Ads',v:''},{id:'google',label:'Google Ads',v:''},{id:'linkedin',label:'LinkedIn',v:''},{id:'email',label:'Email / CRM',v:''}], drop:null, msg:'Herramienta a cero.', toast:'Todos los datos se han borrado.', toastTo:role}); },
       fromHub:!!s.hub,
       canLinks:profile === 'com',
       copyLink:() => copyExt(),
@@ -2371,7 +2379,7 @@ class Component extends DCLogic {
         if (!s.drop) return;
         const fr = s.drop.rows.filter(r => !r.dupe);
         if (!fr.length) return;
-        const add = fr.map((r,i) => ({id:'a' + (s.nextId + i), full:r.full, name:r.name, pais:r.pais, src:r.src, fecha:r.fecha || new Date().toLocaleDateString('es-ES'), tel:r.tel || '', email:r.email || '', asesor:r.asesor || '', estado:r.estado || '', last:r.last || ''}));
+        const add = fr.map((r,i) => ({id:'a' + (s.nextId + i), full:r.full, name:r.name, pais:r.pais, src:r.src, fecha:r.fecha || new Date().toLocaleDateString('es-ES'), tel:r.tel || '', email:r.email || '', asesor:r.asesor || '', estado:r.estado || '', last:r.last || '', idioma:r.idioma || ''}));
         set({
           added:add.concat(s.added), nextId:s.nextId + fr.length, drop:null,
           msg:fr.length + (fr.length === 1 ? ' lead añadido' : ' leads añadidos') + ' en Admisiones. Los leads ya cargados no se han modificado.'
