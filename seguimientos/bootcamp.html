@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 24</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 25</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1420,7 +1420,7 @@ class Component extends DCLogic {
     if (!this._base || !this.isDirty()) return;
     this.persistLocal();
     clearTimeout(this._deb);
-    this._deb = setTimeout(() => this.flush(), 250);
+    this._deb = setTimeout(() => this.flush(), 1200);
   }
   isDirty(){
     return Object.keys(KV_KEYS).some(k => KV_KEYS[k].some(f => !jsonSame(this.state[f], this._base[k][f])));
@@ -1465,6 +1465,10 @@ class Component extends DCLogic {
         const fields = KV_KEYS[key];
         const snap = {}; fields.forEach(f => { snap[f] = jclone(this.state[f]); });
         if (!fields.some(f => !jsonSame(snap[f], this._base[key][f]))) continue;
+        // Cloudflare KV admite ~1 escritura por segundo y clave: se espacian las escrituras para no recibir errores
+        this._lw = this._lw || {};
+        const gap = 1300 - (Date.now() - (this._lw[key] || 0));
+        if (gap > 0) await new Promise(r => setTimeout(r, gap));
         let remote = (await kvGet(key)) || {};
         // lectura obsoleta del KV (más antigua que nuestra última escritura): usar lo último que escribimos, o se pisarían cambios recientes
         if (this._wt && this._wt[key] && (remote._t || 0) < this._wt[key] && this._rc && this._rc[key]) remote = this._rc[key];
@@ -1475,6 +1479,7 @@ class Component extends DCLogic {
           try { await kvSet('adminhub_bootcamp_backup_v1', {_t:_ts, key:key, data:remote}); } catch (e) {}
         }
         await kvSet(key, Object.assign({}, remote, merged, {_t:_ts}));
+        this._lw[key] = Date.now();
         this._wt = this._wt || {}; this._wt[key] = _ts;
         this._rc = this._rc || {}; this._rc[key] = Object.assign({}, remote, merged, {_t:_ts});
         const patch = {};
