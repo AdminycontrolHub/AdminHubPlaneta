@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 27</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 28</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1422,6 +1422,20 @@ class Component extends DCLogic {
       if (ok) this.markSync(true);
     } finally { this._resetting = false; }
   }
+  async diagnose(err){
+    // Prueba qué tamaños de escritura acepta el servidor, para saber si el fallo es de tamaño, de límite diario o de red
+    if (this._diagBusy || Date.now() - (this._diagAt || 0) < 300000) return;
+    this._diagBusy = true; this._diagAt = Date.now();
+    const out = [], base = String(err && err.message || '');
+    try { await kvGetRaw('adminhub_bootcamp_ping'); out.push('lectura OK'); } catch (e) { out.push('lectura FALLA'); }
+    for (const kb of [0.1, 10, 35]) {
+      try { await kvPost('adminhub_bootcamp_ping', {t:Date.now(), pad:'x'.repeat(Math.round(kb * 1024))}); out.push('escribir ' + kb + ' KB OK'); }
+      catch (e) { out.push('escribir ' + kb + ' KB FALLA'); }
+    }
+    this._diagBusy = false;
+    this._diagTxt = 'Diagnóstico: ' + out.join(' · ');
+    if (this.state.syncOk === false) this.markSync(false, err);
+  }
   quickSave(){
     if (!this._base || !this.isDirty()) return;
     Object.keys(KV_KEYS).forEach(key => {
@@ -1454,7 +1468,9 @@ class Component extends DCLogic {
   }
   markSync(ok, err){
     const at = new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
-    if (this.state.syncOk !== ok || (ok && this.state.syncAt !== at) || (!ok && this.state.syncErr !== String(err && err.message || ''))) this.setState({syncOk:ok, syncAt:ok ? at : this.state.syncAt, syncErr:ok ? '' : String(err && err.message || '')});
+    if (ok) this._diagTxt = '';
+    const msg = ok ? '' : (String(err && err.message || '') + (this._diagTxt ? ' — ' + this._diagTxt : ''));
+    if (this.state.syncOk !== ok || (ok && this.state.syncAt !== at) || (!ok && this.state.syncErr !== msg)) this.setState({syncOk:ok, syncAt:ok ? at : this.state.syncAt, syncErr:msg});
   }
   async pull(){
     if (this._pulling || this._flushing || !this._base) return;
@@ -1519,7 +1535,7 @@ class Component extends DCLogic {
         if (Object.keys(patch).length) this.setState(patch);
       }
       this.markSync(true);
-    } catch (e) { this.markSync(false, e); this._again = false; setTimeout(() => this.flush(), 5000); }
+    } catch (e) { this.markSync(false, e); this.diagnose(e); this._again = false; setTimeout(() => this.flush(), 5000); }
     finally { this._flushing = false; if (this._again) setTimeout(() => this.flush(), 150); }
   }
 
