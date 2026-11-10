@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 23</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 24</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1368,7 +1368,7 @@ class Component extends DCLogic {
   _lcGet(key){ try { const v = lsGet('adminhub_bootcamp_lc2_' + key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
   persistLocal(){
     Object.keys(KV_KEYS).forEach(key => {
-      const data = {}; let any = false;
+      const old = this._lcGet(key), data = Object.assign({}, (old && old.data) || {}); let any = false;
       KV_KEYS[key].forEach(f => { if (!jsonSame(this.state[f], this._base[key][f])) { data[f] = jclone(this.state[f]); any = true; } });
       if (!any) return;
       try { lsSet('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:Date.now(), data})); } catch (e) {}
@@ -1392,7 +1392,7 @@ class Component extends DCLogic {
         catch (e) { ok = false; this.markSync(false, (e && e.message) || 'error'); continue; }
         this._wt[key] = ts; this._rc[key] = Object.assign({}, data, {_t:ts});
         KV_KEYS[key].forEach(f => { this._base[key][f] = jclone(data[f]); });
-        try { localStorage.removeItem('adminhub_bootcamp_lc2_' + key); } catch (e) {}
+        try { localStorage.setItem('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:ts, data:jclone(data)})); } catch (e) {}
       }
       if (ok) this.markSync(true);
     } finally { this._resetting = false; }
@@ -1436,9 +1436,10 @@ class Component extends DCLogic {
       let dirty = false; const patch = {};
       for (const key of Object.keys(KV_KEYS)) {
         let remote = await kvGet(key);
-        const lc = this._lcGet(key);
+        let lc = this._lcGet(key);
+        if (lc && ((remote && remote._t) || 0) >= lc._t) { try { localStorage.removeItem('adminhub_bootcamp_lc2_' + key); } catch (e) {} lc = null; }
         let stale = false;
-        if (lc && lc.data && lc._t > ((remote && remote._t) || 0)) { stale = true; remote = Object.assign({}, remote || {}, lc.data, {_t:lc._t}); }
+        if (lc && lc.data && lc._t > ((remote && remote._t) || 0)) { stale = true; remote = Object.assign({}, remote || {}, lc.data, {_t:lc._t}); this._wt = this._wt || {}; this._wt[key] = Math.max(this._wt[key] || 0, lc._t); }
         if (!remote) continue;
         this._rc = this._rc || {}; this._rc[key] = remote;
         // lectura obsoleta (KV es eventualmente consistente): si es anterior a nuestra última escritura, se ignora
