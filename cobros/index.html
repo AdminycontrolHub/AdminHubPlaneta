@@ -884,8 +884,10 @@ function bmAvisoCarga(){
   let el = document.getElementById('bmAvisoCarga');
   if(!el){
     el = document.createElement('div'); el.id = 'bmAvisoCarga';
-    el.style.cssText = 'margin:10px auto 0;max-width:720px;text-align:center;font-size:12px;color:#FFB547;background:rgba(255,181,71,0.08);border:1px solid rgba(255,181,71,0.35);border-radius:10px;padding:8px 12px;';
-    const row = document.getElementById('nodesRow'); row.parentNode.insertBefore(el, row.nextSibling);
+    el.style.cssText = 'margin:14px auto 0;max-width:720px;text-align:center;font-size:12px;color:#FFB547;background:rgba(255,181,71,0.08);border:1px solid rgba(255,181,71,0.35);border-radius:10px;padding:8px 12px;';
+    const area = document.getElementById('nodesRow').closest('.nodes-area') || document.getElementById('nodesRow').parentNode;
+    el.style.position = 'relative'; el.style.zIndex = '10';
+    area.parentNode.insertBefore(el, area.nextSibling);
   }
   el.style.display = bmLoadOk ? 'none' : 'block';
   el.textContent = bmLoadOk ? '' : 'No se pudieron leer las burbujas guardadas ('+bmLoadErr+'). Se muestran las de por defecto y los cambios no se guardarán hasta recargar.';
@@ -895,7 +897,14 @@ async function bmLoadBubbles(){
   bmLoadOk = false; bmLoadErr = '';
   const local = bmLocalGet();
   try{
-    const res = await fetch(`${WORKER_URL}/kv?key=${BM_KV_KEY}&_ts=${Date.now()}`, { cache:'no-store' });
+    /* Hasta 3 intentos: los fallos momentáneos del servidor no deben dejar las burbujas por defecto */
+    let res = null, ultimoErr = null;
+    for(let intento=0; intento<3 && !res; intento++){
+      if(intento) await new Promise(r=>setTimeout(r, 1200*intento));
+      try{ res = await fetch(`${WORKER_URL}/kv?key=${BM_KV_KEY}&_ts=${Date.now()}`, { cache:'no-store' }); }
+      catch(e){ ultimoErr = e; }
+    }
+    if(!res) throw (ultimoErr || new Error('sin conexión'));
     let data = null;
     try{ data = await res.json(); }catch(e){ throw new Error('respuesta no válida, HTTP '+res.status); }
     if(!res.ok && !(data && 'value' in data)) throw new Error('HTTP '+res.status);
@@ -921,11 +930,12 @@ async function bmLoadBubbles(){
   }
   await bmEnsureFijas();
   bmRenderNodesRow();
-  bmAvisoCarga();
+  /* Sin aviso en pantalla: si la lectura falló, solo se avisa al intentar guardar un cambio de burbujas */
+  if(!bmLoadOk) console.warn('Burbujas: no se pudieron leer del servidor ('+bmLoadErr+'). Se muestran las de por defecto.');
 }
 async function bmSaveBubbles(){
   if(!bmLoadOk){
-    alert('No se pudo conectar con el servidor al cargar las burbujas, así que no se guardan cambios para no borrar los tuyos. Recarga la página e inténtalo de nuevo.');
+    alert('Ahora mismo no se puede guardar el cambio de las burbujas porque no hay conexión con el servidor donde se guardan. Recarga la página dentro de un momento y vuelve a intentarlo.');
     return false;
   }
   bmLocalSet(bmBubbles);
