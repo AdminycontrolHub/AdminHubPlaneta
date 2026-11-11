@@ -951,7 +951,7 @@ function syncLive(manual){
       p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
       banner('Esteban ha enviado el cierre a Adm. Comercial a las ' + fmtHora(sn.sentAt));
     }
-    var out = { pageId:p.id, conv:p.conv, date:p.date, sem:p.sem || '', title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), entregadoAt: same ? (sn.entregadoAt || 0) : 0, rows:snapRows(p) };
+    var out = { pageId:p.id, conv:p.conv, date:p.date, sem:semSnap(p), title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), entregadoAt: same ? (sn.entregadoAt || 0) : 0, rows:snapRows(p) };
     /* no escribas en la nube si no ha cambiado nada (el plan gratuito de Cloudflare limita las escrituras diarias) */
     if (!manual && sn && JSON.stringify(sn) === JSON.stringify(out)) return null;
     return wSetRaw(SNAP_PREFIX + LIVE, out);
@@ -1161,6 +1161,8 @@ function applyCurvas(res, errs){
   uiAlert((msg.length ? msg.join('\n') : 'No he podido importar nada.'));
 }
 function semOf(p){ return p && p.sem ? p.sem : ''; }
+/* si el título contiene "prueba", la tarjeta de Esteban sale marcada como PRUEBA */
+function semSnap(p){ return /prueba/i.test(p.title || '') ? 'PRUEBA' : (p.sem || ''); }
 
 load();
 </script>
