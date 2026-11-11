@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 29</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 30</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -358,7 +358,7 @@ select.inp{cursor:pointer}
                 <td style="word-break:break-word">
                   <sc-if value="{{l.manual}}" hint-placeholder-val="{{false}}"><div style="display:flex;flex-direction:column;gap:4px"><input class="inp" aria-label="Nombre del candidato" placeholder="Nombre y apellidos" value="{{l.nameVal}}" onChange="{{l.onName}}" style="font-weight:700"><input class="inp" aria-label="Teléfono del candidato" placeholder="Teléfono" value="{{l.telVal}}" onChange="{{l.onTel}}"><input class="inp" aria-label="Email del candidato" placeholder="Email" value="{{l.emailVal}}" onChange="{{l.onEmail}}"></div></sc-if>
                   <sc-if value="{{l.notManual}}" hint-placeholder-val="{{true}}">
-                  <span class="hov" tabindex="0"><span style="{{l.nameStyle}};border-bottom:1px dotted var(--mut)">{{l.name}}</span> <span class="mono" style="color:var(--mut);font-size:12px">{{l.pais}}</span> <sc-if value="{{l.isReact}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:#EFE9FF;color:#5B3FC4">Reactivado</span></sc-if> <sc-if value="{{l.flagES}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Español" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Idioma plataforma solicitud info</title><rect width="22" height="15" fill="#AA151B"/><rect y="3.75" width="22" height="7.5" fill="#F1BF00"/></svg></sc-if><sc-if value="{{l.flagEN}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Inglés" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Idioma plataforma solicitud info</title><rect width="22" height="15" fill="#fff"/><rect y="0.000" width="22" height="1.1538" fill="#B22234"/><rect y="2.308" width="22" height="1.1538" fill="#B22234"/><rect y="4.615" width="22" height="1.1538" fill="#B22234"/><rect y="6.923" width="22" height="1.1538" fill="#B22234"/><rect y="9.231" width="22" height="1.1538" fill="#B22234"/><rect y="11.538" width="22" height="1.1538" fill="#B22234"/><rect y="13.846" width="22" height="1.1538" fill="#B22234"/><rect width="9.2" height="8.08" fill="#3C3B6E"/></svg></sc-if><sc-if value="{{l.idiOther}}" hint-placeholder-val="{{false}}"><span class="mono" style="font-size:12px;color:var(--mut)">{{l.idiTxt}}</span></sc-if>
+                  <sc-if value="{{l.isHot}}" hint-placeholder-val="{{false}}"><span onClick="{{l.onUnhot}}" title="Muy interesado, priorizar" aria-label="Muy interesado, priorizar" style="color:#D98200;font-weight:900;font-size:20px;line-height:1;cursor:pointer;margin-right:4px">*</span></sc-if><span class="hov" tabindex="0"><span style="{{l.nameStyle}};border-bottom:1px dotted var(--mut)">{{l.name}}</span> <span class="mono" style="color:var(--mut);font-size:12px">{{l.pais}}</span> <sc-if value="{{l.isReact}}" hint-placeholder-val="{{false}}"><span class="chip" style="background:#EFE9FF;color:#5B3FC4">Reactivado</span></sc-if> <sc-if value="{{l.flagES}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Español" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Idioma plataforma solicitud info</title><rect width="22" height="15" fill="#AA151B"/><rect y="3.75" width="22" height="7.5" fill="#F1BF00"/></svg></sc-if><sc-if value="{{l.flagEN}}" hint-placeholder-val="{{false}}"><svg width="22" height="15" viewBox="0 0 22 15" role="img" aria-label="Inglés" style="border-radius:2px;vertical-align:-3px;box-shadow:0 0 0 1px rgba(0,0,0,.15)"><title>Idioma plataforma solicitud info</title><rect width="22" height="15" fill="#fff"/><rect y="0.000" width="22" height="1.1538" fill="#B22234"/><rect y="2.308" width="22" height="1.1538" fill="#B22234"/><rect y="4.615" width="22" height="1.1538" fill="#B22234"/><rect y="6.923" width="22" height="1.1538" fill="#B22234"/><rect y="9.231" width="22" height="1.1538" fill="#B22234"/><rect y="11.538" width="22" height="1.1538" fill="#B22234"/><rect y="13.846" width="22" height="1.1538" fill="#B22234"/><rect width="9.2" height="8.08" fill="#3C3B6E"/></svg></sc-if><sc-if value="{{l.idiOther}}" hint-placeholder-val="{{false}}"><span class="mono" style="font-size:12px;color:var(--mut)">{{l.idiTxt}}</span></sc-if>
                     <span class="pop">
                       <span style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="lbl">Teléfono</span><br><span class="mono" style="user-select:all;font-size:13px;color:var(--ink)">{{l.tel}}</span></span><button onClick="{{l.copyTel}}" title="Copiar teléfono" aria-label="Copiar teléfono" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
                       <span style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><span class="lbl">Email</span><br><span class="mono" style="user-select:all;font-size:13px;color:var(--ink)">{{l.email}}</span></span><button onClick="{{l.copyEmail}}" title="Copiar correo" aria-label="Copiar correo" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></span>
@@ -1576,7 +1576,7 @@ class Component extends DCLogic {
     const NOW = new Date(); const NOWT = NOW.getTime(); const todayTxt = NOW.toLocaleDateString('es-ES');
     const mktBg = this.props.mktBg || '#ECE6FC';
     const eff = (l) => s.estados[l.id] || l.estado;
-    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', gest:a.gest || '', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual, idioma:a.idioma || '', origen:a.origen || 'Nuevo'})).concat(LEADS);
+    const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', gest:a.gest || '', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual, idioma:a.idioma || '', origen:a.origen || 'Nuevo', hot:!!a.hot})).concat(LEADS);
     const noteOf = (id, def) => (s.notes[id] !== undefined ? s.notes[id] : def);
     const setNote = (id, v) => { const n = Object.assign({}, s.notes); n[id] = v; set({notes:n}); };
     const priceOf = (id, seedHab, seedDto, seedPar, seedIni, seedTipo) => {
@@ -1866,11 +1866,11 @@ class Component extends DCLogic {
       const nNew = s.drop.rows.filter(r => !r.dupe).length;
       const nDup = s.drop.rows.length - nNew;
       drop = {
-        rows:s.drop.rows.map(r => ({...idiV(r.idioma), name:r.name, pais:r.pais, estado:r.estado || 'No contactado', src:r.src, result:r.dupe ? 'Duplicado · se omite' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
+        rows:s.drop.rows.map(r => ({...idiV(r.idioma), name:r.name, pais:r.pais, estado:r.estado || 'No contactado', src:r.src, result:r.dupe ? 'Duplicado · se marca muy interesado' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
         summary:nNew + ' nuevos · ' + nDup + ' duplicados',
-        note:(s.drop.excel ? dropCnt : '') + (s.drop.excel ? 'Se comparan por email y por nombre con los leads ya cargados: los duplicados se omiten. Comprueba que el estado se ha leído bien antes de añadir.' : 'Se crea un lead por archivo, con el nombre del archivo.'),
-        none:nNew === 0, btnLabel:nNew === 0 ? 'No hay casos nuevos' : 'Añadir ' + nNew + (nNew === 1 ? ' lead nuevo' : ' leads nuevos'),
-        btnStyle:'border:0;border-radius:10px;padding:11px 18px;font-weight:800;font-size:14px;background:' + (nNew === 0 ? '#D7DCF5' : ACC.mkt) + ';color:' + (nNew === 0 ? '#5A6393' : '#FFFFFF')
+        note:(s.drop.excel ? dropCnt : '') + (s.drop.excel ? 'Se comparan por email y por nombre con los leads ya cargados: los duplicados no crean fila: el lead existente se marca como «muy interesado» y sube al principio. Comprueba que el estado se ha leído bien antes de añadir.' : 'Se crea un lead por archivo, con el nombre del archivo.'),
+        none:nNew === 0 && nDup === 0, btnLabel:(nNew === 0 && nDup === 0) ? 'No hay casos nuevos' : (nNew ? 'Añadir ' + nNew + (nNew === 1 ? ' lead nuevo' : ' leads nuevos') : '') + (nNew && nDup ? ' y ' : '') + (nDup ? (nNew ? '' : 'Marcar ') + nDup + (nDup === 1 ? ' duplicado' : ' duplicados') + (nNew ? '' : ' como muy interesados') : ''),
+        btnStyle:'border:0;border-radius:10px;padding:11px 18px;font-weight:800;font-size:14px;background:' + (nNew === 0 && nDup === 0 ? '#D7DCF5' : ACC.mkt) + ';color:' + (nNew === 0 && nDup === 0 ? '#5A6393' : '#FFFFFF')
       };
     }
     if (!drop) drop = {rows:[], summary:'', note:'', none:true, btnLabel:'', btnStyle:''};
@@ -1977,7 +1977,8 @@ class Component extends DCLogic {
         onEmail:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {email:e.target.value.trim()}) : x)}),
         last:noteOf(l.id, l.last), onLast:(e) => setNote(l.id, e.target.value),
         mora:false, moraAmt:'', hasMod:hmN(l.id) > 0, modN:hmN(l.id), hasClaim:!!openClaimOf(l.id), ...idiV(l.idioma), isReact:l.origen === 'Reactivado', nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
-        rowStyle:cur === 'Aceptado' ? 'background:#F0FAF4' : (l.isNew ? 'background:#F5F1FE' : ''),
+        isHot:!!l.hot, onUnhot:() => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {hot:false}) : x)}),
+        rowStyle:l.hot ? 'background:#FFF0C2;box-shadow:inset 4px 0 0 #E8A100' : cur === 'Aceptado' ? 'background:#F0FAF4' : (l.isNew ? 'background:#F5F1FE' : ''),
         estOpts:ESTADOS.map(e => ({v:e, label:e, sel:cur === e})),
         estStyle:'font-weight:700;color:' + EST_COL[cur][1] + ';background:' + EST_COL[cur][0] + ';border-color:' + EST_COL[cur][1],
         onEstado:(ev) => {
@@ -2563,13 +2564,18 @@ class Component extends DCLogic {
       setOrigNuevo:() => set({dropOrigen:'Nuevo'}), setOrigReact:() => set({dropOrigen:'Reactivado'}),
       confirmDrop:() => {
         if (!s.drop) return;
-        const fr = s.drop.rows.filter(r => !r.dupe);
-        if (!fr.length) return;
+        const fr = s.drop.rows.filter(r => !r.dupe), dp = s.drop.rows.filter(r => r.dupe);
+        if (!fr.length && !dp.length) return;
         const gg = assignGest(s.added, fr);
         const add = fr.map((r,i) => ({id:'a' + (s.nextId + i), full:r.full, name:r.name, pais:r.pais, src:r.src, fecha:r.fecha || new Date().toLocaleDateString('es-ES'), tel:r.tel || '', email:r.email || '', asesor:r.asesor || '', estado:r.estado || '', last:r.last || '', idioma:r.idioma || '', origen:r.origen || s.dropOrigen || 'Nuevo', gest:gg[i]}));
+        const hotIds = {};
+        dp.forEach(r => { const kn = (r.full || '').toLowerCase(), ke = (r.email || '').toLowerCase(); const m = add.concat(s.added).filter(x => (ke && (x.email || '').toLowerCase() === ke) || (x.full || '').toLowerCase() === kn)[0]; if (m) hotIds[m.id] = 1; });
+        const all = add.concat(s.added).map(x => hotIds[x.id] ? Object.assign({}, x, {hot:true}) : x);
+        const ordered = all.filter(x => hotIds[x.id]).concat(all.filter(x => !hotIds[x.id]));
+        const nHot = Object.keys(hotIds).length;
         set({
-          dropOrigen:'Nuevo', added:add.concat(s.added), nextId:s.nextId + fr.length, drop:null,
-          msg:fr.length + (fr.length === 1 ? ' lead añadido' : ' leads añadidos') + ' en Admisiones. Los leads ya cargados no se han modificado.'
+          dropOrigen:'Nuevo', added:ordered, nextId:s.nextId + fr.length, drop:null,
+          msg:(fr.length ? fr.length + (fr.length === 1 ? ' lead añadido' : ' leads añadidos') + ' en Admisiones. ' : '') + (nHot ? nHot + (nHot === 1 ? ' lead repetido' : ' leads repetidos') + ' marcado' + (nHot === 1 ? '' : 's') + ' como «muy interesado» y subido' + (nHot === 1 ? '' : 's') + ' al principio (no se duplican filas).' : 'Los leads ya cargados no se han modificado.')
         });
       },
       addedCount:s.added.length,
