@@ -125,12 +125,15 @@ body{background:
 
 /* tabla */
 .tw{overflow-x:auto;border:1px solid var(--gl);border-radius:6px;background:rgba(3,21,20,.55)}
-.tbl{width:100%;border-collapse:collapse;min-width:760px}
+.tbl{width:100%;border-collapse:collapse;min-width:860px}
 .tbl th{background:linear-gradient(180deg,#14584f,#0b3a36);color:var(--g4);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;padding:12px 8px;text-align:center;border-bottom:2px solid var(--g3)}
 th.h-x{width:36px}
-th.h-m{width:124px;text-align:left;padding-left:16px}
+th.h-o{width:92px;line-height:1.3}
+th.h-t .splitb{display:block;margin:4px auto 0;background:rgba(240,199,90,.15);border:1px solid var(--g4);color:var(--g4);font-size:9px;letter-spacing:.6px;padding:2px 6px;border-radius:4px;cursor:pointer;font-family:inherit;text-transform:none}
+th.h-t small,th.h-o small{display:block;font-size:9px;letter-spacing:1px;color:var(--g5)}
+th.h-m{width:136px;min-width:136px;text-align:left;padding-left:16px}
 th.h-n{background:linear-gradient(135deg,var(--g5),var(--g3));color:#2a1d00}
-th.h-e{text-align:left;padding-left:12px;min-width:200px;width:36%}
+th.h-e{text-align:left;padding-left:12px;min-width:180px;width:28%}
 th.h-a{width:100px;padding:10px 4px;white-space:normal;line-height:1.35;font-size:9px;letter-spacing:.8px}
 .tbl td{padding:0;border-top:1px solid rgba(88,181,168,.14);background:transparent;vertical-align:middle}
 .tbl tbody tr:hover td:not(.netasc){background:rgba(88,181,168,.08)}
@@ -293,7 +296,7 @@ function num(v){ var t = String(v == null ? '' : v).trim().replace(',', '.'); if
 function seed(){ return []; }
 
 /* ============ PERSISTENCIA ============ */
-var APP_VER = 'v12';
+var APP_VER = 'v13';
 function setStatus(txt, cls){ var s = document.getElementById('status'); s.textContent = txt + ' · ' + APP_VER; s.className = 'status mono ' + (cls || ''); }
 function uiDlg(msg, opts, cb){
   var old = document.getElementById('dlg'); if (old) old.parentNode.removeChild(old);
@@ -441,9 +444,12 @@ function migrate(){
     if (/^\s*(pre-?\s*reuni[oó]n|resumen semanal)/i.test(p.title || '')){ p.title = DEFAULT_TITLE; dirty[p.id] = true; ch = true; }
     if (!p.conv){ p.conv = BASE_CONVS[0]; dirty[p.id] = true; ch = true; }
     if (!p.rows) p.rows = [];
+    if (!p.splitO && p.rows.some(function(r){ return String(r.obj2 || '').trim() !== ''; })){ p.splitO = true; dirty[p.id] = true; ch = true; }
+    if (!p.splitM && p.rows.some(function(r){ return String(r.matris2 || '').trim() !== ''; })){ p.splitM = true; dirty[p.id] = true; ch = true; }
     if (!p.tareas) p.tareas = [];
     for (j = 0; j < p.rows.length; j++){ if (p.rows[j].pasamos == null) p.rows[j].pasamos = ''; if (p.rows[j].arrastre == null) p.rows[j].arrastre = ''; }
     if (tidyBrands(p)){ dirty[p.id] = true; ch = true; }
+    if (!/prueba/i.test(p.title || '') && ucmaFill(p)){ dirty[p.id] = true; ch = true; }
   }
   if (ch) scheduleSave();
 }
@@ -634,7 +640,8 @@ function renderMain(){
        '<span class="navhint">' + (idx + 1) + ' de ' + all.length + ' resúmenes</span></div>';
 
   var sm = semOf(p), mtop = mon;
-  if (sm && p.semMes && !/^mes/i.test(p.semMes)) mtop = p.semMes.slice(0, 3).toUpperCase();
+  var smes = semMesOf(p);
+  if (sm && smes && !/^mes/i.test(smes)) mtop = smes.slice(0, 3).toUpperCase();
   h += '<div class="head"><div class="cal"><div class="cm">' + esc(mtop) + '</div><div class="cd">' + (sm ? esc(sm) : d.getDate()) + '</div><div class="cw">' + (sm ? esc(d.getDate() + ' ' + d.toLocaleDateString('es-ES', { month:'short' }).replace('.', '')) : esc(wd)) + '</div></div>';
   h += '<div class="ht"><input class="title-in" value="' + esc(p.title) + '" oninput="setField(\'title\',this.value)">' +
        '<div class="meta"><span>Fecha:</span><input type="date" value="' + esc(p.date) + '" onchange="setDate(this.value)"></div></div>';
@@ -643,7 +650,7 @@ function renderMain(){
        '<button class="btn dng" onclick="delPage()">🗑 Eliminar</button></div></div>';
 
   h += '<div class="h2 hl1">Puntos más importantes</div>';
-  h += '<div class="tw"><table class="tbl"><thead><tr><th class="h-x"></th><th class="h-m">Marca</th><th class="h-o">Objetivo</th><th class="h-t">Matris</th><th class="h-b">Bajas+CE</th><th class="h-p">Pasamos</th><th class="h-n">Netas</th><th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr></thead><tbody id="tb"></tbody></table></div>';
+  h += '<div class="tw"><table class="tbl"><thead>' + theadHtml(p) + '</thead><tbody id="tb"></tbody></table></div>';
   h += '<div class="rowbtns"><button class="addrow" onclick="addRow()">＋ Añadir marca</button><span id="pubwrap">' + pubBtnHtml(p) + '</span></div>';
 
   h += '<div class="two"><div>';
@@ -660,8 +667,10 @@ function renderMain(){
 }
 
 /* ============ TABLA ============ */
+function sum2(a, b){ var x = num(a), y = num(b); return (x == null && y == null) ? null : (x || 0) + (y || 0); }
+function matSum(r){ return sum2(r.matris, r.matris2); }
 function netasVal(r){
-  var m = num(r.matris), p = num(r.pasamos);
+  var m = matSum(r), p = num(r.pasamos);
   return (m != null && p != null) ? m - p : null;
 }
 function arrVal(r){
@@ -677,6 +686,17 @@ function netasText(r){
 }
 function cls(n){ return n == null ? '' : (n > 0 ? 'pos' : (n < 0 ? 'neg' : '')); }
 
+/* columnas visibles: Objetivo y Matris pueden ir en dos (Abril / Octubre) solo en los meses que lo necesitan */
+function nCols(p){ return (p.splitO ? 2 : 1) + (p.splitM ? 2 : 1) + 3; }
+function theadHtml(p){
+  var h = '<tr><th class="h-x"></th><th class="h-m">Marca</th>';
+  if (p.splitO) h += '<th class="h-o">Objetivo<small>Abril</small></th><th class="h-o">Objetivo<small>Octubre</small></th>';
+  else h += '<th class="h-o">Objetivo</th>';
+  if (p.splitM) h += '<th class="h-t">Matris<small>Abril</small></th><th class="h-t">Matris<small>Octubre</small><button class="splitb" title="Volver a una sola columna" onclick="toggleSplitM()">\u21a9 unir</button></th>';
+  else h += '<th class="h-t">Matris<button class="splitb" title="Separar en Abril / Octubre" onclick="toggleSplitM()">\u21c6 dividir</button></th>';
+  return h + '<th class="h-b">Bajas+CE</th><th class="h-p">Pasamos</th><th class="h-n">Netas</th><th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr>';
+}
+function numCell(i, k, r, cl){ return '<td class="num ' + cl + '"><input value="' + esc(r[k] == null ? '' : r[k]) + '" oninput="setRow(' + i + ',\'' + k + '\',this.value)"></td>'; }
 function renderRows(){
   var p = getPage(curId); if (!p) return;
   var h = '';
@@ -685,9 +705,9 @@ function renderRows(){
     h += '<tr class="dr">' +
       '<td class="star"><button class="starb' + (r.star ? ' on' : '') + '" title="Destacar" onclick="toggleStar(' + i + ')">★</button></td>' +
       '<td class="brand b-' + normBrand(r.marca) + '"><input value="' + esc(r.marca) + '" oninput="setRow(' + i + ',\'marca\',this.value);brandTint(this)"></td>' +
-      '<td class="num c-o"><input value="' + esc(r.obj) + '" oninput="setRow(' + i + ',\'obj\',this.value)"></td>' +
-      '<td class="num c-t"><input value="' + esc(r.matris) + '" oninput="setRow(' + i + ',\'matris\',this.value)"></td>' +
-      '<td class="num c-b"><input value="' + esc(r.bajas) + '" oninput="setRow(' + i + ',\'bajas\',this.value)"></td>' +
+      numCell(i, 'obj', r, 'c-o') + (p.splitO ? numCell(i, 'obj2', r, 'c-o') : '') +
+      numCell(i, 'matris', r, 'c-t') + (p.splitM ? numCell(i, 'matris2', r, 'c-t') : '') +
+      numCell(i, 'bajas', r, 'c-b') +
       '<td class="num c-p' + (String(r.pasamos).trim() === '' ? ' falta' : '') + '"><input value="' + esc(r.pasamos) + '" oninput="setRow(' + i + ',\'pasamos\',this.value)"></td>' +
       '<td class="netasc ' + cls(netasVal(r)) + '">' + esc(netasText(r)) + '</td>' +
       '<td class="c-e"><input value="' + esc(r.nota) + '" placeholder="Decisión / comentario…" oninput="setRow(' + i + ',\'nota\',this.value)"></td>' +
@@ -699,24 +719,35 @@ function renderRows(){
 }
 /* subtotal OBS + UCMA-OBS (línea fina amarilla bajo UCMA-OBS) */
 function subVals(p){
-  var o = null, m = null, b = null, pa = null, n = null;
+  var t = { obj:null, obj2:null, matris:null, matris2:null, bajas:null, pasamos:null, netas:null }, ks = ['obj','obj2','matris','matris2','bajas','pasamos'], q;
   function add(a, v){ return v == null ? a : (a == null ? v : a + v); }
   for (var i = 0; i < p.rows.length; i++){
     var r = p.rows[i], k = normBrand(r.marca);
     if (k !== 'OBS' && k !== 'UCMAOBS') continue;
-    o = add(o, num(r.obj)); m = add(m, num(r.matris)); b = add(b, num(r.bajas)); pa = add(pa, num(r.pasamos)); n = add(n, netasVal(r));
+    for (q = 0; q < ks.length; q++) t[ks[q]] = add(t[ks[q]], num(r[ks[q]]));
+    t.netas = add(t.netas, netasVal(r));
   }
-  return [o, m, b, pa, n].map(function(v){ return v == null ? '' : String(Math.round(v * 100) / 100); });
+  var cols = ['obj'].concat(p.splitO ? ['obj2'] : [], ['matris'], p.splitM ? ['matris2'] : [], ['bajas','pasamos','netas']);
+  return cols.map(function(c){ return t[c] == null ? '' : String(Math.round(t[c] * 100) / 100); });
 }
 function subRowHtml(p){
-  var v = subVals(p);
-  return '<tr class="subtot"><td></td><td class="stl">Total</td><td>' + v[0] + '</td><td>' + v[1] + '</td><td>' + v[2] + '</td><td>' + v[3] + '</td><td>' + v[4] + '</td><td></td><td></td></tr>';
+  var v = subVals(p), h = '<tr class="subtot"><td></td><td class="stl">Total</td>';
+  for (var i = 0; i < v.length; i++) h += '<td>' + v[i] + '</td>';
+  return h + '<td></td><td></td></tr>';
 }
 function refreshSub(){
   var p = getPage(curId); if (!p) return;
   var tr = document.querySelector('#tb tr.subtot'); if (!tr) return;
   var v = subVals(p), tds = tr.getElementsByTagName('td');
-  for (var i = 0; i < 5; i++) tds[i + 2].textContent = v[i];
+  for (var i = 0; i < v.length; i++) tds[i + 2].textContent = v[i];
+}
+function toggleSplitM(){
+  var p = getPage(curId); if (!p) return;
+  if (p.splitM){
+    p.rows.forEach(function(r){ var m = matSum(r); r.matris = m == null ? '' : String(m); r.matris2 = ''; });
+    p.splitM = false;
+  } else { p.splitM = true; p.rows.forEach(function(r){ if (r.matris2 == null) r.matris2 = ''; }); }
+  scheduleSave(p.id); renderMain();
 }
 function brandTint(inp){ inp.parentNode.className = 'brand b-' + normBrand(inp.value); }
 function refreshNetas(){
@@ -748,9 +779,9 @@ function renderTasks(){
 /* ============ ACCIONES ============ */
 function setField(k, v){ var p = getPage(curId); if (!p) return; p[k] = v; scheduleSave(p.id); if (k === 'title') renderSideSoft(); }
 function renderSideSoft(){ clearTimeout(renderSideSoft.t); renderSideSoft.t = setTimeout(renderSide, 300); }
-function setRow(i, k, v){ var p = getPage(curId); if (!p) return; p.rows[i][k] = v; scheduleSave(p.id); if (k === 'matris' || k === 'pasamos') refreshNetas(); if (k === 'obj' || k === 'matris' || k === 'bajas' || k === 'pasamos' || k === 'marca') refreshSub(); if (k === 'pasamos'){ var cs = document.querySelectorAll('td.c-p'); if (cs[i]) cs[i].classList.toggle('falta', String(v).trim() === ''); } }
+function setRow(i, k, v){ var p = getPage(curId); if (!p) return; p.rows[i][k] = v; scheduleSave(p.id); if (k === 'matris' || k === 'matris2' || k === 'pasamos') refreshNetas(); if (k === 'obj' || k === 'obj2' || k === 'matris' || k === 'matris2' || k === 'bajas' || k === 'pasamos' || k === 'marca') refreshSub(); if (k === 'pasamos'){ var cs = document.querySelectorAll('td.c-p'); if (cs[i]) cs[i].classList.toggle('falta', String(v).trim() === ''); } }
 function toggleStar(i){ var p = getPage(curId); p.rows[i].star = !p.rows[i].star; scheduleSave(p.id); renderRows(); }
-function addRow(){ var p = getPage(curId); p.rows.push({ marca:'', obj:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false }); scheduleSave(p.id); renderRows(); }
+function addRow(){ var p = getPage(curId); p.rows.push({ marca:'', obj:'', obj2:'', matris:'', matris2:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false }); scheduleSave(p.id); renderRows(); }
 function delRow(i){ var p = getPage(curId); p.rows.splice(i, 1); scheduleSave(p.id); renderRows(); }
 function addTask(){ var p = getPage(curId); p.tareas.push({ t:'', done:false }); scheduleSave(p.id); renderTasks(); renderSide(); }
 function delTask(i){ var p = getPage(curId); p.tareas.splice(i, 1); scheduleSave(p.id); renderTasks(); renderSide(); }
@@ -775,10 +806,11 @@ function buildPage(iso, conv){
   }
   var rows = [];
   if (prevSame){
-    for (i = 0; i < prevSame.rows.length; i++) rows.push({ marca: prevSame.rows[i].marca, obj: '', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
+    for (i = 0; i < prevSame.rows.length; i++) rows.push({ marca: prevSame.rows[i].marca, obj: '', obj2: '', matris2:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   } else {
-    for (i = 0; i < DEFAULT_BRANDS.length; i++) rows.push({ marca: DEFAULT_BRANDS[i], obj:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
+    for (i = 0; i < DEFAULT_BRANDS.length; i++) rows.push({ marca: DEFAULT_BRANDS[i], obj:'', obj2:'', matris:'', matris2:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   }
+  ucmaFill({ date: iso, rows: rows });
   var pend = [], pp = prevSame || prevAny;
   if (pp){ for (i = 0; i < pp.tareas.length; i++){ if (!pp.tareas[i].done) pend.push({ t: pp.tareas[i].t, done:false }); } }
   return { id: uid(), conv: conv, date: iso, title: DEFAULT_TITLE, rows: rows, puntos:'', tareas: pend, updated: Date.now() };
@@ -839,7 +871,26 @@ function numSnap(v){
   if (!/^-?\d+(\.\d+)?$/.test(t)) return '';
   return String(Math.round(Number(t)));
 }
-function snapRows(p){ return p.rows.map(function(r){ return { marca:r.marca, obj:numSnap(r.obj), matris:numSnap(r.matris), bajas:numSnap(r.bajas), pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r) }; }); }
+function objTotal(r){
+  var a = numSnap(r.obj), b = numSnap(r.obj2);
+  if (a === '' && b === '') return '';
+  return String(Number(a || 0) + Number(b || 0));
+}
+function sumSnap(a, b){
+  var x = numSnap(a), y = numSnap(b);
+  if (x === '' && y === '') return '';
+  return String(Number(x || 0) + Number(y || 0));
+}
+function partTxt(split, a, b, tot){
+  if (!split) return tot;
+  var x = numSnap(a), y = numSnap(b);
+  if (x === '' && y === '') return '';
+  return (x || '0') + ' Abr / ' + (y || '0') + ' Oct';
+}
+function snapRows(p){ return p.rows.map(function(r){
+  var obj = sumSnap(r.obj, r.obj2), mat = sumSnap(r.matris, r.matris2);
+  return { marca:r.marca, obj:obj, matris:mat, bajas:numSnap(r.bajas), pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r), objTxt:partTxt(p.splitO, r.obj, r.obj2, obj), matTxt:partTxt(p.splitM, r.matris, r.matris2, mat) };
+}); }
 function adoptPasamos(p, sn){
   for (var i = 0; i < p.rows.length && i < sn.rows.length; i++){
     if (String(sn.rows[i].marca) === String(p.rows[i].marca)) {
@@ -852,7 +903,7 @@ function adoptPasamos(p, sn){
 /* copia la tabla como tabla real (HTML) para pegarla en Teams */
 function fotoCierre(){
   var p = getPage(curId); if (!p) return;
-  var cols = ['Marca','Objetivo','Matris','Bajas+CE','Pasamos','Netas','Esteban','Arrastramos para próxima semana'];
+  var cols = ['Marca'].concat(p.splitO ? ['Objetivo Abril','Objetivo Octubre'] : ['Objetivo'], p.splitM ? ['Matris Abril','Matris Octubre'] : ['Matris'], ['Bajas+CE','Pasamos','Netas','Esteban','Arrastramos para próxima semana']);
   var th = 'padding:8px 12px;background:#0a3532;color:#fbe39b;border:1px solid #11504a;font-family:Segoe UI,Arial,sans-serif;font-size:12px;text-align:center;';
   var td = 'padding:8px 12px;border:1px solid #9bb8b3;font-family:Segoe UI,Arial,sans-serif;font-size:13px;text-align:center;';
   var h = '<table style="border-collapse:collapse"><thead><tr>', t = cols.join('\t') + '\n', i;
@@ -860,10 +911,10 @@ function fotoCierre(){
   h += '</tr></thead><tbody>';
   for (i = 0; i < p.rows.length; i++){
     var r = p.rows[i], vac = String(r.pasamos).trim() === '';
-    var cells = [r.marca, r.obj, r.matris, r.bajas, r.pasamos, netasText(r), r.nota, arrText(r)];
+    var cells = [r.marca, r.obj].concat(p.splitO ? [r.obj2 || ''] : [], [r.matris], p.splitM ? [r.matris2 || ''] : [], [r.bajas, r.pasamos, netasText(r), r.nota, arrText(r)]), pi = 3 + (p.splitO ? 1 : 0) + (p.splitM ? 1 : 0);
     h += '<tr>';
     for (var k = 0; k < cells.length; k++){
-      var st = td + (k === 0 ? 'font-weight:bold;text-align:left;' : '') + (k === 4 && vac ? 'background:#f0c75a;' : '');
+      var st = td + (k === 0 ? 'font-weight:bold;text-align:left;' : '') + (k === pi && vac ? 'background:#f0c75a;' : '');
       h += '<td style="' + st + '">' + (esc(cells[k]) || '&nbsp;') + '</td>';
     }
     h += '</tr>';
@@ -1083,7 +1134,7 @@ function onXlsx(inp){
   files.forEach(function(f){
     var rd = new FileReader();
     rd.onload = function(e){
-      try { res.push(parseCurva(new Uint8Array(e.target.result), f.name)); }
+      try { parseCurva(new Uint8Array(e.target.result), f.name).forEach(function(c){ res.push(c); }); }
       catch(err){ errs.push(f.name + ': ' + err.message); }
       if (--left === 0){ inp.value = ''; applyCurvas(res, errs); }
     };
@@ -1114,37 +1165,58 @@ function brandOfFile(rows, fname){
   }
   return tryTxt(fname);
 }
-/* lee una curva: por cada martes, objetivo semanal (columna Sem del FORECAST) y semana comercial S1..S5 */
+/* lee las curvas: por cada martes, objetivo "1ER SEM" (Abril, conv. 2704) y "2DO SEM" (Octubre, 2710/2709) y semana comercial S1..S5.
+   Acepta también el formato antiguo con una sola columna "Sem". Recorre todas las hojas del archivo. */
 function parseCurva(buf, fname){
-  var wb = XLSX.read(buf, { type:'array' });
-  var ws = wb.Sheets[wb.SheetNames[0]];
-  var rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:'' });
-  var hr = -1, cF = -1, cM = -1, cS = -1, i, j;
-  for (i = 0; i < rows.length && hr < 0; i++){
-    var f = -1, m = -1, sm = -1;
-    for (j = 0; j < rows[i].length; j++){
-      var t = String(rows[i][j]).trim().toLowerCase();
-      if (t === 'fecha' && f < 0) f = j;
-      if (t === 'mes' && m < 0) m = j;
-      if (t === 'sem' && sm < 0) sm = j;
-    }
-    if (f >= 0 && sm >= 0){ hr = i; cF = f; cM = m; cS = sm; }
+  var wb = XLSX.read(buf, { type:'array' }), out = [], lastErr = '', si;
+  for (si = 0; si < wb.SheetNames.length; si++){
+    try { var c = parseSheet(wb.Sheets[wb.SheetNames[si]], wb.SheetNames[si], fname); if (c) out.push(c); }
+    catch(e){ lastErr = e.message; }
   }
-  if (hr < 0) throw new Error('no encuentro las columnas "Fecha" y "Sem"');
-  var brand = brandOfFile(rows, fname);
-  if (!brand) throw new Error('no sé de qué marca es (no aparece OBS, ESDesign o Inesdi en el título ni en el nombre)');
+  if (!out.length) throw new Error(lastErr || 'no encuentro las columnas "Fecha" y "1ER SEM" / "2DO SEM"');
+  return out;
+}
+function hdrKind(v){
+  var t = String(v == null ? '' : v).trim().toLowerCase().replace(/[\s.\u00ba\u00b0]/g, '');
+  if (t === 'fecha') return 'f';
+  if (t === 'mes') return 'm';
+  if (/^1(er|a|\u00aa)?sem/.test(t)) return 's1';
+  if (/^2(do|a|\u00aa|n)?sem/.test(t)) return 's2';
+  if (t === 'sem') return 's';
+  return '';
+}
+function parseSheet(ws, sname, fname){
+  var rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:'' });
+  var hr = -1, cF = -1, cM = -1, c1 = -1, c2 = -1, cS = -1, i, j;
+  for (i = 0; i < rows.length && hr < 0; i++){
+    var f = -1, m = -1, a1 = -1, a2 = -1, sm = -1;
+    for (j = 0; j < rows[i].length; j++){
+      var k = hdrKind(rows[i][j]);
+      if (k === 'f' && f < 0) f = j;
+      if (k === 'm' && m < 0) m = j;
+      if (k === 's1' && a1 < 0) a1 = j;
+      if (k === 's2' && a2 < 0) a2 = j;
+      if (k === 's' && sm < 0) sm = j;
+    }
+    if (f >= 0 && (a1 >= 0 || a2 >= 0 || sm >= 0)){ hr = i; cF = f; cM = m; c1 = a1 >= 0 ? a1 : sm; c2 = a2; }
+  }
+  if (hr < 0) throw new Error('hoja "' + sname + '": no encuentro las columnas "Fecha" y "1ER SEM" / "2DO SEM"');
+  if (cM < 0 && cF > 0) cM = cF - 1;
+  var brand = brandOfFile(rows, sname) || brandOfFile(rows, fname);
+  if (!brand) throw new Error('hoja "' + sname + '": no sé de qué marca es (no aparece OBS, ESDesign, Inesdi ni UCMA)');
   var by = {}, n = 0, mes = '', cnt = 0;
   for (i = hr + 1; i < rows.length; i++){
     var r = rows[i];
-    if (cM >= 0 && typeof r[cM] === 'string' && r[cM].trim()){ mes = r[cM].trim(); cnt = 0; }
+    if (cM >= 0 && typeof r[cM] === 'string' && r[cM].trim() && !xlIso(r[cF])){ /* fila de mes sin fecha */ }
+    if (cM >= 0 && typeof r[cM] === 'string' && r[cM].trim() && !/^(total|suma)/i.test(r[cM].trim())){ var nm = r[cM].trim(); if (nm !== mes){ mes = nm; cnt = 0; } }
     var iso = xlIso(r[cF]);
     if (!iso) continue;
     cnt++;
-    by[iso] = { obj: num(r[cS]), sem: 'S' + cnt, mes: mes };
+    by[iso] = { obj: c1 >= 0 ? num(r[c1]) : null, obj2: c2 >= 0 ? num(r[c2]) : null, sem: 'S' + cnt, mes: mes };
     n++;
   }
-  if (!n) throw new Error('no hay fechas en la columna "Fecha"');
-  return { brand: brand, name: fname, by: by, n: n };
+  if (!n) throw new Error('hoja "' + sname + '": no hay fechas en la columna "Fecha"');
+  return { brand: brand, name: fname + (sname ? ' [' + sname + ']' : ''), by: by, n: n, has2: c2 >= 0 };
 }
 function applyCurvas(res, errs){
   errs = errs || [];
@@ -1153,13 +1225,18 @@ function applyCurvas(res, errs){
   var msg = [], i, j, semSet = null, semBad = false, firstBy = null;
   for (i = 0; i < res.length; i++){
     var c = res[i], e = c.by[p.date];
-    if (c.brand === 'UCMA'){ msg.push('✖ ' + c.name + ': es de UCMA; el objetivo de UCMA-OBS se escribe a mano.'); continue; }
+    if (c.brand === 'UCMA'){ msg.push('✖ ' + c.name + ': es de UCMA; su objetivo ya viene del plan de Altas (se rellena solo).'); continue; }
     if (!firstBy) firstBy = c.by;
     if (!e){ msg.push('✖ ' + c.name + ' (' + c.brand + '): el ' + fmtShort(p.date) + ' no aparece en ese archivo.'); continue; }
-    if (e.obj == null){ msg.push('✖ ' + c.name + ' (' + c.brand + '): la semana ' + e.sem + ' no tiene objetivo en la columna Sem.'); continue; }
+    if (e.obj == null && e.obj2 == null){ msg.push('✖ ' + c.name + ' (' + c.brand + '): la semana ' + e.sem + ' no tiene objetivo.'); continue; }
     var done = false;
     for (j = 0; j < p.rows.length; j++){
-      if (normBrand(p.rows[j].marca) === c.brand){ p.rows[j].obj = String(e.obj); done = true; msg.push('✔ ' + p.rows[j].marca + ' → ' + e.obj + '  (' + e.sem + ')'); }
+      if (normBrand(p.rows[j].marca) === c.brand){
+        p.rows[j].obj = e.obj == null ? '' : String(e.obj);
+        if (c.has2) p.rows[j].obj2 = e.obj2 == null ? '' : String(e.obj2);
+        done = true;
+        msg.push('✔ ' + p.rows[j].marca + ' → Abril ' + (e.obj == null ? '—' : e.obj) + (c.has2 ? ' · Octubre ' + (e.obj2 == null ? '—' : e.obj2) : '') + '  (' + e.sem + ')');
+      }
     }
     if (!done) msg.push('✖ ' + c.name + ': ese resumen no tiene fila de ' + c.brand + '.');
     if (semSet && semSet !== e.sem) semBad = true;
@@ -1173,15 +1250,48 @@ function applyCurvas(res, errs){
       if (ee && (q.sem !== ee.sem || q.semMes !== ee.mes)){ q.sem = ee.sem; q.semMes = ee.mes; dirty[q.id] = true; tagged++; }
     }
   }
+  if (res.length){ var anyO2 = p.rows.some(function(r){ return String(r.obj2 || '').trim() !== ''; }); if (anyO2 !== !!p.splitO){ p.splitO = anyO2; msg.push(anyO2 ? 'ℹ Este mes hay objetivos de Abril y de Octubre: he separado la columna Objetivo.' : 'ℹ Este mes no hay objetivos de Octubre: una sola columna de Objetivo.'); } }
+  if (ucmaFill(p)) msg.push('✔ UCMA-OBS → ' + UCMA_PLAN[p.date] + '  (plan de Altas)');
   for (i = 0; i < errs.length; i++) msg.push('✖ ' + errs[i]);
   if (semBad) msg.push('⚠ Los archivos no coinciden en la semana comercial de este martes. Revisa que sean del mismo año.');
   if (tagged || res.length) scheduleSave(p.id);
   renderAll();
   uiAlert((msg.length ? msg.join('\n') : 'No he podido importar nada.'));
 }
-function semOf(p){ return p && p.sem ? p.sem : ''; }
+/* calendario comercial 2026-27 (martes -> mes comercial y semana); los archivos importados mandan sobre esto */
+var CAL = {
+  '2026-10-06':['Octubre','S1'],'2026-10-13':['Octubre','S2'],'2026-10-20':['Octubre','S3'],'2026-10-27':['Octubre','S4'],'2026-11-03':['Octubre','S5'],
+  '2026-11-10':['Noviembre','S1'],'2026-11-17':['Noviembre','S2'],'2026-11-24':['Noviembre','S3'],
+  '2026-12-01':['Diciembre','S1'],'2026-12-08':['Diciembre','S2'],'2026-12-15':['Diciembre','S3'],'2026-12-22':['Diciembre','S4'],
+  '2026-12-29':['Enero','S1'],'2027-01-05':['Enero','S2'],'2027-01-12':['Enero','S3'],'2027-01-19':['Enero','S4'],'2027-01-26':['Enero','S5']
+};
+var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function calOf(iso){
+  if (!iso) return null;
+  if (CAL[iso]) return { mes: CAL[iso][0], sem: CAL[iso][1] };
+  var d = new Date(iso + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  return { mes: MESES[d.getMonth()], sem: 'S' + Math.ceil(d.getDate() / 7) };
+}
+function semOf(p){ if (!p) return ''; if (p.sem) return p.sem; var c = calOf(p.date); return c ? c.sem : ''; }
+function semMesOf(p){ if (!p) return ''; if (p.sem) return p.semMes || ''; var c = calOf(p.date); return c ? c.mes : ''; }
+/* objetivo UCMA-OBS: "Altas" del plan (Nov 16 · Dic 19 · Ene 44) repartidas por semana comercial */
+var UCMA_PLAN = {
+  '2026-11-10':6,'2026-11-17':5,'2026-11-24':5,
+  '2026-12-01':5,'2026-12-08':5,'2026-12-15':5,'2026-12-22':4,
+  '2026-12-29':9,'2027-01-05':9,'2027-01-12':9,'2027-01-19':9,'2027-01-26':8
+};
+function ucmaFill(p){
+  var v = UCMA_PLAN[p.date], ch = false;
+  if (v == null || !p.rows) return false;
+  for (var i = 0; i < p.rows.length; i++){
+    var r = p.rows[i];
+    if (normBrand(r.marca) === 'UCMAOBS' && String(r.obj == null ? '' : r.obj).trim() === '' && String(r.obj2 || '').trim() === ''){ r.obj = String(v); ch = true; }
+  }
+  return ch;
+}
 /* si el título contiene "prueba", la tarjeta de Esteban sale marcada como PRUEBA */
-function semSnap(p){ return /prueba/i.test(p.title || '') ? 'PRUEBA' : (p.sem || ''); }
+function semSnap(p){ return /prueba/i.test(p.title || '') ? 'PRUEBA' : semOf(p); }
 
 load();
 </script>
