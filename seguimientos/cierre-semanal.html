@@ -130,7 +130,7 @@ body{background:
 th.h-x{width:36px}
 th.h-o{width:92px;line-height:1.3}
 th.h-t .splitb{display:block;margin:4px auto 0;background:rgba(240,199,90,.15);border:1px solid var(--g4);color:var(--g4);font-size:9px;letter-spacing:.6px;padding:2px 6px;border-radius:4px;cursor:pointer;font-family:inherit;text-transform:none}
-th.h-t small,th.h-o small{display:block;font-size:9px;letter-spacing:1px;color:var(--g5)}
+th.h-t small,th.h-o small,th.h-b small,th.h-n small{display:block;font-size:9px;letter-spacing:1px;color:var(--g5)}
 th.h-m{width:136px;min-width:136px;text-align:left;padding-left:16px}
 th.h-n{background:linear-gradient(135deg,var(--g5),var(--g3));color:#2a1d00}
 th.h-e{text-align:left;padding-left:12px;min-width:180px;width:28%}
@@ -445,7 +445,7 @@ function migrate(){
     if (!p.conv){ p.conv = BASE_CONVS[0]; dirty[p.id] = true; ch = true; }
     if (!p.rows) p.rows = [];
     if (!p.splitO && p.rows.some(function(r){ return String(r.obj2 || '').trim() !== ''; })){ p.splitO = true; dirty[p.id] = true; ch = true; }
-    if (!p.splitM && p.rows.some(function(r){ return String(r.matris2 || '').trim() !== ''; })){ p.splitM = true; dirty[p.id] = true; ch = true; }
+    if (!p.splitM && p.rows.some(function(r){ return String(r.matris2 || '').trim() !== '' || String(r.bajas2 || '').trim() !== ''; })){ p.splitM = true; dirty[p.id] = true; ch = true; }
     if (!p.tareas) p.tareas = [];
     for (j = 0; j < p.rows.length; j++){ if (p.rows[j].pasamos == null) p.rows[j].pasamos = ''; if (p.rows[j].arrastre == null) p.rows[j].arrastre = ''; }
     if (tidyBrands(p)){ dirty[p.id] = true; ch = true; }
@@ -668,13 +668,22 @@ function renderMain(){
 
 /* ============ TABLA ============ */
 function sum2(a, b){ var x = num(a), y = num(b); return (x == null && y == null) ? null : (x || 0) + (y || 0); }
+function bajSum(r){ return sum2(r.bajas, r.bajas2); }
 function matSum(r){ return sum2(r.matris, r.matris2); }
+/* convocatoria a la que se descuentan los Pasamos (bajas): la siguiente según el mes del cierre. Nov-Abr -> Abril; May-Oct -> Octubre */
+function targetConv(p){ var m = new Date(p.date + 'T00:00:00').getMonth() + 1; return (m >= 11 || m <= 4) ? 'A' : 'O'; }
+function netasPart(p, r, w){
+  var m = num(w === 'A' ? r.matris : r.matris2); if (m == null) return null;
+  if (targetConv(p) !== w) return m;
+  var pa = num(r.pasamos); return pa == null ? null : m - pa;
+}
+function netasPartText(p, r, w){ var v = netasPart(p, r, w); return v == null ? '' : String(Math.round(v * 100) / 100); }
 function netasVal(r){
   var m = matSum(r), p = num(r.pasamos);
   return (m != null && p != null) ? m - p : null;
 }
 function arrVal(r){
-  var b = num(r.bajas), p = num(r.pasamos);
+  var b = bajSum(r), p = num(r.pasamos);
   return (b != null && p != null) ? b - p : null;
 }
 function arrText(r){ var v = arrVal(r); return v == null ? '' : String(v); }
@@ -694,9 +703,16 @@ function theadHtml(p){
   else h += '<th class="h-o">Objetivo</th>';
   if (p.splitM) h += '<th class="h-t">Matris<small>Abril</small></th><th class="h-t">Matris<small>Octubre</small><button class="splitb" title="Volver a una sola columna" onclick="toggleSplitM()">\u21a9 unir</button></th>';
   else h += '<th class="h-t">Matris<button class="splitb" title="Separar en Abril / Octubre" onclick="toggleSplitM()">\u21c6 dividir</button></th>';
-  return h + '<th class="h-b">Bajas+CE</th><th class="h-p">Pasamos</th><th class="h-n">Netas</th><th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr>';
+  if (p.splitM) h += '<th class="h-b">Bajas+CE<small>Abril</small></th><th class="h-b">Bajas+CE<small>Octubre</small></th>';
+  else h += '<th class="h-b">Bajas+CE</th>';
+  return h + '<th class="h-p">Pasamos</th>' + (p.splitM ? '<th class="h-n" title="' + (targetConv(p) === 'A' ? 'Los Pasamos se descuentan de Abril' : '') + '">Netas<small>Abril' + (targetConv(p) === 'A' ? ' ◂' : '') + '</small></th><th class="h-n" title="' + (targetConv(p) === 'O' ? 'Los Pasamos se descuentan de Octubre' : '') + '">Netas<small>Octubre' + (targetConv(p) === 'O' ? ' ◂' : '') + '</small></th>' : '<th class="h-n">Netas</th>') + '<th class="h-e">Esteban</th><th class="h-a">Arrastramos para próxima semana</th></tr>';
 }
 function numCell(i, k, r, cl){ return '<td class="num ' + cl + '"><input value="' + esc(r[k] == null ? '' : r[k]) + '" oninput="setRow(' + i + ',\'' + k + '\',this.value)"></td>'; }
+function netasCells(p, r){
+  if (!p.splitM) return '<td class="netasc ' + cls(netasVal(r)) + '">' + esc(netasText(r)) + '</td>';
+  var a = netasPart(p, r, 'A'), o = netasPart(p, r, 'O');
+  return '<td class="netasc ' + cls(a) + '">' + esc(netasPartText(p, r, 'A')) + '</td><td class="netasc ' + cls(o) + '">' + esc(netasPartText(p, r, 'O')) + '</td>';
+}
 function renderRows(){
   var p = getPage(curId); if (!p) return;
   var h = '';
@@ -707,9 +723,9 @@ function renderRows(){
       '<td class="brand b-' + normBrand(r.marca) + '"><input value="' + esc(r.marca) + '" oninput="setRow(' + i + ',\'marca\',this.value);brandTint(this)"></td>' +
       numCell(i, 'obj', r, 'c-o') + (p.splitO ? numCell(i, 'obj2', r, 'c-o') : '') +
       numCell(i, 'matris', r, 'c-t') + (p.splitM ? numCell(i, 'matris2', r, 'c-t') : '') +
-      numCell(i, 'bajas', r, 'c-b') +
+      numCell(i, 'bajas', r, 'c-b') + (p.splitM ? numCell(i, 'bajas2', r, 'c-b') : '') +
       '<td class="num c-p' + (String(r.pasamos).trim() === '' ? ' falta' : '') + '"><input value="' + esc(r.pasamos) + '" oninput="setRow(' + i + ',\'pasamos\',this.value)"></td>' +
-      '<td class="netasc ' + cls(netasVal(r)) + '">' + esc(netasText(r)) + '</td>' +
+      netasCells(p, r) +
       '<td class="c-e"><input value="' + esc(r.nota) + '" placeholder="Decisión / comentario…" oninput="setRow(' + i + ',\'nota\',this.value)"></td>' +
       '<td class="arrc ' + cls(arrVal(r)) + '">' + esc(arrText(r)) + '</td>' +
       '</tr>';
@@ -719,15 +735,15 @@ function renderRows(){
 }
 /* subtotal OBS + UCMA-OBS (línea fina amarilla bajo UCMA-OBS) */
 function subVals(p){
-  var t = { obj:null, obj2:null, matris:null, matris2:null, bajas:null, pasamos:null, netas:null }, ks = ['obj','obj2','matris','matris2','bajas','pasamos'], q;
+  var t = { obj:null, obj2:null, matris:null, matris2:null, bajas:null, bajas2:null, pasamos:null, netas:null, netasA:null, netasO:null }, ks = ['obj','obj2','matris','matris2','bajas','bajas2','pasamos'], q;
   function add(a, v){ return v == null ? a : (a == null ? v : a + v); }
   for (var i = 0; i < p.rows.length; i++){
     var r = p.rows[i], k = normBrand(r.marca);
     if (k !== 'OBS' && k !== 'UCMAOBS') continue;
     for (q = 0; q < ks.length; q++) t[ks[q]] = add(t[ks[q]], num(r[ks[q]]));
-    t.netas = add(t.netas, netasVal(r));
+    t.netas = add(t.netas, netasVal(r)); t.netasA = add(t.netasA, netasPart(p, r, 'A')); t.netasO = add(t.netasO, netasPart(p, r, 'O'));
   }
-  var cols = ['obj'].concat(p.splitO ? ['obj2'] : [], ['matris'], p.splitM ? ['matris2'] : [], ['bajas','pasamos','netas']);
+  var cols = ['obj'].concat(p.splitO ? ['obj2'] : [], ['matris'], p.splitM ? ['matris2'] : [], ['bajas'], p.splitM ? ['bajas2'] : [], ['pasamos'], p.splitM ? ['netasA','netasO'] : ['netas']);
   return cols.map(function(c){ return t[c] == null ? '' : String(Math.round(t[c] * 100) / 100); });
 }
 function subRowHtml(p){
@@ -744,22 +760,25 @@ function refreshSub(){
 function toggleSplitM(){
   var p = getPage(curId); if (!p) return;
   if (p.splitM){
-    p.rows.forEach(function(r){ var m = matSum(r); r.matris = m == null ? '' : String(m); r.matris2 = ''; });
+    p.rows.forEach(function(r){ var m = matSum(r); r.matris = m == null ? '' : String(m); r.matris2 = ''; var b = bajSum(r); r.bajas = b == null ? '' : String(b); r.bajas2 = ''; });
     p.splitM = false;
-  } else { p.splitM = true; p.rows.forEach(function(r){ if (r.matris2 == null) r.matris2 = ''; }); }
+  } else { p.splitM = true; p.rows.forEach(function(r){ if (r.matris2 == null) r.matris2 = ''; if (r.bajas2 == null) r.bajas2 = ''; }); }
   scheduleSave(p.id); renderMain();
 }
 function brandTint(inp){ inp.parentNode.className = 'brand b-' + normBrand(inp.value); }
 function refreshNetas(){
-  /* recalcula la columna Netas sin perder el foco al teclear */
+  /* recalcula las columnas Netas sin perder el foco al teclear */
   var p = getPage(curId); if (!p) return;
   var tb = document.getElementById('tb'); if (!tb) return;
   var trs = tb.querySelectorAll('tr.dr');
   for (var i = 0; i < p.rows.length && i < trs.length; i++){
-    var c = trs[i].querySelector('.netasc');
-    if (c){ c.textContent = netasText(p.rows[i]); c.className = 'netasc ' + cls(netasVal(p.rows[i])); }
+    var cs = trs[i].querySelectorAll('.netasc'), r = p.rows[i];
+    if (p.splitM && cs.length === 2){
+      cs[0].textContent = netasPartText(p, r, 'A'); cs[0].className = 'netasc ' + cls(netasPart(p, r, 'A'));
+      cs[1].textContent = netasPartText(p, r, 'O'); cs[1].className = 'netasc ' + cls(netasPart(p, r, 'O'));
+    } else if (cs.length === 1){ cs[0].textContent = netasText(r); cs[0].className = 'netasc ' + cls(netasVal(r)); }
     var a = trs[i].querySelector('.arrc');
-    if (a){ a.textContent = arrText(p.rows[i]); a.className = 'arrc ' + cls(arrVal(p.rows[i])); }
+    if (a){ a.textContent = arrText(r); a.className = 'arrc ' + cls(arrVal(r)); }
   }
 }
 
@@ -779,9 +798,9 @@ function renderTasks(){
 /* ============ ACCIONES ============ */
 function setField(k, v){ var p = getPage(curId); if (!p) return; p[k] = v; scheduleSave(p.id); if (k === 'title') renderSideSoft(); }
 function renderSideSoft(){ clearTimeout(renderSideSoft.t); renderSideSoft.t = setTimeout(renderSide, 300); }
-function setRow(i, k, v){ var p = getPage(curId); if (!p) return; p.rows[i][k] = v; scheduleSave(p.id); if (k === 'matris' || k === 'matris2' || k === 'pasamos') refreshNetas(); if (k === 'obj' || k === 'obj2' || k === 'matris' || k === 'matris2' || k === 'bajas' || k === 'pasamos' || k === 'marca') refreshSub(); if (k === 'pasamos'){ var cs = document.querySelectorAll('td.c-p'); if (cs[i]) cs[i].classList.toggle('falta', String(v).trim() === ''); } }
+function setRow(i, k, v){ var p = getPage(curId); if (!p) return; p.rows[i][k] = v; scheduleSave(p.id); if (k === 'matris' || k === 'matris2' || k === 'pasamos' || k === 'bajas' || k === 'bajas2') refreshNetas(); if (k === 'obj' || k === 'obj2' || k === 'matris' || k === 'matris2' || k === 'bajas2' || k === 'bajas' || k === 'pasamos' || k === 'marca') refreshSub(); if (k === 'pasamos'){ var cs = document.querySelectorAll('td.c-p'); if (cs[i]) cs[i].classList.toggle('falta', String(v).trim() === ''); } }
 function toggleStar(i){ var p = getPage(curId); p.rows[i].star = !p.rows[i].star; scheduleSave(p.id); renderRows(); }
-function addRow(){ var p = getPage(curId); p.rows.push({ marca:'', obj:'', obj2:'', matris:'', matris2:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false }); scheduleSave(p.id); renderRows(); }
+function addRow(){ var p = getPage(curId); p.rows.push({ marca:'', obj:'', obj2:'', matris:'', matris2:'', bajas2:'', bajas2:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false }); scheduleSave(p.id); renderRows(); }
 function delRow(i){ var p = getPage(curId); p.rows.splice(i, 1); scheduleSave(p.id); renderRows(); }
 function addTask(){ var p = getPage(curId); p.tareas.push({ t:'', done:false }); scheduleSave(p.id); renderTasks(); renderSide(); }
 function delTask(i){ var p = getPage(curId); p.tareas.splice(i, 1); scheduleSave(p.id); renderTasks(); renderSide(); }
@@ -808,7 +827,7 @@ function buildPage(iso, conv){
   if (prevSame){
     for (i = 0; i < prevSame.rows.length; i++) rows.push({ marca: prevSame.rows[i].marca, obj: '', obj2: '', matris2:'', matris:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   } else {
-    for (i = 0; i < DEFAULT_BRANDS.length; i++) rows.push({ marca: DEFAULT_BRANDS[i], obj:'', obj2:'', matris:'', matris2:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
+    for (i = 0; i < DEFAULT_BRANDS.length; i++) rows.push({ marca: DEFAULT_BRANDS[i], obj:'', obj2:'', matris:'', matris2:'', bajas2:'', bajas2:'', bajas:'', pasamos:'', arrastre:'', netas:null, nota:'', star:false });
   }
   ucmaFill({ date: iso, rows: rows });
   var pend = [], pp = prevSame || prevAny;
@@ -885,11 +904,13 @@ function partTxt(split, a, b, tot){
   if (!split) return tot;
   var x = numSnap(a), y = numSnap(b);
   if (x === '' && y === '') return '';
-  return (x || '0') + ' Abr / ' + (y || '0') + ' Oct';
+  if (y === '') return x + ' Abr';
+  if (x === '') return y + ' Oct';
+  return x + ' Abr / ' + y + ' Oct';
 }
 function snapRows(p){ return p.rows.map(function(r){
   var obj = sumSnap(r.obj, r.obj2), mat = sumSnap(r.matris, r.matris2);
-  return { marca:r.marca, obj:obj, matris:mat, bajas:numSnap(r.bajas), pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r), objTxt:partTxt(p.splitO, r.obj, r.obj2, obj), matTxt:partTxt(p.splitM, r.matris, r.matris2, mat) };
+  return { marca:r.marca, obj:obj, matris:mat, bajas:sumSnap(r.bajas, r.bajas2), pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r), objTxt:partTxt(p.splitO, r.obj, r.obj2, obj), matTxt:partTxt(p.splitM, r.matris, r.matris2, mat), bajTxt:partTxt(p.splitM, r.bajas, r.bajas2, sumSnap(r.bajas, r.bajas2)) };
 }); }
 function adoptPasamos(p, sn){
   for (var i = 0; i < p.rows.length && i < sn.rows.length; i++){
@@ -903,7 +924,7 @@ function adoptPasamos(p, sn){
 /* copia la tabla como tabla real (HTML) para pegarla en Teams */
 function fotoCierre(){
   var p = getPage(curId); if (!p) return;
-  var cols = ['Marca'].concat(p.splitO ? ['Objetivo Abril','Objetivo Octubre'] : ['Objetivo'], p.splitM ? ['Matris Abril','Matris Octubre'] : ['Matris'], ['Bajas+CE','Pasamos','Netas','Esteban','Arrastramos para próxima semana']);
+  var cols = ['Marca'].concat(p.splitO ? ['Objetivo Abril','Objetivo Octubre'] : ['Objetivo'], p.splitM ? ['Matris Abril','Matris Octubre'] : ['Matris'], (p.splitM ? ['Bajas+CE Abril','Bajas+CE Octubre'] : ['Bajas+CE']), ['Pasamos'], (p.splitM ? ['Netas Abril','Netas Octubre'] : ['Netas']), ['Esteban','Arrastramos para próxima semana']);
   var th = 'padding:8px 12px;background:#0a3532;color:#fbe39b;border:1px solid #11504a;font-family:Segoe UI,Arial,sans-serif;font-size:12px;text-align:center;';
   var td = 'padding:8px 12px;border:1px solid #9bb8b3;font-family:Segoe UI,Arial,sans-serif;font-size:13px;text-align:center;';
   var h = '<table style="border-collapse:collapse"><thead><tr>', t = cols.join('\t') + '\n', i;
@@ -911,7 +932,7 @@ function fotoCierre(){
   h += '</tr></thead><tbody>';
   for (i = 0; i < p.rows.length; i++){
     var r = p.rows[i], vac = String(r.pasamos).trim() === '';
-    var cells = [r.marca, r.obj].concat(p.splitO ? [r.obj2 || ''] : [], [r.matris], p.splitM ? [r.matris2 || ''] : [], [r.bajas, r.pasamos, netasText(r), r.nota, arrText(r)]), pi = 3 + (p.splitO ? 1 : 0) + (p.splitM ? 1 : 0);
+    var cells = [r.marca, r.obj].concat(p.splitO ? [r.obj2 || ''] : [], [r.matris], p.splitM ? [r.matris2 || ''] : [], [r.bajas], p.splitM ? [r.bajas2 || ''] : [], [r.pasamos], p.splitM ? [netasPartText(p, r, 'A'), netasPartText(p, r, 'O')] : [netasText(r)], [r.nota, arrText(r)]), pi = 4 + (p.splitO ? 1 : 0) + (p.splitM ? 2 : 0);
     h += '<tr>';
     for (var k = 0; k < cells.length; k++){
       var st = td + (k === 0 ? 'font-weight:bold;text-align:left;' : '') + (k === pi && vac ? 'background:#f0c75a;' : '');
