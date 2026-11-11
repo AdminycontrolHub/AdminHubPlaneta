@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 33</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 34</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -239,7 +239,7 @@ select.inp{cursor:pointer}
                 </tbody>
               </table>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="lbl">Leads sin año 2026/2027 en «Fecha Lead»: esta carga es de</span><button onClick="{{setOrigNuevo}}" aria-label="Carga de leads nuevos" style="{{origNuevoStyle}}">Leads nuevos</button><button onClick="{{setOrigReact}}" aria-label="Carga de reactivados" style="{{origReactStyle}}">Reactivados</button></div>
+            <sc-if value="{{drop.hasNoYear}}" hint-placeholder-val="{{false}}"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="lbl">Leads sin año 2026/2027 en «Fecha Lead»: esta carga es de</span><button onClick="{{setOrigNuevo}}" aria-label="Carga de leads nuevos" style="{{origNuevoStyle}}">Leads nuevos</button><button onClick="{{setOrigReact}}" aria-label="Carga de reactivados" style="{{origReactStyle}}">Reactivados</button></div></sc-if>
             <div style="color:var(--mut);font-size:12px">{{drop.note}}</div>
             <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
               <button onClick="{{discardDrop}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px">Descartar</button>
@@ -1870,6 +1870,7 @@ class Component extends DCLogic {
       const nNew = s.drop.rows.filter(r => !r.dupe).length;
       const nDup = s.drop.rows.length - nNew;
       drop = {
+        hasNoYear:s.drop.rows.some(r => !r.dupe && r.origen !== 'Reactivado' && r.origen !== 'Nuevo'),
         rows:s.drop.rows.map(r => ({...idiV(r.idioma), name:r.name, pais:r.pais, estado:r.estado || 'No contactado', src:r.src, result:r.dupe ? 'Duplicado · se marca muy interesado' : 'Nuevo', chip:r.dupe ? 'background:#FFF4D6;color:#8A5A00' : 'background:#DDF5E6;color:#176B3A'})),
         summary:nNew + ' nuevos · ' + nDup + ' duplicados',
         note:(s.drop.excel ? dropCnt : '') + (s.drop.excel ? 'Se comparan por email y por nombre con los leads ya cargados: los duplicados no crean fila: el lead existente se marca como «muy interesado» y sube al principio. Comprueba que el estado se ha leído bien antes de añadir.' : 'Se crea un lead por archivo, con el nombre del archivo.'),
