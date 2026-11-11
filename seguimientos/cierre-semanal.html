@@ -336,7 +336,7 @@ function wGetRaw(key){
     .then(function(r){ if (!r.ok) throw new Error('KV ' + r.status); return r.text(); })
     .then(function(t){ var j = null; try { j = JSON.parse(t); } catch(e){} var v = (j != null ? j : t); if (v && typeof v === 'object' && 'value' in v) v = v.value; for (var n = 0; n < 4 && typeof v === 'string'; n++){ try { v = JSON.parse(v); } catch(e){ return null; } } if (!v || typeof v !== 'object') return null;
       /* Power Automate guarda las horas como texto: pásalas a número */
-      ['pUpd','sentAt','publishedAt'].forEach(function(k){ if (k in v) v[k] = Number(v[k]) || 0; });
+      ['pUpd','sentAt','publishedAt','entregadoAt'].forEach(function(k){ if (k in v) v[k] = Number(v[k]) || 0; });
       return v; });
 }
 function wSetRaw(key, obj){
@@ -951,7 +951,7 @@ function syncLive(manual){
       p.sentSeen = sn.sentAt; p.snap = LIVE; scheduleSave(p.id);
       banner('Esteban ha enviado el cierre a Adm. Comercial a las ' + fmtHora(sn.sentAt));
     }
-    var out = { pageId:p.id, conv:p.conv, date:p.date, sem:p.sem || '', title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), rows:snapRows(p) };
+    var out = { pageId:p.id, conv:p.conv, date:p.date, sem:p.sem || '', title:p.title, pUpd: same ? (sn.pUpd || 0) : 0, sentAt: same ? (sn.sentAt || 0) : 0, publishedAt: manual ? Date.now() : (same ? (sn.publishedAt || 0) : 0), entregadoAt: same ? (sn.entregadoAt || 0) : 0, rows:snapRows(p) };
     /* no escribas en la nube si no ha cambiado nada (el plan gratuito de Cloudflare limita las escrituras diarias) */
     if (!manual && sn && JSON.stringify(sn) === JSON.stringify(out)) return null;
     return wSetRaw(SNAP_PREFIX + LIVE, out);
