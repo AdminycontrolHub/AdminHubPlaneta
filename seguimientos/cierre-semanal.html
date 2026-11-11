@@ -293,7 +293,7 @@ function num(v){ var t = String(v == null ? '' : v).trim().replace(',', '.'); if
 function seed(){ return []; }
 
 /* ============ PERSISTENCIA ============ */
-var APP_VER = 'v11';
+var APP_VER = 'v12';
 function setStatus(txt, cls){ var s = document.getElementById('status'); s.textContent = txt + ' · ' + APP_VER; s.className = 'status mono ' + (cls || ''); }
 function uiDlg(msg, opts, cb){
   var old = document.getElementById('dlg'); if (old) old.parentNode.removeChild(old);
@@ -941,8 +941,13 @@ function syncLive(manual){
   if (EQ || !state || !state.pages.length) return;
   if (dbDoc){ if (manual) uiAlert('Publicar funciona en la versión de GitHub. Aquí la herramienta no se conecta con tu Worker.'); return; }
   if (syncBusy && !manual) return;
-  var p = manual ? getPage(curId) : livePage(); if (!p) return;
-  if (!manual && (!p.pubAt || document.hidden)) return; /* sin publicar o pestaña oculta: no leas ni escribas */
+  var p = manual ? getPage(curId) : null;
+  if (manual && !p) return;
+  if (!manual){
+    if (document.hidden) return; /* pestaña oculta: no leas ni escribas */
+    var reciente = Date.now() - 14 * 86400000;
+    if (!state.pages.some(function(q){ return q.pubAt && q.pubAt > reciente; })) return; /* nada publicado: no leas */
+  }
   if (manual){
     if (pubPending || p.pubAt) return;
     pubPending = true; var bt = document.querySelector('#pubwrap .pubbtn'); if (bt) bt.disabled = true;
@@ -950,6 +955,11 @@ function syncLive(manual){
   }
   syncBusy = true;
   wGetRaw(SNAP_PREFIX + LIVE).catch(function(){ return null; }).then(function(sn){
+    if (!manual){
+      /* manda el cierre que figura en la nube (el último publicado): nunca pises el de otra hoja */
+      p = sn && sn.rows ? getPage(sn.pageId) : null;
+      if (!p || !p.pubAt) return null;
+    }
     var same = sn && sn.rows && sn.pageId === p.id;
     if (same && sn.pUpd && sn.pUpd > (p.snapSeen || 0)){
       adoptPasamos(p, sn); p.snap = LIVE; scheduleSave(p.id);
