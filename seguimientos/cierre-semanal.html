@@ -293,7 +293,8 @@ function num(v){ var t = String(v == null ? '' : v).trim().replace(',', '.'); if
 function seed(){ return []; }
 
 /* ============ PERSISTENCIA ============ */
-function setStatus(txt, cls){ var s = document.getElementById('status'); s.textContent = txt; s.className = 'status mono ' + (cls || ''); }
+var APP_VER = 'v11';
+function setStatus(txt, cls){ var s = document.getElementById('status'); s.textContent = txt + ' · ' + APP_VER; s.className = 'status mono ' + (cls || ''); }
 function uiDlg(msg, opts, cb){
   var old = document.getElementById('dlg'); if (old) old.parentNode.removeChild(old);
   var d = document.createElement('div'); d.id = 'dlg'; d.className = 'dlgbg';
@@ -830,7 +831,15 @@ function fotoImagen(){
 var EQ = (function(){ var m = /[?&]e=([A-Za-z0-9]+)/.exec(location.search); return m ? m[1] : null; })();
 var SNAP_PREFIX = 'adminhub_cierre_esteban_';
 function newToken(){ var a = 'abcdefghijkmnpqrstuvwxyz23456789', t = '', i; try { var u = new Uint8Array(20); crypto.getRandomValues(u); for (i = 0; i < 20; i++) t += a[u[i] % a.length]; } catch(e){ for (i = 0; i < 20; i++) t += a[Math.floor(Math.random() * a.length)]; } return t; }
-function snapRows(p){ return p.rows.map(function(r){ return { marca:r.marca, obj:r.obj, matris:r.matris, bajas:r.bajas, pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r) }; }); }
+/* la tarjeta de Teams suma con int(): a Esteban solo le enviamos números enteros (lo que no sea un número va vacío) */
+function numSnap(v){
+  var t = String(v == null ? '' : v).replace(/\s/g, '');
+  if (t === '') return '';
+  if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, ''); else t = t.replace(',', '.');
+  if (!/^-?\d+(\.\d+)?$/.test(t)) return '';
+  return String(Math.round(Number(t)));
+}
+function snapRows(p){ return p.rows.map(function(r){ return { marca:r.marca, obj:numSnap(r.obj), matris:numSnap(r.matris), bajas:numSnap(r.bajas), pasamos:r.pasamos, nota:r.nota, arrastre:arrText(r) }; }); }
 function adoptPasamos(p, sn){
   for (var i = 0; i < p.rows.length && i < sn.rows.length; i++){
     if (String(sn.rows[i].marca) === String(p.rows[i].marca)) {
