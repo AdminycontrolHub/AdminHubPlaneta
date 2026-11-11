@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 36</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 37</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1525,9 +1525,17 @@ class Component extends DCLogic {
       }
       if (Object.keys(patch).length) this.setState(patch);
       this.markSync(true);
+      this.fillCarga();
       if (dirty || this.isDirty()) this.flush();
     } catch (e) { this.markSync(false, e); }
     finally { this._pulling = false; }
+  }
+  fillCarga(){
+    // Leads cargados antes de existir la columna «Fecha de carga»: se les asigna la fecha de hoy una sola vez
+    const a = this.state.added;
+    if (!Array.isArray(a) || !a.some(x => x && !x.cargado)) return;
+    const d = new Date().toLocaleDateString('es-ES');
+    this.setState({added: a.map(x => (x && !x.cargado) ? Object.assign({}, x, {cargado:d}) : x)});
   }
   async flush(){
     if (!this._base || this._resetting) return;
