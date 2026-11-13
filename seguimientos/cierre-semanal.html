@@ -1283,7 +1283,7 @@ function applyCurvas(res, errs){
   if (firstBy){
     for (i = 0; i < state.pages.length; i++){
       var q = state.pages[i], ee = firstBy[q.date];
-      if (ee && (q.sem !== ee.sem || q.semMes !== ee.mes)){ q.sem = ee.sem; q.semMes = ee.mes; dirty[q.id] = true; tagged++; }
+      if (ee && (q.sem !== ee.sem || q.semMes !== ee.mes || q.semDate !== q.date)){ q.sem = ee.sem; q.semMes = ee.mes; q.semDate = q.date; dirty[q.id] = true; tagged++; }
     }
   }
   if (res.length){ var anyO2 = p.rows.some(function(r){ return String(r.obj2 || '').trim() !== ''; }); if (anyO2 !== !!p.splitO){ p.splitO = anyO2; msg.push(anyO2 ? 'ℹ Este mes hay objetivos de Abril y de Octubre: he separado la columna Objetivo.' : 'ℹ Este mes no hay objetivos de Octubre: una sola columna de Objetivo.'); } }
@@ -1296,21 +1296,25 @@ function applyCurvas(res, errs){
 }
 /* calendario comercial 2026-27 (martes -> mes comercial y semana); los archivos importados mandan sobre esto */
 var CAL = {
-  '2026-10-06':['Octubre','S1'],'2026-10-13':['Octubre','S2'],'2026-10-20':['Octubre','S3'],'2026-10-27':['Octubre','S4'],'2026-11-03':['Octubre','S5'],
-  '2026-11-10':['Noviembre','S1'],'2026-11-17':['Noviembre','S2'],'2026-11-24':['Noviembre','S3'],
+  '2026-10-06':['Octubre','S1'],'2026-10-13':['Octubre','S2'],'2026-10-20':['Octubre','S3'],'2026-10-27':['Octubre','S4'],
+  '2026-11-03':['Noviembre','S1'],'2026-11-10':['Noviembre','S2'],'2026-11-17':['Noviembre','S3'],'2026-11-24':['Noviembre','S4'],
   '2026-12-01':['Diciembre','S1'],'2026-12-08':['Diciembre','S2'],'2026-12-15':['Diciembre','S3'],'2026-12-22':['Diciembre','S4'],
   '2026-12-29':['Enero','S1'],'2027-01-05':['Enero','S2'],'2027-01-12':['Enero','S3'],'2027-01-19':['Enero','S4'],'2027-01-26':['Enero','S5']
 };
 var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function calOf(iso){
   if (!iso) return null;
-  if (CAL[iso]) return { mes: CAL[iso][0], sem: CAL[iso][1] };
   var d = new Date(iso + 'T00:00:00');
   if (isNaN(d.getTime())) return null;
+  /* cualquier día cuenta como el martes de su semana (lun-dom) */
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 1);
+  var t = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  if (CAL[t]) return { mes: CAL[t][0], sem: CAL[t][1] };
   return { mes: MESES[d.getMonth()], sem: 'S' + Math.ceil(d.getDate() / 7) };
 }
-function semOf(p){ if (!p) return ''; if (p.sem) return p.sem; var c = calOf(p.date); return c ? c.sem : ''; }
-function semMesOf(p){ if (!p) return ''; if (p.sem) return p.semMes || ''; var c = calOf(p.date); return c ? c.mes : ''; }
+/* la semana importada solo vale si el cierre sigue en la fecha en la que se etiquetó; si no, manda el calendario */
+function semOf(p){ if (!p) return ''; if (p.sem && p.semDate === p.date) return p.sem; var c = calOf(p.date); return c ? c.sem : (p.sem || ''); }
+function semMesOf(p){ if (!p) return ''; if (p.sem && p.semDate === p.date) return p.semMes || ''; var c = calOf(p.date); return c ? c.mes : ''; }
 /* objetivo UCMA-OBS: "Altas" del plan (Nov 16 · Dic 19 · Ene 44) repartidas por semana comercial */
 var UCMA_PLAN = {
   '2026-11-10':6,'2026-11-17':5,'2026-11-24':5,
