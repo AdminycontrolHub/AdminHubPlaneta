@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 38</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 41</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -88,6 +88,7 @@ select.inp{cursor:pointer}
       <sc-if value="{{unlocked}}" hint-placeholder-val="{{false}}">
         <span class="chip" style="background:var(--grnbg);color:var(--grntx)">Edición total activa</span>
         <button onClick="{{resetAll}}" style="background:#fff;color:#B0203C;border:1px solid #F2A3B4;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Borrar todos los datos</button>
+        <button onClick="{{restoreBk}}" style="background:#fff;color:#1F5FBF;border:1px solid #AFC8F3;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Recuperar copia</button>
       </sc-if>
       <sc-if value="{{canChange}}" hint-placeholder-val="{{true}}"><button onClick="{{changeProfile}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Cambiar perfil</button></sc-if>
     </div>
@@ -355,7 +356,7 @@ select.inp{cursor:pointer}
       <div style="background:#fff;border-radius:12px;padding:4px 6px">
         <table class="tight" style="table-layout:fixed">
           <colgroup><col style="width:11%"><col style="width:7%"><col style="width:9%"><col style="width:9%"><col style="width:6%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:8%"><col style="width:19%"><col style="width:8%"></colgroup>
-          <thead><tr><th style="width:18%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Lead <button onClick="{{ft_idi}}" title="Filtrar por idioma" aria-label="Filtrar Lead" style="{{fb_idi}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><button onClick="{{ft_tipo}}" title="Filtrar por tipo (reactivados / nuevos)" aria-label="Filtrar tipo" style="{{fb_tipo}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_tipo}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><div style="font:700 10px Manrope,sans-serif;color:#7C86B8;padding:4px 10px 2px;text-transform:uppercase;letter-spacing:.06em">Tipo</div><sc-for list="{{fo_tipo}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if><input aria-label="Buscar por nombre" placeholder="Buscar…" value="{{fqVal}}" onChange="{{onFq}}" style="margin-left:6px;width:84px;font-size:11px;padding:2px 6px;border:1px solid var(--inpline);border-radius:6px;background:#fff;color:var(--ink);text-transform:none;letter-spacing:0;vertical-align:middle"><sc-if value="{{fm_idi}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><div style="font:700 10px Manrope,sans-serif;color:#7C86B8;padding:4px 10px 2px;text-transform:uppercase;letter-spacing:.06em">Idioma</div><sc-for list="{{fo_idi}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Gestionado Por <button onClick="{{ft_ases}}" title="Filtrar" aria-label="Filtrar Gestionado Por" style="{{fb_ases}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_ases}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_ases}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:10%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Estado <button onClick="{{ft_est}}" title="Filtrar" aria-label="Filtrar Estado" style="{{fb_est}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_est}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_est}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Tarifa <button onClick="{{ft_tar}}" title="Filtrar" aria-label="Filtrar Tarifa" style="{{fb_tar}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_tar}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_tar}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Descuento <button onClick="{{ft_dto}}" title="Filtrar" aria-label="Filtrar Descuento" style="{{fb_dto}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_dto}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_dto}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Precio final</th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Forma de pago <button onClick="{{ft_pago}}" title="Filtrar" aria-label="Filtrar Forma de pago" style="{{fb_pago}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_pago}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_pago}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:6%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Mes primera cuota <button onClick="{{ft_ini}}" title="Filtrar" aria-label="Filtrar Mes primera cuota" style="{{fb_ini}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_ini}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_ini}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:6%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Forma de facturación <button onClick="{{ft_bill}}" title="Filtrar" aria-label="Filtrar Forma de facturación" style="{{fb_bill}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_bill}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_bill}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:9%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Último seguimiento</th><th style="width:6%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Acciones</th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Carga y último contacto</th></tr></thead>
+          <thead><tr><th style="width:18%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Lead <button onClick="{{ft_idi}}" title="Filtrar por idioma" aria-label="Filtrar Lead" style="{{fb_idi}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><button onClick="{{ft_tipo}}" title="Filtrar por tipo (reactivados / nuevos)" aria-label="Filtrar tipo" style="{{fb_tipo}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_tipo}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><div style="font:700 10px Manrope,sans-serif;color:#7C86B8;padding:4px 10px 2px;text-transform:uppercase;letter-spacing:.06em">Tipo</div><sc-for list="{{fo_tipo}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if><input aria-label="Buscar por nombre" placeholder="Buscar…" value="{{fqVal}}" onChange="{{onFq}}" style="margin-left:6px;width:84px;font-size:11px;padding:2px 6px;border:1px solid var(--inpline);border-radius:6px;background:#fff;color:var(--ink);text-transform:none;letter-spacing:0;vertical-align:middle"><sc-if value="{{fm_idi}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><div style="font:700 10px Manrope,sans-serif;color:#7C86B8;padding:4px 10px 2px;text-transform:uppercase;letter-spacing:.06em">Idioma</div><sc-for list="{{fo_idi}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Gestionado Por <button onClick="{{ft_ases}}" title="Filtrar" aria-label="Filtrar Gestionado Por" style="{{fb_ases}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_ases}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_ases}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:10%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Estado <button onClick="{{ft_est}}" title="Filtrar" aria-label="Filtrar Estado" style="{{fb_est}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_est}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_est}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Tarifa <button onClick="{{ft_tar}}" title="Filtrar" aria-label="Filtrar Tarifa" style="{{fb_tar}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_tar}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_tar}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Descuento <button onClick="{{ft_dto}}" title="Filtrar" aria-label="Filtrar Descuento" style="{{fb_dto}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_dto}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_dto}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:7%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Precio final</th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Forma de pago <button onClick="{{ft_pago}}" title="Filtrar" aria-label="Filtrar Forma de pago" style="{{fb_pago}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_pago}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_pago}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:6%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Primer pago <button onClick="{{ft_ini}}" title="Filtrar" aria-label="Filtrar Primer pago" style="{{fb_ini}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_ini}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_ini}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:6%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em"><div style="position:relative;display:inline-block">Forma de facturación <button onClick="{{ft_bill}}" title="Filtrar" aria-label="Filtrar Forma de facturación" style="{{fb_bill}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5Z"/></svg></button><sc-if value="{{fm_bill}}" hint-placeholder-val="{{false}}"><div style="position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid var(--inpline);border-radius:10px;box-shadow:0 8px 24px rgba(40,50,120,.18);padding:4px;display:flex;flex-direction:column;gap:2px;min-width:120px;text-transform:none;letter-spacing:0"><sc-for list="{{fo_bill}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" aria-label="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div></sc-if></div></th><th style="width:9%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Último seguimiento</th><th style="width:6%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Acciones</th><th style="width:8%;white-space:normal;line-height:1.3;vertical-align:bottom;letter-spacing:.04em">Carga y último contacto</th></tr></thead>
           <tbody>
             <sc-for list="{{admRows}}" as="l" hint-placeholder-count="6">
               <tr style="{{l.rowStyle}}">
@@ -384,7 +385,7 @@ select.inp{cursor:pointer}
                   <sc-if value="{{l.isLead}}" hint-placeholder-val="{{true}}">
                     <div style="display:flex;gap:6px;align-items:center"><select class="inp" aria-label="Estado" onChange="{{l.onEstado}}" style="{{l.estStyle}};flex:1 1 auto;min-width:0">
                       <sc-for list="{{l.estOpts}}" as="o" hint-placeholder-count="5">
-                        <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
+                        <option value="{{o.v}}" selected="{{o.sel}}" disabled="{{o.dis}}">{{o.label}}</option>
                       </sc-for>
                     </select><button onClick="{{l.onEnv}}" disabled="{{l.envOff}}" title="{{l.envTitle}}" aria-label="Enviar email al candidato" style="flex:0 0 auto;background:#fff;border:1px solid var(--inpline);border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></button></div>
                   </sc-if>
@@ -453,7 +454,7 @@ select.inp{cursor:pointer}
                 </td>
                 <td>
                   <sc-if value="{{l.showPrice}}" hint-placeholder-val="{{true}}">
-                    <select class="inp" aria-label="Mes de la primera cuota" onChange="{{l.onIni}}" style="{{l.iniStyle}}">
+                    <select class="inp" aria-label="Primer pago" onChange="{{l.onIni}}" style="{{l.iniStyle}}">
                       <sc-for list="{{l.iniOpts}}" as="o" hint-placeholder-count="5">
                         <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
                       </sc-for>
@@ -575,7 +576,7 @@ select.inp{cursor:pointer}
               <button onClick="{{k.flagGo}}" aria-pressed="{{k.flag}}" style="{{k.flagStyle}}">Marcar impago a mano</button>
             </div>
             <div onDragOver="{{k.onDragOver}}" onDragLeave="{{k.onDragLeave}}" onDrop="{{k.onDrop}}" style="{{k.hmStyle}}">
-              <span style="font-size:13px;color:var(--ink)">Arrastra aquí la HM: se cruza con Admisiones (precio final, forma de pago, facturación y fecha de la primera cuota)</span>
+              <span style="font-size:13px;color:var(--ink)">Arrastra aquí la HM: se cruza con Admisiones (precio final, forma de pago, facturación y primer pago)</span>
               <label class="pick" style="position:relative;display:inline-block;background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:6px 11px;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer">
                 Elegir HM
                 <input type="file" accept=".pdf,.xlsx,.xls,.csv" aria-label="Elegir la HM" onChange="{{k.onPickHm}}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
@@ -1365,7 +1366,7 @@ const MAILT = {
 };
 const MONTHS = ['nov', 'dic', 'ene', 'feb'];
 const MONTH_LBL = {nov:'NOV', dic:'DIC', ene:'ENE', feb:'FEB'};
-// máximo de cuotas si se aplaza, según el mes de la 1.ª cuota (la última cuota es en febrero)
+// máximo de cuotas si se aplaza, según el primer pago (la última cuota es en febrero)
 const MAXC = {nov:3, dic:2};
 const INI_SEED = {};
 const CONTACT = {};
@@ -1433,18 +1434,44 @@ class Component extends DCLogic {
       try { lsSet('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:Date.now(), data})); } catch (e) {}
     });
   }
-  async hardReset(patch){
+  _toast(msg){ this.setState({copyMsg:msg}); clearTimeout(this._cmT); this._cmT = setTimeout(() => this.setState({copyMsg:''}), 7000); }
+  async restoreBackup(){
+    // Recupera la última copia de seguridad guardada (se crea al borrar todo o al vaciar una lista). Pide confirmar con un segundo clic.
+    if (!this._base || this._resetting) return;
+    try {
+      const bk = await kvGet('adminhub_bootcamp_backup_v1');
+      if (!bk || !bk.data) { this._toast('No hay ninguna copia de seguridad guardada en el servidor.'); return; }
+      const data = (bk.key && KV_KEYS[bk.key]) ? {[bk.key]: bk.data} : bk.data;
+      const patch = {}, keys = [];
+      Object.keys(data).forEach(k => { if (KV_KEYS[k] && data[k]) { let any = false; KV_KEYS[k].forEach(f => { if (data[k][f] !== undefined) { patch[f] = data[k][f]; any = true; } }); if (any) keys.push(k); } });
+      const nLeads = Array.isArray(patch.added) ? patch.added.length : 0;
+      if (!keys.length) { this._toast('La copia de seguridad está vacía.'); return; }
+      const when = bk._t ? new Date(bk._t).toLocaleString('es-ES') : '';
+      if (!this._bkArm || Date.now() - this._bkArm > 30000) {
+        this._bkArm = Date.now();
+        this._toast('Copia del ' + when + (nLeads ? ' con ' + nLeads + ' leads' : '') + '. Pulsa otra vez «Recuperar copia» (en 30 s) para sustituir los datos actuales por ella.');
+        return;
+      }
+      this._bkArm = 0;
+      this.setState(patch);
+      await this.hardReset(patch, keys, true);
+      this._toast('Copia recuperada' + (nLeads ? ': ' + nLeads + ' leads' : '') + '.');
+    } catch (e) { this._toast('No se pudo leer la copia de seguridad: ' + ((e && e.message) || 'error')); }
+  }
+  async hardReset(patch, only, noBackup){
     // Escritura autoritativa: sustituye lo guardado (sin fusionar con lo que haya en el servidor).
     if (!this._base) return;
     this._resetting = true; this._wt = this._wt || {}; this._rc = this._rc || {};
     try {
       const ts = Date.now(), backup = {};
       let ok = true;
-      for (const key of Object.keys(KV_KEYS)) {
-        try { const rem = await kvGet(key); if (rem) backup[key] = rem; } catch (e) {}
+      if (!noBackup) {
+        for (const key of Object.keys(KV_KEYS)) {
+          try { const rem = await kvGet(key); if (rem) backup[key] = rem; } catch (e) {}
+        }
+        try { await kvSet('adminhub_bootcamp_backup_v1', {_t:ts, reason:'reset', data:backup}); } catch (e) {}
       }
-      try { await kvSet('adminhub_bootcamp_backup_v1', {_t:ts, reason:'reset', data:backup}); } catch (e) {}
-      for (const key of Object.keys(KV_KEYS)) {
+      for (const key of Object.keys(KV_KEYS).filter(k => !only || only.indexOf(k) >= 0)) {
         const data = {};
         KV_KEYS[key].forEach(f => { data[f] = jclone(patch[f] !== undefined ? patch[f] : this.state[f]); });
         try { await kvSet(key, Object.assign({}, data, {_t:ts})); }
@@ -1605,7 +1632,7 @@ class Component extends DCLogic {
       if (pr.dto == null) m.push('Descuento');
       if (pr.tipo !== 'Contado' && pr.tipo !== 'Aplazado') m.push('Forma de pago');
       if (pr.tipo === 'Aplazado' && !pr.ncuotas) m.push('Nº de cuotas');
-      if (!pr.ini) m.push('Mes de la primera cuota');
+      if (!pr.ini) m.push('Primer pago');
       if (!pr.bill) m.push('Forma de facturación');
       return m;
     };
@@ -1613,6 +1640,7 @@ class Component extends DCLogic {
     const matMiss = (l) => missFor(l, priceOf(l.id, '—', null, ''), null);
     const matOk = (l) => docsOk(l.id) && matMiss(l).length === 0;
     const eff = (l) => { const e = s.estados[l.id] || l.estado; if (e === 'Aceptada cerrada') return 'Aceptado'; return (e === 'Aceptado' && matOk(l)) ? 'Aceptada cerrada' : e; };
+    const moroDone = (id) => { const mv = s.moro[id]; return !!mv && mv.st !== 'pending'; };
     const moroMiss = (l, pr) => missFor(l, pr, null).filter(x => x !== 'Forma de facturación');
     const moroArgs = (l, pr, cur) => { const mm = moroMiss(l, pr); return [cur === ST_CONT && mm.length === 0, [ST_CONT, 'Aceptado', 'Aceptada cerrada'].indexOf(cur) >= 0, (cur === ST_CONT && mm.length) ? 'Para pedir el checkeo de morosidad completa antes la fila (faltan: ' + mm.join(', ') + ').' : '']; };
     const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', gest:a.gest || '', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual, idioma:a.idioma || '', origen:a.origen || 'Nuevo', hot:!!a.hot, cargado:a.cargado || '', ult:a.ult || ''})).concat(LEADS);
@@ -1682,7 +1710,7 @@ class Component extends DCLogic {
     const maxC = (ini) => MAXC[ini] || 0;
     const setTipo = (id, ini, t) => {
       if (t === 'Aplazado') {
-        if (ini && !maxC(ini)) { flash('No se puede aplazar con la 1.ª cuota en ' + MONTH_LBL[ini] + ': la última cuota es en febrero.'); return false; }
+        if (ini && !maxC(ini)) { flash('No se puede aplazar con el primer pago en ' + MONTH_LBL[ini] + ': la última cuota es en febrero.'); return false; }
         setPrice(id, {tipo:t});
       } else setPrice(id, {tipo:t || null, ncuotas:null});
       return true;
@@ -1691,8 +1719,8 @@ class Component extends DCLogic {
       const ini = v || null, pt = {ini};
       if (pr.tipo === 'Aplazado' && ini) {
         const mx = maxC(ini);
-        if (!mx) { pt.tipo = null; pt.ncuotas = null; flash('Con la 1.ª cuota en ' + MONTH_LBL[ini] + ' no se puede aplazar: se ha quitado «Aplazado».'); }
-        else if (pr.ncuotas && pr.ncuotas > mx) { pt.ncuotas = null; flash('Con la 1.ª cuota en ' + MONTH_LBL[ini] + ' el máximo es ' + mx + ' cuotas: elige de nuevo.'); }
+        if (!mx) { pt.tipo = null; pt.ncuotas = null; flash('Con el primer pago en ' + MONTH_LBL[ini] + ' no se puede aplazar: se ha quitado «Aplazado».'); }
+        else if (pr.ncuotas && pr.ncuotas > mx) { pt.ncuotas = null; flash('Con el primer pago en ' + MONTH_LBL[ini] + ' el máximo es ' + mx + ' cuotas: elige de nuevo.'); }
       }
       setPrice(id, pt);
     };
@@ -1700,7 +1728,7 @@ class Component extends DCLogic {
       const hab = pr.hab, fin = pr.fin;
       const pend = pr.hmv && !pr.hmv.validated ? pr.hmv.keys : [];
       const redSel = 'border-color:#D32F4B;background:#FDECEF;color:#B0203C;font-weight:700;';
-      const HLBL = {precio:'precio final', pago:'forma de pago', fact:'forma de facturación', fecha:'mes de la primera cuota'};
+      const HLBL = {precio:'precio final', pago:'forma de pago', fact:'forma de facturación', fecha:'primer pago'};
       const base = BASEP[hab];
       const isDoble = hab === 'Doble';
       const col = pr.grp !== undefined && isDoble ? PAL[pr.grp] : null;
@@ -1720,7 +1748,7 @@ class Component extends DCLogic {
         showCuotas:pr.tipo === 'Aplazado',
         cuotasDis:!pr.ini || !maxC(pr.ini),
         ncOpts:[{v:'', label:'Nº cuotas', sel:!pr.ncuotas}].concat(Array.from({length:Math.max(0, maxC(pr.ini) - 1)}, (_, i) => i + 2).map(n => ({v:String(n), label:n + ' cuotas', sel:pr.ncuotas === n}))),
-        onNc:(e) => { const v = Number(e.target.value) || null; if (v && (!pr.ini || v > maxC(pr.ini))) { flash('Con esa fecha de 1.ª cuota no se puede elegir ese número de cuotas.'); e.target.value = pr.ncuotas ? String(pr.ncuotas) : ''; return; } setPrice(id, {ncuotas:v}); },
+        onNc:(e) => { const v = Number(e.target.value) || null; if (v && (!pr.ini || v > maxC(pr.ini))) { flash('Con ese primer pago no se puede elegir ese número de cuotas.'); e.target.value = pr.ncuotas ? String(pr.ncuotas) : ''; return; } setPrice(id, {ncuotas:v}); },
         ...(() => {
           const n = pr.ncuotas, ok = pr.tipo === 'Aplazado' && n && pr.ini && fin != null && n <= maxC(pr.ini);
           if (!ok) return {hasCuota:false, cuotaTxt:'', cuotaSub:''};
@@ -1728,7 +1756,7 @@ class Component extends DCLogic {
           const from = MONTHS.indexOf(pr.ini), ms = MONTHS.slice(from, from + n).map(mm => MONTH_LBL[mm]);
           return {hasCuota:true, cuotaTxt:n + ' cuotas de ' + fmt(each) + (last !== each ? ' (la última, ' + fmt(last) + ')' : '') + ' · ' + ms.join(' · '), cuotaSub:'Tras el pago inicial de ' + fmt(PI) + ' · total ' + fmt(fin)};
         })(),
-        cuotasNote:!pr.ini ? 'Elige antes el mes de la 1.ª cuota' : (!maxC(pr.ini) ? 'No aplazable: última cuota en febrero' : 'Máx. ' + maxC(pr.ini) + ' cuotas'),
+        cuotasNote:!pr.ini ? 'Elige antes el primer pago' : (!maxC(pr.ini) ? 'No aplazable: última cuota en febrero' : 'Máx. ' + maxC(pr.ini) + ' cuotas'),
         billOpts:[{v:'', label:'Elige', sel:!pr.bill}, {v:'Alumno', label:'Alumno', sel:pr.bill === 'Alumno'}, {v:'Empresa', label:'Empresa', sel:pr.bill === 'Empresa'}],
         onBill:(e) => setPrice(id, {bill:e.target.value || null}),
         billAlert:pr.bill === 'Empresa',
@@ -2012,11 +2040,12 @@ class Component extends DCLogic {
         onPareja:(e) => { const pm = missFor(l, pr, av).filter(x => x !== 'Pareja'); if (pm.length) { flash('Para indicar la pareja antes hay que completar el resto de la fila: ' + pm.join(', ') + '.'); return; } setPrice(l.id, {pareja:e.target.value}); },
         isHot:!!l.hot, onUnhot:() => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {hot:false}) : x)}),
         rowStyle:l.hot ? 'background:#FFD3E8;box-shadow:inset 4px 0 0 #D6338A' : cur === 'Aceptada cerrada' ? 'background:#DDF5E6;box-shadow:inset 4px 0 0 #176B3A' : cur === 'Aceptado' ? 'background:#F0FAF4' : (l.origen === 'Nuevo' ? 'background:#FFE4C4' : (l.origen === 'Reactivado' ? 'background:#FFFFFF' : '')),
-        estOpts:(cur === 'Aceptada cerrada' ? ESTADOS_ALL : ESTADOS).map(e => ({v:e, label:e, sel:cur === e})),
+        estOpts:(cur === 'Aceptada cerrada' ? ESTADOS_ALL : ESTADOS).map(e => ({v:e, label:(e === 'Aceptado' && !moroDone(l.id) && cur !== 'Aceptado' ? 'Aceptado · tras el checkeo de morosidad' : e), sel:cur === e, dis:e === 'Aceptado' && !moroDone(l.id) && cur !== 'Aceptado'})),
         estStyle:'font-weight:700;color:' + EST_COL[cur][1] + ';background:' + EST_COL[cur][0] + ';border-color:' + EST_COL[cur][1],
         onEstado:(ev) => {
           const e = ev.target.value;
           if (e === 'Aceptada cerrada') return;
+          if (e === 'Aceptado' && cur !== 'Aceptado' && !moroDone(l.id)) { flash('No se puede aceptar a ' + l.name + ' hasta que Administración comercial resuelva el checkeo de morosidad (se pide desde «Interesado»).'); set({}); return; }
           const o = Object.assign({}, s.estados); o[l.id] = e;
           const p = {estados:o};
           if (e === 'Aceptado' && cur !== 'Aceptado') { p.toast = l.name + ' pasa a Administración comercial con los datos de Admisiones.'; p.toastTo = 'com'; }
@@ -2140,7 +2169,7 @@ class Component extends DCLogic {
       if (!st.data.hab || st.data.hab === '—') h.hab = 'Individual';
       return h;
     };
-    const HM_FIELDS = [['precio', 'Precio final', '5.275,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fact', 'Forma de facturación', 'Alumno / Empresa'], ['fecha', 'Fecha de la primera cuota', 'dd/mm/aaaa']];
+    const HM_FIELDS = [['precio', 'Precio final', '5.275,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fact', 'Forma de facturación', 'Alumno / Empresa'], ['fecha', 'Primer pago', 'dd/mm/aaaa']];
     const cmpHm = (mc, vals) => {
       const pr = priceOf(mc.id, '—', null, '');
       return HM_FIELDS.map(f => {
@@ -2260,7 +2289,7 @@ class Component extends DCLogic {
         facTick:s.fact[c.id] ? '✓' : '',
         lastFull:lastTxt, lastShort, obs:s.obs[c.id] || '',
         onObs:(e) => { const o = Object.assign({}, s.obs); o[c.id] = e.target.value; set({obs:o}); },
-        iniTxt:c.ini ? '1.ª cuota: ' + MONTH_LBL[c.ini] + ' · definida en Admisiones' : 'Admisiones aún no ha indicado el mes de la 1.ª cuota',
+        iniTxt:c.ini ? 'Primer pago: ' + MONTH_LBL[c.ini] + ' · definida en Admisiones' : 'Admisiones aún no ha indicado el primer pago',
         docs, tipos, slots,
         // reclamaciones a Admisiones
         canClaim:!m.cancel && !m.docsAll && !oc, claimLabel, claimMissing:missing.join(', '),
@@ -2418,7 +2447,7 @@ class Component extends DCLogic {
     });
     const owners = [
       ownerBox('mkt','Marketing','Alta de leads desde el archivo arrastrado (nombre, email, país, teléfono) y costes de marketing. No toca la base inicial.'),
-      ownerBox('adm','Admisiones','Asesor, canal, estado (pendiente, contactado falta decisión, no contesta, aceptado, rechazado), último seguimiento, tarifa (1 individual · 2 doble, con la pareja obligatoria), descuento, mes de la 1.ª cuota y precio final. Recibe las gestiones urgentes.'),
+      ownerBox('adm','Admisiones','Asesor, canal, estado (pendiente, contactado falta decisión, no contesta, aceptado, rechazado), último seguimiento, tarifa (1 individual · 2 doble, con la pareja obligatoria), descuento, primer pago y precio final. Recibe las gestiones urgentes.'),
       ownerBox('com','Administración comercial','HM (prevalece), observaciones, documentación CCGG, PI y HM, reclamaciones a Admisiones, tipo de pago, cobros, devoluciones y exportación.')
     ];
 
@@ -2511,6 +2540,7 @@ class Component extends DCLogic {
       },
       hmOpen:hmModal.hmOpen, hmRows:hmModal.hmRows, hmName:hmModal.hmName, hmFile:hmModal.hmFile, hmRead:hmModal.hmRead, hmCancel:hmModal.hmCancel, hmSave:hmModal.hmSave,
       resetAll:() => set({rstOpen:true, rstPwd:'', rstErr:false}),
+      restoreBk:() => this.restoreBackup(),
       rstOpenV:!!s.rstOpen, rstErrV:s.rstErr, rstPwdVal:s.rstPwd,
       onRstPwd:(e) => set({rstPwd:e.target.value, rstErr:false}),
       rstCancel:() => set({rstOpen:false, rstPwd:'', rstErr:false}),
