@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 41</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 42</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1253,10 +1253,12 @@ async function kvGetRaw(key) {
   if (!r.ok) throw new Error('leer ' + key.replace('adminhub_bootcamp_', '') + ': el servidor responde ' + r.status);
   const t = await r.text();
   if (!t) return null;
-  let j; try { j = JSON.parse(t); } catch (e) { return null; }
+  let j; try { j = JSON.parse(t); } catch (e) { throw new Error('leer ' + key.replace('adminhub_bootcamp_', '') + ': respuesta ilegible del servidor'); }
   let v = (j && typeof j === 'object' && !Array.isArray(j) && 'value' in j) ? j.value : j;
-  if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return null; } }
-  return (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { throw new Error('leer ' + key.replace('adminhub_bootcamp_', '') + ': dato ilegible en el servidor'); } }
+  if (!(v && typeof v === 'object' && !Array.isArray(v))) throw new Error('leer ' + key.replace('adminhub_bootcamp_', '') + ': formato inesperado en el servidor');
+  return v;
 }
 async function kvGet(key) {
   const v = await kvGetRaw(key);
@@ -1425,13 +1427,14 @@ class Component extends DCLogic {
     window.addEventListener('pagehide', this._onPageHide);
     window.addEventListener('beforeunload', this._onBeforeUnload);
   }
+  _nt(key){ const sn = Math.max(0, ...Object.keys(this._seen || {}).map(k => this._seen[k] || 0), ...Object.keys(this._wt || {}).map(k => this._wt[k] || 0)); return Math.max(Date.now(), ((this._rc && this._rc[key] && this._rc[key]._t) || 0) + 1, sn + 1); }
   _lcGet(key){ try { const v = lsGet('adminhub_bootcamp_lc2_' + key); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
   persistLocal(){
     Object.keys(KV_KEYS).forEach(key => {
       const old = this._lcGet(key), data = Object.assign({}, (old && old.data) || {}); let any = false;
       KV_KEYS[key].forEach(f => { if (!jsonSame(this.state[f], this._base[key][f])) { data[f] = jclone(this.state[f]); any = true; } });
       if (!any) return;
-      try { lsSet('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:Date.now(), data})); } catch (e) {}
+      try { lsSet('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:this._nt(key), data})); } catch (e) {}
     });
   }
   _toast(msg){ this.setState({copyMsg:msg}); clearTimeout(this._cmT); this._cmT = setTimeout(() => this.setState({copyMsg:''}), 7000); }
@@ -1463,7 +1466,7 @@ class Component extends DCLogic {
     if (!this._base) return;
     this._resetting = true; this._wt = this._wt || {}; this._rc = this._rc || {};
     try {
-      const ts = Date.now(), backup = {};
+      const ts = this._nt('adminhub_bootcamp_mkt_v1'), backup = {};
       let ok = true;
       if (!noBackup) {
         for (const key of Object.keys(KV_KEYS)) {
@@ -1476,7 +1479,7 @@ class Component extends DCLogic {
         KV_KEYS[key].forEach(f => { data[f] = jclone(patch[f] !== undefined ? patch[f] : this.state[f]); });
         try { await kvSet(key, Object.assign({}, data, {_t:ts})); }
         catch (e) { ok = false; this.markSync(false, (e && e.message) || 'error'); continue; }
-        this._wt[key] = ts; this._rc[key] = Object.assign({}, data, {_t:ts});
+        this._wt[key] = ts; this._seen = this._seen || {}; this._seen[key] = ts; this._rc[key] = Object.assign({}, data, {_t:ts}); this._rcAt = Date.now();
         KV_KEYS[key].forEach(f => { this._base[key][f] = jclone(data[f]); });
         try { localStorage.setItem('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:ts, data:jclone(data)})); } catch (e) {}
       }
@@ -1499,6 +1502,7 @@ class Component extends DCLogic {
   }
   quickSave(){
     if (!this._base || !this.isDirty()) return;
+    if (Date.now() - (this._rcAt || 0) > 6000) return; // la última lectura del servidor es antigua: se podrían pisar cambios de otros; queda en la copia local y se guarda al volver
     Object.keys(KV_KEYS).forEach(key => {
       const fields = KV_KEYS[key];
       const snap = {}; fields.forEach(f => { snap[f] = jclone(this.state[f]); });
@@ -1540,10 +1544,13 @@ class Component extends DCLogic {
       let dirty = false; const patch = {};
       for (const key of Object.keys(KV_KEYS)) {
         let remote = await kvGet(key);
+        this._seen = this._seen || {};
+        if (remote && (remote._t || 0) < (this._seen[key] || 0)) continue; // lectura más antigua que otra ya vista (el servidor aún no se ha puesto al día)
+        if (remote) this._seen[key] = Math.max(this._seen[key] || 0, remote._t || 0);
         let lc = this._lcGet(key);
         if (lc && ((remote && remote._t) || 0) >= lc._t) { try { localStorage.removeItem('adminhub_bootcamp_lc2_' + key); } catch (e) {} lc = null; }
         let stale = false;
-        if (lc && lc.data && lc._t > ((remote && remote._t) || 0)) { stale = true; remote = Object.assign({}, remote || {}, lc.data, {_t:lc._t}); this._wt = this._wt || {}; this._wt[key] = Math.max(this._wt[key] || 0, lc._t); }
+        if (lc && lc.data && lc._t > ((remote && remote._t) || 0)) { stale = true; const ov = Object.assign({}, remote || {}); Object.keys(lc.data).forEach(f => { ov[f] = mergeField(f, this._base[key][f], lc.data[f], (remote || {})[f]); }); remote = Object.assign(ov, {_t:lc._t}); this._wt = this._wt || {}; this._wt[key] = Math.max(this._wt[key] || 0, lc._t); }
         if (!remote) continue;
         this._rc = this._rc || {}; this._rc[key] = remote;
         // lectura obsoleta (KV es eventualmente consistente): si es anterior a nuestra última escritura, se ignora
@@ -1554,9 +1561,10 @@ class Component extends DCLogic {
           else dirty = true;
         });
       }
+      { const dflt = new Date().toLocaleDateString('es-ES'), cur = patch.added || this.state.added; if (Array.isArray(cur) && cur.some(x => x && !x.cargado)) patch.added = cur.map(x => (x && !x.cargado) ? Object.assign({}, x, {cargado:dflt}) : x); }
       if (Object.keys(patch).length) this.setState(patch);
+      this._rcAt = Date.now();
       this.markSync(true);
-      this.fillCarga();
       if (dirty || this.isDirty()) this.flush();
     } catch (e) { this.markSync(false, e); }
     finally { this._pulling = false; }
@@ -1581,18 +1589,23 @@ class Component extends DCLogic {
         this._lw = this._lw || {};
         const gap = 1300 - (Date.now() - (this._lw[key] || 0));
         if (gap > 0) await new Promise(r => setTimeout(r, gap));
-        let remote = (await kvGet(key)) || {};
+        let remote = await kvGet(key);
+        this._seen = this._seen || {}; this._rc = this._rc || {};
+        if (!remote && this._rc[key]) { await new Promise(r => setTimeout(r, 1500)); remote = await kvGet(key); if (!remote) throw new Error('guardar ' + key.replace('adminhub_bootcamp_', '') + ': el servidor devolvió el dato vacío; no se guarda para no borrar nada (se reintenta)'); }
+        remote = remote || {};
+        if ((remote._t || 0) < (this._seen[key] || 0) && this._rc[key]) remote = this._rc[key];
+        else this._seen[key] = Math.max(this._seen[key] || 0, remote._t || 0);
         // lectura obsoleta del KV (más antigua que nuestra última escritura): usar lo último que escribimos, o se pisarían cambios recientes
         if (this._wt && this._wt[key] && (remote._t || 0) < this._wt[key] && this._rc && this._rc[key]) remote = this._rc[key];
         const merged = {};
         fields.forEach(f => { merged[f] = mergeField(f, this._base[key][f], snap[f], remote[f]); });
-        const _ts = Date.now();
-        if (fields.some(f => Array.isArray(remote[f]) && remote[f].length > 0 && Array.isArray(merged[f]) && merged[f].length === 0)) {
+        const _ts = this._nt(key);
+        if (fields.some(f => Array.isArray(remote[f]) && remote[f].length > 0 && Array.isArray(merged[f]) && (merged[f].length === 0 || remote[f].length - merged[f].length >= 3))) {
           try { await kvSet('adminhub_bootcamp_backup_v1', {_t:_ts, key:key, data:remote}); } catch (e) {}
         }
         await kvSet(key, Object.assign({}, remote, merged, {_t:_ts}));
         this._lw[key] = Date.now();
-        this._wt = this._wt || {}; this._wt[key] = _ts;
+        this._wt = this._wt || {}; this._wt[key] = _ts; this._seen[key] = _ts; this._rcAt = Date.now();
         this._rc = this._rc || {}; this._rc[key] = Object.assign({}, remote, merged, {_t:_ts});
         const patch = {};
         fields.forEach(f => {
