@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 38</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 40</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -88,6 +88,7 @@ select.inp{cursor:pointer}
       <sc-if value="{{unlocked}}" hint-placeholder-val="{{false}}">
         <span class="chip" style="background:var(--grnbg);color:var(--grntx)">Edición total activa</span>
         <button onClick="{{resetAll}}" style="background:#fff;color:#B0203C;border:1px solid #F2A3B4;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Borrar todos los datos</button>
+        <button onClick="{{restoreBk}}" style="background:#fff;color:#1F5FBF;border:1px solid #AFC8F3;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Recuperar copia</button>
       </sc-if>
       <sc-if value="{{canChange}}" hint-placeholder-val="{{true}}"><button onClick="{{changeProfile}}" style="background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px">Cambiar perfil</button></sc-if>
     </div>
@@ -384,7 +385,7 @@ select.inp{cursor:pointer}
                   <sc-if value="{{l.isLead}}" hint-placeholder-val="{{true}}">
                     <div style="display:flex;gap:6px;align-items:center"><select class="inp" aria-label="Estado" onChange="{{l.onEstado}}" style="{{l.estStyle}};flex:1 1 auto;min-width:0">
                       <sc-for list="{{l.estOpts}}" as="o" hint-placeholder-count="5">
-                        <option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option>
+                        <option value="{{o.v}}" selected="{{o.sel}}" disabled="{{o.dis}}">{{o.label}}</option>
                       </sc-for>
                     </select><button onClick="{{l.onEnv}}" disabled="{{l.envOff}}" title="{{l.envTitle}}" aria-label="Enviar email al candidato" style="flex:0 0 auto;background:#fff;border:1px solid var(--inpline);border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></button></div>
                   </sc-if>
@@ -1433,18 +1434,44 @@ class Component extends DCLogic {
       try { lsSet('adminhub_bootcamp_lc2_' + key, JSON.stringify({_t:Date.now(), data})); } catch (e) {}
     });
   }
-  async hardReset(patch){
+  _toast(msg){ this.setState({copyMsg:msg}); clearTimeout(this._cmT); this._cmT = setTimeout(() => this.setState({copyMsg:''}), 7000); }
+  async restoreBackup(){
+    // Recupera la última copia de seguridad guardada (se crea al borrar todo o al vaciar una lista). Pide confirmar con un segundo clic.
+    if (!this._base || this._resetting) return;
+    try {
+      const bk = await kvGet('adminhub_bootcamp_backup_v1');
+      if (!bk || !bk.data) { this._toast('No hay ninguna copia de seguridad guardada en el servidor.'); return; }
+      const data = (bk.key && KV_KEYS[bk.key]) ? {[bk.key]: bk.data} : bk.data;
+      const patch = {}, keys = [];
+      Object.keys(data).forEach(k => { if (KV_KEYS[k] && data[k]) { let any = false; KV_KEYS[k].forEach(f => { if (data[k][f] !== undefined) { patch[f] = data[k][f]; any = true; } }); if (any) keys.push(k); } });
+      const nLeads = Array.isArray(patch.added) ? patch.added.length : 0;
+      if (!keys.length) { this._toast('La copia de seguridad está vacía.'); return; }
+      const when = bk._t ? new Date(bk._t).toLocaleString('es-ES') : '';
+      if (!this._bkArm || Date.now() - this._bkArm > 30000) {
+        this._bkArm = Date.now();
+        this._toast('Copia del ' + when + (nLeads ? ' con ' + nLeads + ' leads' : '') + '. Pulsa otra vez «Recuperar copia» (en 30 s) para sustituir los datos actuales por ella.');
+        return;
+      }
+      this._bkArm = 0;
+      this.setState(patch);
+      await this.hardReset(patch, keys, true);
+      this._toast('Copia recuperada' + (nLeads ? ': ' + nLeads + ' leads' : '') + '.');
+    } catch (e) { this._toast('No se pudo leer la copia de seguridad: ' + ((e && e.message) || 'error')); }
+  }
+  async hardReset(patch, only, noBackup){
     // Escritura autoritativa: sustituye lo guardado (sin fusionar con lo que haya en el servidor).
     if (!this._base) return;
     this._resetting = true; this._wt = this._wt || {}; this._rc = this._rc || {};
     try {
       const ts = Date.now(), backup = {};
       let ok = true;
-      for (const key of Object.keys(KV_KEYS)) {
-        try { const rem = await kvGet(key); if (rem) backup[key] = rem; } catch (e) {}
+      if (!noBackup) {
+        for (const key of Object.keys(KV_KEYS)) {
+          try { const rem = await kvGet(key); if (rem) backup[key] = rem; } catch (e) {}
+        }
+        try { await kvSet('adminhub_bootcamp_backup_v1', {_t:ts, reason:'reset', data:backup}); } catch (e) {}
       }
-      try { await kvSet('adminhub_bootcamp_backup_v1', {_t:ts, reason:'reset', data:backup}); } catch (e) {}
-      for (const key of Object.keys(KV_KEYS)) {
+      for (const key of Object.keys(KV_KEYS).filter(k => !only || only.indexOf(k) >= 0)) {
         const data = {};
         KV_KEYS[key].forEach(f => { data[f] = jclone(patch[f] !== undefined ? patch[f] : this.state[f]); });
         try { await kvSet(key, Object.assign({}, data, {_t:ts})); }
@@ -1613,6 +1640,7 @@ class Component extends DCLogic {
     const matMiss = (l) => missFor(l, priceOf(l.id, '—', null, ''), null);
     const matOk = (l) => docsOk(l.id) && matMiss(l).length === 0;
     const eff = (l) => { const e = s.estados[l.id] || l.estado; if (e === 'Aceptada cerrada') return 'Aceptado'; return (e === 'Aceptado' && matOk(l)) ? 'Aceptada cerrada' : e; };
+    const moroDone = (id) => { const mv = s.moro[id]; return !!mv && mv.st !== 'pending'; };
     const moroMiss = (l, pr) => missFor(l, pr, null).filter(x => x !== 'Forma de facturación');
     const moroArgs = (l, pr, cur) => { const mm = moroMiss(l, pr); return [cur === ST_CONT && mm.length === 0, [ST_CONT, 'Aceptado', 'Aceptada cerrada'].indexOf(cur) >= 0, (cur === ST_CONT && mm.length) ? 'Para pedir el checkeo de morosidad completa antes la fila (faltan: ' + mm.join(', ') + ').' : '']; };
     const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', gest:a.gest || '', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual, idioma:a.idioma || '', origen:a.origen || 'Nuevo', hot:!!a.hot, cargado:a.cargado || '', ult:a.ult || ''})).concat(LEADS);
@@ -2012,11 +2040,12 @@ class Component extends DCLogic {
         onPareja:(e) => { const pm = missFor(l, pr, av).filter(x => x !== 'Pareja'); if (pm.length) { flash('Para indicar la pareja antes hay que completar el resto de la fila: ' + pm.join(', ') + '.'); return; } setPrice(l.id, {pareja:e.target.value}); },
         isHot:!!l.hot, onUnhot:() => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {hot:false}) : x)}),
         rowStyle:l.hot ? 'background:#FFD3E8;box-shadow:inset 4px 0 0 #D6338A' : cur === 'Aceptada cerrada' ? 'background:#DDF5E6;box-shadow:inset 4px 0 0 #176B3A' : cur === 'Aceptado' ? 'background:#F0FAF4' : (l.origen === 'Nuevo' ? 'background:#FFE4C4' : (l.origen === 'Reactivado' ? 'background:#FFFFFF' : '')),
-        estOpts:(cur === 'Aceptada cerrada' ? ESTADOS_ALL : ESTADOS).map(e => ({v:e, label:e, sel:cur === e})),
+        estOpts:(cur === 'Aceptada cerrada' ? ESTADOS_ALL : ESTADOS).map(e => ({v:e, label:(e === 'Aceptado' && !moroDone(l.id) && cur !== 'Aceptado' ? 'Aceptado · tras el checkeo de morosidad' : e), sel:cur === e, dis:e === 'Aceptado' && !moroDone(l.id) && cur !== 'Aceptado'})),
         estStyle:'font-weight:700;color:' + EST_COL[cur][1] + ';background:' + EST_COL[cur][0] + ';border-color:' + EST_COL[cur][1],
         onEstado:(ev) => {
           const e = ev.target.value;
           if (e === 'Aceptada cerrada') return;
+          if (e === 'Aceptado' && cur !== 'Aceptado' && !moroDone(l.id)) { flash('No se puede aceptar a ' + l.name + ' hasta que Administración comercial resuelva el checkeo de morosidad (se pide desde «Interesado»).'); set({}); return; }
           const o = Object.assign({}, s.estados); o[l.id] = e;
           const p = {estados:o};
           if (e === 'Aceptado' && cur !== 'Aceptado') { p.toast = l.name + ' pasa a Administración comercial con los datos de Admisiones.'; p.toastTo = 'com'; }
@@ -2511,6 +2540,7 @@ class Component extends DCLogic {
       },
       hmOpen:hmModal.hmOpen, hmRows:hmModal.hmRows, hmName:hmModal.hmName, hmFile:hmModal.hmFile, hmRead:hmModal.hmRead, hmCancel:hmModal.hmCancel, hmSave:hmModal.hmSave,
       resetAll:() => set({rstOpen:true, rstPwd:'', rstErr:false}),
+      restoreBk:() => this.restoreBackup(),
       rstOpenV:!!s.rstOpen, rstErrV:s.rstErr, rstPwdVal:s.rstPwd,
       onRstPwd:(e) => set({rstPwd:e.target.value, rstErr:false}),
       rstCancel:() => set({rstOpen:false, rstPwd:'', rstErr:false}),
