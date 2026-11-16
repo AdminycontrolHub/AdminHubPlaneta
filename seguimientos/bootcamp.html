@@ -45,7 +45,7 @@ select.inp{cursor:pointer}
   <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end">
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 37</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 38</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -388,6 +388,7 @@ select.inp{cursor:pointer}
                       </sc-for>
                     </select><button onClick="{{l.onEnv}}" disabled="{{l.envOff}}" title="{{l.envTitle}}" aria-label="Enviar email al candidato" style="flex:0 0 auto;background:#fff;border:1px solid var(--inpline);border-radius:8px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></button></div>
                   </sc-if>
+                  <sc-if value="{{l.moroWait}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;font-size:11px;color:var(--mut);line-height:1.35">{{l.moroWhy}}</div></sc-if>
                   <sc-if value="{{l.moroBtn}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px"><button onClick="{{l.moroGo}}" style="background:#fff;color:var(--redtx);border:1px solid var(--red);border-radius:8px;padding:5px 9px;font-weight:800;font-size:12px">Checkeo morosidad</button></div></sc-if>
                   <sc-if value="{{l.moroPending}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;font-size:12px;color:var(--ambertx);font-weight:700">Checkeo solicitado · pendiente</div></sc-if>
                   <sc-if value="{{l.moroSi}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;color:#B3203D;font-weight:800;font-size:13px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D32F4B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>MOROSO</div></sc-if>
@@ -403,7 +404,8 @@ select.inp{cursor:pointer}
                       </select>
                       <sc-if value="{{l.isDoble}}" hint-placeholder-val="{{false}}">
                         <div style="display:flex;flex-direction:column;gap:5px">
-                          <input class="inp" aria-label="Nombre de la pareja" value="{{l.parejaVal}}" onChange="{{l.onPareja}}" placeholder="Pareja (obligatorio)" style="{{l.parejaStyle}}">
+                          <input class="inp" aria-label="Nombre de la pareja" disabled="{{l.parejaLocked}}" title="{{l.parejaWhy}}" value="{{l.parejaVal}}" onChange="{{l.onPareja}}" placeholder="Pareja (obligatorio)" style="{{l.parejaStyle}}">
+                          <sc-if value="{{l.parejaLocked}}" hint-placeholder-val="{{false}}"><span style="font-size:11px;color:var(--mut);font-weight:600;line-height:1.35">{{l.parejaWhy}}</span></sc-if>
                           <sc-if value="{{l.parejaMissing}}" hint-placeholder-val="{{false}}"><span style="font-size:11px;color:var(--redtx);font-weight:600">Sin pareja no se guarda la tarifa doble.</span></sc-if>
                           <div draggable="true" onDragStart="{{l.onPairStart}}" style="cursor:grab;font-size:11px;font-weight:700;color:var(--ink);background:#fff;border:1px dashed var(--inpline);border-radius:8px;padding:4px 8px;width:fit-content">⠿ Arrastrar para emparejar</div>
                           <sc-if value="{{l.hasGrp}}" hint-placeholder-val="{{false}}"><span class="chip" style="{{l.grpStyle}}">Pareja agrupada</span></sc-if>
@@ -488,7 +490,7 @@ select.inp{cursor:pointer}
       <sc-if value="{{admEmpty}}" hint-placeholder-val="{{false}}">
         <div style="padding:28px 12px;color:var(--mut);text-align:center;font-size:14px">No hay leads de la muestra con este estado.</div>
       </sc-if>
-      <div style="color:var(--mut);font-size:12px;margin-top:12px;line-height:1.5">Al marcar «Aceptado», el lead pasa solo a Administración comercial con sus datos. Lo que se escribe aquí en «Último seguimiento» es lo mismo que ve esa pestaña.</div>
+      <div style="color:var(--mut);font-size:12px;margin-top:12px;line-height:1.5">Al marcar «Aceptado», el lead pasa solo a Administración comercial con sus datos. Solo cuenta como matrícula ganada (y pasa solo a «Aceptada cerrada») cuando la fila está completa y Administración comercial ha marcado como recibidos la HM y el PI. Lo que se escribe aquí en «Último seguimiento» es lo mismo que ve esa pestaña.</div>
     </div>
   </sc-if>
 
@@ -1321,9 +1323,11 @@ const EST_COL = {
   'Interesado':['#DCEBFE','#1D58C0'],
   'Ilocalizado':['#E7EAF5','#4B5578'],
   'Aceptado':['#DDF5E6','#176B3A'],
+  'Aceptada cerrada':['#B9E8CB','#0B5A2A'],
   'Rechazado':['#FDECEF','#B3203D']
 };
-const BASE = {'No contactado':0,'Interesado':0,'Ilocalizado':0,'Aceptado':0,'Rechazado':0};
+const BASE = {'No contactado':0,'Interesado':0,'Ilocalizado':0,'Aceptado':0,'Aceptada cerrada':0,'Rechazado':0};
+const ESTADOS_ALL = ['No contactado', 'Ilocalizado', ST_CONT, 'Aceptado', 'Aceptada cerrada', 'Rechazado'];
 const LEADS = [];
 const SIM_EXCEL = [];
 const D0 = {ccgg:1,pi:1,hm:1};
@@ -1589,7 +1593,28 @@ class Component extends DCLogic {
     const canEdit = role === 'reu' || profile === role || unlocked;
     const NOW = new Date(); const NOWT = NOW.getTime(); const todayTxt = NOW.toLocaleDateString('es-ES');
     const mktBg = this.props.mktBg || '#ECE6FC';
-    const eff = (l) => s.estados[l.id] || l.estado;
+    const missFor = (l, pr, av) => {
+      const m = [];
+      if (l.manual) {
+        if (!(l.full || '').trim()) m.push('Nombre');
+        if (!(l.tel || '').trim()) m.push('Teléfono');
+        if (!(l.email || '').trim()) m.push('Email');
+      }
+      if (pr.hab !== 'Individual' && pr.hab !== 'Doble') m.push('Tarifa');
+      if (pr.hab === 'Doble' && !(pr.pareja || '').trim()) m.push('Pareja');
+      if (pr.dto == null) m.push('Descuento');
+      if (pr.tipo !== 'Contado' && pr.tipo !== 'Aplazado') m.push('Forma de pago');
+      if (pr.tipo === 'Aplazado' && !pr.ncuotas) m.push('Nº de cuotas');
+      if (!pr.ini) m.push('Mes de la primera cuota');
+      if (!pr.bill) m.push('Forma de facturación');
+      return m;
+    };
+    const docsOk = (id) => { const d = ((s.cs[id] || {}).docs) || {}; return !!(d.hm && d.pi); };
+    const matMiss = (l) => missFor(l, priceOf(l.id, '—', null, ''), null);
+    const matOk = (l) => docsOk(l.id) && matMiss(l).length === 0;
+    const eff = (l) => { const e = s.estados[l.id] || l.estado; if (e === 'Aceptada cerrada') return 'Aceptado'; return (e === 'Aceptado' && matOk(l)) ? 'Aceptada cerrada' : e; };
+    const moroMiss = (l, pr) => missFor(l, pr, null).filter(x => x !== 'Forma de facturación');
+    const moroArgs = (l, pr, cur) => { const mm = moroMiss(l, pr); return [cur === ST_CONT && mm.length === 0, [ST_CONT, 'Aceptado', 'Aceptada cerrada'].indexOf(cur) >= 0, (cur === ST_CONT && mm.length) ? 'Para pedir el checkeo de morosidad completa antes la fila (faltan: ' + mm.join(', ') + ').' : '']; };
     const allLeads = s.added.map(a => ({id:a.id, full:a.full, name:a.name, pais:a.pais, asesor:a.asesor || 'Sin asignar', gest:a.gest || '', canal:'—', estado:a.estado || 'No contactado', last:a.last || ('Alta nueva · ' + a.src), fecha:a.fecha, tel:a.tel, email:a.email, isNew:!a.estado || !!a.manual, manual:!!a.manual, idioma:a.idioma || '', origen:a.origen || 'Nuevo', hot:!!a.hot, cargado:a.cargado || '', ult:a.ult || ''})).concat(LEADS);
     const noteOf = (id, def) => (s.notes[id] !== undefined ? s.notes[id] : def);
     const setNote = (id, v) => { const n = Object.assign({}, s.notes); n[id] = v; set({notes:n}); };
@@ -1609,7 +1634,7 @@ class Component extends DCLogic {
       return {asesor:cur, asesOpts:(ASESORES.indexOf(cur) < 0 && cur ? ASESORES.concat([cur]) : ASESORES).map(a => ({v:a, label:a, sel:cur === a})), onAses:(e) => { const o = Object.assign({}, s.asesores); o[id] = e.target.value; set({asesores:o}); }};
     };
     // contador de plazas: cuenta personas (una pareja doble solo suma 2 cuando los dos están aceptados)
-    const accLeads = allLeads.filter(l => eff(l) === 'Aceptado');
+    const accLeads = allLeads.filter(l => eff(l) === 'Aceptada cerrada');
     let personasAc = 0, parejasPend = 0;
     accLeads.forEach(l => {
       const pv = priceOf(l.id, '—', null, '');
@@ -1624,10 +1649,10 @@ class Component extends DCLogic {
     const pips = [];
     for (let i = 0; i < GOAL; i++) pips.push({style:'width:11px;height:11px;border-radius:50%;display:inline-block;background:' + (i < personasAc ? (extra > 0 || faltan === 0 ? '#2E9E5B' : '#7C5CE6') : '#D7DCF5')});
     for (let i = 0; i < extra; i++) pips.push({style:'width:13px;height:13px;border-radius:50%;display:inline-block;background:#F5A300;box-shadow:0 0 0 2px #FFE2A0'});
-    const moroView = (id, name, asesorN, accepted) => {
+    const moroView = (id, name, asesorN, okBtn, showRes, why) => {
       const mv = s.moro[id];
       return {
-        moroBtn:accepted && !mv, moroPending:accepted && !!mv && mv.st === 'pending', moroSi:accepted && !!mv && mv.st === 'si', moroNo:accepted && !!mv && mv.st === 'no',
+        moroBtn:!!okBtn && !mv, moroWait:!!why && !mv, moroWhy:why || '', moroPending:!!showRes && !!mv && mv.st === 'pending', moroSi:!!showRes && !!mv && mv.st === 'si', moroNo:!!showRes && !!mv && mv.st === 'no',
         moroGo:() => { const o = Object.assign({}, s.moro); o[id] = {st:'pending', date:todayTxt, name, asesor:asesorN}; set({moro:o, toastTo:'com', toast:'Checkeo de morosidad solicitado a Administración comercial para ' + name + '.'}); }
       };
     };
@@ -1643,6 +1668,9 @@ class Component extends DCLogic {
     const pairDrop = (tid, pr) => {
       const src = s.pairDrag;
       if (!src || src.id === String(tid) || pr.hab !== 'Doble') { set({pairDrag:null}); return; }
+      const rowMiss = (id) => { const l0 = allLeads.filter(x => x.id === id)[0]; return l0 ? missFor(l0, priceOf(id, '—', null, ''), null).filter(x => x !== 'Pareja') : []; };
+      const pmm = rowMiss(src.id).length ? rowMiss(src.id) : rowMiss(String(tid));
+      if (pmm.length) { flash('Para emparejar hay que completar antes el resto de la fila: ' + pmm.join(', ') + '.'); set({pairDrag:null}); return; }
       const o = Object.assign({}, s.prices);
       const pa = o[src.id] || {}, pb = o[tid] || {};
       let g = pb.grp !== undefined ? pb.grp : pa.grp;
@@ -1711,6 +1739,7 @@ class Component extends DCLogic {
         habOpts:[['Individual', 'Tarifa 1 · Individual'], ['Doble', 'Tarifa 2 · Doble']].map(h => ({label:h[1], go:() => setPrice(id, {hab:h[0]}), style:'border-radius:7px;padding:4px 8px;font-size:12px;font-weight:700;border:1px solid ' + (hab === h[0] ? ACC.adm : LINE) + ';background:' + (hab === h[0] ? ACC.adm : '#FFFFFF') + ';color:' + (hab === h[0] ? '#FFFFFF' : INK)})),
         isDoble:isDoble, parejaVal:pr.pareja, parejaMissing:miss,
         onPareja:(e) => setPrice(id, {pareja:e.target.value}),
+        parejaLocked:false, parejaWhy:'',
         parejaStyle:miss ? 'border-color:' + RED + ';background:#FDECEF' : '',
         hasGrp:!!col, grpStyle:col ? 'background:' + col[1] + ';color:#FFFFFF' : '',
         zoneStyle:'border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:8px;' + (col ? 'background:' + col[0] + ';border:2px solid ' + col[1] : 'border:2px solid transparent'),
@@ -1726,11 +1755,12 @@ class Component extends DCLogic {
     const counts = Object.assign({}, BASE);
     allLeads.forEach(l => { counts[eff(l)]++; });
     const nLeads = allLeads.length;
+    const nAcc = (counts['Aceptado'] || 0) + (counts['Aceptada cerrada'] || 0);
 
     // ---------- alumnos (Admisiones -> Adm. comercial)
-    const fresh = allLeads.filter(l => eff(l) === 'Aceptado').map(l => ({
+    const fresh = allLeads.filter(l => eff(l) === 'Aceptado' || eff(l) === 'Aceptada cerrada').map(l => ({
       id:l.id, idioma:l.idioma || '', name:l.name, full:l.full, pais:l.pais, asesor:l.asesor, canal:l.canal, last:l.last, hab:priceOf(l.id,'—',null,'').hab, fin:(priceOf(l.id,'—',null,'').ok ? priceOf(l.id,'—',null,'').fin : null), acomp:priceOf(l.id,'—',null,'').pareja || '—', ini:priceOf(l.id,'—',null,'').ini, iniOverride:priceOf(l.id,'—',null,'').iniSet, ncuotas:priceOf(l.id,'—',null,'').ncuotas, bill:priceOf(l.id,'—',null,'').bill, grp:priceOf(l.id,'—',null,'').grp, tel:'—', email:'—',
-      sub:'Aceptado en Admisiones · importes por definir', tipo:priceOf(l.id,'—',null,'').tipo, amt:{pi:500,nov:0,dic:0,ene:0,feb:0}, extraAmt:0, docs:{}, paid:{}, refund:500, isNew:true, hm:null
+      sub:(docsOk(l.id) ? (matMiss(l).length ? 'HM y PI recibidos · falta completar la fila en Admisiones: ' + matMiss(l).join(', ') : 'Aceptada cerrada · matrícula ganada') : 'Aceptado en Admisiones · marca HM y PI como recibidos para cerrar la matrícula'), tipo:priceOf(l.id,'—',null,'').tipo, amt:{pi:500,nov:0,dic:0,ene:0,feb:0}, extraAmt:0, docs:{}, paid:{}, refund:500, isNew:true, hm:null
     }));
     const docsFor = (c) => DOCS.filter(d => d[0] !== 'dfe' || c.bill === 'Empresa');
     const seeds = fresh.concat(COM.map(c => { const pr = priceOf(c.id, c.hab, c.dto, c.acomp === '—' ? '' : c.acomp, INI_SEED[c.id], c.tipo); return Object.assign({isNew:false, refund:c.refund || 500}, c, {tipo:pr.tipo, hab:pr.hab, fin:pr.ok ? pr.fin : null, acomp:pr.pareja || '—', ini:pr.ini, iniOverride:pr.iniSet, grp:pr.grp}); }));
@@ -1799,7 +1829,7 @@ class Component extends DCLogic {
     const HIST_KEY = 'adminhub_bootcamp_historico_v1';
     const cycSnapshot = (name) => ({
       id:'c' + Date.now().toString(36), name, year:new Date().getFullYear(), closedAt:Date.now(), closedTxt:todayTxt,
-      leads:nLeads, aceptados:counts['Aceptado'] || 0, docsInc, cerrados:model.filter(m => m.closed).length,
+      leads:nLeads, aceptados:nAcc, docsInc, cerrados:model.filter(m => m.closed).length,
       esperado:T.esperado, recibido:T.recibido, devuelta:T.devuelta, devPend:T.devPend, pend:T.pend, neta,
       counts:Object.assign({}, counts),
       costs:s.costs.map(x => ({label:x.label, v:x.v})),
@@ -1837,7 +1867,7 @@ class Component extends DCLogic {
     const docsInc = active.filter(m => !m.docsAll).length;
     const funnel = [
       tile('mkt','Leads', nLeads, 'cargados con la herramienta'),
-      tile('adm','Aceptados', counts['Aceptado'], (nLeads ? Math.round(counts['Aceptado'] / nLeads * 100) : 0) + ' % de los leads'),
+      tile('adm','Aceptados', nAcc, (nLeads ? Math.round(nAcc / nLeads * 100) : 0) + ' % de los leads'),
       tile('com','Doc. incompleta', docsInc, 'sin CCGG, PI o HM', {warn:docsInc > 0}),
       tile('com','Casos cerrados', model.filter(m => m.closed).length, 'cobro o devolución', {small:true}),
       tile('com','Facturación recibida', fmt(neta), 'cuotas pagadas' + (T.devuelta > 0 ? ' · tras devolver ' + fmt(T.devuelta) : ''))
@@ -1897,7 +1927,7 @@ class Component extends DCLogic {
     const costKpis = [
       {label:'Total invertido', sub:'Suma de todos los conceptos', value:costTotal > 0 ? fmt(costTotal) : '—'},
       {label:'Coste por lead', sub:'Total ÷ ' + nLeads + ' leads', value:costTotal > 0 && nLeads > 0 ? fmt(costTotal / nLeads) : '—'},
-      {label:'Coste por aceptado', sub:'Total ÷ ' + counts['Aceptado'] + ' aceptados', value:costTotal > 0 && counts['Aceptado'] > 0 ? fmt(costTotal / counts['Aceptado']) : '—'}
+      {label:'Coste por aceptado', sub:'Total ÷ ' + nAcc + ' aceptados', value:costTotal > 0 && nAcc > 0 ? fmt(costTotal / nAcc) : '—'}
     ];
 
     // ---------- ADMISIONES
@@ -1921,27 +1951,11 @@ class Component extends DCLogic {
         }
       });
     });
-    const admTabs = ['Todos'].concat(ESTADOS).map(t => ({
+    const admTabs = ['Todos'].concat(ESTADOS_ALL).map(t => ({
       label:t, count:t === 'Todos' ? nLeads : counts[t], active:s.filter === t, go:() => set({filter:t}),
       style:btn(s.filter === t, ACC.adm) + 'padding:10px 14px'
     }));
     const urgentShown = urgent.map(u => Object.assign({gest:'—'}, u)).filter(u => !s.urgGest || u.gest === s.urgGest);
-    const missFor = (l, pr, av) => {
-      const m = [];
-      if (l.manual) {
-        if (!(l.full || '').trim()) m.push('Nombre');
-        if (!(l.tel || '').trim()) m.push('Teléfono');
-        if (!(l.email || '').trim()) m.push('Email');
-      }
-      if (pr.hab !== 'Individual' && pr.hab !== 'Doble') m.push('Tarifa');
-      if (pr.hab === 'Doble' && !(pr.pareja || '').trim()) m.push('Pareja');
-      if (pr.dto == null) m.push('Descuento');
-      if (pr.tipo !== 'Contado' && pr.tipo !== 'Aplazado') m.push('Forma de pago');
-      if (pr.tipo === 'Aplazado' && !pr.ncuotas) m.push('Nº de cuotas');
-      if (!pr.ini) m.push('Mes de la primera cuota');
-      if (!pr.bill) m.push('Forma de facturación');
-      return m;
-    };
     const nrm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     const FLT = s.flt || {}, FQ = nrm(s.fq);
     const leadRows = allLeads.filter(l => {
@@ -1963,7 +1977,7 @@ class Component extends DCLogic {
       const cur = eff(l);
       const pr = priceOf(l.id, '—', null, '');
       const av = asesView(l.id, l.asesor);
-      return Object.assign(priceView(l.id, pr, true), moroView(l.id, l.name, av.asesor, cur === 'Aceptado'), {
+      return Object.assign(priceView(l.id, pr, true), moroView(l.id, l.name, av.asesor, ...moroArgs(l, pr, cur)), {
         tel:l.tel || '—', email:l.email || '—', copyTel:copy(l.tel || '—', 'teléfono'), copyEmail:copy(l.email || '—', 'email'),
         name:l.name, pais:l.pais, asesor:av.asesor, asesOpts:av.asesOpts, onAses:av.onAses, canal:l.canal, isNew:!!l.isNew, isLead:true, isStudent:false,
         envOff:!l.email, envTitle:!l.email ? 'Este lead no tiene email' : 'Enviar email · ' + (l.origen === 'Reactivado' ? 'reactivado' : 'nuevo') + ' · plantilla ' + (cur === 'Ilocalizado' ? '2' : '1'),
@@ -1993,12 +2007,16 @@ class Component extends DCLogic {
         last:noteOf(l.id, l.last), onLast:(e) => setNote(l.id, e.target.value),
         mora:false, moraAmt:'', hasMod:hmN(l.id) > 0, modN:hmN(l.id), hasClaim:!!openClaimOf(l.id), ...idiV(l.idioma), isReact:l.origen === 'Reactivado', nameStyle:'font-weight:700', stuChip:'', stuLabel:'',
         cargaTxt:l.cargado || '—', ultTxt:l.ult || (cur === 'No contactado' ? 'Nunca contactado' : 'Contactado · fecha sin registrar'), ultNever:!l.ult && cur === 'No contactado',
+        parejaLocked:missFor(l, pr, av).filter(x => x !== 'Pareja').length > 0,
+        parejaWhy:'Completa antes el resto de la fila: ' + missFor(l, pr, av).filter(x => x !== 'Pareja').join(', ') + '.',
+        onPareja:(e) => { const pm = missFor(l, pr, av).filter(x => x !== 'Pareja'); if (pm.length) { flash('Para indicar la pareja antes hay que completar el resto de la fila: ' + pm.join(', ') + '.'); return; } setPrice(l.id, {pareja:e.target.value}); },
         isHot:!!l.hot, onUnhot:() => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {hot:false}) : x)}),
-        rowStyle:l.hot ? 'background:#FFD3E8;box-shadow:inset 4px 0 0 #D6338A' : cur === 'Aceptado' ? 'background:#F0FAF4' : (l.origen === 'Nuevo' ? 'background:#FFE4C4' : (l.origen === 'Reactivado' ? 'background:#FFFFFF' : '')),
-        estOpts:ESTADOS.map(e => ({v:e, label:e, sel:cur === e})),
+        rowStyle:l.hot ? 'background:#FFD3E8;box-shadow:inset 4px 0 0 #D6338A' : cur === 'Aceptada cerrada' ? 'background:#DDF5E6;box-shadow:inset 4px 0 0 #176B3A' : cur === 'Aceptado' ? 'background:#F0FAF4' : (l.origen === 'Nuevo' ? 'background:#FFE4C4' : (l.origen === 'Reactivado' ? 'background:#FFFFFF' : '')),
+        estOpts:(cur === 'Aceptada cerrada' ? ESTADOS_ALL : ESTADOS).map(e => ({v:e, label:e, sel:cur === e})),
         estStyle:'font-weight:700;color:' + EST_COL[cur][1] + ';background:' + EST_COL[cur][0] + ';border-color:' + EST_COL[cur][1],
         onEstado:(ev) => {
           const e = ev.target.value;
+          if (e === 'Aceptada cerrada') return;
           const o = Object.assign({}, s.estados); o[l.id] = e;
           const p = {estados:o};
           if (e === 'Aceptado' && cur !== 'Aceptado') { p.toast = l.name + ' pasa a Administración comercial con los datos de Admisiones.'; p.toastTo = 'com'; }
@@ -2015,7 +2033,7 @@ class Component extends DCLogic {
       const m = byId[c.id];
       const pr = priceOf(c.id, c.hab, c.dto, COM.filter(x => x.id === c.id)[0].acomp === '—' ? '' : COM.filter(x => x.id === c.id)[0].acomp, INI_SEED[c.id]);
       const av = asesView(c.id, c.asesor);
-      return Object.assign(priceView(c.id, pr, !m.cancel), moroView(c.id, c.name, av.asesor, !m.cancel), {
+      return Object.assign(priceView(c.id, pr, !m.cancel), moroView(c.id, c.name, av.asesor, false, !m.cancel, ''), {
         tel:c.tel, email:c.email, copyTel:copy(c.tel, 'teléfono'), copyEmail:copy(c.email, 'email'),
         name:c.name, pais:c.pais, asesor:av.asesor, asesOpts:av.asesOpts, onAses:av.onAses, canal:c.canal, isNew:false, isLead:false, isStudent:true, opts:[],
         last:noteOf(c.id, c.last), onLast:(e) => setNote(c.id, e.target.value),
@@ -2416,7 +2434,7 @@ class Component extends DCLogic {
           idi:[ALL, ['ES', 'ES'], ['ENG', 'ENG']],
           tipo:[ALL, ['Reactivado', 'Reactivados'], ['Nuevo', 'Nuevos']],
           ases:[ALL].concat(ASESORES.map(a => [a, a])),
-          est:[ALL].concat(ESTADOS.map(e => [e, e])),
+          est:[ALL].concat(ESTADOS_ALL.map(e => [e, e])),
           tar:[ALL, ['Individual', 'Individual'], ['Doble', 'Doble'], NONE],
           dto:[ALL].concat(DTO_OPTS.map(d => [String(d), d === 0 ? 'Sin descuento' : d + ' %']), [NONE]),
           pago:[ALL, ['Contado', 'Contado'], ['Aplazado', 'Aplazado'], NONE],
@@ -2462,7 +2480,7 @@ class Component extends DCLogic {
       closeHist:() => { if (s.ext || (location.hash || '') === '#historico') { location.href = '../index.html'; } else set({histOpen:false}); },
       histCloseLbl:(location.hash || '') === '#historico' ? 'Volver al AdminHub' : 'Cerrar',
       cycOpen:s.cycOpen, cycName:s.cycName, cycErr:s.cycErr, cycPwdVal:s.cycPwd,
-      cycLeads:nLeads, cycAcc:counts['Aceptado'] || 0, cycNeta:fmt(neta),
+      cycLeads:nLeads, cycAcc:nAcc, cycNeta:fmt(neta),
       cycBtn:s.cycBusy ? 'Guardando…' : 'Cerrar ciclo y poner a 0',
       openCyc:() => set({cycOpen:true, cycPwd:'', cycErr:'', cycBusy:false}),
       closeCyc:() => set({cycOpen:false, cycPwd:'', cycErr:''}),
@@ -2553,7 +2571,7 @@ class Component extends DCLogic {
       plazasLbl:extra > 0 ? 'Sobre el objetivo' : (faltan === 0 ? 'Objetivo cumplido' : 'Plazas que faltan'),
       plazasLeft:extra > 0 ? '+' + extra : String(faltan),
       plazasStyle:'font-family:JetBrains Mono,monospace;font-size:46px;font-weight:700;line-height:1;color:' + (extra > 0 ? '#B26A00' : (faltan === 0 ? '#176B3A' : (faltan <= 5 ? '#8A5A00' : INK))),
-      plazasSub:personasAc + ' de ' + GOAL + ' aceptados' + (parejasPend > 0 ? ' · ' + parejasPend + ' pendientes de cerrar la pareja' : ''),
+      plazasSub:personasAc + ' de ' + GOAL + ' matrículas ganadas' + (parejasPend > 0 ? ' · ' + parejasPend + ' pendientes de cerrar la pareja' : ''),
       demoOpts:[[null, 'Real'], [12, '12'], [20, '20'], [21, '21'], [23, '23']].map(d => ({label:d[1], active:s.demo === d[0], go:() => set({demo:d[0]}), style:'border-radius:7px;padding:3px 8px;font-size:11px;font-weight:700;border:1px solid ' + (s.demo === d[0] ? ACC.mkt : LINE) + ';background:' + (s.demo === d[0] ? ACC.mkt : '#FFFFFF') + ';color:' + (s.demo === d[0] ? '#FFFFFF' : INK)})),
       pips, pipsAria:personasAc + ' de ' + GOAL + ' plazas cubiertas', hasExtra:extra > 0, extraTxt:'+' + extra + (extra === 1 ? ' persona extra' : ' personas extra'),
       roleButtons, funnel, isMkt:role === 'mkt', isAdm:role === 'adm', isCom:role === 'com',
