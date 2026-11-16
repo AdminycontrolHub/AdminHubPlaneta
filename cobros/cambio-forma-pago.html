@@ -617,30 +617,27 @@ function filas(){
 
 function aviso(){
   var ap=S.forma==='aplazado', dto=S.dtoAplica==='aplicar';
-  if(ap && dto) return {txt:'Aplazado: se propone quitar el dto. pago de contado.', btn:'Quitar dto. contado', act:'quitar'};
-  if(ap) return {txt:'Aplazado: las cuotas son libres desde la fecha de primera cuota.'};
-  if(S.forma==='contado_2'){
-    var lim=H.fechaMatricula?addMonth(H.fechaMatricula):'';
-    if(lim && (!S.fecha || S.fecha<=lim)) return {err:true, txt:'Contado 2 veces: el pago tiene que ser a más de un mes de la inscripción (después del '+dmy(lim)+'). 1 cuota.'};
-    return {txt:'Contado 2 veces: pago a más de un mes de la inscripción. 1 cuota.'+(dto?'':' Puedes aplicar el dto. pago de contado.'), btn:dto?null:'Aplicar dto. contado', act:'aplicar'};
-  }
-  var base = S.forma==='contado_dias' ? 'Contado en días: 1 cuota.' : 'Contado: 1 cuota.';
-  return {txt: dto ? base : base+' Puedes aplicar el dto. pago de contado.', btn:dto?null:'Aplicar dto. contado', act:'aplicar'};
+  if(ap) return dto ? {txt:'Aplazado: se propone quitar el dto. pago de contado.', btn:'Quitar dto. contado', act:'quitar'} : {txt:''};
+  var base = S.forma==='contado_2' ? 'Contado 2 veces: 1 cuota.' : '';
+  if(dto) return {txt:base};
+  return {txt:(base?base+' ':'')+'Puedes aplicar el dto. pago de contado.', btn:'Aplicar dto. contado', act:'aplicar'};
 }
 
 /* Filas del resumen Antes / Ahora (cuotas e importe de cuota en una sola línea) */
 function dtoTxtAntes(){ return H.contado>0 ? (H.contadoPct?pctTxt(H.contadoPct)+' · ':'')+eur(H.contado) : 'Sin dto.'; }
 function dtoTxtAhora(M){ return M.dto>0 ? pctTxt(num(S.dtoPct))+' · '+eur(M.dto) : (H.contado>0?'Retirado':'Sin dto.'); }
+function hayCambios(){ return filasResumen(false).some(function(r){return r.changed;}); }
 function filasResumen(todas){
   var by={}; R.rows.forEach(function(r){by[r.k]=r;});
   var M=R.M, intacto=JSON.stringify(S)===JSON.stringify(S0), out=[];
-  function add(k,label,b,a,ch,o){ var r={k:k,label:label,b:b,a:intacto?b:a,changed:!intacto&&ch}; for(var x in (o||{})) r[x]=o[x]; if(todas||r.changed) out.push(r); }
+  function add(k,label,b,a,ch,o){ var r={k:k,label:label,b:b,a:intacto?b:a,changed:!intacto&&ch}; for(var x in (o||{})) r[x]=o[x]; if(todas||r.changed||r.siempre) out.push(r); }
   add('master','Importe master',eur(H.master),eur(H.master),false);
   add('desc','Descuentos (ayudas y otros dtos.)',eur(H.descuentos),eur(M.desc),by.desc.changed);
   add('dto','Dto. pago de contado',dtoTxtAntes(),dtoTxtAhora(M),by.dto.changed);
   add('total','Total final a pagar',eur(H.total),eur(M.total),by.total.changed,{tot:true});
   add('insc','Inscripción',eur(H.insc),eur(M.insc),by.insc.changed);
   add('forma','Forma de pago',formaTxt(H.forma),formaTxt(S.forma),by.forma.changed);
+  add('resto','Resto a abonar en cuotas',eur(H.resto),eur(M.resto),by.resto.changed,{siempre:true});
   add('cuotas','Cuotas',H.cuotas+' × '+eur(H.cuota),M.cuotas+' × '+eur(M.cuota),by.cuotas.changed||by.cuota.changed);
   add('fecha','Fecha 1.ª cuota',dmy(H.fecha),dmy(S.fecha),by.fecha.changed);
   return out;
@@ -729,13 +726,13 @@ function render(){
   document.querySelectorAll('#mod .line[data-k]').forEach(function(l){ var r=by[l.dataset.k]; l.classList.toggle('chg',!!(r&&r.changed)); });
 
   var av=aviso();
-  $('aviso').classList.toggle('err',!!av.err);
+  $('aviso').classList.toggle('err',!!av.err); $('aviso').classList.toggle('hidden',!av.txt&&!av.btn);
   $('avisoTxt').textContent=av.txt;
   var b=$('btnAviso'); b.classList.toggle('hidden',!av.btn); b.textContent=av.btn||''; b.dataset.act=av.act||'';
 
   var cambios=F.rows.filter(function(r){return r.changed;}), n=cambios.length;
   est.className='pill'+(n?' chg':''); est.textContent=n?'Borrador · '+n+' cambio'+(n===1?'':'s'):'Sin cambios';
-  var nr=filasResumen(false).length; $('nCambios').textContent=n?nr+' concepto'+(nr===1?'':'s')+' modificado'+(nr===1?'':'s'):'';
+  var nr=filasResumen(false).filter(function(r){return r.changed;}).length; $('nCambios').textContent=n?nr+' concepto'+(nr===1?'':'s')+' modificado'+(nr===1?'':'s'):'';
 
   var h, fr=filasResumen(false);
   if(!n) h='<div class="vacio">Sin cambios respecto a la HM. Modifica algún campo de la burbuja para generar el resumen.</div>';
@@ -778,12 +775,12 @@ function nombreAlumno(){ return [H.nombre,H.apellidos].filter(Boolean).join(' ')
 function asunto(){ return 'CFP · '+nombreAlumno()+(H.idOportunidad?' · ID '+H.idOportunidad:''); }
 function bloquesTexto(){
   var fr=filasResumen(false);
-  if(!fr.length) return 'Sin cambios respecto a la HM.';
+  if(!hayCambios()) return 'Sin cambios respecto a la HM.';
   var fila=function(r,c){ return '· '+r.label+': '+r[c]; };
   return 'ANTES (HM)\n'+fr.map(function(r){return fila(r,'b');}).join('\n')+'\n\nAHORA\n'+fr.map(function(r){return fila(r,'a');}).join('\n');
 }
 function cuerpoCorreo(){
-  var obs=$('f-obs').value.trim(), hay=filasResumen(false).length>0;
+  var obs=$('f-obs').value.trim(), hay=hayCambios();
   return ['Buenos días,','',
     'Por favor, solicitamos gestionar el CFP de '+nombreAlumno()+(H.idOportunidad?' (ID '+H.idOportunidad+')':'')+' con el siguiente detalle:',
     H.email?'Email del alumno: '+H.email:'', '',
@@ -814,7 +811,7 @@ function correoHTML(conSaludo){
   } else {
     h+=p('<b>CFP · '+esc(nombreAlumno())+(H.idOportunidad?' · ID '+esc(H.idOportunidad):'')+'</b>'+(H.email?'<br><span style="color:'+MUT+'">Email del alumno: '+esc(H.email)+'</span>':''));
   }
-  if(fr.length){
+  if(hayCambios()){
     var fa=facturacion(R.M);
     h+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;margin:0 0 10px"><tr><td style="'+FNT+'background:'+(fa.cambia?'#FFF1D6':'#EEE8DF')+';border:'+(fa.cambia?'1.5px solid #FFB547':'1px solid '+LIN)+';border-radius:10px;padding:7px 12px;font-size:12.5px;line-height:1.5;color:'+NAVY+'">'+
        '<b style="color:'+(fa.cambia?'#7A4A00':NAVY)+'">'+fa.titulo+':</b> '+(fa.cambia?'<b>':'')+esc(fa.detalle)+(fa.cambia?'</b>':'')+'</td></tr></table>';
@@ -841,7 +838,7 @@ function copiarSel(html){
   var ok=false; try{ ok=document.execCommand('copy'); }catch(e){} sel.removeAllRanges(); d.remove(); return ok;
 }
 function resumenTexto(){
-  var obs=$('f-obs').value.trim(), hay=filasResumen(false).length>0;
+  var obs=$('f-obs').value.trim(), hay=hayCambios();
   return ['CFP · '+nombreAlumno()+(H.idOportunidad?' · ID '+H.idOportunidad:''),
     H.email?'Email del alumno: '+H.email:'', '',
     hay?factTexto():'', hay?titularTexto(R.M):'', '',
@@ -961,14 +958,11 @@ async function crearPDF(){
 
   var obs=$('f-obs').value.trim();
   fnt(false,8.5); var ol=doc.splitTextToSize(T(obs||'—'),W-2*X-8), oh=ol.length*4.1+7;
-  if(Y+oh+30>282){ doc.addPage(); Y=20; }
+  if(Y+oh+8>282){ doc.addPage(); Y=20; }
   seccion('Observaciones');
   doc.setDrawColor.apply(doc,LINE); doc.setLineWidth(0.3); doc.roundedRect(X,Y-3,W-2*X,oh,2,2,'S');
   fnt(false,8.5); doc.text(ol,X+4,Y+2.4); Y+=oh+18;
 
-  if(Y>280){ doc.addPage(); Y=40; }
-  doc.setDrawColor(154,166,178); doc.setLineWidth(0.3); doc.line(X,Y,X+80,Y); doc.line(W-X-80,Y,W-X,Y);
-  fnt(false,8,MUTED); doc.text(T('Asesor: '+(H.asesor||'')),X,Y+4.4); doc.text('Conforme alumno',W-X-80,Y+4.4);
 
   var pages=doc.getNumberOfPages();
   for(var p=1;p<=pages;p++){ doc.setPage(p); fnt(false,6.5,MUTED); doc.text(T('CFP · '+nombreAlumno()+(H.idOportunidad?' · ID '+H.idOportunidad:'')+' · HM: '+H.archivo),X,290); doc.text(p+' / '+pages,W-X,290,{align:'right'}); }
@@ -1075,10 +1069,10 @@ function cuerpoMailto(conFrase){
   return ['Buenos días,','',
     'Por favor, solicitamos gestionar el CFP de '+nombreAlumno()+(H.idOportunidad?' (ID '+H.idOportunidad+')':'')+' con el siguiente detalle:',
     H.email?'Email del alumno: '+H.email:'', '',
-    fr.length?factTexto():'Sin cambios respecto a la HM.',
-    fr.length&&conFrase?titularTexto(R.M):'', '',
-    fr.length?'Cambios (antes → ahora):':'',
-    fr.map(function(r){ return '- '+r.label+': '+r.b+' → '+r.a; }).join('\n'), '',
+    hayCambios()?factTexto():'Sin cambios respecto a la HM.',
+    hayCambios()&&conFrase?titularTexto(R.M):'', '',
+    hayCambios()?'Cambios (antes → ahora):':'',
+    hayCambios()?fr.map(function(r){ return '- '+r.label+': '+r.b+' → '+r.a; }).join('\n'):'', '',
     obs?'Observaciones: '+obs:'', '',
     'Adjuntamos el PDF con el detalle.','','Muchas gracias.','Un saludo,'].join('\n').replace(/\n{3,}/g,'\n\n').trim();
 }
