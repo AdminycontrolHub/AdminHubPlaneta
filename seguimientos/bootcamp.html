@@ -56,7 +56,7 @@ select.inp{cursor:pointer}
     </div></sc-if>
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 46</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 48</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1284,7 +1284,7 @@ const KV_KEYS = {
   adminhub_bootcamp_com_v2:  ['cs', 'obs', 'fact', 'roomNo'],
   adminhub_bootcamp_gest_v2: ['claims', 'nextClaim', 'moro', 'tasks', 'topics', 'nextT']
 };
-const APPV = 46;
+const APPV = 48;
 const KV_LEGACY = {adminhub_bootcamp_mkt_v2:'adminhub_bootcamp_mkt_v1', adminhub_bootcamp_adm_v2:'adminhub_bootcamp_adm_v1', adminhub_bootcamp_com_v2:'adminhub_bootcamp_com_v1', adminhub_bootcamp_gest_v2:'adminhub_bootcamp_gest_v1'};
 const DEVID = (() => { try { let d = localStorage.getItem('adminhub_bootcamp_dev'); if (!d) { d = Math.random().toString(36).slice(2, 8); localStorage.setItem('adminhub_bootcamp_dev', d); } return d; } catch (e) { return 'x' + Math.random().toString(36).slice(2, 6); } })();
 const blog = (e, o) => { try { const a = JSON.parse(localStorage.getItem('adminhub_bootcamp_log') || '[]'); a.push(Object.assign({t:new Date().toISOString().slice(11, 19), e}, o || {})); while (a.length > 120) a.shift(); localStorage.setItem('adminhub_bootcamp_log', JSON.stringify(a)); } catch (x) {} };
@@ -1394,8 +1394,9 @@ const PAL = [['#ECE6FC','#7C5CE6','#4A31A8'],['#DCEBFE','#2F6FE0','#1D58C0'],['#
 const FIN = {jc:2495, mu:4491, no:4241.5, mb:4990, jp:3591, dl:3990, sl:4241.5, ac:3192, da:4241.5};
 const DTO = {jc:50, mu:10, no:15, mb:0, jp:10, dl:0, sl:15, ac:20, da:15};
 const DTO_OPTS = [5, 10];
-const ASESORES = ['Heilin', 'Pía', 'Carlos P.', 'XP'];
-const isGest = (g) => ASESORES.indexOf(g) >= 0 || g === 'MG';
+const ASESORES = ['Heilin', 'Pía', 'Júlia', 'Carlos P.'];
+const ASES_EXTRA = ['XP', 'MG'];
+const isGest = (g) => ASESORES.indexOf(g) >= 0 || g === 'MG' || ASES_EXTRA.indexOf(g) >= 0;
 const assignGest = (existing, news) => {
   // reparto rotatorio entre los 4 asesores, a partir del último lead asignado
   let last = -1;
@@ -1891,7 +1892,7 @@ class Component extends DCLogic {
     const gestOf = (id, seed) => { const man = s.asesores[id]; if (isGest(man)) return man; const a = s.added.filter(x => x.id === id)[0]; if (a && isGest(a.gest)) return a.gest; if (isGest(seed)) return seed; const o = s.asesores[id]; if (isGest(o)) return o; return gestHash(id); };
     const asesView = (id, seed) => {
       const cur = gestOf(id, seed);
-      return {asesor:cur, asesOpts:(ASESORES.indexOf(cur) < 0 && cur ? ASESORES.concat([cur]) : ASESORES).map(a => ({v:a, label:a, sel:cur === a})), onAses:(e) => { const o = Object.assign({}, s.asesores); o[id] = e.target.value; set({asesores:o}); }};
+      return {asesor:cur, asesOpts:((ASESORES.concat(ASES_EXTRA)).indexOf(cur) < 0 && cur ? ASESORES.concat(ASES_EXTRA, [cur]) : ASESORES.concat(ASES_EXTRA)).map(a => ({v:a, label:a, sel:cur === a})), onAses:(e) => { const o = Object.assign({}, s.asesores); o[id] = e.target.value; set({asesores:o}); }};
     };
     // contador de plazas: cuenta personas (una pareja doble solo suma 2 cuando los dos están aceptados)
     const accLeads = allLeads.filter(l => eff(l) === 'Aceptada cerrada');
@@ -2267,7 +2268,7 @@ class Component extends DCLogic {
           location.href = 'mailto:' + encodeURIComponent(l.email || '') + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
         },
         manual:!!l.manual, notManual:!l.manual, nameVal:l.full || '', telVal:l.tel || '', emailVal:l.email || '',
-        onName:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {full:e.target.value.trim(), name:e.target.value.trim()}) : x)}),
+        onName:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {full:e.target.value, name:e.target.value}) : x)}),
         onTel:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {tel:e.target.value.trim()}) : x)}),
         onEmail:(e) => set({added:s.added.map(x => x.id === l.id ? Object.assign({}, x, {email:e.target.value.trim()}) : x)}),
         last:noteOf(l.id, l.last), onLast:(e) => setNote(l.id, e.target.value),
@@ -2710,7 +2711,7 @@ class Component extends DCLogic {
         const fopts = {
           idi:[ALL, ['ES', 'ES'], ['ENG', 'ENG']],
           tipo:[ALL, ['Reactivado', 'Reactivados'], ['Nuevo', 'Nuevos']],
-          ases:[ALL].concat(ASESORES.concat(['MG']).map(a => [a, a])),
+          ases:[ALL].concat(ASESORES.concat(ASES_EXTRA).map(a => [a, a])),
           est:[ALL].concat(ESTADOS_ALL.map(e => [e, e])),
           tar:[ALL, ['Individual', 'Individual'], ['Doble', 'Doble'], NONE],
           dto:[ALL].concat(DTO_OPTS.map(d => [String(d), d === 0 ? 'Sin descuento' : d + ' %']), [NONE]),
@@ -2918,7 +2919,7 @@ class Component extends DCLogic {
       hasUrgent:urgent.length > 0, urgent:urgentShown, urgentCount:urgent.length,
       fm_gu:s.fMenu === 'gu', ft_gu:() => set({fMenu:s.fMenu === 'gu' ? '' : 'gu'}),
       fb_gu:'background:' + (s.urgGest ? '#2A3A8C' : 'transparent') + ';color:' + (s.urgGest ? '#fff' : '#5A6393') + ';border:0;border-radius:6px;padding:3px 5px;margin-left:4px;cursor:pointer;vertical-align:middle;display:inline-flex;align-items:center',
-      fo_gu:[['', 'Todos']].concat(ASESORES.concat(['MG']).map(a => [a, a])).map(o => ({label:o[1], aria:'Gestionado por ' + o[1], style:'text-align:left;border:0;border-radius:7px;padding:6px 10px;font:700 12px Manrope,sans-serif;cursor:pointer;white-space:nowrap;background:' + (s.urgGest === o[0] ? '#E3EAFB' : '#fff') + ';color:#1B2150', pick:() => set({urgGest:o[0], fMenu:''})})),
+      fo_gu:[['', 'Todos']].concat(ASESORES.concat(ASES_EXTRA).map(a => [a, a])).map(o => ({label:o[1], aria:'Gestionado por ' + o[1], style:'text-align:left;border:0;border-radius:7px;padding:6px 10px;font:700 12px Manrope,sans-serif;cursor:pointer;white-space:nowrap;background:' + (s.urgGest === o[0] ? '#E3EAFB' : '#fff') + ';color:#1B2150', pick:() => set({urgGest:o[0], fMenu:''})})),
       admTabs, admRows, admEmpty:admRows.length === 0,
       // comercial
       comTabs, cards:groups, corteOpts, sumItems,
