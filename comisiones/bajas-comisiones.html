@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bajas de comisiones - OBS</title>
+<title>Bajas de comisiones</title>
 <style>html,body{margin:0;background:#D2E8DE}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -13,23 +13,54 @@
 <body>
 <div id="root"></div>
 <script>
-// ===== CONFIGURACIÓN (cambia estas dos líneas) =====
-const API_URL = "https://comisiones-api.TU-SUBDOMINIO.workers.dev"; // URL del Worker del hub (ruta /comisiones-db)
-const HUB_URL = "https://TU-HUB.TU-DOMINIO.com/bajas-comisiones"; // destino del botón "Volver a Bajas Comisiones"
-const LOCAL_MODE = API_URL.includes("TU-SUBDOMINIO"); // sin configurar: guarda solo en este navegador (modo prueba)
+// ===== MARCAS (no hay que configurar nada por marca) =====
+const MARCAS = [
+  { id: "obs", nombre: "OBS", color: "#1F9D6B" },
+  { id: "inesdi", nombre: "INESDI", color: "#8B5CD6" },
+  { id: "esdesign", nombre: "ESDesign", color: "#C9902B" },
+  { id: "ucma", nombre: "UCMA", color: "#3B84C4" },
+];
+const QS = new URLSearchParams(location.search);
+function detectMarca() {
+  const q = (QS.get("marca") || "").toLowerCase();
+  if (MARCAS.some((m) => m.id === q)) return q;
+  const path = location.pathname.toLowerCase();
+  const byPath = MARCAS.find((m) => path.includes(m.id));
+  if (byPath) return byPath.id;
+  try { const l = localStorage.getItem("comisiones-marca"); if (MARCAS.some((m) => m.id === l)) return l; } catch (e) {}
+  return "obs";
+}
+const MARCA = detectMarca();
+try { localStorage.setItem("comisiones-marca", MARCA); } catch (e) {}
+const MARCA_INFO = MARCAS.find((m) => m.id === MARCA);
+document.title = "Bajas de comisiones - " + MARCA_INFO.nombre;
+function cambiarMarca(id) {
+  const u = new URL(location.href);
+  u.searchParams.set("marca", id);
+  location.href = u.toString();
+}
+// API: mismo dominio del hub por defecto (ruta /comisiones-db). Opcional: ?api=https://... o window.COMISIONES_API
+const API_URL = (QS.get("api") || window.COMISIONES_API || "").replace(/\/$/, "");
+// Botón volver: ?volver=URL, si no la página de origen, si no el historial, si no la raíz
+const VOLVER = QS.get("volver") || document.referrer || "";
+let LOCAL_MODE = false; // se activa solo si el servidor no responde
 const KEY_LS = "comisiones-api-key";
-function apiKey() {
+function apiKey(force) {
   let k = localStorage.getItem(KEY_LS);
-  if (!k) { k = prompt("Clave de acceso de Comisiones:") || ""; localStorage.setItem(KEY_LS, k); }
+  if (!k || force) { k = prompt("Clave de acceso de Comisiones:") || ""; localStorage.setItem(KEY_LS, k); }
   return k;
 }
-async function api(method, body) {
-  const r = await fetch(API_URL + "/comisiones-db", {
+async function api(method, body, retried) {
+  const r = await fetch(API_URL + "/comisiones-db?marca=" + MARCA, {
     method,
-    headers: { "Content-Type": "application/json", "X-Api-Key": apiKey() },
+    headers: { "Content-Type": "application/json", "X-Api-Key": localStorage.getItem(KEY_LS) || "" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (r.status === 401) { localStorage.removeItem(KEY_LS); throw new Error("Clave incorrecta. Recarga la página."); }
+  if (r.status === 401) {
+    if (retried) { localStorage.removeItem(KEY_LS); throw new Error("Clave incorrecta"); }
+    apiKey(true);
+    return api(method, body, true);
+  }
   return r;
 }
 function mergeDb(r, l) {
@@ -49,7 +80,7 @@ function mergeDb(r, l) {
   out.aliases = { ...(r.aliases || {}), ...(l.aliases || {}) };
   return out;
 }
-const LS_LOCAL = "comisiones-db-local";
+const LS_LOCAL = "comisiones-db-local:" + MARCA;
 let remoteV = 0;
 window.storage = {
   async get(key) {
@@ -59,9 +90,18 @@ window.storage = {
       remoteV = s ? s.v : 0;
       return { key, v: remoteV, value: s && s.data ? JSON.stringify(s.data) : null };
     }
-    const r = await api("GET");
-    if (!r.ok) throw new Error("GET " + r.status);
-    const j = await r.json();
+    let r, j;
+    try {
+      r = await api("GET");
+      if (r.status === 404 || r.status === 405) throw new Error("sin servidor");
+      if (!r.ok) throw new Error("GET " + r.status);
+      j = await r.json();
+      if (typeof j !== "object" || j === null || !("v" in j)) throw new Error("respuesta no válida");
+    } catch (e) {
+      if (e.message === "Clave incorrecta") throw e;
+      LOCAL_MODE = true; window.__localMode = true;
+      return window.storage.get(key);
+    }
     remoteV = j.v;
     return { key, v: j.v, value: j.data ? JSON.stringify(j.data) : null };
   },
@@ -915,21 +955,41 @@ function App() {
         ))}
       </datalist>
       <div style={styles.shell}>
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <a href={HUB_URL} style={styles.backBtn}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {MARCAS.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => m.id !== MARCA && cambiarMarca(m.id)}
+                style={{
+                  padding: "7px 16px", borderRadius: 999, cursor: "pointer", fontWeight: 700, fontSize: 13,
+                  border: `2px solid ${m.color}`,
+                  background: m.id === MARCA ? m.color : "#fff",
+                  color: m.id === MARCA ? "#fff" : m.color,
+                }}
+              >
+                {m.nombre}
+              </button>
+            ))}
+          </div>
+          <a
+            href={VOLVER || "/"}
+            onClick={(e) => { if (!QS.get("volver") && !document.referrer && history.length > 1) { e.preventDefault(); history.back(); } }}
+            style={styles.backBtn}
+          >
             ‹ Volver a Bajas Comisiones
           </a>
         </div>
 
         <div style={styles.headerPanel}>
           <div style={styles.headerLeft}>
-            <div style={styles.headerIcon}>%</div>
+            <div style={{ ...styles.headerIcon, borderColor: MARCA_INFO.color, color: MARCA_INFO.color }}>%</div>
             <div>
-              <div style={styles.headerTitle}>Bajas de comisiones - OBS</div>
+              <div style={styles.headerTitle}>Bajas de comisiones - {MARCA_INFO.nombre}</div>
               <div style={styles.headerSub}>Administración comercial</div>
             </div>
           </div>
-          <div style={styles.headerRight}>{LOCAL_MODE ? "Modo local (sin servidor) · " : ""}Actualizado: {lastUpdateStr}</div>
+          <div style={styles.headerRight}>{window.__localMode ? "Modo local (sin servidor) · " : ""}Actualizado: {lastUpdateStr}</div>
         </div>
 
         <div style={styles.row}>
