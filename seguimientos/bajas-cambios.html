@@ -610,7 +610,7 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 </div>
 
 <script>
-console.log('%cHub Bajas y Cambios — versión 2026-10-22-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
+console.log('%cHub Bajas y Cambios — versión 2026-11-19-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
 // ============================================================
 // CONFIGURACION
 // ============================================================
@@ -913,11 +913,9 @@ async function cargarTodo(){
   const totalNivel1 = casos.filter(perteneceANivel1).length;
   // Mismo criterio que las pestañas y el Resumen semanal: en Devolucion
   // cuenta su propio cierre (devolucion completada), no el estado general.
-  const pendientesNivel1 = casos.filter(c => {
-    if(!perteneceANivel1(c)) return false;
-    const cat = categoriaDeCaso(c);
-    return cat ? esPendienteParaCategoria(c, cat) : esPendiente(c);
-  }).length;
+  // Igual que las tarjetas: se suma cada tipo en el que el caso esta pendiente.
+  const pendientesNivel1 = casos.filter(perteneceANivel1)
+    .reduce((t, c) => t + categoriasDeCaso(c).filter(cat => esPendienteParaCategoria(c, cat)).length, 0);
   document.getElementById('subHeader').textContent = `${totalNivel1} casos totales · ${pendientesNivel1} pendientes`;
 }
 
@@ -1330,20 +1328,26 @@ function toggleAitor(){
 }
 
 function renderAitorPopover(){
-  const pendientes = casos.filter(c => {
-    if(!perteneceANivel1(c)) return false;
-    const cat = categoriaDeCaso(c);
-    return cat ? esPendienteParaCategoria(c, cat) : esPendiente(c);
+  // Mismo criterio que las tarjetas: un caso cuenta en CADA tipo en el que
+  // esta pendiente (p. ej. una Baja con Devolucion cuya devolucion tambien
+  // esta pendiente cuenta en las dos), asi los numeros coinciden.
+  const entradas = [];
+  casos.forEach(c => {
+    if(!perteneceANivel1(c)) return;
+    categoriasDeCaso(c).forEach(cat => { if(esPendienteParaCategoria(c, cat)) entradas.push({ c, cat }); });
   });
+  // La parte de arriba (total, mas antiguo y bloques por marca) NO incluye
+  // Devolucion: las devoluciones van aparte, en su propio bloque de abajo.
+  const pendientes = entradas.filter(e => e.cat.id !== 'devolucion');
 
   // Caso mas antiguo, para la frase inicial
   let masAntiguoCaso = null;
   let masAntiguoDias = -1;
-  pendientes.forEach(c => {
+  let masAntiguoCat = '';
+  pendientes.forEach(({ c, cat }) => {
     const d = diasDesde(c.fechaIngreso);
-    if(d > masAntiguoDias){ masAntiguoDias = d; masAntiguoCaso = c; }
+    if(d > masAntiguoDias){ masAntiguoDias = d; masAntiguoCaso = c; masAntiguoCat = cat.nombre; }
   });
-  const masAntiguoCat = masAntiguoCaso ? (categoriaDeCaso(masAntiguoCaso) ? categoriaDeCaso(masAntiguoCaso).nombre : masAntiguoCaso.tipoGestion) : '';
   const masAntiguoMarca = masAntiguoCaso ? nombreMarca(masAntiguoCaso.marca) : '';
   const intro = `Hay ${pendientes.length} pendiente${pendientes.length===1?'':'s'} de gestión` +
     (masAntiguoCaso ? `, de los cuales el más antiguo lleva ${masAntiguoDias} días (${masAntiguoCat}, ${masAntiguoMarca}).` : '.');
@@ -1351,9 +1355,8 @@ function renderAitorPopover(){
   // Agrupar: Marca -> Categoria -> lista de casos (Devolución se trata aparte, ver mas abajo)
   const porMarca = {};
   const devolucionPorMarca = {};
-  pendientes.forEach(c => {
+  entradas.forEach(({ c, cat }) => {
     const marca = nombreMarca(c.marca) || 'Sin marca';
-    const cat = categoriaDeCaso(c);
     const catId = cat ? cat.id : 'otro';
     if(catId === 'devolucion'){
       devolucionPorMarca[marca] = devolucionPorMarca[marca] || [];
