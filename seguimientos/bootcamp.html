@@ -56,7 +56,7 @@ select.inp{cursor:pointer}
     </div></sc-if>
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 48</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 49</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -193,6 +193,7 @@ select.inp{cursor:pointer}
                     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
                       <button onClick="{{u.onSi}}" aria-pressed="{{u.siOn}}" style="{{u.siStyle}}">SÍ</button>
                       <button onClick="{{u.onNo}}" aria-pressed="{{u.noOn}}" style="{{u.noStyle}}">NO</button>
+                      <sc-if value="{{u.siImp}}" hint-placeholder-val="{{false}}"><input class="inp" aria-label="Importe de la deuda en euros" placeholder="Importe deuda €" inputmode="decimal" value="{{u.debtVal}}" onChange="{{u.onDebt}}" style="width:130px;padding:6px 8px;font-weight:700"></sc-if>
                       <button onClick="{{u.save}}" disabled="{{u.saveOff}}" style="{{u.saveStyle}}">Guardar</button>
                     </div>
                   </sc-if>
@@ -404,7 +405,7 @@ select.inp{cursor:pointer}
                   <sc-if value="{{l.moroWait}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;font-size:11px;color:var(--mut);line-height:1.35">{{l.moroWhy}}</div></sc-if>
                   <sc-if value="{{l.moroBtn}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px"><button onClick="{{l.moroGo}}" style="background:#fff;color:var(--redtx);border:1px solid var(--red);border-radius:8px;padding:5px 9px;font-weight:800;font-size:12px">Checkeo morosidad</button></div></sc-if>
                   <sc-if value="{{l.moroPending}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;font-size:12px;color:var(--ambertx);font-weight:700">Checkeo solicitado · pendiente</div></sc-if>
-                  <sc-if value="{{l.moroSi}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;color:#B3203D;font-weight:800;font-size:13px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D32F4B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>MOROSO</div></sc-if>
+                  <sc-if value="{{l.moroSi}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;color:#B3203D;font-weight:800;font-size:13px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D32F4B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>{{l.moroDebtTxt}}<input class="inp" aria-label="Importe de la deuda en euros" placeholder="importe €" inputmode="decimal" value="{{l.moroDebt}}" onChange="{{l.onMoroDebt}}" style="width:90px;padding:4px 6px;font-size:12px;font-weight:700"></div></sc-if>
                   <sc-if value="{{l.moroNo}}" hint-placeholder-val="{{false}}"><div style="margin-top:6px;display:flex;align-items:center;gap:6px;color:#176B3A;font-weight:800;font-size:13px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F7A45" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>OK NO DEUDA</div></sc-if>
                 </td>
                 <td>
@@ -1284,7 +1285,7 @@ const KV_KEYS = {
   adminhub_bootcamp_com_v2:  ['cs', 'obs', 'fact', 'roomNo'],
   adminhub_bootcamp_gest_v2: ['claims', 'nextClaim', 'moro', 'tasks', 'topics', 'nextT']
 };
-const APPV = 48;
+const APPV = 49;
 const KV_LEGACY = {adminhub_bootcamp_mkt_v2:'adminhub_bootcamp_mkt_v1', adminhub_bootcamp_adm_v2:'adminhub_bootcamp_adm_v1', adminhub_bootcamp_com_v2:'adminhub_bootcamp_com_v1', adminhub_bootcamp_gest_v2:'adminhub_bootcamp_gest_v1'};
 const DEVID = (() => { try { let d = localStorage.getItem('adminhub_bootcamp_dev'); if (!d) { d = Math.random().toString(36).slice(2, 8); localStorage.setItem('adminhub_bootcamp_dev', d); } return d; } catch (e) { return 'x' + Math.random().toString(36).slice(2, 6); } })();
 const blog = (e, o) => { try { const a = JSON.parse(localStorage.getItem('adminhub_bootcamp_log') || '[]'); a.push(Object.assign({t:new Date().toISOString().slice(11, 19), e}, o || {})); while (a.length > 120) a.shift(); localStorage.setItem('adminhub_bootcamp_log', JSON.stringify(a)); } catch (x) {} };
@@ -1857,8 +1858,6 @@ class Component extends DCLogic {
       const m = [];
       if (l.manual) {
         if (!(l.full || '').trim()) m.push('Nombre');
-        if (!(l.tel || '').trim()) m.push('Teléfono');
-        if (!(l.email || '').trim()) m.push('Email');
       }
       if (pr.hab !== 'Individual' && pr.hab !== 'Doble') m.push('Tarifa');
       if (pr.hab === 'Doble' && !(pr.pareja || '').trim()) m.push('Pareja');
@@ -1913,7 +1912,7 @@ class Component extends DCLogic {
     const moroView = (id, name, asesorN, okBtn, showRes, why) => {
       const mv = s.moro[id];
       return {
-        moroBtn:!!okBtn && !mv, moroWait:!!why && !mv, moroWhy:why || '', moroPending:!!showRes && !!mv && mv.st === 'pending', moroSi:!!showRes && !!mv && mv.st === 'si', moroNo:!!showRes && !!mv && mv.st === 'no',
+        moroBtn:!!okBtn && !mv, moroWait:!!why && !mv, moroWhy:why || '', moroPending:!!showRes && !!mv && mv.st === 'pending', moroSi:!!showRes && !!mv && mv.st === 'si', moroDebt:(mv && mv.debt) || '', moroDebtTxt:'deuda: ' + ((mv && String(mv.debt || '').trim()) || '—') + ' €', onMoroDebt:(e) => { const cur = s.moro[id]; if (!cur) return; const o = Object.assign({}, s.moro); o[id] = Object.assign({}, cur, {debt:String(e.target.value || '').trim()}); set({moro:o}); }, moroNo:!!showRes && !!mv && mv.st === 'no',
         moroGo:() => { const o = Object.assign({}, s.moro); o[id] = {st:'pending', date:todayTxt, name, asesor:asesorN}; set({moro:o, toastTo:'com', toast:'Checkeo de morosidad solicitado a Administración comercial para ' + name + '.'}); }
       };
     };
@@ -2199,19 +2198,20 @@ class Component extends DCLogic {
     s.tasks.filter(x => x.dept === role && !x.done).forEach(x => urgent.push({isMoro:false, isOk:true, tipo:'Tarea de reunión', detail:x.text + (x.review ? ' · Revisión: ' + x.review.split('-').reverse().join('/') : ''), who:'Reunión de seguimiento', date:x.date, ok:() => set({tasks:s.tasks.map(y => y.id === x.id ? Object.assign({}, y, {done:true, doneDate:todayTxt}) : y)})}));
     if (role === 'adm') s.claims.filter(x => !x.resolved && !x.gestionado).forEach(x => urgent.push({isMoro:false, isOk:true, tipo:x.tipo, detail:'Falta: ' + x.missing.join(' · '), who:x.name, gest:gestOf(x.sid, x.asesor), date:x.date, ok:() => set({claims:s.claims.map(y => y.id === x.id ? Object.assign({}, y, {gestionado:true}) : y)})}));
     if (role === 'com') Object.keys(s.moro).filter(k => s.moro[k].st === 'pending').forEach(k => {
-      const mv = s.moro[k], sel = s.moroSel[k];
+      const mv = s.moro[k], sel = s.moroSel[k], dd = (s.moroDraft || {})[k] || '';
       const sb = (on, col) => 'border-radius:8px;padding:6px 12px;font-weight:800;font-size:13px;border:1px solid ' + (on ? col : LINE) + ';background:' + (on ? col : '#FFFFFF') + ';color:' + (on ? '#FFFFFF' : INK);
       const setSel = (v) => { const o = Object.assign({}, s.moroSel); o[k] = v; set({moroSel:o}); };
       urgent.push({
         isMoro:true, isOk:false, tipo:'Checkeo de morosidad', detail:'¿El alumno tiene deuda pendiente? Responde SÍ o NO y guarda.', who:mv.name + ' · ' + mv.asesor, date:mv.date,
         siOn:sel === 'si', noOn:sel === 'no', siStyle:sb(sel === 'si', RED), noStyle:sb(sel === 'no', '#1F7A45'),
-        onSi:() => setSel('si'), onNo:() => setSel('no'), saveOff:!sel,
-        saveStyle:'border-radius:8px;padding:6px 12px;font-weight:800;font-size:13px;border:0;background:' + (sel ? ACC.com : '#D7DCF5') + ';color:' + (sel ? '#FFFFFF' : '#5A6393'),
+        onSi:() => setSel('si'), onNo:() => setSel('no'), saveOff:!sel || (sel === 'si' && !dd.trim()), siImp:sel === 'si', debtVal:dd, onDebt:(e) => { const o = Object.assign({}, s.moroDraft || {}); o[k] = e.target.value; set({moroDraft:o}); },
+        saveStyle:'border-radius:8px;padding:6px 12px;font-weight:800;font-size:13px;border:0;background:' + ((sel && !(sel === 'si' && !dd.trim())) ? ACC.com : '#D7DCF5') + ';color:' + ((sel && !(sel === 'si' && !dd.trim())) ? '#FFFFFF' : '#5A6393'),
         save:() => {
           if (!sel) return;
-          const o = Object.assign({}, s.moro); o[k] = Object.assign({}, mv, {st:sel, answerDate:todayTxt});
+          if (sel === 'si' && !dd.trim()) { set({toast:'Indica el importe de la deuda para guardar.', toastTo:role}); return; }
+          const o = Object.assign({}, s.moro); o[k] = Object.assign({}, mv, sel === 'si' ? {st:sel, answerDate:todayTxt, debt:dd.trim()} : {st:sel, answerDate:todayTxt});
           const ms = Object.assign({}, s.moroSel); delete ms[k];
-          set({moro:o, moroSel:ms, toastTo:'adm', toast:'Respuesta guardada: ' + mv.name + (sel === 'si' ? ' · MOROSO' : ' · OK, sin deuda') + '.'});
+          set({moro:o, moroSel:ms, toastTo:'adm', toast:'Respuesta guardada: ' + mv.name + (sel === 'si' ? ' · deuda: ' + dd.trim() + ' €' : ' · OK, sin deuda') + '.'});
         }
       });
     });
