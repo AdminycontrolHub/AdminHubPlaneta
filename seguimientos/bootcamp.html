@@ -56,7 +56,7 @@ select.inp{cursor:pointer}
     </div></sc-if>
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 50</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 51</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -185,7 +185,7 @@ select.inp{cursor:pointer}
               <tr>
                 <td><span class="chip" style="background:var(--redbg);color:var(--redtx);border:1px solid var(--red);white-space:normal">{{u.tipo}}</span></td>
                 <td style="font-size:13px;word-break:break-word">{{u.detail}}</td>
-                <td style="font-weight:700;font-size:13px;word-break:break-word">{{u.who}}</td>
+                <td style="font-weight:700;font-size:13px;word-break:break-word">{{u.who}} <sc-if value="{{u.hasEmail}}" hint-placeholder-val="{{false}}"><button onClick="{{u.copyEmailBtn}}" title="email" aria-label="email" style="background:#fff;border:1px solid var(--inpline);border-radius:7px;width:28px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;vertical-align:middle;margin-left:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></sc-if></td>
                 <td><span class="chip" style="background:#EEF1FB;color:#1B2150;font-weight:800;border:1px solid var(--inpline)">{{u.gest}}</span></td>
                 <td class="mono" style="font-size:12px">{{u.date}}</td>
                 <td>
@@ -589,7 +589,7 @@ select.inp{cursor:pointer}
               <button onClick="{{k.flagGo}}" aria-pressed="{{k.flag}}" style="{{k.flagStyle}}">Marcar impago a mano</button>
             </div>
             <div onDragOver="{{k.onDragOver}}" onDragLeave="{{k.onDragLeave}}" onDrop="{{k.onDrop}}" style="{{k.hmStyle}}">
-              <span style="font-size:13px;color:var(--ink)">Arrastra aquí la HM: se cruza con Admisiones (precio final, forma de pago, facturación y primer pago)</span>
+              <span style="font-size:13px;color:var(--ink)">Arrastra aquí la HM: se cruza con Admisiones (importe total final a pagar, forma de pago y primer pago)</span>
               <label class="pick" style="position:relative;display:inline-block;background:#fff;color:var(--ink);border:1px solid var(--inpline);border-radius:8px;padding:6px 11px;font-weight:700;font-size:12px;white-space:nowrap;cursor:pointer">
                 Elegir HM
                 <input type="file" accept=".pdf,.xlsx,.xls,.csv" aria-label="Elegir la HM" onChange="{{k.onPickHm}}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
@@ -1263,15 +1263,16 @@ async function hmText(f) {
 }
 async function parseHmFile(f) {
   const text = await hmText(f);
-  const vals = {precio:'', pago:'', fact:'', fecha:''};
+  const vals = {precio:'', pago:'', fecha:''};
   const AMT = '(\\d{1,3}(?:[.\\s]\\d{3})*(?:,\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)';
   let m;
   const pr = new RegExp('(precio\\s*(?:final|total|de\\s*venta|del\\s*programa|matr[ií]cula)?|importe\\s*(?:total|final|a\\s*pagar|matr[ií]cula)?|total\\s*(?:a\\s*pagar|matr[ií]cula)?)[^\\n\\d]{0,40}' + AMT + '\\s*(?:€|eur)?', 'ig');
-  while ((m = pr.exec(text))) { const n = parseEuro(m[2]); if (n != null && n >= 500) { vals.precio = String(m[2]); break; } }
+  const pf = new RegExp('importe\\s*total\\s*final(?:\\s*a\\s*pagar)?[^\\d]{0,80}' + AMT + '\\s*(?:€|eur)?', 'ig');
+  while ((m = pf.exec(text))) { const n = parseEuro(m[1]); if (n != null && n >= 500) { vals.precio = String(m[1]); break; } }
+  if (!vals.precio) { const pf2 = new RegExp('total\\s*final\\s*a\\s*pagar[^\\d]{0,80}' + AMT + '\\s*(?:€|eur)?', 'ig'); while ((m = pf2.exec(text))) { const n = parseEuro(m[1]); if (n != null && n >= 500) { vals.precio = String(m[1]); break; } } }
+  if (!vals.precio) while ((m = pr.exec(text))) { const n = parseEuro(m[2]); if (n != null && n >= 500) { vals.precio = String(m[2]); break; } }
   m = text.match(/forma\s*de\s*pago[^\n]{0,60}?(contado|aplazad\w*|fraccionad\w*|financiad\w*|cuotas?)/i) || text.match(/(pago\s*(?:al\s*)?contado|pago\s*aplazado|aplazado|contado)/i);
   if (m) vals.pago = m[1];
-  m = text.match(/(?:forma\s*de\s*)?factur\w*[^\n]{0,60}?(empresa|alumno|estudiante|particular)/i) || text.match(/(?:a\s*nombre\s*de|facturar\s*a)[^\n]{0,30}?(empresa|alumno|estudiante)/i);
-  if (m) vals.fact = m[1];
   m = text.match(/(?:primer[a]?\s*cuota|1\s*[ªa]?\s*cuota|inicio\s*(?:del\s*)?(?:pago|financiaci\w+))[^\n\d]{0,40}(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:noviembre|diciembre|enero|febrero)(?:\s*(?:de\s*)?\d{4})?)/i);
   if (m) vals.fecha = m[1];
   return {vals, chars:text.replace(/\s/g, '').length};
@@ -1285,7 +1286,7 @@ const KV_KEYS = {
   adminhub_bootcamp_com_v2:  ['cs', 'obs', 'fact', 'roomNo'],
   adminhub_bootcamp_gest_v2: ['claims', 'nextClaim', 'moro', 'tasks', 'topics', 'nextT']
 };
-const APPV = 50;
+const APPV = 51;
 const KV_LEGACY = {adminhub_bootcamp_mkt_v2:'adminhub_bootcamp_mkt_v1', adminhub_bootcamp_adm_v2:'adminhub_bootcamp_adm_v1', adminhub_bootcamp_com_v2:'adminhub_bootcamp_com_v1', adminhub_bootcamp_gest_v2:'adminhub_bootcamp_gest_v1'};
 const DEVID = (() => { try { let d = localStorage.getItem('adminhub_bootcamp_dev'); if (!d) { d = Math.random().toString(36).slice(2, 8); localStorage.setItem('adminhub_bootcamp_dev', d); } return d; } catch (e) { return 'x' + Math.random().toString(36).slice(2, 6); } })();
 const blog = (e, o) => { try { const a = JSON.parse(localStorage.getItem('adminhub_bootcamp_log') || '[]'); a.push(Object.assign({t:new Date().toISOString().slice(11, 19), e}, o || {})); while (a.length > 120) a.shift(); localStorage.setItem('adminhub_bootcamp_log', JSON.stringify(a)); } catch (x) {} };
@@ -2202,7 +2203,7 @@ class Component extends DCLogic {
       const sb = (on, col) => 'border-radius:8px;padding:6px 12px;font-weight:800;font-size:13px;border:1px solid ' + (on ? col : LINE) + ';background:' + (on ? col : '#FFFFFF') + ';color:' + (on ? '#FFFFFF' : INK);
       const setSel = (v) => { const o = Object.assign({}, s.moroSel); o[k] = v; set({moroSel:o}); };
       urgent.push({
-        isMoro:true, isOk:false, tipo:'Checkeo de morosidad', detail:'¿El alumno tiene deuda pendiente? Responde SÍ o NO y guarda.', who:mv.name + ' · ' + mv.asesor, date:mv.date,
+        hasEmail:!!((s.added.filter(x => x.id === k)[0] || {}).email), copyEmailBtn:copy((s.added.filter(x => x.id === k)[0] || {}).email || '', 'email'), isMoro:true, isOk:false, tipo:'Checkeo de morosidad', detail:'¿El alumno tiene deuda pendiente? Responde SÍ o NO y guarda.', who:mv.name + ' · ' + mv.asesor, date:mv.date,
         siOn:sel === 'si', noOn:sel === 'no', siStyle:sb(sel === 'si', RED), noStyle:sb(sel === 'no', '#1F7A45'),
         onSi:() => setSel('si'), onNo:() => setSel('no'), saveOff:!sel || (sel === 'si' && !dd.trim()), siImp:sel === 'si', debtVal:dd, onDebt:(e) => { const o = Object.assign({}, s.moroDraft || {}); o[k] = e.target.value; set({moroDraft:o}); },
         saveStyle:'border-radius:8px;padding:6px 12px;font-weight:800;font-size:13px;border:0;background:' + ((sel && !(sel === 'si' && !dd.trim())) ? ACC.com : '#D7DCF5') + ';color:' + ((sel && !(sel === 'si' && !dd.trim())) ? '#FFFFFF' : '#5A6393'),
@@ -2408,7 +2409,7 @@ class Component extends DCLogic {
       if (!st.data.hab || st.data.hab === '—') h.hab = 'Individual';
       return h;
     };
-    const HM_FIELDS = [['precio', 'Precio final', '5.275,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fact', 'Forma de facturación', 'Alumno / Empresa'], ['fecha', 'Primer pago', 'dd/mm/aaaa']];
+    const HM_FIELDS = [['precio', 'Importe total final a pagar', '5.275,00'], ['pago', 'Forma de pago', 'Contado / Aplazado'], ['fecha', 'Primer pago (incluye PI)', 'dd/mm/aaaa']];
     const cmpHm = (mc, vals) => {
       const pr = priceOf(mc.id, '—', null, '');
       return HM_FIELDS.map(f => {
@@ -2417,7 +2418,7 @@ class Component extends DCLogic {
         if (k === 'precio') { adm = pr.fin != null ? fmt(pr.fin) : null; const n = parseEuro(v); hm = n != null ? fmt(n) : (v ? v + ' (?)' : null); if (adm && n != null) ok = Math.abs(pr.fin - n) < 0.5; }
         if (k === 'pago') { adm = pr.tipo || null; const x = parsePago(v); hm = x || (v ? v + ' (?)' : null); if (adm && x) ok = adm === x; }
         if (k === 'fact') { adm = pr.bill || null; const x = parseFact(v); hm = x || (v ? v + ' (?)' : null); if (adm && x) ok = adm === x; }
-        if (k === 'fecha') { adm = pr.ini ? MONTH_LBL[pr.ini] : null; const mn = parseMes(v); hm = mn ? v + ' · ' + MESES[mn - 1].toUpperCase().slice(0, 3) : (v ? v + ' (?)' : null); if (adm && mn) ok = MNUM[pr.ini] === mn; }
+        if (k === 'fecha') { adm = pr.ini ? MONTH_LBL[pr.ini] : null; const mn = parseMes(v); hm = mn ? v + ' · ' + MESES[mn - 1].toUpperCase().slice(0, 3) : (v ? v + ' (?)' : null); if (adm && mn) { const oks = [MNUM[pr.ini]]; if (pr.tipo === 'Aplazado') { const ix = MONTHS.indexOf(pr.ini); if (MONTHS[ix + 1]) oks.push(MNUM[MONTHS[ix + 1]]); if (pr.ncuotas && MONTHS[4 - pr.ncuotas]) oks.push(MNUM[MONTHS[4 - pr.ncuotas]]); } ok = oks.indexOf(mn) >= 0; } }
         let st = 'ok';
         if (!hm) st = 'nohm'; else if (!adm) st = 'noadm'; else if (ok === null) st = 'nohm'; else if (!ok) st = 'diff';
         const chips = {ok:['Coincide', 'background:#DDF5E6;color:#176B3A;font-weight:700'], diff:['No coincide · lo pisa la HM', 'background:#FDECEF;color:#B0203C;font-weight:700'], nohm:['Falta el dato de la HM', 'background:#FFF4D6;color:#8A5A00;font-weight:700'], noadm:['Falta en Admisiones', 'background:#FFF4D6;color:#8A5A00;font-weight:700']};
@@ -2426,12 +2427,12 @@ class Component extends DCLogic {
     };
     const openHm = async (c, file) => {
       if (!file) return;
-      const base = {id:c.id, name:c.name, file:file.name, vals:{precio:'', pago:'', fact:'', fecha:''}, read:'Leyendo el archivo…'};
+      const base = {id:c.id, name:c.name, file:file.name, vals:{precio:'', pago:'', fecha:''}, read:'Leyendo el archivo…'};
       set({hmM:base, hmDrag:''});
       try {
         const r = await parseHmFile(file);
         const got = Object.keys(r.vals).filter(k => r.vals[k]).length;
-        set({hmM:Object.assign({}, base, {vals:r.vals, read:r.chars < 20 ? 'No he podido leer texto del archivo (¿es una imagen o un PDF escaneado?): escribe los datos a mano.' : 'He leído ' + got + ' de 4 datos: revisa y completa los que falten.'})});
+        set({hmM:Object.assign({}, base, {vals:r.vals, read:r.chars < 20 ? 'No he podido leer texto del archivo (¿es una imagen o un PDF escaneado?): escribe los datos a mano.' : 'He leído ' + got + ' de 3 datos: revisa y completa los que falten.'})});
       } catch (err) {
         set({hmM:Object.assign({}, base, {read:'No he podido leer este archivo (usa PDF o Excel): escribe los datos a mano.'})});
       }
