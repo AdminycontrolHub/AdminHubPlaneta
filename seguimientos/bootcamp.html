@@ -56,7 +56,7 @@ select.inp{cursor:pointer}
     </div></sc-if>
     <div style="display:flex;flex-direction:column;gap:6px">
       <sc-if value="{{fromHub}}" hint-placeholder-val="{{true}}"><a href="../index.html" style="align-self:flex-start;display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--inpline);border-radius:10px;padding:7px 13px;color:var(--ink);font-weight:700;font-size:13px;text-decoration:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver al AdminHub</a></sc-if>
-      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 51</span></div>
+      <div class="lbl">Admin Hub &nbsp;/&nbsp; Bootcamp Silicon Valley &nbsp;·&nbsp; <span title="Versión de este archivo" style="opacity:.6">v30-10 · 52</span></div>
       <h1 style="margin:0;font-size:32px;font-weight:800;letter-spacing:-.01em;color:var(--ink)">Seguimiento Bootcamp Silicon Valley</h1>
       <div style="color:var(--mut);font-size:14px">Edición 8–12 marzo 2027 · una sola base de datos, cuatro pestañas</div>
     </div>
@@ -1256,6 +1256,8 @@ async function hmText(f) {
     await loadXlsx();
     const wb = /\.csv$/i.test(f.name) ? XLSX.read(await f.text(), {type:'string'}) : XLSX.read(await f.arrayBuffer(), {type:'array'});
     const out = [];
+    const esNum = (v) => { const neg = v < 0, a = Math.abs(v), t = Number.isInteger(a) ? String(a) : a.toFixed(2); const p = t.split('.'); const ip = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return (neg ? '-' : '') + ip + (p[1] ? ',' + p[1] : ''); };
+    wb.SheetNames.forEach(n => { const ws = wb.Sheets[n]; Object.keys(ws).forEach(a => { if (a[0] === '!') return; const c = ws[a]; if (c && c.t === 'n' && typeof c.v === 'number' && !/^\s*\d{1,4}[\/\-.]\d{1,2}[\/\-.]\d{1,4}\s*$/.test(String(c.w || '')) && String(c.w || '').indexOf('%') < 0) c.w = esNum(c.v); }); });
     wb.SheetNames.forEach(n => { XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, raw:false, defval:''}).forEach(r => { const l = r.filter(c => String(c).trim() !== '').join(' | '); if (l) out.push(l); }); });
     return out.join('\n');
   }
@@ -1286,7 +1288,7 @@ const KV_KEYS = {
   adminhub_bootcamp_com_v2:  ['cs', 'obs', 'fact', 'roomNo'],
   adminhub_bootcamp_gest_v2: ['claims', 'nextClaim', 'moro', 'tasks', 'topics', 'nextT']
 };
-const APPV = 51;
+const APPV = 52;
 const KV_LEGACY = {adminhub_bootcamp_mkt_v2:'adminhub_bootcamp_mkt_v1', adminhub_bootcamp_adm_v2:'adminhub_bootcamp_adm_v1', adminhub_bootcamp_com_v2:'adminhub_bootcamp_com_v1', adminhub_bootcamp_gest_v2:'adminhub_bootcamp_gest_v1'};
 const DEVID = (() => { try { let d = localStorage.getItem('adminhub_bootcamp_dev'); if (!d) { d = Math.random().toString(36).slice(2, 8); localStorage.setItem('adminhub_bootcamp_dev', d); } return d; } catch (e) { return 'x' + Math.random().toString(36).slice(2, 6); } })();
 const blog = (e, o) => { try { const a = JSON.parse(localStorage.getItem('adminhub_bootcamp_log') || '[]'); a.push(Object.assign({t:new Date().toISOString().slice(11, 19), e}, o || {})); while (a.length > 120) a.shift(); localStorage.setItem('adminhub_bootcamp_log', JSON.stringify(a)); } catch (x) {} };
