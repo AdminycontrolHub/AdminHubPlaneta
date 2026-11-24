@@ -602,7 +602,7 @@ function pendCount(p){ var n = 0; for (var i = 0; i < (p.tareas || []).length; i
 function renderSide(){
   var q = '';
   var l = pagesOf(curConv).slice().sort(function(a, b){
-    var ma = a.date.slice(0, 7), mb = b.date.slice(0, 7);
+    var ma = commMonth(a).key, mb = commMonth(b).key;
     if (ma !== mb) return ma < mb ? 1 : -1;
     return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0);
   }), h = '', shown = 0, lastM = '';
@@ -613,11 +613,11 @@ function renderSide(){
       if (blob.indexOf(q) < 0) continue;
     }
     shown++;
-    var dd = new Date(p.date + 'T00:00:00'), mk = p.date.slice(0, 7);
+    var dd = new Date(p.date + 'T00:00:00'), cm = commMonth(p), mk = cm.key;
     if (mk !== lastM){
       if (lastM) h += '</div>';
       lastM = mk;
-      h += '<div class="mh">' + esc(dd.toLocaleDateString('es-ES', { month:'long' }) + ' ' + dd.getFullYear()) + '</div><div class="chips">';
+      h += '<div class="mh">' + esc(cm.label) + '</div><div class="chips">';
     }
     var wk = dd.toLocaleDateString('es-ES', { weekday:'short' }).replace('.', ''), pc = pendCount(p);
     h += '<div class="pchip' + (p.id === curId ? ' on' : '') + '" title="' + esc(fmtDate(p.date) + (pc ? ' · ' + pc + ' pendientes' : '')) + '" onclick="openPage(\'' + p.id + '\')">' +
@@ -626,6 +626,13 @@ function renderSide(){
   if (lastM) h += '</div>';
   if (!shown) h = '<div class="empty">' + (q ? 'Sin resultados' : 'Aún no hay resúmenes en ' + curConv + '.<br>Crea el primero con ＋') + '</div>';
   document.getElementById('plist').innerHTML = h;
+}
+/* el cierre cuelga del mes comercial que cierra (p. ej. el martes 1 dic es S4 de noviembre), aunque la fecha sea de otro mes */
+function commMonth(p){
+  var dd = new Date(p.date + 'T00:00:00'), mes = semMesOf(p), mi = MESES.indexOf(mes), dm = dd.getMonth(), y = dd.getFullYear();
+  if (mi < 0) return { key: p.date.slice(0, 7), label: dd.toLocaleDateString('es-ES', { month:'long' }) + ' ' + y };
+  if (mi - dm > 6) y--; else if (dm - mi > 6) y++;
+  return { key: y + '-' + ('0' + (mi + 1)).slice(-2), label: mes + ' ' + y };
 }
 function openPage(id){ curId = id; renderSide(); renderMain(); }
 
