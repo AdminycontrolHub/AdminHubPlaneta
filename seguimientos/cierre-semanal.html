@@ -1239,6 +1239,7 @@ function parseSheet(ws, sname, fname){
   if (hr < 0) throw new Error('hoja "' + sname + '": no encuentro las columnas "Fecha" y "1ER SEM" / "2DO SEM"');
   if (cM < 0 && cF > 0) cM = cF - 1;
   var brand = brandOfFile(rows, sname) || brandOfFile(rows, fname);
+  if (/ucma/i.test(fname || '') && /obs/i.test(fname || '') && brand === 'OBS') brand = 'TOT';
   if (!brand) throw new Error('hoja "' + sname + '": no sé de qué marca es (no aparece OBS, ESDesign, Inesdi ni UCMA)');
   var by = {}, n = 0, mes = '', cnt = 0;
   for (i = hr + 1; i < rows.length; i++){
@@ -1258,17 +1259,20 @@ function applyCurvas(res, errs){
   errs = errs || [];
   var p = getPage(curId) || pagesOf(curConv)[0];
   if (!p){ uiAlert('No hay ningún cierre abierto.'); return; }
-  var msg = [], i, j, semSet = null, semBad = false, firstBy = null;
+  var msg = [], i, j, semSet = null, semBad = false, firstBy = null, totV = null, obsV = null;
   for (i = 0; i < res.length; i++){
-    var c = res[i], e = c.by[p.date];
-    if (c.brand === 'UCMA'){ msg.push('✖ ' + c.name + ': es de UCMA; su objetivo ya viene del plan de Altas (se rellena solo).'); continue; }
+    var c = res[i], e = c.by[prevTue(p.date)];
+    if (c.brand === 'UCMA'){ msg.push('✖ ' + c.name + ': archivo solo de UCMA; usa el de "OBS y UCMA".'); continue; }
     if (!firstBy) firstBy = c.by;
+    if (c.brand === 'TOT'){ if (e && e.obj != null){ totV = e.obj; msg.push('✔ Curva OBS y UCMA → ' + e.obj + '  (' + e.sem + ')'); } else msg.push('✖ ' + c.name + ': esa semana no tiene valor.'); continue; }
     if (!e){ msg.push('✖ ' + c.name + ' (' + c.brand + '): el ' + fmtShort(p.date) + ' no aparece en ese archivo.'); continue; }
+    if (c.brand === 'INE' && e.obj == null) e = { obj: 0, obj2: e.obj2, sem: e.sem, mes: e.mes };
     if (e.obj == null && e.obj2 == null){ msg.push('✖ ' + c.name + ' (' + c.brand + '): la semana ' + e.sem + ' no tiene objetivo.'); continue; }
     var done = false;
     for (j = 0; j < p.rows.length; j++){
       if (normBrand(p.rows[j].marca) === c.brand){
         p.rows[j].obj = e.obj == null ? '' : String(e.obj);
+        if (c.brand === 'OBS') obsV = e.obj;
         if (c.has2) p.rows[j].obj2 = e.obj2 == null ? '' : String(e.obj2);
         done = true;
         msg.push('✔ ' + p.rows[j].marca + ' → Abril ' + (e.obj == null ? '—' : e.obj) + (c.has2 ? ' · Octubre ' + (e.obj2 == null ? '—' : e.obj2) : '') + '  (' + e.sem + ')');
@@ -1278,16 +1282,19 @@ function applyCurvas(res, errs){
     if (semSet && semSet !== e.sem) semBad = true;
     if (!semSet) semSet = e.sem;
   }
+  if (totV != null && obsV != null){
+    for (j = 0; j < p.rows.length; j++) if (normBrand(p.rows[j].marca) === 'UCMAOBS'){ p.rows[j].obj = String(totV - obsV); msg.push('✔ UCMA-OBS → ' + (totV - obsV) + '  (OBS y UCMA ' + totV + ' − OBS ' + obsV + ')'); }
+  } else if (totV != null) msg.push('⚠ Falta el archivo "Curva OBS 2027" para calcular UCMA-OBS (OBS y UCMA − OBS).');
   /* semana comercial en todos los cierres cuyo martes aparezca en algún archivo */
   var tagged = 0;
   if (firstBy){
     for (i = 0; i < state.pages.length; i++){
-      var q = state.pages[i], ee = firstBy[q.date];
+      var q = state.pages[i], ee = firstBy[prevTue(q.date)];
       if (ee && (q.sem !== ee.sem || q.semMes !== ee.mes || q.semDate !== q.date)){ q.sem = ee.sem; q.semMes = ee.mes; q.semDate = q.date; dirty[q.id] = true; tagged++; }
     }
   }
   if (res.length){ var anyO2 = p.rows.some(function(r){ return String(r.obj2 || '').trim() !== ''; }); if (anyO2 !== !!p.splitO){ p.splitO = anyO2; msg.push(anyO2 ? 'ℹ Este mes hay objetivos de Abril y de Octubre: he separado la columna Objetivo.' : 'ℹ Este mes no hay objetivos de Octubre: una sola columna de Objetivo.'); } }
-  if (ucmaFill(p)) msg.push('✔ UCMA-OBS → ' + UCMA_PLAN[p.date] + '  (plan de Altas)');
+
   for (i = 0; i < errs.length; i++) msg.push('✖ ' + errs[i]);
   if (semBad) msg.push('⚠ Los archivos no coinciden en la semana comercial de este martes. Revisa que sean del mismo año.');
   if (tagged || res.length) scheduleSave(p.id);
@@ -1295,12 +1302,7 @@ function applyCurvas(res, errs){
   uiAlert((msg.length ? msg.join('\n') : 'No he podido importar nada.'));
 }
 /* calendario comercial 2026-27 (martes -> mes comercial y semana); los archivos importados mandan sobre esto */
-var CAL = {
-  '2026-10-06':['Octubre','S1'],'2026-10-13':['Octubre','S2'],'2026-10-20':['Octubre','S3'],'2026-10-27':['Octubre','S4'],
-  '2026-11-03':['Noviembre','S1'],'2026-11-10':['Noviembre','S2'],'2026-11-17':['Noviembre','S3'],'2026-11-24':['Noviembre','S4'],
-  '2026-12-01':['Diciembre','S1'],'2026-12-08':['Diciembre','S2'],'2026-12-15':['Diciembre','S3'],'2026-12-22':['Diciembre','S4'],
-  '2026-12-29':['Enero','S1'],'2027-01-05':['Enero','S2'],'2027-01-12':['Enero','S3'],'2027-01-19':['Enero','S4'],'2027-01-26':['Enero','S5']
-};
+var CAL = {"2026-10-06":["Octubre","S1"],"2026-10-13":["Octubre","S2"],"2026-10-20":["Octubre","S3"],"2026-10-27":["Octubre","S4"],"2026-11-03":["Octubre","S5"],"2026-11-10":["Noviembre","S1"],"2026-11-17":["Noviembre","S2"],"2026-11-24":["Noviembre","S3"],"2026-12-01":["Noviembre","S4"],"2026-12-08":["Diciembre","S1"],"2026-12-15":["Diciembre","S2"],"2026-12-22":["Diciembre","S3"],"2026-12-29":["Diciembre","S4"],"2027-01-05":["Enero","S1"],"2027-01-12":["Enero","S2"],"2027-01-19":["Enero","S3"],"2027-01-26":["Enero","S4"],"2027-02-02":["Enero","S5"],"2027-02-09":["Febrero","S1"],"2027-02-16":["Febrero","S2"],"2027-02-23":["Febrero","S3"],"2027-03-02":["Febrero","S4"],"2027-03-09":["Marzo","S1"],"2027-03-16":["Marzo","S2"],"2027-03-23":["Marzo","S3"],"2027-03-30":["Marzo","S4"],"2027-04-06":["Abril","S1"],"2027-04-13":["Abril","S2"],"2027-04-20":["Abril","S3"],"2027-04-27":["Abril","S4"],"2027-05-04":["Abril","S5"],"2027-05-11":["Mayo","S1"],"2027-05-18":["Mayo","S2"],"2027-05-25":["Mayo","S3"],"2027-06-01":["Mayo","S4"],"2027-06-08":["Junio","S1"],"2027-06-15":["Junio","S2"],"2027-06-22":["Junio","S3"],"2027-06-29":["Junio","S4"],"2027-07-06":["Julio","S1"]};
 var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function calOf(iso){
   if (!iso) return null;
@@ -1315,19 +1317,37 @@ function calOf(iso){
 /* la semana importada solo vale si el cierre sigue en la fecha en la que se etiquetó; si no, manda el calendario */
 function semOf(p){ if (!p) return ''; if (p.sem && p.semDate === p.date) return p.sem; var c = calOf(p.date); return c ? c.sem : (p.sem || ''); }
 function semMesOf(p){ if (!p) return ''; if (p.sem && p.semDate === p.date) return p.semMes || ''; var c = calOf(p.date); return c ? c.mes : ''; }
-/* objetivo UCMA-OBS: "Altas" del plan (Nov 16 · Dic 19 · Ene 44) repartidas por semana comercial */
-var UCMA_PLAN = {
-  '2026-11-10':6,'2026-11-17':5,'2026-11-24':5,
-  '2026-12-01':5,'2026-12-08':5,'2026-12-15':5,'2026-12-22':4,
-  '2026-12-29':9,'2027-01-05':9,'2027-01-12':9,'2027-01-19':9,'2027-01-26':8
-};
+/* CURVAS 2027 (columna Forecast/Sem de cada archivo). El valor de un cierre es el de la fila fechada el martes ANTERIOR
+   (las fechas del archivo son a cierre de la semana anterior). TOT = curva "OBS y UCMA"; UCMA-OBS = TOT - OBS. */
+var CURVAS = {"OBS":{"2026-11-03":38,"2026-11-10":45,"2026-11-17":57,"2026-11-24":65,"2026-12-01":50,"2026-12-08":46,"2026-12-15":44,"2026-12-22":28,"2026-12-29":27,"2027-01-05":45,"2027-01-12":63,"2027-01-19":68,"2027-01-26":76,"2027-02-02":60,"2027-02-09":66,"2027-02-16":68,"2027-02-23":70,"2027-03-02":56,"2027-03-09":61,"2027-03-16":62,"2027-03-23":45,"2027-03-30":55,"2027-04-06":57,"2027-04-13":55,"2027-04-20":57,"2027-04-27":60,"2027-05-04":48,"2027-05-11":47,"2027-05-18":57,"2027-05-25":64,"2027-06-01":57,"2027-06-08":59,"2027-06-15":62,"2027-06-22":52,"2027-06-29":54},"TOT":{"2026-11-03":38,"2026-11-10":45,"2026-11-17":60,"2026-11-24":69,"2026-12-01":54,"2026-12-08":50,"2026-12-15":46,"2026-12-22":30,"2026-12-29":29,"2027-01-05":50,"2027-01-12":68,"2027-01-19":73,"2027-01-26":82,"2027-02-02":60,"2027-02-09":66,"2027-02-16":68,"2027-02-23":70,"2027-03-02":56,"2027-03-09":61,"2027-03-16":62,"2027-03-23":45,"2027-03-30":55,"2027-04-06":57,"2027-04-13":55,"2027-04-20":57,"2027-04-27":60,"2027-05-04":48,"2027-05-11":47,"2027-05-18":57,"2027-05-25":64,"2027-06-01":57,"2027-06-08":59,"2027-06-15":62,"2027-06-22":52,"2027-06-29":54},"ESDesign":{"2026-11-03":13,"2026-11-10":22,"2026-11-17":25,"2026-11-24":28,"2026-12-01":22,"2026-12-08":14,"2026-12-15":18,"2026-12-22":6,"2026-12-29":7,"2027-01-05":18,"2027-01-12":25,"2027-01-19":29,"2027-01-26":33,"2027-02-02":24,"2027-02-09":25,"2027-02-16":28,"2027-02-23":31,"2027-03-02":23,"2027-03-09":26,"2027-03-16":28,"2027-03-23":24,"2027-03-30":16,"2027-04-06":20,"2027-04-13":26,"2027-04-20":31,"2027-04-27":25,"2027-05-04":25,"2027-05-11":26,"2027-05-18":28,"2027-05-25":29,"2027-06-01":26,"2027-06-08":27,"2027-06-15":28,"2027-06-22":25,"2027-06-29":23},"Inesdi":{"2027-02-02":1,"2027-02-09":1,"2027-02-16":2,"2027-02-23":2,"2027-03-02":2,"2027-03-09":2,"2027-03-16":2,"2027-03-23":1,"2027-03-30":2,"2027-04-06":2,"2027-04-13":3,"2027-04-20":3,"2027-04-27":3,"2027-05-04":2,"2027-05-11":2,"2027-05-18":2,"2027-05-25":3,"2027-06-01":2,"2027-06-08":2,"2027-06-15":3,"2027-06-22":3,"2027-06-29":2}};
+function tuesdayOf(iso){
+  var d = new Date(iso + 'T00:00:00'); if (isNaN(d.getTime())) return '';
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 1);
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function prevTue(iso){
+  var t = tuesdayOf(iso); if (!t) return '';
+  var d = new Date(t + 'T00:00:00'); d.setDate(d.getDate() - 7);
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function curvaObj(date, brandKey){
+  var k = prevTue(date), o = CURVAS.OBS[k], t = CURVAS.TOT[k];
+  if (brandKey === 'OBS') return o;
+  if (brandKey === 'UCMAOBS') return (o != null && t != null) ? t - o : undefined;
+  if (brandKey === 'ESD') return CURVAS.ESDesign[k];
+  if (brandKey === 'INE'){ var iv = CURVAS.Inesdi[k]; return iv != null ? iv : (o != null || t != null ? 0 : undefined); }
+}
+/* rellena Objetivo (columna Abril) desde las curvas; una sola vez por cierre (p.curvaOk) y solo desde el 24/11/2026 */
 function ucmaFill(p){
-  var v = UCMA_PLAN[p.date], ch = false;
-  if (v == null || !p.rows) return false;
+  if (!p.rows || p.date < '2026-11-24') return false;
+  var ch = false, first = !p.curvaOk;
   for (var i = 0; i < p.rows.length; i++){
-    var r = p.rows[i];
-    if (normBrand(r.marca) === 'UCMAOBS' && String(r.obj == null ? '' : r.obj).trim() === '' && String(r.obj2 || '').trim() === ''){ r.obj = String(v); ch = true; }
+    var r = p.rows[i], v = curvaObj(p.date, normBrand(r.marca));
+    if (v == null) continue;
+    if (first && String(r.obj == null ? '' : r.obj) !== String(v)){ r.obj = String(v); ch = true; }
+    else if (!first && String(r.obj == null ? '' : r.obj).trim() === '' && String(r.obj2 || '').trim() === ''){ r.obj = String(v); ch = true; }
   }
+  if (first && p.id){ p.curvaOk = true; ch = true; }
   return ch;
 }
 /* si el título contiene "prueba", la tarjeta de Esteban sale marcada como PRUEBA */
