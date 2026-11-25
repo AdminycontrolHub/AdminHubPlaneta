@@ -2419,8 +2419,8 @@ function pzTotales(n){
 function mjRenderTeamGrid(){
   pzVista = { modo:'equipo' };
   pzCargarHub();
-  // Solo tareas asignadas a alguien del equipo (las mismas que se ven en las burbujas)
-  const totReu = mjTopics.filter(t => !t.locked && t.status !== 'cerrado' && mjAssigneeList(t).some(n => mjTeamMembers.some(p => p.name === n))).length;
+  // Suma de las tareas de cada persona (igual que las burbujas: compartida = 1 por persona)
+  const totReu = mjTeamMembers.reduce((t,p) => t + pzTemasDe(p.name).length, 0);
   const hubOk = pzEstadoHub === 'ok';
   const totInc = hubOk ? pzCasosHub.length : '…';
   const totDev = hubOk ? pzCasosHub.filter(c => pzCat(c).id === 'devolucion').length : 0;
