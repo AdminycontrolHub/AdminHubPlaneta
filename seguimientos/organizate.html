@@ -2200,5 +2200,515 @@ window.addEventListener('load', function(){
 });
 
 </script>
+<!-- =====================================================================
+     NUEVO PANEL POR PERSONA (Reuniones · Bajas y cambios · Bandeja · Atenea)
+     Bloque añadido aparte: sustituye solo la vista de "Yo", la de cada
+     persona de "Equipo" y las burbujas del equipo. La Mesa del Jueves no
+     se toca. Para quitarlo, basta con borrar este bloque entero.
+     ===================================================================== -->
+<style>
+.pz-tot{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 4px;}
+.pz-tot .box{display:flex;flex-direction:column;align-items:center;gap:1px;padding:10px 4px 8px;border-radius:12px;border:1px solid #e8e2da;background:#fdfcfa;}
+.pz-tot .num{font-size:26px;font-weight:200;line-height:1.1;letter-spacing:-.5px;}
+.pz-tot b{font-size:11.5px;color:#1a3a50;}
+.pz-tot small{font-size:10px;color:#5a6e80;text-align:center;}
+.pz-br{font-size:9.5px;color:#5a6e80;text-align:center;line-height:1.35;margin-top:2px;max-width:96px;}
+.pz-ic{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0 14px;}
+.pz-icb{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 10px;border-radius:12px;border:1px solid #d8d0c4;background:#fff;cursor:pointer;font-family:inherit;color:#1a3a50;}
+.pz-icb:hover{background:#fbf9f5;}
+.pz-icb.on{border:1px dashed #85B7EB;background:#f8fbff;}
+.pz-icb b{font-size:13px;}
+.pz-icb small{font-size:10.5px;color:#5a6e80;}
+.pz-icb .bd{position:absolute;top:6px;right:8px;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;background:#fce4e4;color:#a4293f;}
+.pz-icb .bd.gris{background:#e9edf1;color:#5a6e80;}
+.pz-tw{border:1px solid #d8d0c4;border-radius:10px;overflow:hidden;}
+table.pz-t{width:100%;border-collapse:collapse;table-layout:fixed;}
+.pz-t th{background:#2a7f8a;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-align:left;padding:10px;}
+.pz-t td{font-size:12.5px;padding:9px 10px;border-top:1px solid #ece6dc;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a3a50;}
+.pz-t tr.gr td{background:#f8f5ef;font-size:12px;font-weight:700;padding:8px 10px;}
+.pz-t tr.et td{cursor:pointer;}
+.pz-t tr.et:hover td{background:#fbf9f5;}
+.pz-t tr.sub td{background:#fdfcfa;font-size:12px;}
+.pz-t tr.sub td:first-child{padding-left:30px;}
+.pz-hid{display:none;}
+.pz-mono{font-family:'Courier New',monospace;font-size:11.5px;color:#5a6e80;}
+.pz-mk{font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:8px;}
+.pz-ag{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;}
+.pz-r{background:#fce4e4;color:#a4293f}.pz-a{background:#fdf0dc;color:#8a5a10}.pz-g{background:#e6f2ee;color:#0f6e56}
+.pz-tri{color:#a4293f;font-size:12px;margin-left:6px;}
+.pz-sb{font-size:11px;color:#5a6e80;}
+.pz-gen{color:#9a8e82;font-style:italic;}
+.pz-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:0;}
+.pz-fb{font-size:11px;padding:5px 12px;border-radius:14px;border:1px solid #2a7f8a;color:#2a7f8a;background:#fff;white-space:nowrap;cursor:pointer;font-family:inherit;font-weight:600;}
+.pz-fb:hover{background:#eef6f7;}
+.pz-vacio{font-size:12px;color:#7a6e62;padding:14px 4px;}
+.pz-modal-bg{position:fixed;inset:0;background:rgba(1,8,20,.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;}
+.pz-modal-bg.show{display:flex;}
+.pz-modal{background:#fff;border-radius:14px;padding:20px;max-width:420px;width:100%;color:#1a3a50;text-align:left;}
+.pz-modal h3{font-size:15px;margin-bottom:10px;}
+.pz-modal label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;margin:8px 0;}
+.pz-modal select,.pz-modal input{font-family:inherit;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid #c0b8ae;}
+.pz-modal .acc{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+.pz-btn-pri{padding:7px 16px;border-radius:8px;background:#2a7f8a;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:inherit;}
+.pz-btn-sec{padding:7px 14px;border-radius:8px;background:#fff;color:#5a6e80;border:1px solid #c0b8ae;font-weight:600;cursor:pointer;font-family:inherit;}
+.pz-err{font-size:11.5px;color:#a4293f;margin-top:6px;display:none;}
+@media (max-width:640px){ .pz-tot,.pz-ic{grid-template-columns:repeat(2,minmax(0,1fr));} .pz-t td,.pz-t th{padding:8px 6px;} }
+</style>
+
+<div class="pz-modal-bg" id="pzResp">
+  <div class="pz-modal">
+    <h3>Responsables de Atenea por marca</h3>
+    <p style="font-size:12px;color:#5a6e80;margin:0 0 10px;line-height:1.5">Elige quién lleva los casos de Atenea de cada marca. El cambio se aplica a <b>todo el equipo</b>, por eso para guardarlo hace falta la contraseña de administración.</p>
+    <div id="pzRespFilas"></div>
+    <label style="margin-top:14px;">Contraseña de administración (para guardar) <input type="password" id="pzRespPass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')pzGuardarResponsables()"></label>
+    <div class="pz-err" id="pzRespErr">Contraseña incorrecta: no se ha guardado ningún cambio.</div>
+    <div class="acc"><button class="pz-btn-sec" onclick="document.getElementById('pzResp').classList.remove('show')">Cancelar</button><button class="pz-btn-pri" onclick="pzGuardarResponsables()">Guardar cambios</button></div>
+  </div>
+</div>
+<input type="file" id="pzFileAtenea" accept=".xlsx,.xls,.csv" style="display:none" onchange="pzCargarExcelAtenea(this)">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ============================================================
+// CONFIGURACION DEL PANEL
+// ============================================================
+const PZ_KV_HUB = 'https://seguimiento-correos.adminhubplaneta.workers.dev/kv';  // Hub de Bajas y Cambios (solo lectura, salvo Atenea)
+const PZ_KV_HUB_LIST = PZ_KV_HUB + '/list';
+const PZ_URL_HUB = 'bajas-cambios.html';
+const PZ_CLAVE_ADMIN = 'AdminHub';
+const PZ_KEY_ATENEA_RESP = 'config_atenea_responsables';
+const PZ_KEY_ATENEA_CASOS = m => 'config_atenea_casos_' + m;
+const PZ_MARCAS = ['OBS','INESDI','ESDesign','UCMA'];
+const PZ_MARCA_COLORES = { 'OBS':{bg:'#e6f1fb',fg:'#0c447c'}, 'ESDesign':{bg:'#fdeee0',fg:'#c45200'}, 'INESDI':{bg:'#f3ece0',fg:'#6b4a1f'}, 'UCMA':{bg:'#fdf6d9',fg:'#a6870c'} };
+const PZ_ALIAS = { 'noelia':'Noe' };   // la macro usa "Noelia"; en el equipo es "Noe"
+
+let pzCasosHub = [];
+let pzEstadoHub = 'sin_cargar';   // sin_cargar | cargando | ok | error
+let pzAteneaResp = { OBS:'Ana', INESDI:'Ana', ESDesign:'Ana', UCMA:'Elsa' };
+let pzAteneaCasos = {};
+let pzApartado = { yo:'reu', persona:'reu' };
+let pzVista = null;               // {modo:'yo'|'persona'|'equipo', nombre}
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+function pzEsc(s){ const d=document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+function pzEscA(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;'); }
+function pzNorm(s){ return (s||'').toString().trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
+function pzParseFecha(f){
+  if(!f) return null;
+  if(f instanceof Date) return isNaN(f) ? null : f;
+  const s = String(f).trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
+}
+function pzDias(f){ const d = pzParseFecha(f); if(!d) return 0; const h = new Date(); h.setHours(0,0,0,0); return Math.max(0, Math.round((h - new Date(d.getFullYear(), d.getMonth(), d.getDate()))/86400000)); }
+function pzTxtDias(n){ return n === 0 ? 'Hoy' : (n === 1 ? '1 día' : n + ' días'); }
+function pzClsDias(n){ return n > 5 ? 'pz-r' : (n >= 2 ? 'pz-a' : 'pz-g'); }
+function pzFechaCorta(f){ const d = pzParseFecha(f); return d ? String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0') : '—'; }
+function pzMarca(c){ const s = pzNorm(c); if(s.includes('obs')) return 'OBS'; if(s.includes('inesdi')) return 'INESDI'; if(s.includes('esdesign') || s === 'esd') return 'ESDesign'; if(s.includes('planetadeagostini') || s.includes('ucma') || s.includes('carlemany')) return 'UCMA'; return c || '—'; }
+function pzMarcaHtml(m){ const c = PZ_MARCA_COLORES[m] || {bg:'#ede8df',fg:'#5a6e80'}; return `<span class="pz-mk" style="background:${c.bg};color:${c.fg}">${pzEsc(m)}</span>`; }
+function pzPersona(n){ if(!n) return ''; return PZ_ALIAS[pzNorm(n)] || n; }
+
+async function pzKvGet(key, intentos){
+  intentos = intentos || 3;
+  for(let i=0; i<intentos; i++){
+    try{
+      const res = await fetch(`${PZ_KV_HUB}?key=${encodeURIComponent(key)}`);
+      if(!res.ok) throw new Error('kv');
+      const d = await res.json();
+      return d.value ? JSON.parse(d.value) : null;
+    }catch(e){ if(i === intentos-1) throw e; await new Promise(r=>setTimeout(r, 300*(i+1))); }
+  }
+}
+async function pzKvSet(key, value){
+  const res = await fetch(PZ_KV_HUB, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key, value}) });
+  return res.ok;
+}
+
+// ============================================================
+// CASOS DEL HUB (misma logica que el Hub)
+// ============================================================
+const PZ_CATS = [
+  { id:'ce', nombre:'CE', match:t=>t==='CE' },
+  { id:'cc', nombre:'CC', match:t=>['CC a Oct','CC a Sept','CC a Abril','CC'].includes(t) },
+  { id:'cp', nombre:'CP', match:t=>t==='CP' },
+  { id:'bajasin', nombre:'Baja sin devolución', match:t=>t==='Baja sin Devolución' },
+  { id:'bajacon', nombre:'Baja con devolución', match:t=>t==='Baja con Devolución' },
+  { id:'devolucion', nombre:'Devolución', match:(t,c)=> t==='Devolución' || t==='Pte Cert Bancario' || t==='Pte Certificado' ||
+      (t==='Baja con Devolución' && c && pzPteDev(c) && (c.textoMetodo==='Transferencia' || c.textoMetodo==='Flywire')) }
+];
+function pzPteDev(c){ return ((pzNorm(c.categoriasOriginales).match(/devoluc/g)) || []).length >= 2; }
+function pzCat(c){ if(c.__cat) return c.__cat; const d = PZ_CATS.find(x=>x.id==='devolucion'); if(d.match(c.tipoGestion, c)) return d; return PZ_CATS.find(x=>x.id!=='devolucion' && x.match(c.tipoGestion, c)) || null; }
+function pzPendiente(c, cat){ return cat.id === 'devolucion' ? !c.devolucionResuelta : (c.cierreManual ? false : c.estado !== 'Cerrado'); }
+function pzIncidencia(c){ if(c.incidenciaTocada) return !!c.incidenciaManual; return pzNorm(c.categoriasOriginales).includes('incidencia') || !!(c.observacion && c.observacion.trim()); }
+
+async function pzCargarHub(){
+  if(pzEstadoHub === 'cargando' || pzEstadoHub === 'ok') return;
+  pzEstadoHub = 'cargando';
+  try{
+    const res = await fetch(PZ_KV_HUB_LIST);
+    if(!res.ok) throw new Error('list');
+    const keys = (await res.json()).keys || [];
+    const existen = new Set(keys);
+    const ids = keys.filter(k => !k.startsWith('config_') && !k.startsWith('hub_') && !k.startsWith('bandeja_'));
+    const out = [];
+    for(let i=0; i<ids.length; i+=40){
+      const parcial = await Promise.all(ids.slice(i, i+40).map(async key => {
+        try{
+          const [m, h] = await Promise.all([pzKvGet(key), existen.has('hub_'+key) ? pzKvGet('hub_'+key) : Promise.resolve(null)]);
+          return m ? Object.assign({key}, m, h || {}) : null;
+        }catch(e){ return null; }
+      }));
+      out.push(...parcial.filter(Boolean));
+    }
+    // Igual que las tarjetas del Hub: un caso cuenta en CADA tipo en el que
+    // esta pendiente (p. ej. Baja con Devolucion y su Devolucion).
+    const entradas = [];
+    out.forEach(c => PZ_CATS.forEach(cat => { if(cat.match(c.tipoGestion, c) && pzPendiente(c, cat)) entradas.push(Object.assign({}, c, { __cat: cat })); }));
+    pzCasosHub = entradas;
+    pzEstadoHub = 'ok';
+  }catch(e){ pzEstadoHub = 'error'; }
+  pzRepintar();
+}
+async function pzCargarAtenea(){
+  try{ const r = await pzKvGet(PZ_KEY_ATENEA_RESP); if(r && typeof r === 'object') pzAteneaResp = Object.assign({}, pzAteneaResp, r); }catch(e){}
+  await Promise.all(PZ_MARCAS.map(async m => { try{ const d = await pzKvGet(PZ_KEY_ATENEA_CASOS(m)); if(d) pzAteneaCasos[m] = d; }catch(e){} }));
+  pzRepintar();
+}
+
+// ============================================================
+// BANDEJA: correos pendientes que no son bajas y cambios. Los envia la
+// macro de Outlook en UNA sola clave ("bandeja_resumen") y aqui se leen
+// con UNA sola lectura.
+// ============================================================
+const PZ_KEY_BANDEJA = 'bandeja_resumen';
+let PZ_BANDEJA = [];
+let pzBandejaActualizado = '';
+let pzEstadoBandeja = 'cargando';
+async function pzCargarBandeja(){
+  try{
+    const d = await pzKvGet(PZ_KEY_BANDEJA);
+    const lista = (d && Array.isArray(d.correos)) ? d.correos : [];
+    PZ_BANDEJA = lista.map(c => Object.assign({}, c, { responsable: pzPersona(c.responsable) }));
+    pzBandejaActualizado = (d && d.actualizado) || '';
+    pzEstadoBandeja = 'ok';
+  }catch(e){ pzEstadoBandeja = 'error'; }
+  pzRepintar();
+}
+const PZ_COLOR_ETIQUETA = {'Factura':'#378ADD','Revisar':'#888780','CFP':'#7F77DD','Conciliación':'#1D9E75','Pago de tasas':'#D4537E'};
+
+// ============================================================
+// DATOS POR PERSONA
+// ============================================================
+function pzTemasDe(n){ return mjTopics.filter(t => !t.locked && mjAssigneeList(t).includes(n) && t.status !== 'cerrado'); }
+function pzCasosDe(n){ return pzCasosHub.filter(c => pzPersona(c.responsableManual || c.responsable) === n); }
+function pzCorreosDe(n){ return PZ_BANDEJA.filter(c => c.responsable === n && c.estado === 'Pendiente'); }
+function pzMarcasAteneaDe(n){ return PZ_MARCAS.filter(m => pzPersona(pzAteneaResp[m]) === n); }
+function pzAteneaDe(n){ const out = []; pzMarcasAteneaDe(n).forEach(m => { const d = pzAteneaCasos[m]; if(d && d.casos) d.casos.forEach(c => out.push(Object.assign({marca:m}, c))); }); return out; }
+function pzTotales(n){
+  const reu = pzTemasDe(n).length, inc = pzEstadoHub==='ok' ? pzCasosDe(n).length : 0, ban = pzCorreosDe(n).length, ate = pzAteneaDe(n).length;
+  return { reu, inc, ban, ate, total: reu + inc + ban + ate };
+}
+
+// ============================================================
+// EQUIPO: resumen global + burbujas con el total de cada persona
+// (sustituye a la funcion original mjRenderTeamGrid)
+// ============================================================
+function mjRenderTeamGrid(){
+  pzVista = { modo:'equipo' };
+  pzCargarHub();
+  const totReu = mjTopics.filter(t => !t.locked && t.status !== 'cerrado').length;
+  const hubOk = pzEstadoHub === 'ok';
+  const totInc = hubOk ? pzCasosHub.length : '…';
+  const totDev = hubOk ? pzCasosHub.filter(c => pzCat(c).id === 'devolucion').length : 0;
+  const totBan = PZ_BANDEJA.filter(c => c.estado === 'Pendiente').length;
+  const totAte = PZ_MARCAS.reduce((t,m) => t + ((pzAteneaCasos[m] && pzAteneaCasos[m].casos) ? pzAteneaCasos[m].casos.length : 0), 0);
+  const desglose = t => { const p = []; if(t.reu) p.push('🎤'+t.reu); if(t.inc) p.push('ⓘ'+t.inc); if(t.ban) p.push('☀'+t.ban); if(t.ate) p.push('✨'+t.ate); return p.length ? p.join(' · ') : 'sin pendientes'; };
+  return `<div id="pzEquipo">
+    <div class="pz-tot">
+      <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B026FF" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg><span class="num" style="color:#8a2ad0">${totReu}</span><b>Reuniones</b><small>tareas</small></div>
+      <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a7f8a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.6" fill="#2a7f8a"/></svg><span class="num" style="color:#1f6b74">${totInc}</span><b>Bajas y cambios</b><small>${hubOk ? 'casos · ' + totDev + (totDev===1?' devolución':' devoluciones') : (pzEstadoHub==='error' ? 'no se ha podido leer' : 'cargando…')}</small></div>
+      <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span class="num" style="color:#a3600e">${totBan}</span><b>Bandeja</b><small>correos pendientes</small></div>
+      <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4537E" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="num" style="color:#b03b6c">${totAte}</span><b>Atenea</b><small>casos abiertos</small></div>
+    </div>
+    <div class="mj-team-row">
+    ${mjTeamMembers.map(p=>{
+      const t = pzTotales(p.name);
+      return `<div class="mj-team-bubble" onclick="openOrgPersona('${p.name.replace(/'/g,"\\'")}')">
+        <div class="mj-team-circle" style="--pc:${p.color}">
+          <button class="mj-team-edit" onclick="event.stopPropagation();mjOpenTeamEdit('${p.id}')" title="Editar">✎</button>
+          <span>${p.icon}</span>
+          <span class="mj-team-badge">${t.total}</span>
+        </div>
+        <div class="mj-team-name">${bmEscapeHtml(p.name)}</div>
+        <div class="pz-br">${desglose(t)}</div>
+      </div>`;
+    }).join('')}
+    <div class="mj-team-bubble mj-team-add" onclick="mjOpenTeamEdit(null)">
+      <div class="mj-team-circle">➕</div>
+      <div class="mj-team-name">Añadir</div>
+    </div>
+  </div></div>`;
+}
+
+// ============================================================
+// PANEL DE UNA PERSONA (Yo y cada persona de Equipo)
+// (sustituye a las funciones originales renderYoView y openOrgPersona)
+// ============================================================
+function renderYoView(){
+  const area = document.getElementById('organizateSubArea');
+  if(!area) return;
+  if(!mjMyName || !mjTeamMembers.find(p=>p.name===mjMyName)){
+    area.innerHTML = `
+      <div class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;">
+        <div class="ci-icon">🎯</div>
+        <h4>¿Quién eres?</h4>
+        <p>Se recuerda en este navegador para mostrarte directamente tus tareas cada vez.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+          ${mjTeamMembers.map(p=>`<button onclick="mjSetMyIdentity('${p.name.replace(/'/g,"\\'")}')" style="padding:8px 16px;border-radius:20px;border:1.5px solid ${p.color};background:#fff;color:#1a3a50;cursor:pointer;font-family:inherit;font-weight:600;">${p.icon} ${bmEscapeHtml(p.name)}</button>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+  pzVista = { modo:'yo', nombre: mjMyName };
+  pzCargarHub();
+  area.innerHTML = pzPanelHtml(mjMyName, 'yo');
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function openOrgPersona(name){
+  const area = document.getElementById('organizateSubArea');
+  pzVista = { modo:'persona', nombre: name };
+  pzCargarHub();
+  area.innerHTML = pzPanelHtml(name, 'persona');
+  area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function pzRepintar(){
+  if(!pzVista) return;
+  const area = document.getElementById('organizateSubArea');
+  if(!area) return;
+  if(pzVista.modo === 'equipo' && document.getElementById('pzEquipo')){ document.getElementById('pzEquipo').outerHTML = mjRenderTeamGrid(); }
+  else if(pzVista.modo === 'yo' && document.getElementById('pzPanel')){ area.innerHTML = pzPanelHtml(pzVista.nombre, 'yo'); }
+  else if(pzVista.modo === 'persona' && document.getElementById('pzPanel')){ area.innerHTML = pzPanelHtml(pzVista.nombre, 'persona'); }
+}
+function pzElegir(modo, a){ pzApartado[modo] = a; pzRepintar(); }
+
+function pzPanelHtml(n, modo){
+  const p = mjTeamMembers.find(x=>x.name===n);
+  const ap = pzApartado[modo];
+  const casos = pzCasosDe(n);
+  const inc = casos.some(pzIncidencia);
+  const bdHub = pzEstadoHub === 'ok' ? `<span class="bd">${casos.length}${inc?' ⚠':''}</span>` : `<span class="bd gris">${pzEstadoHub==='error'?'!':'…'}</span>`;
+  const cab = modo === 'yo'
+    ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+         <h4 style="display:flex;align-items:center;gap:8px;text-align:left;margin:0;">${p?p.icon:'⭐'} Mis tareas — ${bmEscapeHtml(n)}</h4>
+         <button onclick="mjChangeIdentity()" style="background:none;border:none;color:#2a7f8a;font-size:11px;font-weight:700;cursor:pointer;">¿No eres tú? Cambiar</button>
+       </div>`
+    : `<button onclick="openOrgSub('equipo')" style="background:none;border:none;color:#2a7f8a;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;padding:0;">← Volver al equipo</button>
+       <h4 style="display:flex;align-items:center;gap:8px;text-align:left;">${p?p.icon:'⭐'} Tareas de ${bmEscapeHtml(n)}</h4>`;
+  let cont = '';
+  if(ap === 'reu') cont = pzReuniones(n, modo);
+  else if(ap === 'inc') cont = pzBajas(n);
+  else if(ap === 'ban') cont = pzBandeja(n);
+  else cont = pzAtenea(n);
+  return `<div id="pzPanel" class="carga-inicial" style="background:#fff;border-radius:12px;border:1px solid #d8d0c4;text-align:left;padding:20px;">
+    ${cab}
+    <div class="pz-ic">
+      <button class="pz-icb ${ap==='reu'?'on':''}" onclick="pzElegir('${modo}','reu')"><span class="bd gris">${pzTemasDe(n).length}</span>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B026FF" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg>
+        <b>Reuniones</b><small>Mesa del Jueves</small></button>
+      <button class="pz-icb ${ap==='inc'?'on':''}" onclick="pzElegir('${modo}','inc')">${bdHub}
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2a7f8a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.6" fill="#2a7f8a"/></svg>
+        <b>Bajas y cambios</b><small>Casos del Hub</small></button>
+      <button class="pz-icb ${ap==='ban'?'on':''}" onclick="pzElegir('${modo}','ban')"><span class="bd">${pzCorreosDe(n).length}</span>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>
+        <b>Bandeja</b><small>Correos sin gestionar</small></button>
+      <button class="pz-icb ${ap==='ate'?'on':''}" onclick="pzElegir('${modo}','ate')"><span class="bd">${pzAteneaDe(n).length}</span>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D4537E" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+        <b>Atenea</b><small>Casos abiertos</small></button>
+    </div>
+    ${cont}
+  </div>`;
+}
+
+// --- Reuniones: la tabla de siempre de Organizate ---
+function pzReuniones(n, modo){
+  const items = pzTemasDe(n);
+  if(modo === 'yo'){
+    return `<div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <button onclick="mjOpenClosedCases('yo')" style="font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid #c0b8ae;background:#f8f5ef;color:#5a6e80;cursor:pointer;font-family:inherit;font-weight:600;">📁 Casos cerrados</button>
+      </div>
+      ${mjRenderTaskTable(items, '__yo__', null)}
+      <div style="margin-top:14px;display:flex;gap:8px;">
+        <input type="text" id="mjYoNewTaskInput" placeholder="Añadir una tarea…" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #c0b8ae;font-family:inherit;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')mjAddYoTask()">
+        <button onclick="mjAddYoTask()" style="padding:8px 16px;border-radius:8px;background:#2a7f8a;color:#fff;border:none;font-weight:700;cursor:pointer;font-family:inherit;">+ Añadir</button>
+      </div>
+      ${typeof renderCierreSemanalBtn === 'function' ? renderCierreSemanalBtn() : ''}`;
+  }
+  return mjRenderTaskTable(items, n, n);
+}
+
+// --- Bajas y cambios ---
+function pzBajas(n){
+  if(pzEstadoHub !== 'ok' && pzEstadoHub !== 'error') return `<p class="pz-vacio">Cargando casos del Hub… (puede tardar unos segundos)</p>`;
+  if(pzEstadoHub === 'error') return `<p class="pz-vacio">No se han podido leer los casos del Hub. Revisa la conexión y vuelve a abrir.</p>`;
+  const casos = pzCasosDe(n);
+  if(!casos.length) return `<p class="pz-vacio">Sin casos pendientes en el Hub de Bajas y Cambios.</p>`;
+  const gestion = casos.filter(c => pzCat(c).id !== 'devolucion');
+  const devol = casos.filter(c => pzCat(c).id === 'devolucion');
+  const porMarca = {};
+  gestion.forEach(c => { const m = pzMarca(c.marca); (porMarca[m] = porMarca[m] || []).push(c); });
+  let filas = '';
+  Object.keys(porMarca).sort((a,b)=>porMarca[b].length-porMarca[a].length).forEach(m => {
+    const lista = porMarca[m];
+    filas += `<tr class="gr"><td colspan="3">${pzMarcaHtml(m)} &nbsp;${lista.length} pendiente${lista.length===1?'':'s'}</td></tr>`;
+    PZ_CATS.filter(c=>c.id!=='devolucion').forEach(cat => {
+      const del = lista.filter(c => pzCat(c).id === cat.id);
+      if(!del.length) return;
+      const max = Math.max(...del.map(c => pzDias(c.fechaIngreso)));
+      filas += `<tr><td>${pzEsc(cat.nombre)}</td><td>${del.length}${del.some(pzIncidencia)?'<span class="pz-tri" title="Hay casos con incidencia">⚠</span>':''}</td><td>${pzTxtDias(max)}</td></tr>`;
+    });
+  });
+  if(devol.length) filas += `<tr class="gr"><td colspan="3" style="font-weight:600;color:#5a6e80">Devoluciones pendientes &nbsp;${devol.length}</td></tr>`;
+  const sin = PZ_MARCAS.filter(m => !porMarca[m]);
+  return `<div class="pz-tw"><table class="pz-t">
+    <colgroup><col style="width:46%"><col style="width:26%"><col style="width:28%"></colgroup>
+    <tr><th>Tipo</th><th>Pendientes</th><th>Más antiguo</th></tr>${filas}</table></div>
+    <p class="pz-sb" style="margin:8px 2px 0">${sin.length?pzEsc(sin.join(', '))+' — sin pendientes · ':''}⚠ = hay algún caso con incidencia · <a href="${PZ_URL_HUB}" target="_blank" style="color:#2a7f8a;font-weight:700;text-decoration:none">Abrir en el Hub ↗</a></p>`;
+}
+
+// --- Bandeja ---
+function pzNombreCorreo(c){ return c.alumno ? pzEsc(c.alumno) + (c.id ? ` · <span class="pz-mono">${pzEsc(c.id)}</span>` : '') : `<span class="pz-gen">Sin alumno · «${pzEsc(c.asunto || 'sin asunto')}»</span>`; }
+let pzGrupo = 0;
+function pzBandeja(n){
+  const pend = pzCorreosDe(n);
+  const espera = PZ_BANDEJA.filter(c => c.responsable === n && c.estado === 'Pte respuesta').length;
+  const viejos = pend.filter(c => pzDias(c.fecha) > 5).length;
+  let html = `<p class="pz-sb" style="margin:0 2px 8px">${pend.length} por gestionar · ${viejos} con más de 5 días · ${espera} en espera (Pte respuesta) · pulsa una etiqueta para ver sus correos · ${pzEstadoBandeja==='error'?'<span style="color:#a32d2d">no se ha podido cargar la bandeja</span>':(pzBandejaActualizado?'actualizado '+pzEsc(pzBandejaActualizado):'')}</p>`;
+  if(!pend.length) return html + `<p class="pz-vacio">Sin correos pendientes de gestión.</p>`;
+  const porMarca = {};
+  pend.forEach(c => (porMarca[c.marca] = porMarca[c.marca] || []).push(c));
+  let filas = '';
+  Object.keys(porMarca).sort((a,b)=>porMarca[b].length-porMarca[a].length).forEach(m => {
+    const lista = porMarca[m];
+    filas += `<tr class="gr"><td colspan="4">${pzMarcaHtml(m)} &nbsp;${lista.length} correo${lista.length===1?'':'s'}</td></tr>`;
+    const porEt = {};
+    lista.forEach(c => (porEt[c.etiqueta] = porEt[c.etiqueta] || []).push(c));
+    Object.keys(porEt).map(et => ({et, l: porEt[et].sort((a,b)=>pzDias(b.fecha)-pzDias(a.fecha))}))
+      .sort((a,b)=>pzDias(b.l[0].fecha)-pzDias(a.l[0].fecha))
+      .forEach(({et, l}) => {
+        const g = 'pzg' + (++pzGrupo);
+        const d = pzDias(l[0].fecha);
+        filas += `<tr class="et" onclick="document.querySelectorAll('tr.${g}').forEach(x=>x.classList.toggle('pz-hid'))"><td><span class="pz-dot" style="background:${PZ_COLOR_ETIQUETA[et]||'#9a8e82'}"></span>${pzEsc(et)} ›</td><td>${l.length}</td><td class="pz-mono">${pzFechaCorta(l[0].fecha)}</td><td><span class="pz-ag ${pzClsDias(d)}">${pzTxtDias(d)}</span></td></tr>`;
+        l.forEach(c => { const dc = pzDias(c.fecha); filas += `<tr class="sub pz-hid ${g}"><td>${pzNombreCorreo(c)}</td><td></td><td class="pz-mono">${pzFechaCorta(c.fecha)}</td><td><span class="pz-ag ${pzClsDias(dc)}">${pzTxtDias(dc)}</span></td></tr>`; });
+      });
+  });
+  return html + `<div class="pz-tw"><table class="pz-t">
+    <colgroup><col style="width:44%"><col style="width:16%"><col style="width:18%"><col style="width:22%"></colgroup>
+    <tr><th>Etiqueta</th><th>Correos</th><th>Más antiguo</th><th>Antigüedad</th></tr>${filas}</table></div>`;
+}
+
+// --- Atenea ---
+function pzAtenea(n){
+  const marcas = pzMarcasAteneaDe(n);
+  const cab = `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <span class="pz-sb">${PZ_MARCAS.map(m=>`${pzEsc(m)}: ${pzEsc(pzAteneaResp[m]||'—')}`).join(' · ')}</span>
+      <span style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="pz-fb" onclick="pzAbrirResponsables()">✎ Responsables</button>
+        <button class="pz-fb" onclick="document.getElementById('pzFileAtenea').click()">⬆ Cargar Excel de Atenea</button>
+        <button class="pz-fb" onclick="pzExportarAtenea('${pzEscA(n)}')">⬇ Exportar</button>
+      </span></div>`;
+  if(!marcas.length) return cab + `<p class="pz-vacio">${pzEsc(n)} no tiene ninguna marca de Atenea asignada.</p>`;
+  let filas = '';
+  marcas.forEach(m => {
+    const d = pzAteneaCasos[m];
+    const casos = (d && d.casos) ? d.casos.slice().sort((a,b)=>pzDias(b.creado)-pzDias(a.creado)) : [];
+    filas += `<tr class="gr"><td colspan="4">${pzMarcaHtml(m)} &nbsp;${casos.length} caso${casos.length===1?'':'s'} <span class="pz-sb" style="font-weight:400">· ${d ? 'última carga ' + pzEsc(d.fecha) : 'sin cargar todavía'}</span></td></tr>`;
+    casos.forEach(c => { const dd = pzDias(c.creado); filas += `<tr><td class="pz-mono" title="${pzEscA(c.caso)}">${pzEsc(c.caso)}</td><td title="${pzEscA(c.cliente)}">${pzEsc(c.cliente)}</td><td title="${pzEscA(c.titulo)}">${pzEsc(c.sujeto || c.titulo)}</td><td><span class="pz-ag ${pzClsDias(dd)}">${pzTxtDias(dd)}</span></td></tr>`; });
+  });
+  return cab + `<div class="pz-tw"><table class="pz-t">
+    <colgroup><col style="width:24%"><col style="width:30%"><col style="width:26%"><col style="width:20%"></colgroup>
+    <tr><th>Caso</th><th>Cliente</th><th>Sujeto</th><th>Antigüedad</th></tr>${filas}</table></div>`;
+}
+function pzAbrirResponsables(){
+  document.getElementById('pzRespFilas').innerHTML = PZ_MARCAS.map(m => `<label>${pzEsc(m)}
+    <select id="pzResp_${m}"><option value="">— Nadie —</option>${mjTeamMembers.map(x=>`<option value="${pzEscA(x.name)}" ${pzPersona(pzAteneaResp[m])===x.name?'selected':''}>${pzEsc(x.name)}</option>`).join('')}</select></label>`).join('');
+  document.getElementById('pzRespPass').value = '';
+  document.getElementById('pzRespErr').style.display = 'none';
+  document.getElementById('pzResp').classList.add('show');
+}
+async function pzGuardarResponsables(){
+  if(document.getElementById('pzRespPass').value !== PZ_CLAVE_ADMIN){ document.getElementById('pzRespErr').style.display = 'block'; return; }
+  const nuevo = {}; PZ_MARCAS.forEach(m => nuevo[m] = document.getElementById('pzResp_' + m).value);
+  if(!(await pzKvSet(PZ_KEY_ATENEA_RESP, nuevo))){ alert('No se ha podido guardar. Revisa la conexión.'); return; }
+  pzAteneaResp = nuevo;
+  document.getElementById('pzResp').classList.remove('show');
+  pzRepintar();
+  alert('Responsables de Atenea guardados para todo el equipo.');
+}
+function pzCol(cab, pistas){ const n = cab.map(h => pzNorm(h)); for(const p of pistas){ const i = n.findIndex(h => h.includes(p)); if(i >= 0) return cab[i]; } return null; }
+function pzFechaTexto(v){ const d = v instanceof Date ? v : pzParseFecha(v); return d && !isNaN(d) ? String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear() : String(v||''); }
+async function pzCargarExcelAtenea(input){
+  const f = input.files && input.files[0];
+  input.value = '';
+  if(!f) return;
+  try{
+    const libro = XLSX.read(await f.arrayBuffer(), { cellDates:true });
+    const filas = XLSX.utils.sheet_to_json(libro.Sheets[libro.SheetNames[0]], { defval:'' });
+    if(!filas.length){ alert('El archivo no tiene filas.'); return; }
+    const cab = Object.keys(filas[0]);
+    const cMarca = pzCol(cab, ['owning business','unidad de negocio','business unit']);
+    const cCaso = pzCol(cab, ['case number','numero de caso']);
+    const cCli = pzCol(cab, ['customer','cliente']);
+    const cSuj = pzCol(cab, ['sujeto','subject','asunto']);
+    const cTit = pzCol(cab, ['case title','titulo del caso','titulo']);
+    const cCre = pzCol(cab, ['created on','fecha de creacion','creado']);
+    const cPer = pzCol(cab, ['academic period','periodo']);
+    if(!cCaso || !cCre){ alert('No se encuentran las columnas "Case Number" y "Created On". ¿Es la exportación de la vista de casos abiertos?'); return; }
+    const porMarca = {};
+    filas.forEach(r => {
+      const caso = String(r[cCaso]||'').trim(); if(!caso) return;
+      const m = cMarca ? pzMarca(String(r[cMarca]||'')) : null;
+      const marca = PZ_MARCAS.includes(m) ? m : '?';
+      (porMarca[marca] = porMarca[marca] || []).push({ caso, cliente:String(r[cCli]||'').trim(), sujeto:String(r[cSuj]||'').trim(), titulo:String(r[cTit]||'').trim(), creado:pzFechaTexto(r[cCre]), periodo:String(r[cPer]||'').trim() });
+    });
+    if(porMarca['?']){
+      const m = (prompt('No se ha podido detectar la marca de ' + porMarca['?'].length + ' caso(s). Escribe la marca (OBS, INESDI, ESDesign o UCMA):') || '').trim();
+      const mm = PZ_MARCAS.find(x => pzNorm(x) === pzNorm(m));
+      if(!mm){ alert('Marca no válida. No se ha cargado nada.'); return; }
+      porMarca[mm] = (porMarca[mm] || []).concat(porMarca['?']); delete porMarca['?'];
+    }
+    if(!confirm('Se van a cargar:\n' + Object.keys(porMarca).map(m => `· ${m}: ${porMarca[m].length} caso(s) (sustituye la carga anterior de ${m})`).join('\n') + '\n\n¿Continuar?')) return;
+    const h = new Date();
+    const fecha = String(h.getDate()).padStart(2,'0')+'/'+String(h.getMonth()+1).padStart(2,'0')+'/'+h.getFullYear()+' '+String(h.getHours()).padStart(2,'0')+':'+String(h.getMinutes()).padStart(2,'0');
+    for(const m of Object.keys(porMarca)){
+      const dato = { fecha, cargadoPor: (pzVista && pzVista.nombre) || mjMyName || '', casos: porMarca[m] };
+      if(!(await pzKvSet(PZ_KEY_ATENEA_CASOS(m), dato))){ alert('No se ha podido guardar ' + m + '. Revisa la conexión.'); return; }
+      pzAteneaCasos[m] = dato;
+    }
+    pzRepintar();
+  }catch(e){ alert('No se ha podido leer el archivo. Comprueba que es un Excel exportado de Atenea.'); }
+}
+function pzExportarAtenea(n){
+  const filas = pzAteneaDe(n).sort((a,b)=>a.marca.localeCompare(b.marca) || pzDias(b.creado)-pzDias(a.creado));
+  if(!filas.length){ alert('No hay casos de Atenea para exportar.'); return; }
+  const hoja = XLSX.utils.aoa_to_sheet([['Marca','Caso','Cliente','Sujeto','Título','Periodo','Creado','Días abierto']].concat(filas.map(c => [c.marca, c.caso, c.cliente, c.sujeto, c.titulo, c.periodo, c.creado, pzDias(c.creado)])));
+  hoja['!cols'] = [10,20,28,24,30,14,12,12].map(w => ({wch:w}));
+  hoja['!autofilter'] = { ref: hoja['!ref'] };
+  const libro = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(libro, hoja, 'Atenea');
+  const h = new Date();
+  XLSX.writeFile(libro, `Atenea_casos_abiertos_${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}-${String(h.getDate()).padStart(2,'0')}.xlsx`);
+}
+
+pzCargarAtenea();
+// Las tareas de la Mesa del Jueves llegan un poco despues que el resto: cuando
+// estan cargadas (y cada vez que se sincronizan), se repinta la vista abierta
+// para que las Reuniones salgan con su numero real.
+if(typeof mjTopicsReady !== 'undefined' && mjTopicsReady) mjTopicsReady.then(()=>pzRepintar()).catch(()=>{});
+setInterval(()=>{ if(document.getElementById('pzEquipo') || document.getElementById('pzPanel')) pzRepintar(); }, 20000);
+pzCargarBandeja();
+</script>
+
 </body>
 </html>
