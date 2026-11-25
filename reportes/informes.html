@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informes de ventas — Admin Hub</title>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+:root{
+  --ink:#1a3a50; --ink2:#3a5a70; --mute:#8a9aa8; --mute2:#a0aab4;
+  --cream:#F5F0E8; --cream2:#EEE8DF; --band:#E9E2D6; --line:rgba(0,100,140,.12);
+  --head:#1F4A63; --headtx:#F5F0E8; --headmute:rgba(245,240,232,.65); --headacc:#7FD8F0;
+  --blue:#1F8FBF; --red:#D9534F; --green:#1E9E6E; --purple:#7B5CC9; --amber:#D99A1E;
+}
+body { background:#041C2E; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; color:var(--ink); }
+.bg-overlay { position:fixed; inset:0; z-index:0; pointer-events:none; background:radial-gradient(circle at center, rgba(0,60,110,.45) 0%, rgba(4,28,46,.85) 60%, #041C2E 100%); }
+.stage { position:relative; z-index:2; padding:28px 16px 40px; display:flex; justify-content:center; }
+.modal { width:min(1240px,100%); background:var(--cream); border-radius:18px; box-shadow:0 8px 40px rgba(0,0,0,.45); overflow:visible; animation:fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+/* ---------- Cabecera (C4) ---------- */
+.mh { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 24px; flex-wrap:wrap; background:var(--head); color:var(--headtx); border-radius:18px 18px 0 0; }
+.mh-l { display:flex; gap:12px; align-items:center; min-width:0; }
+.back { font-size:12px; color:var(--headacc); cursor:pointer; border:none; background:none; font-family:inherit; margin-right:4px; white-space:nowrap; }
+.back:hover { text-decoration:underline; }
+.ic { width:34px; height:34px; border-radius:50%; border:1px solid rgba(127,216,240,.6); display:flex; align-items:center; justify-content:center; flex:none; color:var(--headtx); }
+.mt { font-size:15px; font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+.ms { font-size:11.5px; color:var(--headmute); margin-top:2px; }
+.hb { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.btn { font-size:11.5px; padding:6px 11px; border-radius:8px; border:1px solid rgba(245,240,232,.35); color:var(--headtx); background:transparent; cursor:pointer; font-family:inherit; text-decoration:none; transition:all .15s; white-space:nowrap; }
+.btn:hover { background:rgba(255,255,255,.1); }
+.btn:disabled { opacity:.35; cursor:not-allowed; }
+.x { width:28px; height:28px; border-radius:50%; border:1px solid rgba(245,240,232,.35); display:flex; align-items:center; justify-content:center; color:var(--headtx); font-size:12px; text-decoration:none; flex:none; }
+.x:hover { background:rgba(255,255,255,.1); }
+
+/* ---------- Filtros F1 ---------- */
+.fbar { display:flex; gap:8px; align-items:center; padding:10px 24px; background:var(--band); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.dd { position:relative; }
+.ddb { display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid rgba(0,100,140,.2); border-radius:9px; padding:6px 10px; font-size:12.5px; color:var(--ink2); cursor:pointer; font-family:inherit; white-space:nowrap; }
+.ddb small { font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--mute); }
+.ddb b { color:var(--ink); font-weight:600; }
+.ddb .ar { color:var(--mute); font-size:10px; }
+.ddb:hover { border-color:rgba(0,100,140,.45); }
+.dd.open .ddb { border-color:var(--blue); box-shadow:0 0 0 3px rgba(31,143,191,.12); }
+.menu { display:none; position:absolute; top:calc(100% + 6px); left:0; background:#fff; border-radius:11px; box-shadow:0 10px 30px rgba(0,30,60,.22); padding:8px; min-width:220px; max-width:320px; z-index:40; border:1px solid var(--line); }
+.dd.open .menu { display:block; }
+.menu input { width:100%; border:1px solid rgba(0,100,140,.2); border-radius:7px; padding:6px 8px; font-size:12px; margin-bottom:6px; font-family:inherit; outline:none; }
+.menu .lst { max-height:280px; overflow:auto; }
+.it { display:flex; align-items:center; gap:8px; padding:5px 8px; border-radius:7px; font-size:12.5px; cursor:pointer; user-select:none; }
+.it:hover { background:var(--cream); }
+.it.grp { font-weight:700; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--mute); margin-top:4px; }
+.it.sub { padding-left:22px; }
+.it .cnt { margin-left:auto; font-size:11px; color:var(--mute2); }
+.cb { width:15px; height:15px; border-radius:4px; border:1px solid #9aa8b4; display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; flex:none; }
+.cb.on { background:var(--ink); border-color:var(--ink); }
+.cb.half { background:#9aa8b4; border-color:#9aa8b4; }
+.menu .ft { display:flex; justify-content:space-between; border-top:1px solid var(--line); margin-top:6px; padding:7px 6px 2px; font-size:11.5px; }
+.menu .ft button { color:var(--blue); background:none; border:none; cursor:pointer; font-family:inherit; font-size:11.5px; }
+.seg { display:inline-flex; background:#fff; border:1px solid rgba(0,100,140,.2); border-radius:9px; padding:2px; align-items:center; }
+.seg small { font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#9a6a00; padding:0 8px 0 6px; }
+.seg button { font-size:12px; padding:4px 10px; border-radius:7px; border:none; background:none; color:var(--ink2); cursor:pointer; font-family:inherit; }
+.seg button.on { background:var(--amber); color:#fff; font-weight:700; }
+.clear { font-size:12px; color:var(--blue); margin-left:auto; background:none; border:none; cursor:pointer; font-family:inherit; }
+.chips { display:flex; gap:6px; align-items:center; padding:8px 24px 0; flex-wrap:wrap; font-size:11.5px; color:var(--mute); }
+.chip { display:inline-flex; gap:6px; align-items:center; background:var(--ink); color:var(--cream); border-radius:100px; padding:3px 5px 3px 10px; font-size:11.5px; }
+.chip button { width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,.2); border:none; color:#fff; font-size:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.chips .tot { margin-left:auto; }
+.chips .tot b { color:var(--ink); }
+
+/* ---------- Cuerpo ---------- */
+.mb { padding:18px 24px 26px; }
+.secT { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin:28px 2px 10px; }
+.secT.first { margin-top:4px; }
+.secT h2 { font-size:16px; font-weight:600; }
+.secT span { font-size:11.5px; color:var(--mute); }
+.kp { display:grid; gap:12px; }
+.k { background:#fff; border-radius:14px; padding:13px 14px 11px; border-top:2px solid var(--c); box-shadow:0 2px 10px rgba(0,40,70,.07); min-width:0; }
+.k.click { cursor:pointer; transition:transform .15s; } .k.click:hover { transform:translateY(-2px); }
+.k .n { font-size:12.5px; font-weight:600; color:var(--c); }
+.k .v { font-size:34px; font-weight:700; color:var(--c); line-height:1.15; letter-spacing:-.01em; }
+.k .s { font-size:12px; color:#6a7a8a; }
+.k .s b { color:var(--ink); }
+.pte { color:#9a6a00; font-weight:600; }
+.spark { display:flex; align-items:flex-end; gap:4px; height:60px; margin-top:10px; border-bottom:.5px solid rgba(0,100,140,.15); position:relative; }
+.spark .avg { position:absolute; left:0; right:0; border-top:1px dashed rgba(26,58,80,.4); pointer-events:none; }
+.spark .b { flex:1; background:var(--c); border-radius:2px 2px 0 0; opacity:.85; min-height:1px; }
+.sl { display:flex; justify-content:space-between; font-size:9.5px; color:var(--mute); margin-top:4px; font-family:'Courier New',monospace; }
+.panel { background:#fff; border-radius:14px; padding:4px 16px 10px; box-shadow:0 2px 10px rgba(0,40,70,.07); overflow-x:auto; }
+table.t { width:100%; border-collapse:collapse; font-size:13px; }
+.t th { font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:10px 8px 8px; text-align:left; border-bottom:1px solid rgba(0,100,140,.14); white-space:nowrap; }
+.t th.r, .t td.r { text-align:right; } .t th.c, .t td.c { text-align:center; }
+.t td { padding:6px 8px; border-bottom:.5px solid rgba(0,100,140,.08); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.t td.nm { font-weight:600; }
+.t td.mes { font-family:'Courier New',monospace; font-weight:600; }
+.t td.mute { color:#6a7a8a; }
+.t tr.tot td { font-weight:600; border-top:1px solid rgba(26,58,80,.45); border-bottom:none; background:var(--cream); }
+.t tr.dir td { background:var(--ink); color:var(--cream); font-weight:600; font-size:12px; letter-spacing:.03em; }
+.t tr.dir td.mute { color:var(--cream); }
+.t tr.jr td.nm { padding-left:22px; }
+.t tr.jr.exp td.nm { cursor:pointer; }
+.t tr.jr.open td { background:rgba(31,143,191,.06); }
+.t tr.as td { background:#FAF8F4; font-size:12px; color:var(--ink2); }
+.t tr.as td.nm { padding-left:44px; font-weight:500; }
+.car { display:inline-block; width:14px; color:var(--mute); }
+.t td.ck { cursor:pointer; } .t td.ck:hover .db b { color:var(--blue); text-decoration:underline; }
+.db { position:relative; height:24px; display:flex; align-items:center; min-width:92px; }
+.db i { position:absolute; left:0; top:2px; bottom:2px; border-radius:4px; opacity:.25; max-width:100%; }
+.db b { position:relative; font-weight:700; padding-left:7px; min-width:56px; }
+.db small { position:relative; color:var(--mute); font-size:11px; }
+.db .pt { position:relative; font-size:10.5px; color:#9a6a00; margin-left:4px; font-weight:600; }
+.t tr.dir .db small { color:rgba(245,240,232,.6); } .t tr.dir .db i { opacity:.45; } .t tr.dir .db .pt { color:#F0C070; }
+.zero { color:#c8c8c8; font-weight:400 !important; }
+.chipc { font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px; color:#fff; white-space:nowrap; }
+.stk { display:flex; height:12px; border-radius:4px; overflow:hidden; gap:1px; width:150px; }
+.oc { display:inline-flex; flex-direction:column; align-items:center; min-width:70px; padding:3px 6px; border-radius:7px; }
+.oc b { font-size:13.5px; font-weight:700; } .oc small { font-size:10.5px; color:#6a7a8a; }
+.oc.ok { background:rgba(30,158,110,.13); } .oc.ok b { color:#1E7E58; }
+.oc.mid { background:rgba(217,154,30,.16); } .oc.mid b { color:#8a5a00; }
+.oc.bad { background:rgba(217,83,79,.13); } .oc.bad b { color:#B5403C; }
+.t tr.dir .oc small { color:rgba(245,240,232,.75); } .t tr.dir .oc b { color:#fff; }
+.t tr.dir .oc.ok { background:rgba(30,158,110,.55); } .t tr.dir .oc.mid { background:rgba(217,154,30,.6); } .t tr.dir .oc.bad { background:rgba(217,83,79,.6); }
+.pc { display:inline-flex; flex-direction:column; align-items:center; min-width:80px; padding:3px 6px; border-radius:7px; }
+.pc b { font-size:13.5px; font-weight:700; } .pc small { font-size:10.5px; color:#7a8a98; }
+.hb2 { display:flex; align-items:center; gap:10px; font-size:12.5px; margin:8px 0; }
+.hb2 span:first-child { width:230px; }
+.hb2 .bar { flex:1; height:16px; background:#EEE8DF; border-radius:4px; overflow:hidden; display:flex; }
+.hb2 .bar .c1 { background:var(--red); opacity:.85; }
+.hb2 .bar .p1 { background:repeating-linear-gradient(45deg,#D99A1E,#D99A1E 3px,#F0C070 3px,#F0C070 6px); }
+.hb2 b { width:120px; text-align:right; }
+.tabs { display:flex; gap:6px; margin:24px 0 0; border-bottom:1px solid var(--ink); flex-wrap:wrap; }
+.tab { font-size:13px; font-weight:600; padding:10px 18px; border-radius:10px 10px 0 0; color:#6a7a8a; background:var(--cream2); border:none; cursor:pointer; font-family:inherit; }
+.tab.on { background:var(--ink); color:#fff; }
+.tab small { font-weight:400; opacity:.75; margin-left:6px; }
+.note { font-size:11px; color:var(--mute); margin-top:8px; line-height:1.5; }
+.info { margin-top:14px; border:1px dashed rgba(0,120,180,.3); background:rgba(0,80,120,.05); border-radius:10px; padding:10px 14px; font-size:12px; color:var(--ink2); line-height:1.55; }
+.empty-state { text-align:center; padding:40px 10px; color:var(--mute); font-size:14px; }
+.drop { margin:6px auto 0; max-width:620px; border:1px dashed rgba(0,100,160,.35); border-radius:14px; padding:30px 22px; text-align:center; color:#5a7a8a; font-size:13px; cursor:pointer; background:rgba(255,255,255,.5); transition:all .2s; }
+.drop:hover,.drop.over { border-color:var(--blue); color:var(--ink); background:#fff; }
+.drop b { color:var(--blue); } .drop small { display:block; margin-top:6px; font-size:11px; color:var(--mute); }
+.warn { margin:12px 24px 0; background:rgba(217,154,30,.1); border:1px solid rgba(217,154,30,.35); color:#8a5a00; border-radius:10px; padding:8px 12px; font-size:12px; display:none; }
+.rule { font-size:11px; color:var(--mute); margin-top:24px; line-height:1.6; }
+.print-head { display:none; }
+
+/* ---------- Preselección ---------- */
+.sel { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; padding:34px 30px 22px; }
+.op { text-align:center; cursor:pointer; border:none; background:none; font-family:inherit; color:inherit; }
+.circ { width:150px; height:150px; border-radius:50%; margin:0 auto; border:1px solid var(--c); background:radial-gradient(circle,#fff 55%,#F5F0E8 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(0,40,70,.08); transition:transform .2s, box-shadow .2s; }
+.op:hover .circ { transform:translateY(-3px) scale(1.03); box-shadow:0 8px 24px rgba(0,40,70,.16); }
+.op .t { font-size:15px; font-weight:600; color:var(--c); margin-top:14px; }
+.op .d { font-size:12px; color:#6a7a8a; margin-top:5px; line-height:1.45; padding:0 8px; }
+.modal.compact { width:min(620px,100%); background:#F3F7F9; margin-top:8vh; border:1px solid rgba(0,100,140,.08); }
+.bh { display:flex; align-items:center; justify-content:space-between; padding:18px 22px 14px; border-bottom:1px solid rgba(0,100,140,.12); }
+.bh-l { display:flex; gap:12px; align-items:center; }
+.bic { width:34px; height:34px; border-radius:50%; border:1px solid #1F4A63; color:#1F4A63; display:flex; align-items:center; justify-content:center; }
+.bt { font-size:14px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#1F4A63; }
+.bs { font-size:11px; color:#7a8a98; margin-top:2px; }
+.bx { width:28px; height:28px; border-radius:50%; border:1px solid rgba(0,100,140,.3); color:#7a8a98; display:flex; align-items:center; justify-content:center; font-size:12px; text-decoration:none; }
+.bx:hover { color:var(--ink); background:rgba(0,100,140,.06); }
+.bsel { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:28px 18px 10px; }
+.bop { border:none; background:none; cursor:pointer; font-family:inherit; text-align:center; }
+.bcirc { width:100px; height:100px; border-radius:50%; margin:0 auto; border:1px solid var(--c); background:radial-gradient(circle,#fff 60%,#F3F7F9 100%); display:flex; align-items:center; justify-content:center; transition:transform .2s, box-shadow .2s; }
+.bop:hover .bcirc { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,40,70,.12); }
+.bn { font-size:14px; font-weight:600; color:var(--c); margin-top:12px; filter:brightness(.9); }
+.bd { font-size:10.5px; color:#9aa8b4; margin-top:2px; }
+.bhint { text-align:center; font-size:11px; color:#9aa8b4; padding:12px 0 22px; }
+.hint { margin:0 30px 26px; border:1px dashed rgba(0,120,180,.3); background:rgba(0,80,120,.05); border-radius:10px; padding:10px 14px; font-size:12px; color:#6a7a8a; text-align:center; }
+
+/* ---------- Listado de alumnos ---------- */
+.ov { position:fixed; inset:0; z-index:60; background:rgba(0,5,15,.75); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:1rem; }
+.ov.open { display:flex; }
+.dm { width:min(1100px,98vw); max-height:86vh; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,.4); }
+.dm-h { position:sticky; top:0; background:var(--head); color:var(--headtx); display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px 20px; }
+.dm-h h3 { font-size:14px; } .dm-h p { font-size:11px; color:var(--headmute); margin-top:2px; }
+.dm-b { padding:6px 16px 16px; }
+.dm table { width:100%; border-collapse:collapse; font-size:12px; }
+.dm th { text-align:left; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink2); background:var(--cream2); padding:7px 8px; white-space:nowrap; }
+.dm td { padding:6px 8px; border-bottom:1px solid rgba(0,100,140,.07); white-space:nowrap; }
+.dm td.num { text-align:right; font-variant-numeric:tabular-nums; }
+
+/* ---------- PDF ---------- */
+@page { size:A4 landscape; margin:10mm 9mm 11mm; }
+@media print {
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  html, body { background:#fff !important; }
+  .bg-overlay, .hb, .fbar, .chips, .warn, .ov, .drop, .back, .tabs, .note, .info button { display:none !important; }
+  .stage { padding:0 !important; display:block !important; }
+  .modal { width:100% !important; background:#fff !important; box-shadow:none !important; border-radius:0 !important; animation:none !important; zoom:.74; margin:0 !important; border:none !important; }
+  /* cabecera compacta */
+  .mh { border-radius:8px; padding:10px 16px; }
+  .mh .ic { width:28px; height:28px; }
+  .print-head { display:block; font-size:11px; color:var(--ink2); padding:8px 2px 4px; line-height:1.55; border-bottom:1px solid rgba(0,100,140,.15); }
+  .print-head b { color:var(--ink); }
+  .mb { padding:6px 2px 0; }
+  /* tarjetas siempre en una fila */
+  .kp { display:flex !important; gap:10px; }
+  .kp > .k { flex:1 1 0; min-width:0; box-shadow:none !important; border:1px solid rgba(0,100,140,.16); border-top:2px solid var(--c); padding:9px 12px 8px; }
+  .k .v { font-size:28px; }
+  .spark { height:44px; margin-top:6px; }
+  /* tablas */
+  .panel { overflow:visible !important; box-shadow:none !important; border:1px solid rgba(0,100,140,.16); border-radius:10px; padding:2px 10px 6px; }
+  .t td { padding:4px 8px; }
+  .t th { padding:7px 8px 6px; }
+  .db { height:20px; }
+  .t thead { display:table-header-group; }
+  .t tr { break-inside:avoid; page-break-inside:avoid; }
+  .t tr.tot td { background:#F4F1EB; }
+  .info { border:1px solid rgba(0,100,140,.16); background:#fafafa; }
+  /* cada bloque (título + tabla) se mantiene junto; si no cabe, pasa entero a la página siguiente */
+  .blk { break-inside:avoid; page-break-inside:avoid; }
+  .blk.big { break-inside:auto; page-break-inside:auto; }
+  .secT { break-after:avoid; page-break-after:avoid; margin:16px 2px 6px; }
+  .secT.first { margin-top:8px; }
+  .secT h2 { font-size:14px; }
+  .secT span { font-size:10.5px; }
+  .rule { font-size:10px; margin-top:14px; }
+  .pc, .oc { flex-direction:row; gap:6px; padding:1px 6px; min-width:0; align-items:baseline; }
+  .pc b, .oc b { font-size:12.5px; } .pc small, .oc small { font-size:10px; }
+}
+
+@media(max-width:980px){ .kp.k5{grid-template-columns:repeat(3,minmax(0,1fr)) !important;} .sel,.sel.sel4{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:620px){
+  .bsel{grid-template-columns:repeat(2,1fr);row-gap:20px;} .modal.compact{margin-top:0;}
+  .stage{padding:0;} .modal{border-radius:0;} .mh{border-radius:0;}
+  .mh,.fbar,.chips{padding-left:16px;padding-right:16px;} .mb{padding:16px;}
+  .kp{grid-template-columns:repeat(2,minmax(0,1fr)) !important;} .k .v{font-size:26px;}
+  .sel{grid-template-columns:1fr 1fr;padding:22px 12px;} .circ{width:110px;height:110px;}
+  .menu{max-width:86vw;}
+}
+</style>
+</head>
+<body>
+<div class="bg-overlay"></div>
+<div class="stage"><div class="modal" id="app"></div></div>
+<input type="file" id="file" accept=".xlsx,.xlsm,.xls" hidden>
+<input type="file" id="fileObj" accept=".xlsx,.xlsm,.xls" hidden>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeDet()">
+  <div class="dm">
+    <div class="dm-h"><div><h3 id="dTitle"></h3><p id="dSub"></p></div><button class="x" onclick="closeDet()" style="background:none;cursor:pointer">✕</button></div>
+    <div class="dm-b" id="dBody"></div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN
+   ===================================================================== */
+const WORKER_URL='https://lucky-shadow-44ed.veronica-zueras.workers.dev';
+/* Marcas: cada una guarda su propio convocatorio y sus propios objetivos */
+const MARCAS=[   // mismos colores y orden que el hub
+  {id:'OBS',      name:'OBS',      color:'#1dcc84'},
+  {id:'INESDI',   name:'INESDI',   color:'#a878f0'},
+  {id:'ESDESIGN', name:'ESDesign', color:'#f0a830'},
+  {id:'UCMA',     name:'UCMA',     color:'#3aabf0'}
+];
+const brandName=id=>(MARCAS.find(M=>M.id===id)||{name:id}).name;
+const dataKey=m=>`adminhub_informes_v1_${m}`;   // convocatorio agregado (sin datos de alumnos)
+const metaKey=m=>`adminhub_informes_meta_v1_${m}`; // solo nombre de archivo y fecha (para la pantalla de marcas)
+const objKey =m=>`adminhub_objetivos_v1_${m}`;  // objetivos de matrículas por equipo y mes
+const LEGACY_DATA_KEY='adminhub_informes_v1', LEGACY_OBJ_KEY='adminhub_objetivos_v1'; // versión anterior sin marca (era OBS)
+
+const BUCKETS=[
+  {id:'lt10', label:'<10%',    hex:'#D9534F'},
+  {id:'b1015',label:'10–15%',  hex:'#1F8FBF'},
+  {id:'b1520',label:'15–20%',  hex:'#1E9E6E'},
+  {id:'gt20', label:'>20%',    hex:'#7B5CC9'},
+  {id:'cont', label:'Contado', hex:'#D99A1E'}
+];
+const ND={id:'nd',label:'Sin dato',hex:'#9aa8b4'};
+const FP=[
+  {id:'APLAZADO',        label:'Aplazado',        hex:'#1F8FBF'},
+  {id:'CONTADO DIAS',    label:'Contado días',    hex:'#1E9E6E'},
+  {id:'CONTADO 2 VECES', label:'Contado 2 veces', hex:'#7B5CC9'},
+  {id:'EFECTIVO',        label:'Efectivo',        hex:'#D99A1E'}
+];
+const FP_OTRA={id:'OTRA',label:'Otra / sin dato',hex:'#9aa8b4'};
+const EV=[
+  {id:'BAJA',label:'Bajas',                       short:'BAJAS', hex:'#D9534F'},
+  {id:'CE',  label:'Cambios de edición (CE)',     short:'CE',    hex:'#1F8FBF'},
+  {id:'CC',  label:'Cambios de convocatoria (CC)',short:'CC',    hex:'#1E9E6E'}
+];
+const REPORTS={
+  pi:     {title:'Detalle PI mensual',   sub:'Altas por tramo de pago inicial',               color:'#1F8FBF', icon:'<path d="M3 26l7-10 6 5 6-11 6 7"/>', desc:'Altas por tramo de pago inicial, por mes y por equipo'},
+  ventas: {title:'Ventas por equipo',    sub:'Matrículas, facturación y forma de pago por equipo y mes',  color:'#7B5CC9', icon:'<circle cx="15" cy="15" r="10"/><circle cx="15" cy="15" r="5"/><circle cx="15" cy="15" r="1"/>', desc:'Matrículas, objetivos, facturación y contado / aplazado'},
+  bajas:  {title:'Bajas y cambios',      sub:'Bajas, cambios de edición y de convocatoria',    color:'#D9534F', icon:'<path d="M10 8l-5 5 5 5M5 13h14a6 6 0 010 12h-3"/>', desc:'Bajas, CE y CC por convocatoria (incluye pendientes de parte)'}
+};
+
+/* Columnas por nombre (sirve la estructura antigua y la de 2027) */
+const COLS={
+  tm:['TIPOLOGIA MATRICULA'], ta:['TIPOLOGIA ALUMNO'], conv:['CONVOCATORIA'],
+  mes:['MES COMERCIAL INSCRIPCION'], fechaIns:['FECHA INSCRIPCION'],
+  pct:['% INSCRIPCION','%INSCRIPCION'], impIns:['IMPORTE INSCRIPCION'], fact:['FACTURACION NETA'],
+  fp:['FORMA DE PAGO'], cuotas:['NUMERO DE CUOTAS'], id:['ID OPORTUNIDAD'], nacs:['ID NACS'], nombre:['NOMBRES APELLIDOS'],
+  prog:['PROGRAMA'], tp:['TIPO PROGRAMA'], asesor:['ASESOR'], jefe:['JEFE EQUIPO','JEFE DE EQUIPO'], dv:['DIRECTOR VENTAS','DIRECTOR DE VENTAS'],
+  seg:['SEGUIMIENTO'], motivo:['MOTIVO DE BAJA'], desist:['PERIODO DESISTIMIENTO'], medioPI:['MEDIO PAGO PI']
+};
+const REQUIRED=['tm','ta','conv'];
+/* Dimensiones que se guardan agregadas en el servidor (nada que identifique a un alumno) */
+const DIMS=['conv','tm','ta','tp','mes','b','jefe','dv','asesor','fp','ev','pte','mot'];
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+let recsBySheet={};        // hoja -> registros agregados {dims..., n, fact, cq, cn}
+let rawBySheet={};         // hoja -> filas completas (solo si se subió el Excel en esta sesión)
+let activeSheet=null, meta={fileName:'',updated:''}, hasLocal=false;
+/* Los datos SOLO viven en memoria mientras la página está abierta: al salir o recargar se pierden.
+   SESSION guarda lo subido de cada marca para poder cambiar de marca sin volver a subirlo en la misma visita. */
+const SESSION={};
+let OBJ=null;              // {file, updated, rows:[{marca,mes,jefe,conv,obj}]}
+let view='brands';         // brands | home | pi | ventas | bajas
+let marca=null;            // marca elegida
+let brandMeta={};          // marca -> {fileName, updated}
+let loading=false, loadMsg='';
+let openMenu=null, menuSearch='';
+let expanded=new Set();    // jefes desplegados (asesores)
+let bajasTab='BAJA';
+const F={conv:null,tm:null,tp:null,mes:null,jefe:null,ta:{pi:null,contado:null,ventas:null,bajas:null},pte:'incl'};
+let lastTables=[];
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+const norm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const jattr=o=>esc(JSON.stringify(o));
+const fmtN=n=>Math.round(Number(n||0)).toLocaleString('es-ES');
+const pc=(v,t)=>t?(v/t*100).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—';
+const p0=(v,t)=>t?Math.round(v/t*100)+'%':'—';
+const f1=x=>Number(x).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1});
+const eur=n=>Math.round(n||0).toLocaleString('es-ES')+' €';
+const fmtE=n=>n==null?'':Number(n).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2});
+const uniq=a=>[...new Set(a.filter(x=>x!==''&&x!=null))];
+const cap=s=>{s=String(s||'');return s.charAt(0)+s.slice(1).toLowerCase();};
+const numSort=(a,b)=>String(a).localeCompare(String(b),'es',{numeric:true});
+function toNum(v){
+  if(v==null||v==='')return null; if(typeof v==='number')return v;
+  let s=String(v).trim().replace(/\s/g,'');const isPct=s.includes('%');s=s.replace('%','');
+  if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(',','.');
+  const n=parseFloat(s);if(isNaN(n))return null;return isPct?n/100:n;
+}
+function toMes(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date)return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}`;
+  if(typeof v==='number'&&v>20000&&v<80000){const d=new Date(Math.round((v-25569)*86400000));return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;}
+  const m=String(v).trim().match(/^(\d{4})[-\/_](\d{1,2})/);
+  return m?`${m[1]}-${m[2].padStart(2,'0')}`:String(v).trim();
+}
+/* Regla de tramos acordada (18/11/26): % redondeado a 1 decimal (9,9997% = 10,0%)
+   <10% menos de 10 · 10–15% de 10 a menos de 15 · 15–20% de 15 a menos de 20 · >20% desde 20 (incluido) · Contado = EFECTIVO */
+function bucketOf(pct,fp){
+  if(norm(fp)==='EFECTIVO')return 'cont';
+  if(pct==null)return 'nd';
+  const v=Math.floor(pct*1000+0.5+1e-9)/10;
+  return v<10?'lt10':v<15?'b1015':v<20?'b1520':'gt20';
+}
+/* Bajas y cambios: cuenta lo que diga TIPOLOGIA MATRICULA o, si no, SEGUIMIENTO «BAJA/CE/CC PTE PARTE» */
+function eventOf(tm,seg){
+  const m=norm(seg).match(/\b(BAJA|CE|CC) PTE PARTE\b/);
+  const t=norm(tm);
+  if(['BAJA','CE','CC'].includes(t))return {ev:t,pte:m&&m[1]===t?1:0};
+  if(m)return {ev:m[1],pte:1};
+  return {ev:'',pte:0};
+}
+const bInfo=id=>BUCKETS.find(b=>b.id===id)||ND;
+const fpInfo=id=>FP.find(f=>f.id===id)||FP_OTRA;
+
+/* =====================================================================
+   LECTURA DEL EXCEL
+   ===================================================================== */
+function fixRange(ws){
+  try{
+    if(!ws||Array.isArray(ws))return;
+    let maxR=-1,maxC=-1;
+    for(const k in ws){if(k[0]==='!')continue;const c=XLSX.utils.decode_cell(k);if(c.r>maxR)maxR=c.r;if(c.c>maxC)maxC=c.c;}
+    if(maxR>=0)ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:maxR,c:maxC}});
+  }catch(e){console.warn('fixRange',e);}
+}
+function findHeader(aoa,must){
+  for(let r=0;r<Math.min(15,aoa.length);r++){const row=(aoa[r]||[]).map(norm);if(must.every(m=>row.includes(m)))return r;}
+  return -1;
+}
+function parseWorkbook(wb){
+  const out={},warns=[];
+  wb.SheetNames.forEach(sn=>{
+    const ws=wb.Sheets[sn];if(!ws)return;fixRange(ws);
+    const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false});
+    const hr=findHeader(aoa,['TIPOLOGIA MATRICULA','CONVOCATORIA']);if(hr<0)return;
+    const h=aoa[hr].map(norm),ix={};
+    for(const k in COLS){ix[k]=-1;for(const n of COLS[k]){const i=h.indexOf(norm(n));if(i>=0){ix[k]=i;break;}}}
+    if(REQUIRED.some(k=>ix[k]<0))return;
+    const g=(r,k)=>ix[k]>=0?r[ix[k]]:null, str=(r,k)=>String(g(r,k)??'').trim();
+    const rows=[];
+    for(let i=hr+1;i<aoa.length;i++){
+      const r=aoa[i];if(!r)continue;
+      if(!str(r,'conv')&&!str(r,'tm'))continue;
+      let pct=toNum(g(r,'pct'));
+      if(pct==null){const a=toNum(g(r,'impIns')),f=toNum(g(r,'fact'));if(a!=null&&f)pct=a/f;}
+      const mes=toMes(g(r,'mes'))||toMes(g(r,'fechaIns'))||'(sin mes)';
+      const fpN=norm(g(r,'fp'));
+      const {ev,pte}=eventOf(g(r,'tm'),g(r,'seg'));
+      let mot='';
+      if(ev==='BAJA')mot=norm(g(r,'desist'))==='SI'?'PERIODO DE DESISTIMIENTO':(norm(g(r,'motivo'))||'(SIN MOTIVO)');
+      const cu=toNum(g(r,'cuotas'));
+      rows.push({conv:str(r,'conv'),tm:norm(g(r,'tm')),ta:norm(g(r,'ta')),tp:norm(g(r,'tp')),mes,pct,b:bucketOf(pct,fpN),
+        jefe:str(r,'jefe')||'(sin jefe)',dv:str(r,'dv')||'(sin director)',asesor:str(r,'asesor')||'(sin asesor)',
+        fp:FP.some(f=>f.id===fpN)?fpN:'OTRA',fpRaw:str(r,'fp'),ev,pte,mot,
+        fact:toNum(g(r,'fact'))||0,cuotas:cu,
+        id:str(r,'id'),nacs:str(r,'nacs'),nombre:str(r,'nombre'),prog:str(r,'prog'),medioPI:str(r,'medioPI'),impIns:toNum(g(r,'impIns')),seg:str(r,'seg')});
+    }
+    if(!rows.length)return;
+    const miss=[];
+    if(ix.mes<0&&ix.fechaIns<0)miss.push('MES COMERCIAL INSCRIPCION');
+    if(ix.pct<0&&(ix.impIns<0||ix.fact<0))miss.push('% INSCRIPCION');
+    if(ix.jefe<0)miss.push('JEFE EQUIPO');
+    if(ix.seg<0)miss.push('SEGUIMIENTO');
+    if(miss.length)warns.push(`Hoja «${sn}»: faltan ${miss.join(', ')}`);
+    const vac=rows.filter(r=>!r.conv||!r.tm||!r.ta);
+    if(vac.length)warns.push(`Hoja «${sn}»: ${vac.length} fila${vac.length>1?'s':''} sin CONVOCATORIA o TIPOLOGÍA (no entran en ningún filtro)`);
+    out[sn]=rows;
+  });
+  return {out,warns};
+}
+function cube(rows){
+  const m=new Map();
+  rows.forEach(r=>{
+    const k=DIMS.map(d=>r[d]??'').join('\u0001');
+    let a=m.get(k);
+    if(!a){a={};DIMS.forEach(d=>a[d]=r[d]??'');a.n=0;a.fact=0;a.cq=0;a.cn=0;m.set(k,a);}
+    a.n++;a.fact+=r.fact||0;
+    if(r.fp==='APLAZADO'&&r.cuotas!=null){a.cq+=r.cuotas;a.cn++;}
+  });
+  return [...m.values()];
+}
+function pickSheet(names,src){return names.find(n=>norm(n)==='CONVOCATORIO OBS')||names.slice().sort((a,b)=>src[b].length-src[a].length)[0];}
+
+async function handleFile(file){
+  if(!file)return;
+  if(!marca){alert('Elige primero la marca.');return;}
+  const warn=document.getElementById('warn');if(warn)warn.style.display='none';
+  loading=true;loadMsg='Leyendo archivo…';draw();
+  try{
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+    const {out,warns}=parseWorkbook(wb);
+    if(!Object.keys(out).length){loading=false;loadMsg='No encontré ninguna hoja con TIPOLOGIA MATRICULA, TIPOLOGIA ALUMNO y CONVOCATORIA.';draw();return;}
+    rawBySheet=out;recsBySheet={};for(const sn in out)recsBySheet[sn]=cube(out[sn]);
+    hasLocal=true;loading=false;
+    meta={fileName:file.name,updated:new Date().toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'})};
+    activeSheet=pickSheet(Object.keys(out),out);
+    resetFilters(true);draw();
+    if(warns.length){const w=document.getElementById('warn');if(w){w.innerHTML=warns.map(esc).join('<br>');w.style.display='block';}}
+    SESSION[marca]={recsBySheet,rawBySheet,meta,activeSheet,OBJ:SESSION[marca]?SESSION[marca].OBJ:OBJ};
+  }catch(e){console.error(e);loading=false;loadMsg='No se pudo leer el archivo.';draw();}
+}
+
+/* =====================================================================
+   SERVIDOR (KV)
+   ===================================================================== */
+async function kvGet(key){
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),12000);
+  let res;try{res=await fetch(`${WORKER_URL}/kv?key=${key}`,{signal:ctl.signal});}finally{clearTimeout(to);}
+  let d={};try{d=await res.json();}catch(_){d={};}      // 404 / no JSON = no hay nada guardado
+  if(!d||!d.value)return null;
+  try{return typeof d.value==='string'?JSON.parse(d.value):d.value;}catch{return d.value;}
+}
+async function kvSet(key,value){
+  try{await fetch(`${WORKER_URL}/kv`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});}
+  catch(e){console.warn('KV no disponible',e);}
+}
+/* Versiones anteriores guardaban el convocatorio y los objetivos en el servidor.
+   Ya no se guarda nada: aquí solo se BORRA lo que quedó guardado, una vez por navegador. */
+async function purgeOldServerData(){
+  try{if(localStorage.getItem('adminhub_informes_purged_v1'))return;}catch(e){}
+  const keys=['adminhub_pi_v1','adminhub_pi_v2',LEGACY_DATA_KEY,LEGACY_OBJ_KEY,...MARCAS.flatMap(M=>[dataKey(M.id),metaKey(M.id),objKey(M.id)])];
+  try{
+    const res=await Promise.all(keys.map(k=>fetch(`${WORKER_URL}/kv`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k,value:{borrado:true,fecha:new Date().toISOString()}})}).then(r=>r.ok).catch(()=>false)));
+    if(res.every(Boolean)){try{localStorage.setItem('adminhub_informes_purged_v1','1');}catch(e){}}
+  }catch(e){}
+}
+function restoreSession(){
+  const S=SESSION[marca];
+  if(S&&S.recsBySheet&&Object.keys(S.recsBySheet).length){
+    recsBySheet=S.recsBySheet;rawBySheet=S.rawBySheet;meta=S.meta;activeSheet=S.activeSheet;hasLocal=true;
+  }
+  OBJ=S&&S.OBJ?S.OBJ:null;
+  loading=false;loadMsg='';
+  if(hasData())resetFilters(true);
+}
+
+/* =====================================================================
+   OBJETIVOS
+   ===================================================================== */
+async function handleObj(file){
+  if(!file||!marca)return;
+  try{
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+    let rows=[];
+    for(const sn of wb.SheetNames){
+      const ws=wb.Sheets[sn];fixRange(ws);
+      const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false});
+      const hr=findHeader(aoa,['MES','JEFE EQUIPO']);if(hr<0)continue;
+      const h=aoa[hr].map(norm);
+      const iM=h.indexOf('MES'),iJ=h.indexOf('JEFE EQUIPO'),iMa=h.indexOf('MARCA'),iC=h.indexOf('CONVOCATORIA');
+      let iO=h.indexOf('OBJETIVO MATRICULAS');if(iO<0)iO=h.findIndex(x=>x.startsWith('OBJETIVO'));
+      if(iO<0)continue;
+      for(let i=hr+1;i<aoa.length;i++){
+        const r=aoa[i];if(!r)continue;const o=toNum(r[iO]);const j=String(r[iJ]??'').trim();const m=toMes(r[iM]);
+        if(!j||!m||o==null)continue;
+        rows.push({marca:iMa>=0?String(r[iMa]??'').trim():'',mes:m,jefe:j,conv:iC>=0?String(r[iC]??'').trim():'',obj:o});
+      }
+      if(rows.length)break;
+    }
+    if(!rows.length){alert('No encontré objetivos. La plantilla necesita las columnas MES, JEFE EQUIPO y OBJETIVO MATRICULAS.');return;}
+    OBJ={file:file.name,updated:new Date().toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'}),rows};
+    SESSION[marca]=Object.assign(SESSION[marca]||{},{OBJ});draw();
+  }catch(e){console.error(e);alert('No se pudo leer el archivo de objetivos.');}
+}
+function downloadTemplate(){
+  const recs=filtered('ventas');
+  const meses=uniq(recs.map(r=>r.mes)).filter(m=>m!=='(sin mes)').sort();
+  const jefes=uniq(recs.map(r=>r.jefe)).sort();
+  const aoa=[['MARCA','MES','JEFE EQUIPO','OBJETIVO MATRICULAS','CONVOCATORIA (opcional)']];
+  (meses.length?meses:['2026-11']).forEach(m=>jefes.forEach(j=>aoa.push([marca,m,j,null,null])));
+  const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:8},{wch:10},{wch:24},{wch:22},{wch:24}];
+  XLSX.utils.book_append_sheet(wb,ws,'Objetivos');XLSX.writeFile(wb,`plantilla_objetivos_${marca}.xlsx`);
+}
+function objFor(jefes,mes){
+  if(!OBJ)return null;
+  const convSel=F.conv?[...F.conv]:null;
+  let s=0,any=false;
+  OBJ.rows.forEach(o=>{
+    if(o.mes!==mes||!jefes.includes(o.jefe))return;
+    if(o.marca&&norm(o.marca)!==norm(marca))return;
+    if(o.conv&&convSel&&!convSel.includes(o.conv))return;
+    s+=o.obj;any=true;
+  });
+  return any?s:null;
+}
+
+/* =====================================================================
+   FILTROS
+   ===================================================================== */
+function recsSheet(){return recsBySheet[activeSheet]||[];}
+function defaultsFor(){
+  const recs=recsSheet();
+  // por defecto: la convocatoria más reciente con al menos 20 altas (si no, la que más tenga)
+  const cnt={};recs.forEach(r=>{if(r.tm==='ALTA')cnt[r.conv]=(cnt[r.conv]||0)+r.n;});
+  const conv=Object.keys(cnt).sort(numSort);
+  const top=conv.filter(c=>cnt[c]>=20).pop()||conv.sort((a,b)=>cnt[b]-cnt[a])[0];
+  return {conv:top?new Set([top]):null,tm:uniq(recs.map(r=>r.tm)).includes('ALTA')?new Set(['ALTA']):null,
+          ta:(()=>{const nm=uniq(recs.map(r=>r.ta)).includes('NM')?new Set(['NM']):null;const c=()=>nm?new Set(nm):null;return {pi:c(),contado:c(),ventas:c(),bajas:c()};})()};   /* por defecto NM en todos (se quita con la ✕) */
+}
+function resetFilters(all){
+  const d=defaultsFor();
+  F.conv=d.conv;F.tm=d.tm;F.tp=null;F.mes=null;F.jefe=null;F.pte='incl';
+  if(all)F.ta=d.ta;else F.ta[view]=d.ta[view]??null;
+  expanded=new Set();
+}
+const usesTm=v=>v!=='bajas';
+function match(r,v,skip){
+  if(skip!=='conv'&&F.conv&&!F.conv.has(String(r.conv)))return false;
+  if(usesTm(v)&&skip!=='tm'&&F.tm&&!F.tm.has(r.tm))return false;
+  const ta=F.ta[v];if(skip!=='ta'&&ta&&!ta.has(r.ta))return false;
+  if(skip!=='tp'&&F.tp&&!F.tp.has(r.tp||'(SIN TIPO)'))return false;
+  if(v!=='bajas'&&skip!=='mes'&&F.mes&&!F.mes.has(r.mes))return false;
+  if(skip!=='jefe'&&F.jefe&&!F.jefe.has(r.jefe))return false;
+  return true;
+}
+function filtered(v,skip){return recsSheet().filter(r=>match(r,v,skip));}
+function rawFiltered(v){return (rawBySheet[activeSheet]||[]).filter(r=>match(r,v));}
+
+/* Definición de los desplegables */
+function filterDefs(v){
+  const recs=recsSheet();
+  const sum=(arr,key)=>{const o={};arr.forEach(r=>{const k=key(r);o[k]=(o[k]||0)+r.n;});return o;};
+  const defs=[];
+  const cConv=sum(recs.filter(r=>match(r,v,'conv')),r=>String(r.conv));
+  defs.push({k:'conv',label:'Conv.',items:uniq(recs.map(r=>String(r.conv))).sort(numSort).map(x=>({v:x,l:x,n:cConv[x]||0})),search:false});
+  if(usesTm(v)){const c=sum(recs.filter(r=>match(r,v,'tm')),r=>r.tm);defs.push({k:'tm',label:'Matrícula',items:uniq(recs.map(r=>r.tm)).sort().map(x=>({v:x,l:x,n:c[x]||0}))});}
+  {const c=sum(recs.filter(r=>match(r,v,'ta')),r=>r.ta);defs.push({k:'ta',label:'Alumno',items:uniq(recs.map(r=>r.ta)).sort().map(x=>({v:x,l:x,n:c[x]||0}))});}
+  {const vals=uniq(recs.map(r=>r.tp||'(SIN TIPO)')).sort();if(vals.length>1||vals[0]!=='(SIN TIPO)'){const c=sum(recs.filter(r=>match(r,v,'tp')),r=>r.tp||'(SIN TIPO)');defs.push({k:'tp',label:'Tipo programa',items:vals.map(x=>({v:x,l:x,n:c[x]||0}))});}}
+  if(v!=='bajas'){const base=recs.filter(r=>match(r,v,'mes'));const c=sum(base,r=>r.mes);defs.push({k:'mes',label:'Mes inscripción',items:uniq(base.map(r=>r.mes)).sort().map(x=>({v:x,l:x,n:c[x]||0})),mono:true});}
+  {const base=recs.filter(r=>match(r,v,'jefe'));const c=sum(base,r=>r.jefe);const dvOf=dirMap(recs);
+   const groups={};uniq(recs.map(r=>r.jefe)).forEach(j=>{const d=dvOf[j]||'(sin director)';(groups[d]=groups[d]||[]).push(j);});
+   defs.push({k:'jefe',label:'Equipo',groups:Object.keys(groups).sort().map(d=>({d,items:groups[d].sort().map(j=>({v:j,l:j,n:c[j]||0}))})),search:true});}
+  return defs;
+}
+function getSet(k,v){return k==='ta'?F.ta[v]:F[k];}
+function setSet(k,v,s){if(k==='ta')F.ta[v]=s;else F[k]=s;}
+function allValues(def){return def.groups?def.groups.flatMap(g=>g.items.map(i=>i.v)):def.items.map(i=>i.v);}
+function summary(def,v){
+  const s=getSet(def.k,v);const all=allValues(def);
+  if(!s)return def.k==='mes'?`${all.length} de ${all.length}`:(def.k==='ta'||def.k==='jefe'?'Todos':'Todas');
+  const sel=all.filter(x=>s.has(x));
+  if(def.k==='mes')return `${sel.length} de ${all.length}`;
+  if(sel.length===0)return 'Ninguno';
+  if(sel.length===1)return sel[0];
+  return `${sel.length} sel.`;
+}
+function toggleValue(k,val){
+  const def=filterDefs(view).find(d=>d.k===k);const all=allValues(def);
+  let s=getSet(k,view);s=s?new Set(s):new Set(all);
+  s.has(val)?s.delete(val):s.add(val);
+  if(all.every(x=>s.has(x)))s=null;
+  setSet(k,view,s);if(k==='conv'){F.mes=null;}
+  draw();
+}
+function toggleGroup(k,vals){
+  const def=filterDefs(view).find(d=>d.k===k);const all=allValues(def);
+  let s=getSet(k,view);s=s?new Set(s):new Set(all);
+  const allOn=vals.every(x=>s.has(x));vals.forEach(x=>allOn?s.delete(x):s.add(x));
+  if(all.every(x=>s.has(x)))s=null;
+  setSet(k,view,s);draw();
+}
+function setAll(k,on){setSet(k,view,on?null:new Set());if(k==='conv')F.mes=null;draw();}
+function only(k,val){setSet(k,view,new Set([val]));if(k==='conv')F.mes=null;draw();}
+function toggleMenu(k,e){e&&e.stopPropagation();openMenu=openMenu===k?null:k;menuSearch='';draw();}
+document.addEventListener('click',e=>{if(openMenu&&!e.target.closest('.dd')){openMenu=null;draw();}});
+
+function renderFilters(v){
+  const defs=filterDefs(v);
+  let h='<div class="fbar" id="fbar">';
+  defs.forEach(def=>{
+    const s=getSet(def.k,v);const isOn=x=>!s||s.has(x);
+    const item=(it,cls='')=>`<div class="it ${cls}" onclick="event.stopPropagation();toggleValue('${def.k}',${jattr(it.v).replace(/&quot;/g,'&quot;')})" ondblclick="event.stopPropagation();only('${def.k}',${jattr(it.v)})" data-l="${esc(norm(it.l))}"><span class="cb ${isOn(it.v)?'on':''}">${isOn(it.v)?'✓':''}</span><span ${def.mono?'style="font-family:Courier New;font-weight:700"':''}>${esc(it.l)}</span><span class="cnt">${fmtN(it.n)}</span></div>`;
+    let lst='';
+    if(def.groups){def.groups.forEach(g=>{const vals=g.items.map(i=>i.v);const on=vals.filter(isOn).length;
+      lst+=`<div class="it grp" onclick='event.stopPropagation();toggleGroup("${def.k}",${JSON.stringify(vals).replace(/'/g,'&#39;')})' data-l="${esc(norm(g.d+' '+vals.join(' ')))}"><span class="cb ${on===vals.length?'on':on?'half':''}">${on===vals.length?'✓':on?'–':''}</span>${esc(g.d)}</div>`;
+      g.items.forEach(it=>lst+=item(it,'sub'));});}
+    else def.items.forEach(it=>lst+=item(it));
+    h+=`<div class="dd ${openMenu===def.k?'open':''}"><button class="ddb" onclick="toggleMenu('${def.k}',event)"><small>${def.label}</small><b>${esc(summary(def,v))}</b><span class="ar">▾</span></button>
+      <div class="menu" onclick="event.stopPropagation()">${def.search?`<input placeholder="Buscar…" oninput="filterMenu(this)" value="${esc(menuSearch)}">`:''}<div class="lst">${lst}</div>
+      <div class="ft"><button onclick="setAll('${def.k}',true)">Todos</button><span style="font-size:10.5px;color:#a0aab4">doble clic = solo ese</span><button onclick="setAll('${def.k}',false)">Ninguno</button></div></div></div>`;
+  });
+  if(v==='bajas')h+=`<span class="seg"><small>Pendientes de parte</small>${[['incl','Incluir'],['excl','Excluir'],['solo','Solo pendientes']].map(([k,l])=>`<button class="${F.pte===k?'on':''}" onclick="F.pte='${k}';draw()">${l}</button>`).join('')}</span>`;
+  h+=`<button class="clear" onclick="resetFilters(false);draw()">Restablecer</button></div>`;
+  // chips de filtros activos
+  const chips=[];
+  defs.forEach(def=>{const s=getSet(def.k,v);if(!s)return;const all=allValues(def);const sel=all.filter(x=>s.has(x));
+    let txt=sel.length<=3?sel.join(', '):`${sel.length} de ${all.length}`;if(!sel.length)txt='ninguno';
+    chips.push(`<span class="chip">${def.label}: ${esc(txt)}<button onclick="setAll('${def.k}',true)" title="Quitar filtro">✕</button></span>`);});
+  if(v==='bajas'&&F.pte!=='incl')chips.push(`<span class="chip">Pendientes de parte: ${F.pte==='excl'?'excluidos':'solo pendientes'}<button onclick="F.pte='incl';draw()">✕</button></span>`);
+  h+=`<div class="chips">${chips.length?'Filtros activos: '+chips.join(''):'Sin filtros: se muestra todo'}<span class="tot" id="totline"></span></div>`;
+  return h;
+}
+function filterMenu(inp){
+  menuSearch=inp.value;const q=norm(inp.value);
+  inp.closest('.menu').querySelectorAll('.it').forEach(el=>{el.style.display=!q||(el.dataset.l||'').includes(q)?'':'none';});
+}
+function printHead(v){
+  const defs=filterDefs(v);
+  const parts=defs.map(def=>`<b>${def.label}:</b> ${esc((()=>{const s=getSet(def.k,v);if(!s)return 'Todos';const all=allValues(def);return all.filter(x=>s.has(x)).join(', ')||'ninguno';})())}`);
+  if(v==='bajas')parts.push(`<b>Pendientes de parte:</b> ${F.pte==='incl'?'incluidos':F.pte==='excl'?'excluidos':'solo pendientes'}`);
+  return `<div class="print-head">${parts.join(' · ')} · <span style="color:#8a9aa8">generado ${new Date().toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'})}</span></div>`;
+}
+
+/* =====================================================================
+   ESTRUCTURA COMÚN
+   ===================================================================== */
+function dirMap(recs){
+  const c={};recs.forEach(r=>{(c[r.jefe]=c[r.jefe]||{})[r.dv]=(c[r.jefe][r.dv]||0)+r.n;});
+  const o={};for(const j in c)o[j]=Object.keys(c[j]).sort((a,b)=>c[j][b]-c[j][a])[0];return o;
+}
+/* agrupa director > jefe > asesor con una función de acumulación */
+function hierarchy(recs,init,add){
+  const dvOf=dirMap(recsSheet());
+  const D={};
+  recs.forEach(r=>{
+    const d=dvOf[r.jefe]||r.dv||'(sin director)';
+    const dn=D[d]=D[d]||{name:d,acc:init(),jefes:{}};
+    const jn=dn.jefes[r.jefe]=dn.jefes[r.jefe]||{name:r.jefe,acc:init(),as:{}};
+    const an=jn.as[r.asesor]=jn.as[r.asesor]||{name:r.asesor,acc:init()};
+    add(dn.acc,r);add(jn.acc,r);add(an.acc,r);
+  });
+  return D;
+}
+function header(v){
+  const R=REPORTS[v];
+  const convTxt=F.conv&&F.conv.size===1?' · Conv. '+[...F.conv][0]:(F.conv&&F.conv.size>1?' · '+[...F.conv].sort(numSort).join(', '):'');
+  return `<div class="mh"><div class="mh-l"><button class="back" onclick="go('home')">← ${esc(brandName(marca))}</button><div class="ic"><svg width="16" height="16" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${R.icon}</svg></div>
+    <div><div class="mt">${R.title} · ${esc(brandName(marca))}${convTxt}</div><div class="ms">${R.sub}${meta.fileName?` · ${esc(meta.fileName)} · cargado ${esc(meta.updated)}`:''}</div></div></div>
+    <div class="hb"><button class="btn" onclick="document.getElementById('file').click()">⬆ Cargar Excel</button>${v==='ventas'?`<button class="btn" onclick="document.getElementById('fileObj').click()">⬆ Objetivos</button>`:''}<button class="btn" onclick="exportPdf()" ${hasData()?'':'disabled'}>⬇ PDF</button><button class="btn" onclick="exportXlsx()" ${hasData()?'':'disabled'}>⬇ Excel</button><a class="x" href="index.html" title="Cerrar">✕</a></div></div>`;
+}
+function hasData(){return Object.keys(recsBySheet).length>0;}
+function go(v){view=v;openMenu=null;expanded=new Set();window.scrollTo(0,0);if(v==='brands'){marca=null;loadBrandMeta();}draw();}
+function pickBrand(m){
+  marca=m;recsBySheet={};rawBySheet={};hasLocal=false;meta={fileName:'',updated:''};OBJ=null;activeSheet=null;
+  view='home';openMenu=null;expanded=new Set();window.scrollTo(0,0);restoreSession();draw();
+}
+function loadBrandMeta(){
+  MARCAS.forEach(M=>{const S=SESSION[M.id];brandMeta[M.id]=S&&S.meta&&S.meta.fileName?S.meta:null;});
+}
+function toggleExp(j){expanded.has(j)?expanded.delete(j):expanded.add(j);draw();}
+
+function emptyBody(){
+  if(loading)return `<div class="empty-state">${esc(loadMsg||'Leyendo archivo…')}</div>`;
+  const msg=loadMsg?esc(loadMsg):`Sube el convocatorio de ${esc(brandName(marca))} para ver los informes.<br><span style="font-size:12px">Los datos solo se usan mientras la herramienta está abierta: no se guardan en ningún servidor y se borran al salir.</span>`;
+  return `<div class="empty-state" style="padding:22px 10px 6px">${msg}</div><div class="drop" id="drop" onclick="document.getElementById('file').click()">Arrastra aquí el <b>Convo Interno</b> (.xlsx) o haz clic para seleccionarlo<small>Se leen las columnas por nombre: sirve la estructura antigua y la de 2027</small></div>`;
+}
+
+function draw(){
+  const app=document.getElementById('app');
+  const scrollY=window.scrollY;
+  let h='';
+  app.className='modal'+(view==='brands'?' compact':'');
+  if(view==='brands'){
+    h+=`<div class="bh"><div class="bh-l"><div class="bic"><svg width="16" height="16" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 26l7-10 6 5 6-11 6 7"/></svg></div>
+      <div><div class="bt">Informes de ventas</div><div class="bs">Selecciona la marca para abrir sus informes</div></div></div>
+      <a class="bx" href="index.html" title="Cerrar">✕</a></div>
+      <div class="bsel">${MARCAS.map(M=>{const bm=brandMeta[M.id];return `<button class="bop" style="--c:${M.color}" onclick="pickBrand('${M.id}')">
+        <div class="bcirc"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${M.color}" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
+        <div class="bn">${esc(M.name)}</div><div class="bd">${bm?'cargado':'&nbsp;'}</div></button>`;}).join('')}</div>
+      <div class="bhint">Clic en la marca y sube su convocatorio · los datos no se guardan: al salir de la herramienta se borran</div>`;
+    app.innerHTML=h;return;
+  }
+  if(view==='home'){
+    h+=`<div class="mh"><div class="mh-l"><button class="back" onclick="go('brands')">← Marcas</button><div class="ic"><svg width="16" height="16" viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="9" height="9" rx="2"/><rect x="17" y="4" width="9" height="9" rx="2"/><rect x="4" y="17" width="9" height="9" rx="2"/><rect x="17" y="17" width="9" height="9" rx="2"/></svg></div>
+      <div><div class="mt">Informes de ventas · ${esc(brandName(marca))}</div><div class="ms">${meta.fileName?`${esc(meta.fileName)} · cargado ${esc(meta.updated)} (solo en esta sesión)`:'Sin convocatorio cargado'}</div></div></div>
+      <div class="hb"><button class="btn" onclick="document.getElementById('file').click()">⬆ Cargar Excel</button><a class="x" href="index.html" title="Cerrar">✕</a></div></div>
+      <div class="warn" id="warn"></div>`;
+    if(!hasData()&&!loading)h+=`<div class="mb">${emptyBody()}</div>`;
+    h+=`<div class="sel">${Object.entries(REPORTS).map(([k,R])=>`<button class="op" style="--c:${R.color}" onclick="go('${k}')"><div class="circ"><svg width="56" height="56" viewBox="0 0 30 30" fill="none" stroke="${R.color}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${R.icon}</svg></div><div class="t">${R.title.replace(' mensual','')}</div><div class="d">${R.desc}</div></button>`).join('')}</div>
+      <div class="hint">Elige el informe · el convocatorio se carga una vez y sirve para todos · dentro de cada uno puedes filtrar por convocatoria, meses, tipologías, tipo de programa y equipo</div>`;
+    app.innerHTML=h;return;
+  }
+  h+=header(view);
+  if(!hasData()){app.innerHTML=h+`<div class="mb">${emptyBody()}</div>`;return;}
+  h+=renderFilters(view)+`<div class="warn" id="warn"></div>`+printHead(view);
+  let body='';lastTables=[];totTxt='';
+  try{body=({pi:rPI,contado:rContado,ventas:rVentas,bajas:rBajas})[view]();}
+  catch(e){console.error(e);body=`<div class="empty-state">Error al calcular el informe: ${esc(e.message)}</div>`;}
+  app.innerHTML=h+`<div class="mb">${body}</div>`;
+  groupBlocks(app.querySelector('.mb'));
+  const tl=document.getElementById('totline');if(tl)tl.innerHTML=totTxt;
+  if(openMenu){const inp=app.querySelector('.dd.open input');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);filterMenu(inp);}}
+  window.scrollTo(0,scrollY);
+}
+let totTxt='';
+function setTot(txt){totTxt=txt;}
+/* Agrupa cada título de sección con su contenido en un bloque, para que el PDF no los separe */
+function groupBlocks(mb){
+  if(!mb)return;
+  const kids=[...mb.children];let blk=null;
+  kids.forEach(el=>{
+    if(el.classList.contains('secT')){blk=document.createElement('div');blk.className='blk';mb.insertBefore(blk,el);}
+    if(blk)blk.appendChild(el);
+  });
+  mb.querySelectorAll('.blk').forEach(b=>{const rows=b.querySelectorAll('tbody tr').length;if(rows>26)b.classList.add('big');});
+}
+
+/* celdas reutilizables */
+function dbCell(v,t,hex,ctx,extra=''){
+  return `<td ${ctx?`class="ck" onclick='openDet(${JSON.stringify(ctx).replace(/'/g,"&#39;")})'`:''}><div class="db">${t&&v/t>=0.05?`<i style="width:${Math.min(v/t*100,100)}%;background:${hex}"></i>`:''}<b class="${v?'':'zero'}">${v?pc(v,t):'–'}</b>${v?`<small>${fmtN(v)}</small>`:''}${extra}</div></td>`;
+}
+function predChip(arr,cats){
+  const t=arr.reduce((a,b)=>a+b,0);if(!t)return '<td>–</td>';
+  const i=arr.indexOf(Math.max(...arr));
+  return `<td><span class="chipc" style="background:${cats[i].hex}">${cats[i].label} · ${pc(arr[i],t)}</span></td>`;
+}
+
+/* =====================================================================
+   INFORME 1 · DETALLE PI
+   ===================================================================== */
+function rPI(){
+  const recs=filtered('pi');const N=recs.reduce((s,r)=>s+r.n,0);
+  setTot(`<b>${fmtN(N)}</b> altas`);
+  if(!N)return '<div class="empty-state">No hay altas con estos filtros.</div>';
+  const useB=BUCKETS.concat(recs.some(r=>r.b==='nd')?[ND]:[]);
+  const meses=uniq(recs.map(r=>r.mes)).sort();
+  const z=()=>Object.fromEntries(useB.map(b=>[b.id,0]));const arr=o=>useB.map(b=>o[b.id]);
+  const T=z(),byMes={};meses.forEach(m=>byMes[m]=z());
+  recs.forEach(r=>{T[r.b]+=r.n;byMes[r.mes][r.b]+=r.n;});
+  const cells=(a,ctx)=>{const t=a.reduce((x,y)=>x+y,0);return a.map((v,i)=>dbCell(v,t,useB[i].hex,{...ctx,b:useB[i].id})).join('');};
+  const thead=f=>`<thead><tr><th>${f}</th>${useB.map(b=>`<th style="color:${b.hex}">${b.label}</th>`).join('')}<th>Predomina</th><th class="r">Altas</th></tr></thead>`;
+  const totRow=`<tr class="tot"><td>TOTAL</td>${cells(arr(T),{})}${predChip(arr(T),useB)}<td class="r">${fmtN(N)}</td></tr>`;
+  let h=`<div class="secT first"><h2>Resumen por tramo</h2><span>% sobre las altas filtradas · clic en una tarjeta → listado de alumnos</span></div><div class="kp k5" style="grid-template-columns:repeat(5,minmax(0,1fr))">`;
+  BUCKETS.forEach(b=>{
+    const sh=meses.map(m=>{const t=arr(byMes[m]).reduce((x,y)=>x+y,0);return t?byMes[m][b.id]/t:0;});
+    const avg=T[b.id]/N,mx=Math.max(...sh,avg)*1.15||1;
+    h+=`<div class="k click" style="--c:${b.hex}" onclick='openDet(${JSON.stringify({b:b.id})})'><div class="n">PI ${b.label}</div><div class="v">${pc(T[b.id],N)}</div><div class="s"><b>${fmtN(T[b.id])}</b> altas</div>
+      <div class="spark"><div class="avg" style="bottom:${avg/mx*100}%"></div>${meses.map((m,j)=>`<div class="b" style="height:${sh[j]/mx*100}%" title="${m}: ${pc(byMes[m][b.id],arr(byMes[m]).reduce((x,y)=>x+y,0))} · ${byMes[m][b.id]} altas"></div>`).join('')}</div>
+      <div class="sl"><span>${esc(meses[0])}</span><span>${esc(meses[meses.length-1])}</span></div></div>`;
+  });
+  h+=`</div><div class="note">Barritas = % del tramo en cada mes · línea discontinua = media del periodo</div>`;
+  h+=`<div class="secT"><h2>Detalle por mes</h2><span>% del mes en grande · nº de altas en gris · clic en una celda → alumnos</span></div><div class="panel"><table class="t" data-name="PI por mes">${thead('Mes')}<tbody>`;
+  meses.forEach(m=>{const a=arr(byMes[m]);h+=`<tr><td class="mes">${esc(m)}</td>${cells(a,{mes:m})}${predChip(a,useB)}<td class="r mute">${fmtN(a.reduce((x,y)=>x+y,0))}</td></tr>`;});
+  h+=totRow+`</tbody></table></div>`;
+  // por equipo
+  const H=hierarchy(recs,z,(acc,r)=>{acc[r.b]+=r.n;});
+  h+=`<div class="secT pbreak"><h2>Por equipo</h2><span>director › jefe de equipo · clic en un jefe → sus asesores</span></div><div class="panel"><table class="t" data-name="PI por equipo">${thead('Director / Jefe / Asesor')}<tbody>`;
+  h+=hierRows(H,(node,lvl)=>{const a=arr(node.acc);const ctx=lvl==='d'?{dv:node.name}:lvl==='j'?{jefe:node.name}:{asesor:node.name,jefe:node.parent};return cells(a,ctx)+predChip(a,useB)+`<td class="r mute">${fmtN(a.reduce((x,y)=>x+y,0))}</td>`;},node=>arr(node.acc).reduce((x,y)=>x+y,0));
+  h+=totRow+`</tbody></table></div>`;
+  h+=`<p class="rule">Tramos según % INSCRIPCION redondeado a 1 decimal: &lt;10% (menos de 10%) · 10–15% (de 10% a menos de 15%) · 15–20% (de 15% a menos de 20%) · &gt;20% (20% o más, incluido el 20%). «Contado» = forma de pago EFECTIVO. Si falta % INSCRIPCION se calcula como IMPORTE INSCRIPCIÓN / FACTURACIÓN NETA.</p>`;
+  return h;
+}
+/* filas director > jefe (> asesores si está desplegado) */
+function hierRows(H,cellsFn,sizeFn,keep){
+  let h='';const k=keep||(()=>true);
+  Object.values(H).filter(k).sort((a,b)=>sizeFn(b)-sizeFn(a)).forEach(D=>{
+    const jefes=Object.values(D.jefes).filter(k).sort((a,b)=>sizeFn(b)-sizeFn(a));
+    const single=jefes.length===1&&(norm(jefes[0].name)===norm(D.name)||D.name.startsWith('('));
+    if(!single)h+=`<tr class="dir"><td>${esc(D.name.toUpperCase())}</td>${cellsFn(D,'d')}</tr>`;
+    jefes.forEach(J=>{
+      const op=expanded.has(J.name);const as=Object.values(J.as).filter(k).sort((a,b)=>sizeFn(b)-sizeFn(a));
+      h+=`<tr class="jr exp ${op?'open':''}"><td class="nm" onclick="toggleExp(${jattr(J.name)})" title="Ver asesores"><span class="car">${op?'▾':'▸'}</span>${esc(J.name)}</td>${cellsFn(J,'j')}</tr>`;
+      if(op)as.forEach(A=>{A.parent=J.name;h+=`<tr class="as"><td class="nm">${esc(A.name)}</td>${cellsFn(A,'a')}</tr>`;});
+    });
+  });
+  return h;
+}
+
+/* =====================================================================
+   INFORME 2 · CONTADO Y APLAZADO
+   ===================================================================== */
+function rContado(){
+  const recs=filtered('contado');const N=recs.reduce((s,r)=>s+r.n,0);
+  setTot(`<b>${fmtN(N)}</b> altas`);
+  if(!N)return '<div class="empty-state">No hay altas con estos filtros.</div>';
+  const cats=FP.concat(recs.some(r=>r.fp==='OTRA')?[FP_OTRA]:[]);
+  const z=()=>({...Object.fromEntries(cats.map(c=>[c.id,0])),cq:0,cn:0});const arr=o=>cats.map(c=>o[c.id]);
+  const add=(acc,r)=>{acc[r.fp]+=r.n;acc.cq+=r.cq;acc.cn+=r.cn;};
+  const T=z();recs.forEach(r=>add(T,r));
+  const meses=uniq(recs.map(r=>r.mes)).sort();const byMes={};meses.forEach(m=>byMes[m]=z());recs.forEach(r=>add(byMes[r.mes],r));
+  const contado=a=>a.reduce((s,v,i)=>s+(cats[i].id==='APLAZADO'||cats[i].id==='OTRA'?0:v),0);
+  const cells=(acc,ctx)=>{const a=arr(acc),t=a.reduce((x,y)=>x+y,0);
+    return a.map((v,i)=>dbCell(v,t,cats[i].hex,{...ctx,fp:cats[i].id})).join('')+`<td><b>${pc(contado(a),t)}</b></td><td class="r">${acc.cn?f1(acc.cq/acc.cn):'–'}</td><td class="r mute">${fmtN(t)}</td>`;};
+  const thead=f=>`<thead><tr><th>${f}</th>${cats.map(c=>`<th style="color:${c.hex}">${c.label}</th>`).join('')}<th title="Contado días + contado 2 veces + efectivo">Total contado<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:#8a9aa8">(no aplazado)</span></th><th class="r">Media cuotas</th><th class="r">Altas</th></tr></thead>`;
+  const totRow=`<tr class="tot"><td>TOTAL</td>${cells(T,{})}</tr>`;
+  let h=`<div class="secT first"><h2>Resumen</h2><span>% sobre las altas filtradas</span></div><div class="kp k5" style="grid-template-columns:repeat(5,minmax(0,1fr))">`;
+  FP.forEach(f=>{h+=`<div class="k click" style="--c:${f.hex}" onclick='openDet(${JSON.stringify({fp:f.id})})'><div class="n">${f.label}</div><div class="v">${pc(T[f.id],N)}</div><div class="s"><b>${fmtN(T[f.id])}</b> altas</div></div>`;});
+  h+=`<div class="k" style="--c:#1a3a50"><div class="n">Cuotas (aplazados)</div><div class="v">${T.cn?f1(T.cq/T.cn):'–'}</div><div class="s">media de cuotas · total contado <b>${pc(contado(arr(T)),N)}</b></div></div></div>`;
+  h+=`<div class="secT"><h2>Por mes</h2><span>mes comercial de inscripción</span></div><div class="panel"><table class="t" data-name="Forma de pago por mes">${thead('Mes')}<tbody>`;
+  meses.forEach(m=>{h+=`<tr><td class="mes">${esc(m)}</td>${cells(byMes[m],{mes:m})}</tr>`;});
+  h+=totRow+`</tbody></table></div>`;
+  const H=hierarchy(recs,z,add);
+  h+=`<div class="secT pbreak"><h2>Por equipo</h2><span>% de cada forma de pago sobre las altas del equipo · clic en un jefe → asesores</span></div><div class="panel"><table class="t" data-name="Forma de pago por equipo">${thead('Director / Jefe / Asesor')}<tbody>`;
+  h+=hierRows(H,(node,lvl)=>cells(node.acc,lvl==='d'?{dv:node.name}:lvl==='j'?{jefe:node.name}:{asesor:node.name,jefe:node.parent}),node=>arr(node.acc).reduce((x,y)=>x+y,0));
+  h+=totRow+`</tbody></table></div>`;
+  h+=`<p class="rule">Total contado = contado días + contado 2 veces + efectivo. Media de cuotas calculada solo sobre las altas aplazadas con NUMERO DE CUOTAS informado.</p>`;
+  return h;
+}
+
+/* =====================================================================
+   INFORME 3 · VENTAS POR EQUIPO
+   ===================================================================== */
+function rVentas(){
+  const recs=filtered('ventas');const N=recs.reduce((s,r)=>s+r.n,0);
+  setTot(`<b>${fmtN(N)}</b> matrículas`);
+  if(!N)return '<div class="empty-state">No hay matrículas con estos filtros.</div>';
+  const meses=uniq(recs.map(r=>r.mes)).sort();
+  const cats=FP;
+  const z=()=>({n:0,fact:0,cq:0,cn:0,fp:{},m:{}});
+  const add=(a,r)=>{a.n+=r.n;a.fact+=r.fact;a.cq+=r.cq;a.cn+=r.cn;a.fp[r.fp]=(a.fp[r.fp]||0)+r.n;a.m[r.mes]=(a.m[r.mes]||0)+r.n;};
+  const T=z();recs.forEach(r=>add(T,r));
+  const byMes={};meses.forEach(m=>byMes[m]=z());recs.forEach(r=>add(byMes[r.mes],r));
+  const H=hierarchy(recs,z,add);
+  const allJefes=Object.values(H).flatMap(D=>Object.keys(D.jefes));
+  const hasObj=!!(OBJ&&OBJ.rows.length&&allJefes.some(j=>meses.some(m=>objFor([j],m)!=null)));
+  const objSum=(js,ms)=>{let s=0,any=false;ms.forEach(m=>{const o=objFor(js,m);if(o!=null){s+=o;any=true;}});return any?s:null;};
+  const contado=a=>a.n-(a.fp.APLAZADO||0)-(a.fp.OTRA||0);
+  const cls=p=>p>=1?'ok':p>=.9?'mid':'bad';
+  const oc=(r,o)=>o?`<span class="oc ${cls(r/o)}"><b>${Math.round(r/o*100)}%</b><small>${fmtN(r)} / ${fmtN(o)}</small></span>`:`<b>${fmtN(r)}</b>`;
+  const cols=(a,ctx)=>`<td class="c">${fmtN(a.n)}</td><td class="r">${eur(a.fact)}</td><td class="r">${a.n?eur(a.fact/a.n):'–'}</td>`+
+     cats.map(c=>dbCell(a.fp[c.id]||0,a.n,c.hex,{...ctx,fp:c.id})).join('')+`<td><b>${pc(contado(a),a.n)}</b></td><td class="r">${a.cn?f1(a.cq/a.cn):'–'}</td>`;
+  const thead=f=>`<thead><tr><th>${f}</th><th class="c">Matrículas</th><th class="r">Facturación</th><th class="r">Ticket medio</th>${cats.map(c=>`<th style="color:${c.hex}">${c.label}</th>`).join('')}<th>Total contado<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:#8a9aa8">(no aplazado)</span></th><th class="r">Media cuotas</th></tr></thead>`;
+  let h=`<div class="secT first"><h2>Resumen</h2><span>${hasObj?'objetivos cargados':'sin objetivos cargados · pulsa «⬆ Objetivos» para subirlos'}</span></div><div class="kp k5" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+    ${(()=>{if(!hasObj)return `<div class="k" style="--c:#1F8FBF"><div class="n">Matrículas</div><div class="v">${fmtN(N)}</div><div class="s">${fmtN(meses.length)} meses</div></div>`;
+      const oT=objSum(allJefes,meses);const p=oT?N/oT:0;
+      return `<div class="k" style="--c:${p>=1?'#1E9E6E':p>=.9?'#D99A1E':'#D9534F'}"><div class="n">Matrículas · cumplimiento</div><div class="v">${oT?Math.round(p*100)+'%':fmtN(N)}</div><div class="s"><b>${fmtN(N)}</b> de ${fmtN(oT)} objetivo</div></div>`;})()}
+    <div class="k" style="--c:#7B5CC9"><div class="n">Facturación neta</div><div class="v">${(T.fact/1e6).toLocaleString('es-ES',{maximumFractionDigits:2})} M€</div><div class="s">ticket medio <b>${eur(T.fact/N)}</b></div></div>
+    <div class="k" style="--c:#1E9E6E"><div class="n">Total contado</div><div class="v">${pc(contado(T),N)}</div><div class="s"><b>${fmtN(contado(T))}</b> altas no aplazadas</div></div>
+    <div class="k" style="--c:#1F8FBF"><div class="n">Aplazado</div><div class="v">${pc(T.fp.APLAZADO||0,N)}</div><div class="s"><b>${fmtN(T.fp.APLAZADO||0)}</b> altas</div></div>
+    <div class="k" style="--c:#1a3a50"><div class="n">Cuotas (aplazados)</div><div class="v">${T.cn?f1(T.cq/T.cn):'–'}</div><div class="s">media de cuotas</div></div></div>`;
+  h+=`<div class="secT"><h2>Por mes</h2><span>mes comercial de inscripción · % de cada forma de pago sobre las matrículas del mes</span></div><div class="panel"><table class="t" data-name="Ventas por mes">${thead('Mes')}<tbody>`;
+  meses.forEach(m=>h+=`<tr><td class="mes">${esc(m)}</td>${cols(byMes[m],{mes:m})}</tr>`);
+  h+=`<tr class="tot"><td>TOTAL</td>${cols(T,{})}</tr></tbody></table></div>`;
+  h+=`<div class="secT pbreak"><h2>Por equipo</h2><span>director › jefe de equipo · clic en un jefe → sus asesores</span></div><div class="panel"><table class="t" data-name="Ventas por equipo">${thead('Director / Jefe / Asesor')}<tbody>`;
+  h+=hierRows(H,(node,lvl)=>cols(node.acc,lvl==='d'?{dv:node.name}:lvl==='j'?{jefe:node.name}:{asesor:node.name,jefe:node.parent}),node=>node.acc.n);
+  h+=`<tr class="tot"><td>TOTAL</td>${cols(T,{})}</tr></tbody></table></div>`;
+  const last=meses.slice(-6);
+  h+=`<div class="secT pbreak"><h2>Matrículas por equipo y mes${hasObj?' frente a objetivo':''}</h2><span>${hasObj?'% de cumplimiento · real / objetivo':'últimos 6 meses del filtro · con objetivos muestra el % de cumplimiento'}</span></div><div class="panel"><table class="t" data-name="Equipo x mes"><thead><tr><th>Director / Jefe / Asesor</th>${last.map(m=>`<th class="c">${esc(m)}</th>`).join('')}<th class="c">Total</th></tr></thead><tbody>`;
+  h+=hierRows(H,(node,lvl)=>{const js=lvl==='d'?Object.keys(node.jefes):lvl==='j'?[node.name]:null;return last.map(m=>`<td class="c">${oc(node.acc.m[m]||0,hasObj&&js?objFor(js,m):null)}</td>`).join('')+`<td class="c"><b>${fmtN(last.reduce((s,m)=>s+(node.acc.m[m]||0),0))}</b></td>`;},node=>node.acc.n);
+  h+=`<tr class="tot"><td>TOTAL</td>${last.map(m=>`<td class="c">${oc(T.m[m]||0,hasObj?objFor(allJefes,m):null)}</td>`).join('')}<td class="c">${fmtN(last.reduce((s,m)=>s+(T.m[m]||0),0))}</td></tr></tbody></table></div>`;
+  h+=`<div class="info"><b>Objetivos:</b> ${hasObj?`cargados desde «${esc(OBJ.file)}» (${esc(OBJ.updated)}).`:'todavía no hay objetivos.'} Se suben con «⬆ Objetivos» (no se guardan: hay que subirlos en cada sesión). Columnas: <b>MARCA · MES · JEFE EQUIPO · OBJETIVO MATRICULAS</b> (CONVOCATORIA opcional). <button class="clear" style="margin:0" onclick="downloadTemplate()">Descargar plantilla con los equipos y meses del filtro</button></div>`;
+  return h;
+}
+
+/* =====================================================================
+   INFORME 4 · BAJAS Y CAMBIOS
+   ===================================================================== */
+function evCount(r,ev){if(r.ev!==ev)return 0;if(F.pte==='excl'&&r.pte)return 0;if(F.pte==='solo'&&!r.pte)return 0;return r.n;}
+function rBajas(){
+  const recs=filtered('bajas');const N=recs.reduce((s,r)=>s+r.n,0);
+  setTot(`<b>${fmtN(N)}</b> matrículas`);
+  if(!N)return '<div class="empty-state">No hay matrículas con estos filtros.</div>';
+  const convs=uniq(recs.map(r=>String(r.conv))).sort(numSort);
+  const tot=ev=>recs.reduce((s,r)=>s+evCount(r,ev),0);
+  const totP=ev=>recs.reduce((s,r)=>s+(r.ev===ev&&r.pte&&F.pte!=='excl'?r.n:0),0);
+  let h=`<div class="secT first"><h2>Resumen</h2><span>% sobre las ${fmtN(N)} matrículas filtradas</span></div><div class="kp" style="grid-template-columns:repeat(3,minmax(0,1fr))">`;
+  EV.forEach(e=>{h+=`<div class="k click" style="--c:${e.hex}" onclick="bajasTab='${e.id}';draw()"><div class="n">${e.label}</div><div class="v">${pc(tot(e.id),N)}</div><div class="s"><b>${fmtN(tot(e.id))}</b> · <span class="pte">${fmtN(totP(e.id))} pte. parte</span></div></div>`;});
+  h+=`</div><div class="tabs">${EV.map(e=>`<button class="tab ${bajasTab===e.id?'on':''}" onclick="bajasTab='${e.id}';draw()">${e.id==='BAJA'?'BAJAS':e.label.toUpperCase()}<small>${fmtN(tot(e.id))}</small></button>`).join('')}</div>`;
+  const E=EV.find(e=>e.id===bajasTab);
+  // por convocatoria
+  const byC={};convs.forEach(c=>byC[c]={n:0,e:0,p:0});
+  recs.forEach(r=>{const c=byC[String(r.conv)];c.n+=r.n;c.e+=evCount(r,E.id);if(r.ev===E.id&&r.pte&&F.pte!=='excl')c.p+=r.n;});
+  const heat=(x,max,hex)=>`background:${hex}${Math.round(Math.min(x/max,1)*0.38*255).toString(16).padStart(2,'0')}`;
+  const motC={};if(E.id==='BAJA')recs.forEach(r=>{const x=evCount(r,'BAJA');if(!x)return;(motC[r.mot]=motC[r.mot]||{})[String(r.conv)]=(motC[r.mot][String(r.conv)]||0)+x;});
+  h+=`<div class="secT"><h2>${E.id==='BAJA'?'Bajas':E.label} por convocatoria</h2><span>% sobre las matrículas de cada convocatoria</span></div><div class="panel"><table class="t" data-name="${E.short} por convocatoria"><thead><tr><th>Convocatoria</th><th class="r">Matrículas</th><th class="r">${E.short}</th><th class="c">%</th><th class="r">Pte. parte</th>${E.id==='BAJA'?'<th>Motivo principal</th>':''}</tr></thead><tbody>`;
+  convs.forEach(c=>{const x=byC[c];let top='';if(E.id==='BAJA'){const t=Object.entries(motC).map(([m,o])=>[m,o[c]||0]).sort((a,b)=>b[1]-a[1])[0];top=t&&t[1]?`<td>${esc(cap(t[0]))} · ${t[1]}</td>`:'<td>–</td>';}
+    h+=`<tr><td class="mes">${esc(c)}</td><td class="r">${fmtN(x.n)}</td><td class="r ck" onclick='openDet(${JSON.stringify({conv:c,ev:E.id})})'><b>${fmtN(x.e)}</b></td><td class="c"><span class="pc" style="${heat(x.n?x.e/x.n:0,E.id==='BAJA'?.12:.08,E.hex)}"><b>${pc(x.e,x.n)}</b></span></td><td class="r pte">${x.p||'–'}</td>${top}</tr>`;});
+  const sE=tot(E.id),sP=totP(E.id);
+  h+=`<tr class="tot"><td>TOTAL</td><td class="r">${fmtN(N)}</td><td class="r">${fmtN(sE)}</td><td class="c">${pc(sE,N)}</td><td class="r">${sP||'–'}</td>${E.id==='BAJA'?'<td></td>':''}</tr></tbody></table></div>`;
+  // motivos
+  if(E.id==='BAJA'&&sE){
+    const ML=Object.entries(motC).map(([m,o])=>[m,o,Object.values(o).reduce((a,b)=>a+b,0)]).sort((a,b)=>b[2]-a[2]);
+    h+=`<div class="secT"><h2>Motivos de baja por convocatoria</h2><span>% sobre las bajas de cada convocatoria · si la baja está en periodo de desistimiento cuenta en ese motivo</span></div><div class="panel"><table class="t" data-name="Motivos de baja"><thead><tr><th>Motivo</th>${convs.map(c=>`<th class="c">${esc(c)}</th>`).join('')}<th class="c">Total</th></tr></thead><tbody>`;
+    ML.forEach(([m,o,s])=>{h+=`<tr><td class="nm">${esc(m==='PERIODO DE DESISTIMIENTO'?'Periodo de desistimiento':cap(m))}</td>${convs.map(c=>{const x=o[c]||0,b=byC[c].e;return `<td class="c ${x?'ck':''}" ${x?`onclick='openDet(${JSON.stringify({conv:c,ev:'BAJA',mot:m})})'`:''}>${x?`<span class="pc" style="${heat(b?x/b:0,.45,E.hex)}"><b>${pc(x,b)}</b><small>${x}</small></span>`:'<span class="zero">–</span>'}</td>`;}).join('')}<td class="c"><span class="pc"><b>${pc(s,sE)}</b><small>${s}</small></span></td></tr>`;});
+    h+=`<tr class="tot"><td>TOTAL BAJAS</td>${convs.map(c=>`<td class="c">${fmtN(byC[c].e)}</td>`).join('')}<td class="c">${fmtN(sE)}</td></tr></tbody></table></div>`;
+  }
+  // por equipo y convocatoria
+  const z=()=>({c:{}});
+  const add=(acc,r)=>{const k=String(r.conv);const o=acc.c[k]=acc.c[k]||{n:0,e:0,p:0};o.n+=r.n;o.e+=evCount(r,E.id);if(r.ev===E.id&&r.pte&&F.pte!=='excl')o.p+=r.n;};
+  const H=hierarchy(recs,z,add);
+  const cell=(o,ctx)=>{if(!o||!o.n)return '<td class="c">–</td>';return `<td class="c ${o.e?'ck':''}" ${o.e?`onclick='openDet(${JSON.stringify(ctx).replace(/'/g,"&#39;")})'`:''}><span class="pc" style="${heat(o.e/o.n,E.id==='BAJA'?.15:.1,E.hex)}"><b>${pc(o.e,o.n)}</b><small>${o.e} de ${fmtN(o.n)}${o.p?` · <span class="pte">${o.p} pte</span>`:''}</small></span></td>`;};
+  const sumC=acc=>Object.values(acc.c).reduce((s,o)=>({n:s.n+o.n,e:s.e+o.e,p:s.p+o.p}),{n:0,e:0,p:0});
+  h+=`<div class="secT pbreak"><h2>${E.id==='BAJA'?'Bajas':E.label} por equipo y convocatoria</h2><span>% sobre las matrículas del equipo · clic en un jefe → sus asesores</span></div><div class="panel"><table class="t" data-name="${E.short} por equipo"><thead><tr><th>Director / Jefe / Asesor</th>${convs.map(c=>`<th class="c">${esc(c)}</th>`).join('')}<th class="c">Total</th></tr></thead><tbody>`;
+  const keepE=node=>sumC(node.acc).e>0;
+  const hidden=Object.values(H).flatMap(D=>Object.values(D.jefes)).filter(J=>!keepE(J)).map(J=>J.name);
+  h+=hierRows(H,(node,lvl)=>{const base=lvl==='d'?{dv:node.name}:lvl==='j'?{jefe:node.name}:{asesor:node.name,jefe:node.parent};return convs.map(c=>cell(node.acc.c[c],{...base,conv:c,ev:E.id})).join('')+cell(sumC(node.acc),{...base,ev:E.id});},node=>sumC(node.acc).n,keepE);
+  if(!sE)h+=`<tr><td colspan="${convs.length+2}" class="mute" style="text-align:center;padding:16px">No hay ${E.id==='BAJA'?'bajas':E.short} con estos filtros.</td></tr>`;
+  h+=`</tbody></table></div>`;
+  if(hidden.length)h+=`<div class="note">Se ocultan ${hidden.length} equipo${hidden.length>1?'s':''} sin ${E.id==='BAJA'?'bajas':E.short} en estas convocatorias: ${hidden.map(esc).join(', ')}.</div>`;
+  h+=`<div class="info"><b>Cómo se cuenta:</b> ${E.id==='BAJA'?'BAJA':E.id} = TIPOLOGIA MATRICULA «${E.id}» o SEGUIMIENTO «${E.id} PTE PARTE» (pendiente de parte). ${E.id==='CC'?'Un cambio de convocatoria aparece dos veces en el convocatorio: como <b>CC en la convocatoria de origen</b> y como matrícula en la de destino (TIPOLOGIA ALUMNO = CC). Aquí se cuenta <b>solo en la de origen</b>.':''}${E.id==='BAJA'?' Las bajas en periodo de desistimiento cuentan en el motivo «Periodo de desistimiento» aunque tengan otro motivo.':''} Este informe no se filtra por meses: cuenta todas las matrículas de las convocatorias elegidas.</div>`;
+  return h;
+}
+
+/* =====================================================================
+   LISTADO DE ALUMNOS
+   ===================================================================== */
+function openDet(ctx){
+  const dvOf=dirMap(recsSheet());
+  let rows=rawFiltered(view).filter(r=>(!ctx.mes||r.mes===ctx.mes)&&(!ctx.b||r.b===ctx.b)&&(!ctx.fp||r.fp===ctx.fp)&&(!ctx.conv||String(r.conv)===ctx.conv)
+    &&(!ctx.jefe||r.jefe===ctx.jefe)&&(!ctx.asesor||r.asesor===ctx.asesor)&&(!ctx.dv||dvOf[r.jefe]===ctx.dv)
+    &&(!ctx.ev||evCount({...r,n:1},ctx.ev))&&(!ctx.mot||r.mot===ctx.mot));
+  const parts=[ctx.b&&'PI '+bInfo(ctx.b).label,ctx.fp&&fpInfo(ctx.fp).label,ctx.ev&&(EV.find(e=>e.id===ctx.ev)||{}).label,ctx.mot&&cap(ctx.mot),ctx.conv&&'Conv. '+ctx.conv,ctx.mes,ctx.dv,ctx.jefe,ctx.asesor].filter(Boolean);
+  document.getElementById('dTitle').textContent=parts.join(' · ')||'Todas';
+  let h;
+  if(!hasLocal){document.getElementById('dSub').textContent='';h='<p style="padding:16px 4px;font-size:13px;color:#6a7a8a">Carga el Excel para ver el listado.</p>';}
+  else{
+    if(!rows.length)return;
+    document.getElementById('dSub').textContent=`${rows.length} registro${rows.length!==1?'s':''}`;
+    rows=rows.slice().sort((a,b)=>(a.pct??9)-(b.pct??9));
+    h=`<table><thead><tr><th>ID Oportunidad</th><th>Nombre</th><th>Programa</th><th>Conv.</th><th>Mes</th><th style="text-align:right">% Insc.</th><th style="text-align:right">Fact. neta</th><th>Forma pago</th><th>Matrícula</th><th>Seguimiento</th><th>Asesor</th><th>Jefe equipo</th></tr></thead><tbody>${
+      rows.map(r=>`<tr><td>${esc(r.id)}</td><td>${esc(r.nombre)}</td><td>${esc(r.prog)}</td><td>${esc(r.conv)}</td><td>${esc(r.mes)}</td><td class="num">${r.pct!=null?pc(r.pct,1):'—'}</td><td class="num">${fmtE(r.fact)}</td><td>${esc(r.fpRaw)}</td><td>${esc(r.tm)}</td><td>${esc(r.seg)}</td><td>${esc(r.asesor)}</td><td>${esc(r.jefe)}</td></tr>`).join('')}</tbody></table>`;
+  }
+  document.getElementById('dBody').innerHTML=h;
+  document.getElementById('ov').classList.add('open');
+}
+function closeDet(){document.getElementById('ov').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDet();if(openMenu){openMenu=null;draw();}}});
+
+/* =====================================================================
+   EXPORTAR
+   ===================================================================== */
+function exportPdf(){
+  closeDet();openMenu=null;draw();
+  const prev=document.title;
+  document.title=`${REPORTS[view].title.replace(/\s+/g,'_')}${F.conv?'_'+[...F.conv].sort(numSort).join('-'):''}`;
+  const restore=()=>{document.title=prev;window.removeEventListener('afterprint',restore);};
+  window.addEventListener('afterprint',restore);
+  window.print();
+}
+function exportXlsx(){
+  const wb=XLSX.utils.book_new();
+  const ph=document.querySelector('.print-head');
+  const filtros=[[ (ph?ph.innerText:'').replace(/\s+/g,' ').trim() ],[]];
+  document.querySelectorAll('#app table.t').forEach((tb,i)=>{
+    const aoa=[...filtros];
+    tb.querySelectorAll('tr').forEach(tr=>aoa.push([...tr.children].map(td=>{
+      const t=td.innerText.replace(/\s+/g,' ').trim();
+      const m=t.match(/^(-?[\d.]+,\d)%(?: (\d[\d.]*))?/);
+      if(m)return t;  // se deja como texto «53,7% 727» para conservar % y nº
+      const n=t.replace(/\./g,'').replace(' €','').replace(',','.');
+      return /^-?\d+(\.\d+)?$/.test(n)?Number(n):t;
+    })));
+    const name=(tb.dataset.name||('Tabla '+(i+1))).slice(0,31);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),name);
+  });
+  if(hasLocal){
+    const det=rawFiltered(view).map(r=>({'ID OPORTUNIDAD':r.id,'NOMBRES APELLIDOS':r.nombre,'PROGRAMA':r.prog,'TIPO PROGRAMA':r.tp,'CONVOCATORIA':r.conv,'MES COMERCIAL INSCRIPCION':r.mes,'TIPOLOGIA MATRICULA':r.tm,'TIPOLOGIA ALUMNO':r.ta,'% INSCRIPCION':r.pct,'TRAMO PI':bInfo(r.b).label,'FORMA DE PAGO':r.fpRaw,'NUMERO DE CUOTAS':r.cuotas,'FACTURACIÓN NETA':r.fact,'SEGUIMIENTO':r.seg,'BAJA/CAMBIO':r.ev,'PTE PARTE':r.pte?'SI':'','MOTIVO (informe)':r.mot,'ASESOR':r.asesor,'JEFE EQUIPO':r.jefe,'DIRECTOR VENTAS':r.dv}));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(det),'Detalle');
+  }
+  XLSX.writeFile(wb,`${REPORTS[view].title.replace(/\s+/g,'_')}${F.conv?'_'+[...F.conv].sort(numSort).join('-'):''}.xlsx`);
+}
+
+/* =====================================================================
+   ARRANQUE
+   ===================================================================== */
+document.getElementById('file').addEventListener('change',e=>{handleFile(e.target.files[0]);e.target.value='';});
+document.getElementById('fileObj').addEventListener('change',e=>{handleObj(e.target.files[0]);e.target.value='';});
+document.addEventListener('dragover',e=>{e.preventDefault();const d=document.getElementById('drop');if(d)d.classList.add('over');});
+document.addEventListener('dragleave',()=>{const d=document.getElementById('drop');if(d)d.classList.remove('over');});
+document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+(function(){
+  const q=new URLSearchParams(location.search);
+  const m=(q.get('marca')||'').toUpperCase(),inf=q.get('informe');
+  if(MARCAS.some(M=>M.id===m)){marca=m;view=inf&&REPORTS[inf]?inf:'home';restoreSession();draw();}
+  else{view='brands';loadBrandMeta();draw();}
+  purgeOldServerData();
+})();
+</script>
+</body>
+</html>
