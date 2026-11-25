@@ -2344,8 +2344,20 @@ function pzCat(c){ if(c.__cat) return c.__cat; const d = PZ_CATS.find(x=>x.id===
 function pzPendiente(c, cat){ return cat.id === 'devolucion' ? !c.devolucionResuelta : (c.cierreManual ? false : c.estado !== 'Cerrado'); }
 function pzIncidencia(c){ if(c.incidenciaTocada) return !!c.incidenciaManual; return pzNorm(c.categoriasOriginales).includes('incidencia') || !!(c.observacion && c.observacion.trim()); }
 
+// AHORRO DE LECTURAS: los casos ya cerrados (en todas sus categorias) no
+// cambian, asi que se guardan en este navegador y no se vuelven a pedir.
+// Solo se leen del Hub los casos abiertos. Tras un error NO se reintenta
+// solo: hay que recargar la pagina (evita miles de llamadas en bucle).
+const PZ_CACHE_CERRADOS = 'pzCacheCerradosV1';
+// Se renueva entera cada 7 dias por si alguien reabre un caso desde el Hub.
+function pzLeerCacheCerrados(){ try{ const c = JSON.parse(localStorage.getItem(PZ_CACHE_CERRADOS) || 'null'); if(!c || !c.t || (Date.now() - c.t) > 7*86400000) return {}; return c.items || {}; }catch(e){ return {}; } }
+function pzGuardarCacheCerrados(obj){ try{ const prev = JSON.parse(localStorage.getItem(PZ_CACHE_CERRADOS) || 'null'); const t = (prev && prev.t && (Date.now() - prev.t) <= 7*86400000) ? prev.t : Date.now(); localStorage.setItem(PZ_CACHE_CERRADOS, JSON.stringify({ t, items: obj })); }catch(e){} }
+function pzEstaCerradoDelTodo(c){ return !PZ_CATS.some(cat => cat.match(c.tipoGestion, c) && pzPendiente(c, cat)); }
+let pzHubIntentado = false;
+let pzHubProgreso = '';
 async function pzCargarHub(){
-  if(pzEstadoHub === 'cargando' || pzEstadoHub === 'ok') return;
+  if(pzHubIntentado) return;
+  pzHubIntentado = true;
   pzEstadoHub = 'cargando';
   try{
     const res = await fetch(PZ_KV_HUB_LIST);
@@ -2353,16 +2365,24 @@ async function pzCargarHub(){
     const keys = (await res.json()).keys || [];
     const existen = new Set(keys);
     const ids = keys.filter(k => !k.startsWith('config_') && !k.startsWith('hub_') && !k.startsWith('bandeja_'));
+    const cache = pzLeerCacheCerrados();
+    const nuevaCache = {};
     const out = [];
-    for(let i=0; i<ids.length; i+=40){
-      const parcial = await Promise.all(ids.slice(i, i+40).map(async key => {
+    const aLeer = [];
+    ids.forEach(k => { if(cache[k]){ nuevaCache[k] = cache[k]; out.push(cache[k]); } else aLeer.push(k); });
+    let fallos = 0;
+    for(let i=0; i<aLeer.length; i+=25){
+      const parcial = await Promise.all(aLeer.slice(i, i+25).map(async key => {
         try{
-          const [m, h] = await Promise.all([pzKvGet(key), existen.has('hub_'+key) ? pzKvGet('hub_'+key) : Promise.resolve(null)]);
+          const [m, h] = await Promise.all([pzKvGet(key, 1), existen.has('hub_'+key) ? pzKvGet('hub_'+key, 1) : Promise.resolve(null)]);
           return m ? Object.assign({key}, m, h || {}) : null;
-        }catch(e){ return null; }
+        }catch(e){ fallos++; return null; }
       }));
-      out.push(...parcial.filter(Boolean));
+      parcial.filter(Boolean).forEach(c => { out.push(c); if(pzEstaCerradoDelTodo(c)) nuevaCache[c.key] = c; });
+      pzHubProgreso = Math.min(i+25, aLeer.length) + '/' + aLeer.length;
+      if(fallos > 20) throw new Error('demasiados fallos');
     }
+    pzGuardarCacheCerrados(nuevaCache);
     // Igual que las tarjetas del Hub: un caso cuenta en CADA tipo en el que
     // esta pendiente (p. ej. Baja con Devolucion y su Devolucion).
     const entradas = [];
@@ -2424,13 +2444,13 @@ function mjRenderTeamGrid(){
   const hubOk = pzEstadoHub === 'ok';
   const totInc = hubOk ? pzCasosHub.length : '…';
   const totDev = hubOk ? pzCasosHub.filter(c => pzCat(c).id === 'devolucion').length : 0;
-  const totBan = PZ_BANDEJA.filter(c => c.estado === 'Pendiente').length;
+  const totBan = pzEstadoBandeja === 'ok' ? PZ_BANDEJA.filter(c => c.estado === 'Pendiente').length : (pzEstadoBandeja === 'error' ? '!' : '…');
   const totAte = PZ_MARCAS.reduce((t,m) => t + ((pzAteneaCasos[m] && pzAteneaCasos[m].casos) ? pzAteneaCasos[m].casos.length : 0), 0);
   const desglose = t => { const p = []; if(t.reu) p.push('🎤'+t.reu); if(t.inc) p.push('ⓘ'+t.inc); if(t.ban) p.push('☀'+t.ban); if(t.ate) p.push('✨'+t.ate); return p.length ? p.join(' · ') : 'sin pendientes'; };
   return `<div id="pzEquipo">
     <div class="pz-tot">
       <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B026FF" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg><span class="num" style="color:#8a2ad0">${totReu}</span><b>Reuniones</b><small>tareas</small></div>
-      <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a7f8a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.6" fill="#2a7f8a"/></svg><span class="num" style="color:#1f6b74">${totInc}</span><b>Bajas y cambios</b><small>${hubOk ? 'casos · ' + totDev + (totDev===1?' devolución':' devoluciones') : (pzEstadoHub==='error' ? 'no se ha podido leer' : 'cargando…')}</small></div>
+      <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a7f8a" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.6" fill="#2a7f8a"/></svg><span class="num" style="color:#1f6b74">${totInc}</span><b>Bajas y cambios</b><small>${hubOk ? 'casos · ' + totDev + (totDev===1?' devolución':' devoluciones') : (pzEstadoHub==='error' ? 'no se ha podido leer · recarga más tarde' : 'cargando… ' + pzHubProgreso)}</small></div>
       <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span class="num" style="color:#a3600e">${totBan}</span><b>Bandeja</b><small>correos pendientes</small></div>
       <div class="box"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#D4537E" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="num" style="color:#b03b6c">${totAte}</span><b>Atenea</b><small>casos abiertos</small></div>
     </div>
