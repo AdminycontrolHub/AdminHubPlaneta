@@ -610,7 +610,7 @@ select{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 </div>
 
 <script>
-console.log('%cHub Bajas y Cambios — versión 2026-11-19-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
+console.log('%cHub Bajas y Cambios — versión 2026-11-25-a', 'background:#2a7f8a;color:#fff;padding:3px 8px;border-radius:4px;font-weight:bold;');
 // ============================================================
 // CONFIGURACION
 // ============================================================
@@ -870,7 +870,7 @@ async function cargarTodo(){
   // Lo que se edita en el Hub (comentarios, NACS, cierre manual...) vive en
   // las claves "hub_" y esas SIEMPRE se leen frescas.
   const viaPuente = !!(window.__puenteActivo && window.__puenteActivo());
-  const cacheCerrados = viaPuente ? leerCacheCerrados() : null;
+  const cacheCerrados = leerCacheCerrados();  // siempre (antes solo con el puente): ahorra lecturas de Cloudflare
   const macroPorClave = {};
   const resultados = [];
   const TAMANO_TANDA = 40;
@@ -902,7 +902,7 @@ async function cargarTodo(){
       pendientesDeGuardar.push(c);
     }
   });
-  if(viaPuente) guardarCacheCerrados(macroPorClave);
+  guardarCacheCerrados(macroPorClave);
   if(pendientesDeGuardar.length > 0){
     Promise.all(pendientesDeGuardar.map(c => guardarHubData(c.key, c)));
   }
