@@ -466,7 +466,7 @@ function buscarContado(lineas){
   var RE_PCT=/-?\s*\d+(?:[.,]\d+)?\s*%/g, RE_IMP=/-\s*\d[\d.,]*\s*€/g;
   var ini=-1, fin=lineas.length;
   lineas.forEach(function(l,i){ if(ini<0 && /%\s*(?:Desc|Disc)/i.test(l)) ini=i; });
-  lineas.forEach(function(l,i){ if(ini>-1 && i>ini && fin===lineas.length && /Importe Total Final|Total Amount Payable/i.test(l)) fin=i; });
+  lineas.forEach(function(l,i){ if(ini>-1 && i>ini && fin===lineas.length && /Importe Total Final|Total Amount Payable|Total Final Amount/i.test(l)) fin=i; });
   var res={pct:0, importe:0, encontrado:false, dudoso:false};
   if(ini>-1){
     var grupos=[], g=null;
@@ -506,36 +506,43 @@ function interpretarHM(lineas, archivo){
   var txt=lineas.join('\n');
   function m(re){ var r=re.exec(txt); return r?r[1].trim():''; }
   function n(re){ var v=m(re); return v?parseNum(v):NaN; }
+  /* Algunas HM en inglés traen las fechas como mes/día/año («Date of Birth: 4/19/1982»).
+     Si alguna fecha solo tiene sentido así y ninguna como día/mes, se leen todas como mes/día. */
+  var fechasUS=false;
+  (function(){ var re=/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g, x, us=false, eu=false;
+    while((x=re.exec(txt))){ var a=+x[1], b=+x[2]; if(a>12) eu=true; else if(b>12) us=true; }
+    fechasUS = us && !eu; })();
+  function fec(s){ var x=/(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s||''); if(!x) return ''; var d=fechasUS?x[2]:x[1], mo=fechasUS?x[1]:x[2]; return x[3]+'-'+('0'+mo).slice(-2)+'-'+('0'+d).slice(-2); }
 
   var H={
     archivo:archivo,
     /* Cada dato admite la etiqueta en español o en inglés (HM «Oferta Ganada … ENG») */
-    fechaMatricula: isoDe(m(/(?:Fecha de matr[ií]cula|Enrol?ment date)\s*:?\s*(\d{1,2}\/\d{1,2}\/\d{4})/i)),
+    fechaMatricula: fec(m(/(?:Fecha de matr[ií]cula|Enrol?l?ment date)\s*:?\s*(\d{1,2}\/\d{1,2}\/\d{4})/i)),
     programa: m(/^\s*(?:Programa|Programme|Program)\s*:\s*(.+)$/im),
-    convocatoria: m(/^\s*(?:Convocatoria|Call for Applications)\s*:\s*(.+)$/im),
+    convocatoria: m(/^\s*(?:Convocatoria|Call for Applications|Intake)\s*:\s*(.+)$/im),
     nombre: m(/^\s*(?:Nombre|Name)\s*:\s*(.+)$/im),
-    apellidos: m(/^\s*(?:Apellidos|Surname)\s*:\s*(.+)$/im),
+    apellidos: m(/^\s*(?:Apellidos|Surnames?)\s*:\s*(.+)$/im),
     idOportunidad: m(/^\s*ID\s*:\s*(\S+)/im),
     email: m(/^\s*Email\s*:\s*(\S+@\S+)/im),
-    asesor: m(/(?:Asesor|Admissions Advisor)\s*:\s*(.+)$/im),
+    asesor: m(/(?:Asesor|Admissions Advisor|Advisor)\s*:\s*(.+)$/im),
     formaRaw: m(/(?:Forma pago seleccionada|Selected payment method)\s*:\s*(.+)$/im),
-    master: n(/Importe programa\s*:\s*([-\d.,]+)/i),
-    total: n(/(?:Importe Total Final a Pagar|Total Amount Payable)\s*:\s*([-\d.,]+)/i),
-    inscPct: n(/%\s*Inscripci[oó]n\s*:\s*([\d.,]+)\s*%/i),
-    inscHM: n(/(?:Importe Inscripci[oó]n|Enrol?ment Fee)\s*:\s*(?:[\d.,]+\s*%\s*)?([\d.,]+)/i),
-    fecha: isoDe(m(/(?:Fecha Primera Cuota|First Instal?ment Date)\s*:?[ \t]*(\d{1,2}\/\d{1,2}\/\d{4})/i)),
-    restoHM: n(/(?:Resto a Abonar en Cuotas|Remaining Balance to be Paid(?: in Instal?ments)?)\s*:?[ \t]*([\d.,]+)/i),
-    cuotas: parseInt(m(/(?:N[uú]mero (?:de )?Cuotas|Number of Instal?ments)\s*:[ \t]*(\d+)/i),10)||1,
-    cuotaHM: n(/(?:Importe cuota \(Mensual\)|Instal?ment Amount \(Monthly\))\s*:[ \t]*([\d.,]+)/i),
+    master: n(/(?:Importe programa|Program(?:me)? Amount)\s*:\s*€?\s*([-\d.,]+)/i),
+    total: n(/(?:Importe Total Final a Pagar|Total Amount Payable|Total Final Amount to Pay)\s*:\s*€?\s*([-\d.,]+)/i),
+    inscPct: n(/%\s*(?:Inscripci[oó]n|Enrol?lment)\s*:\s*([\d.,]+)\s*%/i),
+    inscHM: n(/(?:Importe Inscripci[oó]n|Enrol?l?ment Fee)\s*:\s*(?:[\d.,]+\s*%\s*)?€?\s*([\d.,]+)/i),
+    fecha: fec(m(/(?:Fecha Primera Cuota|First Instal?l?ment Date)\s*:?[ \t]*(\d{1,2}\/\d{1,2}\/\d{4})/i)),
+    restoHM: n(/(?:Resto a Abonar en Cuotas|Remaining (?:Balance|Amount) to be Paid(?:\s+in\s+Instal?l?ments)?)\s*:?\s*€?\s*([\d.,]+)/i),
+    cuotas: parseInt(m(/(?:N[uú]mero (?:de )?Cuotas|Number of Instal?l?ments)\s*:[ \t]*(\d+)/i),10)||1,
+    cuotaHM: n(/(?:Importe cuota \(Mensual\)|Instal?l?ment\s*Amount \(Monthly\))\s*:[ \t]*€?\s*([\d.,]+)/i),
     avisos:[]
   };
   if(isNaN(H.master)){
     // Alternativa: primera línea de «Detalle de Conceptos» con importe positivo
     /* Un importe es negativo solo si el signo va pegado a la cifra («-1,464.00 €»); el guion con espacio
        del nombre del programa («Identidad visual - 6,100.00 €») no cuenta. Se para en el total final. */
-    var dc=lineas.findIndex(function(l){return /Detalle de Conceptos|Items? Details/i.test(l);});
+    var dc=lineas.findIndex(function(l){return /Detalle de Conceptos|Items? Details|Concepts? Details/i.test(l);});
     for(var i=dc+1;dc>-1&&i<lineas.length;i++){
-      if(/Importe Total Final|Total Amount Payable|%\s*(?:Desc|Disc)/i.test(lineas[i])) break;
+      if(/Importe Total Final|Total Amount Payable|Total Final Amount|%\s*(?:Desc|Disc)/i.test(lineas[i])) break;
       var imps=[], re=/(-?)(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*€/g, mm;
       while((mm=re.exec(lineas[i]))) imps.push(mm);
       if(!imps.length) continue;
@@ -543,6 +550,7 @@ function interpretarHM(lineas, archivo){
       if(ult[1]!=='-' && !/^\s*Descuento/i.test(lineas[i])){ H.master=parseNum(ult[2]); break; }
     }
   }
+  if(fechasUS) H.avisos.push('Las fechas de esta HM vienen como mes/día/año y se han leído así: revisa la fecha de primera cuota.');
   if(isNaN(H.master)) throw new Error('No se encontró el importe del programa (master). Revisa que el archivo sea una HM.');
   if(isNaN(H.total)) throw new Error('No se encontró el «Importe Total Final a Pagar» («Total Amount Payable») en la HM.');
 
@@ -552,9 +560,9 @@ function interpretarHM(lineas, archivo){
   H.descuentos=r2(H.master-H.total-H.contado);
   /* Control: los importes negativos de la HM (de «Detalle de Conceptos» al total) deben sumar master − total */
   (function(){
-    var dc=lineas.findIndex(function(l){return /Detalle de Conceptos|Items? Details/i.test(l);}); if(dc<0) return;
+    var dc=lineas.findIndex(function(l){return /Detalle de Conceptos|Items? Details|Concepts? Details/i.test(l);}); if(dc<0) return;
     var suma=0, hay=false, re=/-(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*€/g, mm;
-    for(var i=dc+1;i<lineas.length && !/Importe Total Final|Total Amount Payable/i.test(lineas[i]);i++){ re.lastIndex=0; while((mm=re.exec(lineas[i]))){ suma+=parseNum(mm[1]); hay=true; } }
+    for(var i=dc+1;i<lineas.length && !/Importe Total Final|Total Amount Payable|Total Final Amount/i.test(lineas[i]);i++){ re.lastIndex=0; while((mm=re.exec(lineas[i]))){ suma+=parseNum(mm[1]); hay=true; } }
     if(hay && Math.abs(r2(suma)-r2(H.master-H.total))>0.02)
       H.avisos.push('Revisa la HM: sus descuentos suman '+eur(suma)+' pero master − total da '+eur(H.master-H.total)+'.');
   })();
@@ -563,7 +571,7 @@ function interpretarHM(lineas, archivo){
   var t=(H.formaRaw||'').toLowerCase();
   H.forma = /aplazad/.test(t) ? 'aplazado' : /(2|dos)\s*(veces|pagos)/.test(t) ? 'contado_2' : /d[ií]as/.test(t) ? 'contado_dias' : /contado/.test(t) ? 'contado' : (H.cuotas>1?'aplazado':'contado');
   /* ESD: «Importe Inscripción: 10% 463.60 €» (porcentaje e importe en la misma línea) */
-  var insc2=/(?:Importe Inscripci[oó]n|Enrol?ment Fee)\s*:\s*([\d.,]+)\s*%/i.exec(txt);
+  var insc2=/(?:Importe Inscripci[oó]n|Enrol?l?ment Fee)\s*:\s*([\d.,]+)\s*%/i.exec(txt);
   if(isNaN(H.inscPct) && insc2) H.inscPct=parseNum(insc2[1]);
   var campus=m(/^\s*Campus\s*:\s*(.+)$/im);
   H.marca = /ESDESIGN|ESDesign|\bESD\b/.test(campus) ? 'ESD' : /OBS/i.test(campus) ? 'OBS'
@@ -1153,6 +1161,7 @@ setMarca(marcaInicial());
 /* Si el módulo no llega con la marca elegida (?marca=OBS|ESD), se pregunta al abrir, como en la calculadora */
 function marcaEnEnlace(){ return /[?&]marca=(OBS|ESD)\b/i.test(location.search); }
 function abrirChooser(){
+  if(bloqueada()) return;
   $('chooser').classList.remove('hidden'); document.body.style.overflow='hidden';
   var b=document.querySelector('.ch-opt[data-m="'+MARCA+'"]'); if(b) b.focus();
 }
